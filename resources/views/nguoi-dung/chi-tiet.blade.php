@@ -1,8 +1,47 @@
 @extends('layouts.app')
 
-@section('title', 'Quán Mới - Chi tiết địa điểm')
+@section('title', 'Phở Chào Hà Nội - 123 Lê Lợi, Quận 1, TP.HCM | Quán Mới')
 
 @push('styles')
+    {{-- SEO Meta Tags & OpenGraph --}}
+    <meta name="description" content="Phở Chào Hà Nội tại 123 Đường Lê Lợi, Phường Bến Thành, Quận 1, TP. HCM. Đánh giá 4.8★ từ 500+ khách hàng. Xem thực đơn phở bò tái lăn đậm đà, bảng giá & chỉ đường." />
+    <meta name="keywords" content="phở chào hà nội, phở ngon quận 1, phở bò tái lăn, quán ăn quận 1, địa điểm ăn uống hcm" />
+    <link rel="canonical" href="{{ url()->current() }}" />
+
+    {{-- OpenGraph Meta Tags --}}
+    <meta property="og:title" content="Phở Chào Hà Nội - Quán Phở Bò Tái Lăn Ngon Tại Quận 1" />
+    <meta property="og:description" content="Thưởng thức phở bò tái lăn chuẩn vị Hà Thành tại Quận 1. Đánh giá 4.8★ từ 500+ thực khách." />
+    <meta property="og:type" content="restaurant" />
+    <meta property="og:url" content="{{ url()->current() }}" />
+    <meta property="og:image" content="https://lh3.googleusercontent.com/aida-public/AB6AXuBZT9uAiYKcdy3HvCa0HWpy4HYJInkXNudXh90FI143Ij_XOb8uCHMMeOppbch7HDqbJ3McTaIS4mpK4x1kOcuypIqixC3bZz7TRpDYmWUSs-ps8wunPmONXD8fHD-FP152tDpYtEaOejKiuOcVEWMGsMjpTQuvBOg4Uf9I0cWwed8HUVNVYyMQWlnleUG0U4JRo3LuE70KW0VZkLnW0IsDzgYgBUoIGJPGCaZ6BvAe2Jz1BG28uUzv" />
+
+    {{-- Schema.org Restaurant JSON-LD Structured Data for Google Rich Snippets --}}
+    <script type="application/ld+json">
+    {
+      "@@context": "https://schema.org",
+      "@@type": "Restaurant",
+      "name": "Phở Chào Hà Nội",
+      "image": [
+        "https://lh3.googleusercontent.com/aida-public/AB6AXuBZT9uAiYKcdy3HvCa0HWpy4HYJInkXNudXh90FI143Ij_XOb8uCHMMeOppbch7HDqbJ3McTaIS4mpK4x1kOcuypIqixC3bZz7TRpDYmWUSs-ps8wunPmONXD8fHD-FP152tDpYtEaOejKiuOcVEWMGsMjpTQuvBOg4Uf9I0cWwed8HUVNVYyMQWlnleUG0U4JRo3LuE70KW0VZkLnW0IsDzgYgBUoIGJPGCaZ6BvAe2Jz1BG28uUzv"
+      ],
+      "servesCuisine": ["Vietnamese", "Pho"],
+      "priceRange": "35.000đ - 85.000đ",
+      "address": {
+        "@@type": "PostalAddress",
+        "streetAddress": "123 Đường Lê Lợi, Phường Bến Thành",
+        "addressLocality": "Quận 1",
+        "addressRegion": "TP. Hồ Chí Minh",
+        "addressCountry": "VN"
+      },
+      "aggregateRating": {
+        "@@type": "AggregateRating",
+        "ratingValue": "4.8",
+        "reviewCount": "524"
+      },
+      "openingHours": "Mo-Su 06:00-22:00"
+    }
+    </script>
+
     <style>
         .bento-grid {
             display: grid;
@@ -27,38 +66,6 @@
     </style>
 @endpush
 
-@section('header')
-    <!-- Top Navigation Bar -->
-    <header class="fixed top-0 left-0 w-full z-50 bg-surface shadow-sm h-16 flex items-center justify-between px-8 md:px-16">
-        <div class="flex items-center gap-4">
-            <span class="material-symbols-outlined text-primary text-2xl cursor-pointer">menu</span>
-            <h1 class="font-headline-lg text-headline-lg text-primary font-bold">Quán Mới</h1>
-        </div>
-        <div class="hidden md:flex items-center gap-8">
-            <nav class="flex items-center gap-6">
-                <a class="text-primary font-label-md text-label-md flex flex-col items-center" href="#">
-                    <span class="material-symbols-outlined fill-icon">explore</span>
-                    <span>Discovery</span>
-                </a>
-                <a class="text-on-surface-variant hover:text-primary font-label-md text-label-md flex flex-col items-center transition-colors" href="#">
-                    <span class="material-symbols-outlined">search</span>
-                    <span>Search</span>
-                </a>
-                <a class="text-on-surface-variant hover:text-primary font-label-md text-label-md flex flex-col items-center transition-colors" href="#">
-                    <span class="material-symbols-outlined">bookmark</span>
-                    <span>Saved</span>
-                </a>
-                <a class="text-on-surface-variant hover:text-primary font-label-md text-label-md flex flex-col items-center transition-colors" href="#">
-                    <span class="material-symbols-outlined">person</span>
-                    <span>Account</span>
-                </a>
-            </nav>
-            <button class="bg-primary text-white px-6 py-2 rounded-xl font-label-md text-label-md hover:opacity-90 active:scale-95 transition-all">
-                Đăng nhập
-            </button>
-        </div>
-    </header>
-@endsection
 
 @section('content')
     <main class="mt-20 max-w-7xl mx-auto px-4 md:px-8 pb-20 flex-grow">
@@ -67,13 +74,13 @@
             <div class="bento-grid">
                 <div class="bento-item-1 rounded-xl overflow-hidden cursor-pointer group relative">
                     <div class="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-all"></div>
-                    <div class="w-full h-full bg-cover bg-center" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBZT9uAiYKcdy3HvCa0HWpy4HYJInkXNudXh90FI143Ij_XOb8uCHMMeOppbch7HDqbJ3McTaIS4mpK4x1kOcuypIqixC3bZz7TRpDYmWUSs-ps8wunPmONXD8fHD-FP152tDpYtEaOejKiuOcVEWMGsMjpTQuvBOg4Uf9I0cWwed8HUVNVYyMQWlnleUG0U4JRo3LuE70KW0VZkLnW0IsDzgYgBUoIGJPGCaZ6BvAe2Jz1BG28uUzv')"></div>
+                    <div class="w-full h-full bg-cover bg-center" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBZT9uAiYKcdy3HvCa0HWpy4HYJInkXNudXh90FI143Ij_XOb8uCHMMeOppbch7HDqbJ3McTaIS4mpK4x1kOcuypIqixC3bZz7TRpDYmWUSs-ps8wunPmONXD8fHD-FP152tDpYtEaOejKiuOcVEWMGsMjpTQuvBOg4Uf9I0cWwed8HUVNVYyMQWlnleUG0U4JRo3LuE70KW0VZkLnW0IsDzgYgBUoIGJPGCaZ6BvAe2Jz1BG28uUzv')" title="Không gian Phở Chào Hà Nội"></div>
                 </div>
                 <div class="bento-item-2 rounded-xl overflow-hidden cursor-pointer group relative">
-                    <div class="w-full h-full bg-cover bg-center" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuD2Ck5qL2_TpbcOo7YGVfL4jIzyWsaWPJOLKDfi0oZ7KRgPjfwEjx3LlprQ1c5zoWBwwq3BNDE8s8h_IBpNRJY5PVvyTDdhgy-7Q5HRK1_o0rHP3G5iRdWrMB0YVFQBGQn4KE7XA_nBiEW3soOPvbhB8fOkpV9CxFQT6Bbm8ZlArhLdCx4a10froFQaLxTZatgH_PH2DzxuUOfaVEhgmpPhVtBYqD9HVRQNvXi9n9k5rXIhenIx5tmk')"></div>
+                    <div class="w-full h-full bg-cover bg-center" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuD2Ck5qL2_TpbcOo7YGVfL4jIzyWsaWPJOLKDfi0oZ7KRgPjfwEjx3LlprQ1c5zoWBwwq3BNDE8s8h_IBpNRJY5PVvyTDdhgy-7Q5HRK1_o0rHP3G5iRdWrMB0YVFQBGQn4KE7XA_nBiEW3soOPvbhB8fOkpV9CxFQT6Bbm8ZlArhLdCx4a10froFQaLxTZatgH_PH2DzxuUOfaVEhgmpPhVtBYqD9HVRQNvXi9n9k5rXIhenIx5tmk')" title="Thịt bò tươi ngon tại Phở Chào"></div>
                 </div>
                 <div class="bento-item-3 rounded-xl overflow-hidden cursor-pointer group relative">
-                    <div class="w-full h-full bg-cover bg-center" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuC3bzrIzaqyG4B_yvZnS4Po8P9iifDNOlmkoZW-CkCRe3OtnGLgU0uzl0qdjB4FDgI1TgyNX21O1P9hfh3SsUrzHSFJW4pWjH3ibrjomvnY5wtcYKOrNP-OruwGf5REKaxsF1IdXYH6kO1PzwhIycGIT8QbgiUZ-skSvJkioA7BbMyMZqIuDVBAebFYczNCNAJM0VKixfDVfLnhdo0plxXmad2kEjdIk01MEUN64cbsrgVlWJQOwaDd')"></div>
+                    <div class="w-full h-full bg-cover bg-center" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuC3bzrIzaqyG4B_yvZnS4Po8P9iifDNOlmkoZW-CkCRe3OtnGLgU0uzl0qdjB4FDgI1TgyNX21O1P9hfh3SsUrzHSFJW4pWjH3ibrjomvnY5wtcYKOrNP-OruwGf5REKaxsF1IdXYH6kO1PzwhIycGIT8QbgiUZ-skSvJkioA7BbMyMZqIuDVBAebFYczNCNAJM0VKixfDVfLnhdo0plxXmad2kEjdIk01MEUN64cbsrgVlWJQOwaDd')" title="Nước dùng phở bò đậm đà"></div>
                 </div>
                 <div class="bento-item-4 rounded-xl overflow-hidden cursor-pointer group relative bg-on-background flex items-center justify-center text-white">
                     <div class="w-full h-full bg-cover bg-center opacity-40" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCfnTVIpmnxpE0pdetcfCZ2GMfN5F0yivGeSsRcxiD7rBqLQE74yWLzaFDYm5kFq82e1RHUwK-PhICSALqS2DYMANoWXy_P0OwtlwoShLH7Qph3_oohL6bWg1e45CE6ysjbUE6jUdCAk9Pp7pz33obm5JKvdkL_yhOKl0dhugz0OpJ4SBiZ7eBY7AsUdiEk02wTOhXwHQPlCd48tbnR8l8iVyyeaJyVg4tX1Mg0eRC-N2o5akKrHUpI')"></div>
@@ -92,7 +99,7 @@
                 <!-- Business Info Header -->
                 <div class="mb-8">
                     <div class="flex items-center gap-2 mb-2">
-                        <h2 class="font-headline-lg text-headline-lg text-on-background">Phở Chào Hà Nội - Quán Mới</h2>
+                        <h1 class="font-headline-lg text-headline-lg text-on-background font-black">Phở Chào Hà Nội - Quán Mới</h1>
                         <span class="material-symbols-outlined text-tick-xanh fill-icon text-xl" title="Verified">verified</span>
                     </div>
                     <p class="text-on-surface-variant flex items-center gap-1 mb-4 font-body-lg text-body-lg">

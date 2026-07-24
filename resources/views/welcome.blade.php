@@ -1,172 +1,427 @@
 @extends('layouts.app')
 
-@section('title', 'Quán Mới - Khám phá tinh hoa ẩm thực')
-
+@section('title', 'Quán Mới - Khám phá tinh hoa ẩm thực địa phương')
 
 @section('content')
     <!-- DESKTOP Main Content -->
     <main class="hidden md:block flex-grow">
         <!-- Hero Section -->
-        <section class="relative w-full h-[500px] flex items-center justify-center">
-            <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAxmwRoMYqrN1heR6D3PvMJVnBs-XHl_Bh5fu5FQ3iWlsce1YbhmhwQyYF7NpVeQEvKyyAOp-tDxbHghRQXOLJIOSOkh--IqL9BGuFuSgqKd4_aB33xgjLl-QTAH5CGJm-AcXKDHVugdm0YQOFF6UxWargg8dFBtoUOzewgu7co8bX23McgyJ7jVduHLA99vgEN1Lx-JDJ8F87dfGS843efTqSx2kBftrxGL1mUnbloF5IwBJ3VilJN')">
-                <div class="absolute inset-0 bg-black/40"></div>
+        <section class="relative w-full h-[540px] flex items-center justify-center overflow-hidden">
+            <div class="absolute inset-0 bg-cover bg-center scale-105 transform hover:scale-100 transition-transform duration-1000" style="background-image: url('https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1600&q=80')">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/30"></div>
             </div>
-            <div class="relative z-10 text-center px-4 max-w-3xl">
-                <h1 class="text-white font-display-lg text-display-lg md:text-[48px] md:leading-[56px] mb-6 drop-shadow-lg">Khám phá tinh hoa ẩm thực địa phương</h1>
-                <div class="bg-surface p-2 rounded-full flex items-center shadow-lg max-w-2xl mx-auto w-full">
-                    <span class="material-symbols-outlined text-primary ml-3 mr-2">location_on</span>
-                    <input class="flex-grow bg-transparent border-none focus:ring-0 text-on-surface text-body-lg px-2 text-main" placeholder="Bạn muốn ăn gì, ở đâu?" type="text"/>
-                    <button class="bg-primary text-white px-6 py-3 rounded-full font-title-md text-title-md hover:bg-surface-tint transition-colors active:scale-95 flex items-center">
-                        <span class="material-symbols-outlined mr-2">search</span> Tìm kiếm
+            <div class="relative z-10 text-center px-4 max-w-4xl space-y-6">
+                <div class="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-4 py-1.5 rounded-full text-white text-sm font-semibold border border-white/30 mb-2">
+                    <span class="material-symbols-outlined text-[18px] text-tick-xanh" style="font-variation-settings: 'FILL' 1;">verified</span>
+                    Cộng đồng ẩm thực & giải trí hàng đầu
+                </div>
+                <h1 class="text-white font-display-lg text-[52px] leading-[62px] font-black drop-shadow-lg tracking-tight">
+                    Khám phá <span class="text-primary-fixed">tinh hoa ẩm thực</span> địa phương
+                </h1>
+                <p class="text-white/90 text-lg max-w-2xl mx-auto font-normal drop-shadow">
+                    Tìm kiếm hàng ngàn quán ăn, quán cà phê, tiệm trà sữa và địa điểm giải trí được yêu thích nhất gần bạn.
+                </p>
+
+                {{-- Hero Search Trigger Box --}}
+                <div class="bg-white p-2.5 rounded-full flex items-center shadow-2xl max-w-2xl mx-auto w-full cursor-pointer hover:shadow-primary/20 transition-all border border-white/80" onclick="openLocationModal()">
+                    <span class="material-symbols-outlined text-primary text-2xl ml-4 mr-2">location_on</span>
+                    <input class="flex-grow bg-transparent border-none focus:ring-0 text-gray-800 text-[16px] font-medium px-2 outline-none cursor-pointer" placeholder="Bạn muốn ăn gì, tìm quán ở đâu?" type="text" readonly onclick="openLocationModal()"/>
+                    <button type="button" onclick="openLocationModal()" class="bg-primary text-white px-7 py-3.5 rounded-full font-bold text-[15px] hover:bg-surface-tint transition-all active:scale-95 flex items-center gap-2 shadow-md">
+                        <span class="material-symbols-outlined text-[20px]">search</span> Tìm kiếm
                     </button>
                 </div>
             </div>
         </section>
 
         <!-- Categories Section -->
-        <section class="max-w-[1200px] mx-auto py-16 px-container-margin">
-            <h2 class="font-headline-lg text-headline-lg text-on-surface mb-8">Danh mục khám phá</h2>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <section class="max-w-[1240px] mx-auto py-16 px-container-margin">
+            <div class="flex justify-between items-end mb-8">
+                <div>
+                    <h2 class="text-2xl font-black text-on-surface">Danh mục khám phá</h2>
+                    <p class="text-text-muted text-[15px] mt-1">Tìm địa điểm theo nhu cầu ẩm thực của bạn</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-5">
                 <!-- Category 1 -->
-                <div class="bg-surface-card rounded-xl shadow-sm border border-surface-container hover:shadow-md hover:-translate-y-1 transition-all cursor-pointer p-6 flex flex-col items-center text-center">
-                    <div class="w-16 h-16 rounded-full bg-primary-fixed flex items-center justify-center mb-4 text-primary">
-                        <span class="material-symbols-outlined text-3xl">restaurant</span>
+                <div class="bg-surface-card rounded-2xl shadow-sm border border-surface-container hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer p-6 flex flex-col items-center text-center group">
+                    <div class="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-3 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+                        <span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">restaurant</span>
                     </div>
-                    <h3 class="font-title-md text-title-md text-on-surface">Quán ăn</h3>
-                    <p class="text-text-muted font-body-sm text-body-sm mt-2">Bữa chính đậm đà</p>
+                    <h3 class="font-bold text-[16px] text-on-surface">Quán ăn</h3>
+                    <p class="text-text-muted text-[13px] mt-1">Bữa chính đậm đà</p>
                 </div>
                 <!-- Category 2 -->
-                <div class="bg-surface-card rounded-xl shadow-sm border border-surface-container hover:shadow-md hover:-translate-y-1 transition-all cursor-pointer p-6 flex flex-col items-center text-center">
-                    <div class="w-16 h-16 rounded-full bg-secondary-fixed flex items-center justify-center mb-4 text-secondary">
-                        <span class="material-symbols-outlined text-3xl">local_cafe</span>
+                <div class="bg-surface-card rounded-2xl shadow-sm border border-surface-container hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer p-6 flex flex-col items-center text-center group">
+                    <div class="w-16 h-16 rounded-2xl bg-secondary/10 flex items-center justify-center mb-3 text-secondary group-hover:bg-secondary group-hover:text-white transition-colors">
+                        <span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">local_cafe</span>
                     </div>
-                    <h3 class="font-title-md text-title-md text-on-surface">Quán nước</h3>
-                    <p class="text-text-muted font-body-sm text-body-sm mt-2">Cà phê &amp; Trà sữa</p>
+                    <h3 class="font-bold text-[16px] text-on-surface">Cà phê & Trà</h3>
+                    <p class="text-text-muted text-[13px] mt-1">Tụ tập & Làm việc</p>
                 </div>
                 <!-- Category 3 -->
-                <div class="bg-surface-card rounded-xl shadow-sm border border-surface-container hover:shadow-md hover:-translate-y-1 transition-all cursor-pointer p-6 flex flex-col items-center text-center">
-                    <div class="w-16 h-16 rounded-full bg-tertiary-fixed flex items-center justify-center mb-4 text-tertiary">
-                        <span class="material-symbols-outlined text-3xl">sports_esports</span>
+                <div class="bg-surface-card rounded-2xl shadow-sm border border-surface-container hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer p-6 flex flex-col items-center text-center group">
+                    <div class="w-16 h-16 rounded-2xl bg-tertiary/10 flex items-center justify-center mb-3 text-tertiary group-hover:bg-tertiary group-hover:text-white transition-colors">
+                        <span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">sports_esports</span>
                     </div>
-                    <h3 class="font-title-md text-title-md text-on-surface">Bida</h3>
-                    <p class="text-text-muted font-body-sm text-body-sm mt-2">Giải trí cuối tuần</p>
+                    <h3 class="font-bold text-[16px] text-on-surface">Bida & Giải trí</h3>
+                    <p class="text-text-muted text-[13px] mt-1">Vui chơi cuối tuần</p>
                 </div>
                 <!-- Category 4 -->
-                <div class="bg-surface-card rounded-xl shadow-sm border border-surface-container hover:shadow-md hover:-translate-y-1 transition-all cursor-pointer p-6 flex flex-col items-center text-center">
-                    <div class="w-16 h-16 rounded-full bg-[#ffdad6] flex items-center justify-center mb-4 text-[#93000a]">
-                        <span class="material-symbols-outlined text-3xl">icecream</span>
+                <div class="bg-surface-card rounded-2xl shadow-sm border border-surface-container hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer p-6 flex flex-col items-center text-center group">
+                    <div class="w-16 h-16 rounded-2xl bg-red-500/10 flex items-center justify-center mb-3 text-red-600 group-hover:bg-red-600 group-hover:text-white transition-colors">
+                        <span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">fastfood</span>
                     </div>
-                    <h3 class="font-title-md text-title-md text-on-surface">Đồ ăn vặt</h3>
-                    <p class="text-text-muted font-body-sm text-body-sm mt-2">Ngon miệng, giá rẻ</p>
+                    <h3 class="font-bold text-[16px] text-on-surface">Đồ ăn vặt</h3>
+                    <p class="text-text-muted text-[13px] mt-1">Ngon rẻ chuẩn gu</p>
+                </div>
+                <!-- Category 5 -->
+                <div class="bg-surface-card rounded-2xl shadow-sm border border-surface-container hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer p-6 flex flex-col items-center text-center group">
+                    <div class="w-16 h-16 rounded-2xl bg-amber-500/10 flex items-center justify-center mb-3 text-amber-600 group-hover:bg-amber-600 group-hover:text-white transition-colors">
+                        <span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">outdoor_grill</span>
+                    </div>
+                    <h3 class="font-bold text-[16px] text-on-surface">Lẩu & Nướng</h3>
+                    <p class="text-text-muted text-[13px] mt-1">Tiệc tùng nhóm</p>
+                </div>
+                <!-- Category 6 -->
+                <div class="bg-surface-card rounded-2xl shadow-sm border border-surface-container hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer p-6 flex flex-col items-center text-center group">
+                    <div class="w-16 h-16 rounded-2xl bg-purple-500/10 flex items-center justify-center mb-3 text-purple-600 group-hover:bg-purple-600 group-hover:text-white transition-colors">
+                        <span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">nightlife</span>
+                    </div>
+                    <h3 class="font-bold text-[16px] text-on-surface">Quán Đêm 24/7</h3>
+                    <p class="text-text-muted text-[13px] mt-1">Ăn đêm & Xuyên đêm</p>
                 </div>
             </div>
         </section>
 
-        <!-- Featured Venues -->
+        <!-- SECTION 1: Trending Venues / Quán Nổi Bật -->
         <section class="bg-surface-container-low py-16">
-            <div class="max-w-[1200px] mx-auto px-container-margin">
+            <div class="max-w-[1240px] mx-auto px-container-margin">
                 <div class="flex justify-between items-end mb-8">
                     <div>
-                        <h2 class="font-headline-lg text-headline-lg text-on-surface">Quán nổi bật</h2>
-                        <p class="text-text-muted font-body-lg text-body-lg mt-1">Những địa điểm được cộng đồng đánh giá cao nhất</p>
+                        <div class="inline-flex items-center gap-1.5 text-primary text-xs font-bold uppercase tracking-wider mb-1">
+                            <span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+                            Hot nhất tuần
+                        </div>
+                        <h2 class="text-2xl font-black text-on-surface">Quán ăn nổi bật được đánh giá cao</h2>
+                        <p class="text-text-muted text-[15px] mt-1">Những địa điểm nhận được nhiều phản hồi tích cực nhất từ cộng đồng</p>
                     </div>
-                    <a class="text-primary font-title-md text-title-md flex items-center hover:underline" href="#">Xem tất cả <span class="material-symbols-outlined ml-1">arrow_forward</span></a>
+                    <a class="text-primary font-bold text-[14px] flex items-center hover:underline gap-1" href="#">
+                        Xem tất cả <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+                    </a>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <!-- Venue Card 1 -->
-                    <a href="/quan/1" class="block bg-surface-card rounded-xl shadow-sm overflow-hidden group cursor-pointer hover:shadow-md transition-shadow">
-                        <div class="relative h-48 w-full">
-                            <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAMFi7L3ajcoG_YDWwzQnLUKGR8SOJB7UNavQpMf999YeiJh_wpVo8CO2FAEJ8YJMqEsIvlvIVpWy9DTnWXizPyn15vwY79KaeGbI4wx43pxpqpY1-vrPGD-hkI9fuWYQeSllEjU7BXkc9kxNtrnQBjaPNKHOhemyK1mmkd146zlVBzQ0ZCMlFXFHlU9iOSHcFuXwziUFSGuxrFYgHiFA14tqmtdveipaVBR4WHpNYB4MTwuV2y_6Ty"/>
-                            <div class="absolute top-3 left-3 bg-surface px-2 py-1 rounded text-primary font-label-md text-label-md flex items-center">
-                                <span class="material-symbols-outlined text-[14px] mr-1" style="font-variation-settings: 'FILL' 1;">star</span> 4.8
+                    <!-- Venue 1 -->
+                    <a href="/quan/1" class="block bg-white rounded-2xl shadow-sm overflow-hidden group cursor-pointer hover:shadow-xl transition-all border border-gray-100">
+                        <div class="relative h-52 w-full overflow-hidden">
+                            <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=600&q=80"/>
+                            <div class="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-xl text-primary font-bold text-xs flex items-center gap-1 shadow-sm">
+                                <span class="material-symbols-outlined text-[15px]" style="font-variation-settings: 'FILL' 1;">star</span> 4.9 (520+)
                             </div>
+                            <div class="absolute top-3 right-3 bg-primary text-white text-[11px] font-bold px-2.5 py-1 rounded-lg">Top 1 Đề Xuất</div>
                         </div>
-                        <div class="p-5">
-                            <div class="flex items-center mb-2">
-                                <h3 class="font-title-md text-title-md text-on-surface truncate mr-2">Phở Gia Truyền Bát Đàn</h3>
-                                <span class="material-symbols-outlined text-tick-xanh text-[18px]" style="font-variation-settings: 'FILL' 1;" title="Verified">verified</span>
+                        <div class="p-5 space-y-2">
+                            <div class="flex items-center justify-between">
+                                <h3 class="font-bold text-[17px] text-on-surface truncate group-hover:text-primary transition-colors">Phở Chào Hà Nội - Quận 1</h3>
+                                <span class="material-symbols-outlined text-tick-xanh text-[20px] flex-shrink-0" style="font-variation-settings: 'FILL' 1;" title="Đã xác thực">verified</span>
                             </div>
-                            <div class="flex items-center text-text-muted font-body-sm text-body-sm mb-4">
-                                <span class="material-symbols-outlined text-[16px] mr-1">location_on</span>
-                                <span class="truncate">49 Bát Đàn, Hoàn Kiếm, Hà Nội</span>
-                            </div>
-                            <div class="flex gap-2">
-                                <span class="bg-surface-container px-2 py-1 rounded text-on-surface-variant font-label-sm text-label-sm">Phở</span>
-                                <span class="bg-surface-container px-2 py-1 rounded text-on-surface-variant font-label-sm text-label-sm">Ăn sáng</span>
-                                <span class="bg-surface-container px-2 py-1 rounded text-on-surface-variant font-label-sm text-label-sm">Lâu đời</span>
-                            </div>
-                        </div>
-                    </a>
-                    <!-- Venue Card 2 -->
-                    <a href="/quan/1" class="block bg-surface-card rounded-xl shadow-sm overflow-hidden group cursor-pointer hover:shadow-md transition-shadow">
-                        <div class="relative h-48 w-full">
-                            <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBdDIm-f3fYmquDwI4yxFYLNk8c2DvdP9gVyJR0l31kij4uJBPIepwy8SthgaQE4vtzOe60bP96ZGDT0N6vSNfbyDUljWquuydu_d-JZtKcURhsVI__AiSvRaPjdg9Ma1W39SPzmlNCE4q5NYGic1YboetnOXpgXDYmGS2OxOdmTbets2EvAXpGwxgR1iwzH6uAYBnPyu77pY8oLM8mbX3GL4DZp_TwapwPX19XhKqvvNYI6GiewTEf"/>
-                            <div class="absolute top-3 left-3 bg-surface px-2 py-1 rounded text-primary font-label-md text-label-md flex items-center">
-                                <span class="material-symbols-outlined text-[14px] mr-1" style="font-variation-settings: 'FILL' 1;">star</span> 4.9
-                            </div>
-                        </div>
-                        <div class="p-5">
-                            <div class="flex items-center mb-2">
-                                <h3 class="font-title-md text-title-md text-on-surface truncate mr-2">The Note Coffee</h3>
-                                <span class="material-symbols-outlined text-tick-xanh text-[18px]" style="font-variation-settings: 'FILL' 1;" title="Verified">verified</span>
-                            </div>
-                            <div class="flex items-center text-text-muted font-body-sm text-body-sm mb-4">
-                                <span class="material-symbols-outlined text-[16px] mr-1">location_on</span>
-                                <span class="truncate">64 Lương Văn Can, Hoàn Kiếm, Hà Nội</span>
-                            </div>
-                            <div class="flex gap-2">
-                                <span class="bg-surface-container px-2 py-1 rounded text-on-surface-variant font-label-sm text-label-sm">Cà phê</span>
-                                <span class="bg-surface-container px-2 py-1 rounded text-on-surface-variant font-label-sm text-label-sm">View đẹp</span>
-                                <span class="bg-surface-container px-2 py-1 rounded text-on-surface-variant font-label-sm text-label-sm">Sống ảo</span>
+                            <p class="text-text-muted text-[13px] flex items-center gap-1">
+                                <span class="material-symbols-outlined text-[16px] text-gray-400">location_on</span>
+                                <span class="truncate">123 Lê Lợi, P. Bến Thành, Quận 1, TP.HCM</span>
+                            </p>
+                            <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+                                <div class="flex gap-1.5">
+                                    <span class="bg-gray-100 px-2 py-0.5 rounded-md text-gray-600 text-[12px] font-medium">Phở bò</span>
+                                    <span class="bg-gray-100 px-2 py-0.5 rounded-md text-gray-600 text-[12px] font-medium">Truyền thống</span>
+                                </div>
+                                <span class="text-primary font-bold text-[14px]">35.000đ - 85.000đ</span>
                             </div>
                         </div>
                     </a>
-                    <!-- Venue Card 3 -->
-                    <a href="/quan/1" class="block bg-surface-card rounded-xl shadow-sm overflow-hidden group cursor-pointer hover:shadow-md transition-shadow">
-                        <div class="relative h-48 w-full">
-                            <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCJQzjw-ulQ0mbtVf1_wBiHRJoAAIoPfsuSVTzpsxXY1rWPuCaWsHHs1hzsRQBhtyqzfc1EeoY6EXtzujXVcBc4KLLvMxlElgWSecPfEvEWEKvri7o4Zl6Zp_VUblP9U-y9bQmknWKIvKojJeKzBfCZ581bbdA-gKrAyDG8Yn3WQ1SsWdQauzgTYfe_w3SJGS-AVS6qQyVEQ3wZ1ga3LFI5MW3T9FB1aPIY3qlLiuuV9ub-J1IloBtq"/>
-                            <div class="absolute top-3 left-3 bg-surface px-2 py-1 rounded text-primary font-label-md text-label-md flex items-center">
-                                <span class="material-symbols-outlined text-[14px] mr-1" style="font-variation-settings: 'FILL' 1;">star</span> 4.7
+
+                    <!-- Venue 2 -->
+                    <a href="/quan/1" class="block bg-white rounded-2xl shadow-sm overflow-hidden group cursor-pointer hover:shadow-xl transition-all border border-gray-100">
+                        <div class="relative h-52 w-full overflow-hidden">
+                            <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=600&q=80"/>
+                            <div class="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-xl text-primary font-bold text-xs flex items-center gap-1 shadow-sm">
+                                <span class="material-symbols-outlined text-[15px]" style="font-variation-settings: 'FILL' 1;">star</span> 4.8 (380+)
                             </div>
+                            <div class="absolute top-3 right-3 bg-tertiary text-white text-[11px] font-bold px-2.5 py-1 rounded-lg">View Đẹp</div>
                         </div>
-                        <div class="p-5">
-                            <div class="flex items-center mb-2">
-                                <h3 class="font-title-md text-title-md text-on-surface truncate mr-2">Magic Billiards Club</h3>
+                        <div class="p-5 space-y-2">
+                            <div class="flex items-center justify-between">
+                                <h3 class="font-bold text-[17px] text-on-surface truncate group-hover:text-primary transition-colors">The Garden Coffee & Roastery</h3>
+                                <span class="material-symbols-outlined text-tick-xanh text-[20px] flex-shrink-0" style="font-variation-settings: 'FILL' 1;" title="Đã xác thực">verified</span>
                             </div>
-                            <div class="flex items-center text-text-muted font-body-sm text-body-sm mb-4">
-                                <span class="material-symbols-outlined text-[16px] mr-1">location_on</span>
-                                <span class="truncate">15 Thái Hà, Đống Đa, Hà Nội</span>
-                            </div>
-                            <div class="flex gap-2">
-                                <span class="bg-surface-container px-2 py-1 rounded text-on-surface-variant font-label-sm text-label-sm">Bida</span>
-                                <span class="bg-surface-container px-2 py-1 rounded text-on-surface-variant font-label-sm text-label-sm">Giải trí</span>
-                                <span class="bg-surface-container px-2 py-1 rounded text-on-surface-variant font-label-sm text-label-sm">Mở muộn</span>
+                            <p class="text-text-muted text-[13px] flex items-center gap-1">
+                                <span class="material-symbols-outlined text-[16px] text-gray-400">location_on</span>
+                                <span class="truncate">45 Nguyễn Thị Minh Khai, Quận 3, TP.HCM</span>
+                            </p>
+                            <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+                                <div class="flex gap-1.5">
+                                    <span class="bg-gray-100 px-2 py-0.5 rounded-md text-gray-600 text-[12px] font-medium">Cà phê muối</span>
+                                    <span class="bg-gray-100 px-2 py-0.5 rounded-md text-gray-600 text-[12px] font-medium">Sân vườn</span>
+                                </div>
+                                <span class="text-primary font-bold text-[14px]">29.000đ - 65.000đ</span>
                             </div>
                         </div>
                     </a>
+
+                    <!-- Venue 3 -->
+                    <a href="/quan/1" class="block bg-white rounded-2xl shadow-sm overflow-hidden group cursor-pointer hover:shadow-xl transition-all border border-gray-100">
+                        <div class="relative h-52 w-full overflow-hidden">
+                            <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80"/>
+                            <div class="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-xl text-primary font-bold text-xs flex items-center gap-1 shadow-sm">
+                                <span class="material-symbols-outlined text-[15px]" style="font-variation-settings: 'FILL' 1;">star</span> 4.7 (290+)
+                            </div>
+                            <div class="absolute top-3 right-3 bg-secondary text-white text-[11px] font-bold px-2.5 py-1 rounded-lg">Lẩu Nướng</div>
+                        </div>
+                        <div class="p-5 space-y-2">
+                            <div class="flex items-center justify-between">
+                                <h3 class="font-bold text-[17px] text-on-surface truncate group-hover:text-primary transition-colors">Quán Nướng Ngói Phố Cổ</h3>
+                                <span class="material-symbols-outlined text-tick-xanh text-[20px] flex-shrink-0" style="font-variation-settings: 'FILL' 1;" title="Đã xác thực">verified</span>
+                            </div>
+                            <p class="text-text-muted text-[13px] flex items-center gap-1">
+                                <span class="material-symbols-outlined text-[16px] text-gray-400">location_on</span>
+                                <span class="truncate">88 Hàng Bạc, Hoàn Kiếm, Hà Nội</span>
+                            </p>
+                            <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+                                <div class="flex gap-1.5">
+                                    <span class="bg-gray-100 px-2 py-0.5 rounded-md text-gray-600 text-[12px] font-medium">Nướng ngói</span>
+                                    <span class="bg-gray-100 px-2 py-0.5 rounded-md text-gray-600 text-[12px] font-medium">Bò nướng</span>
+                                </div>
+                                <span class="text-primary font-bold text-[14px]">120.000đ - 250.000đ</span>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="mt-10 rounded-[28px] bg-white border border-gray-100 shadow-sm p-6 md:p-7">
+                    <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-6">
+                        <div>
+                            <div class="inline-flex items-center gap-2 text-secondary text-xs font-bold uppercase tracking-wider mb-1">
+                                <span class="material-symbols-outlined text-[16px]">new_releases</span>
+                                Mới từ cộng đồng
+                            </div>
+                            <h3 class="text-xl md:text-2xl font-black text-on-surface">Quán mới vừa được thêm gần đây</h3>
+                            <p class="text-text-muted text-[15px] mt-1">Những địa điểm mới lên sóng để bạn khám phá sớm trước khi thành trend.</p>
+                        </div>
+                        <a class="text-primary font-bold text-[14px] flex items-center gap-1 hover:underline" href="{{ route('chu-quan.dang-quan') }}">
+                            Thêm quán của bạn <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+                        </a>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                        <a href="/quan/1" class="group rounded-2xl border border-gray-100 bg-surface-card hover:bg-primary-fixed/20 transition-all p-4 flex items-start gap-4">
+                            <img class="w-24 h-24 rounded-2xl object-cover flex-shrink-0 shadow-sm" src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=300&q=80" alt="Quán mới 1" />
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="bg-primary/10 text-primary px-2.5 py-1 rounded-full text-[11px] font-bold">Mới thêm 2 giờ trước</span>
+                                    <span class="w-2 h-2 rounded-full bg-tick-xanh"></span>
+                                </div>
+                                <h4 class="font-bold text-[16px] text-on-surface group-hover:text-primary transition-colors line-clamp-1">Bún Bò Góc Huế Signature</h4>
+                                <p class="text-[13px] text-text-muted mt-1 line-clamp-2">Không gian nhỏ gọn, nước dùng đậm vị và đang nhận nhiều lượt lưu từ cộng đồng địa phương.</p>
+                                <div class="flex items-center justify-between mt-3 text-[12px]">
+                                    <span class="text-gray-500">Phú Nhuận, TP.HCM</span>
+                                    <span class="font-bold text-primary">45.000đ - 68.000đ</span>
+                                </div>
+                            </div>
+                        </a>
+
+                        <a href="/quan/1" class="group rounded-2xl border border-gray-100 bg-surface-card hover:bg-secondary-fixed/30 transition-all p-4 flex items-start gap-4">
+                            <img class="w-24 h-24 rounded-2xl object-cover flex-shrink-0 shadow-sm" src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=300&q=80" alt="Quán mới 2" />
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="bg-secondary/10 text-secondary px-2.5 py-1 rounded-full text-[11px] font-bold">Vừa mở tuần này</span>
+                                    <span class="text-[12px] text-gray-500">24 lượt quan tâm</span>
+                                </div>
+                                <h4 class="font-bold text-[16px] text-on-surface group-hover:text-primary transition-colors line-clamp-1">Tiệm Cơm Nhà Mộc</h4>
+                                <p class="text-[13px] text-text-muted mt-1 line-clamp-2">Menu cơm nhà thay đổi mỗi ngày, hợp dân văn phòng và nhóm gia đình ghé bữa trưa.</p>
+                                <div class="flex items-center justify-between mt-3 text-[12px]">
+                                    <span class="text-gray-500">Hải Châu, Đà Nẵng</span>
+                                    <span class="font-bold text-primary">39.000đ - 79.000đ</span>
+                                </div>
+                            </div>
+                        </a>
+
+                        <a href="/quan/1" class="group rounded-2xl border border-gray-100 bg-surface-card hover:bg-tertiary-fixed/20 transition-all p-4 flex items-start gap-4">
+                            <img class="w-24 h-24 rounded-2xl object-cover flex-shrink-0 shadow-sm" src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=300&q=80" alt="Quán mới 3" />
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="bg-tertiary/10 text-tertiary px-2.5 py-1 rounded-full text-[11px] font-bold">Đang được theo dõi</span>
+                                    <span class="text-[12px] text-gray-500">Cộng đồng đề cử</span>
+                                </div>
+                                <h4 class="font-bold text-[16px] text-on-surface group-hover:text-primary transition-colors line-clamp-1">Mây Rooftop Cafe</h4>
+                                <p class="text-[13px] text-text-muted mt-1 line-clamp-2">Quán cà phê rooftop mới với góc ngắm hoàng hôn đẹp, hợp đi chill buổi chiều tối.</p>
+                                <div class="flex items-center justify-between mt-3 text-[12px]">
+                                    <span class="text-gray-500">Ninh Kiều, Cần Thơ</span>
+                                    <span class="font-bold text-primary">35.000đ - 59.000đ</span>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
                 </div>
             </div>
         </section>
 
-        <!-- Community Impact -->
-        <section class="max-w-[1200px] mx-auto py-20 px-container-margin">
-            <div class="bg-primary-fixed rounded-2xl p-10 flex flex-col md:flex-row items-center justify-between shadow-sm relative overflow-hidden">
-                <div class="relative z-10 md:w-1/3 mb-8 md:mb-0">
-                    <h2 class="font-display-lg text-display-lg text-on-primary-fixed mb-4">Cộng đồng<br/>Quán Mới</h2>
-                    <p class="text-on-surface-variant font-body-lg text-body-lg">Cùng nhau xây dựng bản đồ ẩm thực địa phương chất lượng, đáng tin cậy.</p>
+        <!-- SECTION 2: Video Reviews Carousel (Mới thêm) -->
+        <section class="max-w-[1240px] mx-auto py-16 px-container-margin">
+            <div class="flex justify-between items-end mb-8">
+                <div>
+                    <div class="inline-flex items-center gap-1.5 text-red-600 text-xs font-bold uppercase tracking-wider mb-1">
+                        <span class="material-symbols-outlined text-[16px]">play_circle</span>
+                        Video Review Thật
+                    </div>
+                    <h2 class="text-2xl font-black text-on-surface">Trải nghiệm thực tế qua Video Short</h2>
+                    <p class="text-text-muted text-[15px] mt-1">Xem video đánh giá ngắn từ các Reviewer uy tín</p>
+                </div>
+                <a class="text-primary font-bold text-[14px] flex items-center hover:underline gap-1" href="#">
+                    Xem tất cả video <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+                </a>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                {{-- Video Card 1 --}}
+                <div class="relative h-96 rounded-2xl overflow-hidden group cursor-pointer shadow-md hover:shadow-xl transition-all">
+                    <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=500&q=80" alt="Review Phở" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-black/20"></div>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <div class="w-14 h-14 rounded-full bg-white/30 backdrop-blur-md flex items-center justify-center text-white group-hover:scale-110 group-hover:bg-primary transition-all">
+                            <span class="material-symbols-outlined text-3xl ml-1" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+                        </div>
+                    </div>
+                    <div class="absolute top-3 right-3 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full text-white text-[12px] font-bold flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[14px]">visibility</span> 12.5k
+                    </div>
+                    <div class="absolute bottom-4 inset-x-4 text-white space-y-1">
+                        <span class="bg-primary text-white text-[10px] font-bold px-2 py-0.5 rounded">Review Quán Ăn</span>
+                        <h4 class="font-bold text-[15px] leading-tight line-clamp-2">Thử ngay tô Phở Bò Tái Lăn 65k chuẩn vị Hà Thành tại Q1</h4>
+                        <p class="text-white/80 text-[12px]">bởi <span class="font-bold text-white">Sài Gòn Foodie</span></p>
+                    </div>
+                </div>
+
+                {{-- Video Card 2 --}}
+                <div class="relative h-96 rounded-2xl overflow-hidden group cursor-pointer shadow-md hover:shadow-xl transition-all">
+                    <img src="https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=500&q=80" alt="Review Cà Phê" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-black/20"></div>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <div class="w-14 h-14 rounded-full bg-white/30 backdrop-blur-md flex items-center justify-center text-white group-hover:scale-110 group-hover:bg-primary transition-all">
+                            <span class="material-symbols-outlined text-3xl ml-1" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+                        </div>
+                    </div>
+                    <div class="absolute top-3 right-3 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full text-white text-[12px] font-bold flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[14px]">visibility</span> 28.3k
+                    </div>
+                    <div class="absolute bottom-4 inset-x-4 text-white space-y-1">
+                        <span class="bg-secondary text-white text-[10px] font-bold px-2 py-0.5 rounded">Cà Phê Sống Ảo</span>
+                        <h4 class="font-bold text-[15px] leading-tight line-clamp-2">Quán cafe sân vườn kính ngắm mưa cực chill ở Q3</h4>
+                        <p class="text-white/80 text-[12px]">bởi <span class="font-bold text-white">An An Review</span></p>
+                    </div>
+                </div>
+
+                {{-- Video Card 3 --}}
+                <div class="relative h-96 rounded-2xl overflow-hidden group cursor-pointer shadow-md hover:shadow-xl transition-all">
+                    <img src="https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=500&q=80" alt="Review Lẩu Nướng" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-black/20"></div>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <div class="w-14 h-14 rounded-full bg-white/30 backdrop-blur-md flex items-center justify-center text-white group-hover:scale-110 group-hover:bg-primary transition-all">
+                            <span class="material-symbols-outlined text-3xl ml-1" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+                        </div>
+                    </div>
+                    <div class="absolute top-3 right-3 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full text-white text-[12px] font-bold flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[14px]">visibility</span> 45.1k
+                    </div>
+                    <div class="absolute bottom-4 inset-x-4 text-white space-y-1">
+                        <span class="bg-amber-600 text-white text-[10px] font-bold px-2 py-0.5 rounded">Quán Nhậu Đêm</span>
+                        <h4 class="font-bold text-[15px] leading-tight line-clamp-2">Đêm muộn ăn lẩu bò nướng ngói thơm lừng phố cổ</h4>
+                        <p class="text-white/80 text-[12px]">bởi <span class="font-bold text-white">Hà Nội Street Food</span></p>
+                    </div>
+                </div>
+
+                {{-- Video Card 4 --}}
+                <div class="relative h-96 rounded-2xl overflow-hidden group cursor-pointer shadow-md hover:shadow-xl transition-all">
+                    <img src="https://images.unsplash.com/photo-1511192336575-5a79af67a629?auto=format&fit=crop&w=500&q=80" alt="Review Bida" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-black/20"></div>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <div class="w-14 h-14 rounded-full bg-white/30 backdrop-blur-md flex items-center justify-center text-white group-hover:scale-110 group-hover:bg-primary transition-all">
+                            <span class="material-symbols-outlined text-3xl ml-1" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+                        </div>
+                    </div>
+                    <div class="absolute top-3 right-3 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full text-white text-[12px] font-bold flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[14px]">visibility</span> 19.8k
+                    </div>
+                    <div class="absolute bottom-4 inset-x-4 text-white space-y-1">
+                        <span class="bg-tertiary text-white text-[10px] font-bold px-2 py-0.5 rounded">Giải Trí Bida</span>
+                        <h4 class="font-bold text-[15px] leading-tight line-clamp-2">Trải nghiệm CLB Bida chuẩn pro dàn bàn nhập khẩu cực mượt</h4>
+                        <p class="text-white/80 text-[12px]">bởi <span class="font-bold text-white">Billiards VN</span></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: Community Collections / BST Bộ Thẩm Ẩm Thực -->
+        <section class="bg-gray-900 text-white py-16">
+            <div class="max-w-[1240px] mx-auto px-container-margin">
+                <div class="flex justify-between items-end mb-8">
+                    <div>
+                        <span class="text-primary-fixed text-xs font-bold uppercase tracking-wider block mb-1">Tuyển chọn đặc biệt</span>
+                        <h2 class="text-2xl font-black text-white">Bộ sưu tập ẩm thực nổi bật</h2>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="relative h-64 rounded-2xl overflow-hidden group cursor-pointer border border-white/10">
+                        <img src="https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&w=600&q=80" alt="BST Cà Phê Muối" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
+                        <div class="absolute bottom-5 inset-x-5 space-y-1">
+                            <span class="bg-primary/80 backdrop-blur-sm text-white text-[11px] font-bold px-2.5 py-1 rounded-md">15 Địa điểm</span>
+                            <h3 class="font-bold text-[18px] text-white">BST Cà phê muối béo ngậy khó cưỡng</h3>
+                            <p class="text-white/70 text-[13px]">Khám phá các quán cà phê muối ngon nhất thành phố</p>
+                        </div>
+                    </div>
+
+                    <div class="relative h-64 rounded-2xl overflow-hidden group cursor-pointer border border-white/10">
+                        <img src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=600&q=80" alt="BST Quán Nướng" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
+                        <div class="absolute bottom-5 inset-x-5 space-y-1">
+                            <span class="bg-secondary/80 backdrop-blur-sm text-white text-[11px] font-bold px-2.5 py-1 rounded-md">24 Địa điểm</span>
+                            <h3 class="font-bold text-[18px] text-white">Top Quán lẩu nướng sân vườn thoáng mát</h3>
+                            <p class="text-white/70 text-[13px]">Lý tưởng cho những buổi tụ họp bạn bè cuối tuần</p>
+                        </div>
+                    </div>
+
+                    <div class="relative h-64 rounded-2xl overflow-hidden group cursor-pointer border border-white/10">
+                        <img src="https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80" alt="BST Đồ Ăn Đêm" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
+                        <div class="absolute bottom-5 inset-x-5 space-y-1">
+                            <span class="bg-tertiary/80 backdrop-blur-sm text-white text-[11px] font-bold px-2.5 py-1 rounded-md">18 Địa điểm</span>
+                            <h3 class="font-bold text-[18px] text-white">Quán ăn đêm 24/7 cho các "cú đêm"</h3>
+                            <p class="text-white/70 text-[13px]">Tổng hợp quán ăn ngon mở muộn sau 00:00</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 4: Community Impact Statistics -->
+        <section class="max-w-[1240px] mx-auto py-20 px-container-margin">
+            <div class="bg-gradient-to-br from-primary-fixed via-amber-50 to-orange-100 rounded-3xl p-10 md:p-14 flex flex-col md:flex-row items-center justify-between shadow-sm relative overflow-hidden border border-amber-200">
+                <div class="relative z-10 md:w-1/3 mb-8 md:mb-0 space-y-3">
+                    <span class="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-bold">Quán Mới Network</span>
+                    <h2 class="font-black text-3xl text-on-primary-fixed leading-tight">Cộng đồng<br/>ẩm thực tin cậy</h2>
+                    <p class="text-on-surface-variant text-[15px] leading-relaxed">Cùng nhau đóng góp đánh giá trung thực để xây dựng bản đồ ẩm thực chất lượng nhất.</p>
                 </div>
                 <div class="relative z-10 md:w-2/3 grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
-                    <div class="bg-surface/80 backdrop-blur-sm p-6 rounded-xl text-center border border-white/50">
-                        <div class="font-display-lg text-display-lg text-primary mb-2">1,000+</div>
-                        <div class="font-title-md text-title-md text-on-surface">Quán ăn</div>
+                    <div class="bg-white/80 backdrop-blur-md p-6 rounded-2xl text-center border border-white/80 shadow-sm">
+                        <div class="font-black text-4xl text-primary mb-1">1,200+</div>
+                        <div class="font-bold text-[15px] text-on-surface">Quán ăn đã xác thực</div>
                     </div>
-                    <div class="bg-surface/80 backdrop-blur-sm p-6 rounded-xl text-center border border-white/50">
-                        <div class="font-display-lg text-display-lg text-secondary mb-2">50k+</div>
-                        <div class="font-title-md text-title-md text-on-surface">Người dùng</div>
+                    <div class="bg-white/80 backdrop-blur-md p-6 rounded-2xl text-center border border-white/80 shadow-sm">
+                        <div class="font-black text-4xl text-secondary mb-1">85,000+</div>
+                        <div class="font-bold text-[15px] text-on-surface">Thành viên năng động</div>
                     </div>
-                    <div class="bg-surface/80 backdrop-blur-sm p-6 rounded-xl text-center border border-white/50">
-                        <div class="font-display-lg text-display-lg text-tertiary mb-2">120k+</div>
-                        <div class="font-title-md text-title-md text-on-surface">Đánh giá</div>
+                    <div class="bg-white/80 backdrop-blur-md p-6 rounded-2xl text-center border border-white/80 shadow-sm">
+                        <div class="font-black text-4xl text-tertiary mb-1">150,000+</div>
+                        <div class="font-bold text-[15px] text-on-surface">Đánh giá thật</div>
                     </div>
                 </div>
             </div>
@@ -174,188 +429,270 @@
     </main>
 
     <!-- MOBILE Main Content -->
-    <main class="max-w-[1200px] mx-auto w-full md:hidden flex-grow">
+    <main class="max-w-[1200px] mx-auto w-full md:hidden flex-grow space-y-6 pb-12">
         <!-- Hero Section -->
-        <section class="px-container-margin pt-stack-md pb-stack-lg bg-surface-card rounded-b-xl shadow-sm relative overflow-hidden">
-            <div class="absolute -top-10 -right-10 w-40 h-40 bg-primary-fixed opacity-50 rounded-full blur-2xl"></div>
-            <div class="absolute top-20 -left-10 w-32 h-32 bg-secondary-container opacity-50 rounded-full blur-2xl"></div>
-            <div class="relative z-10">
-                <h1 class="font-headline-lg-mobile text-headline-lg-mobile mb-4 text-on-surface">Hôm nay bạn muốn đi đâu?</h1>
-                <div class="relative flex items-center w-full">
-                    <span class="material-symbols-outlined absolute left-4 text-on-surface-variant z-10">search</span>
-                    <input class="w-full bg-surface pl-12 pr-4 py-3 rounded-xl border-outline-variant focus:border-secondary focus:ring-secondary text-body-sm shadow-sm transition-all" placeholder="Tìm kiếm quán ăn, món ăn, khu vực..." type="text"/>
-                    <button class="absolute right-2 bg-primary-container text-on-primary-container p-2 rounded-lg scale-98 active:scale-95 transition-transform flex items-center justify-center">
-                        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">tune</span>
+        <section class="px-4 pt-4 pb-6 bg-white rounded-b-2xl shadow-sm relative overflow-hidden border-b border-gray-100">
+            <div class="relative z-10 space-y-3">
+                <div class="inline-flex items-center gap-1 text-primary text-[11px] font-bold uppercase tracking-wider">
+                    <span class="material-symbols-outlined text-[14px]">restaurant</span>
+                    Khám phá địa điểm gần bạn
+                </div>
+                <h1 class="text-xl font-black text-on-surface">Hôm nay bạn muốn ăn gì?</h1>
+                <div class="relative flex items-center w-full cursor-pointer" onclick="openLocationModal()">
+                    <span class="material-symbols-outlined absolute left-3.5 text-primary z-10 text-[20px]">location_on</span>
+                    <input class="w-full bg-gray-100 pl-10 pr-10 py-3 rounded-xl border-none text-[14px] font-medium placeholder:text-gray-400 outline-none cursor-pointer" placeholder="Tìm kiếm quán ăn, khu vực..." type="text" readonly onclick="openLocationModal()"/>
+                    <button type="button" onclick="openLocationModal()" class="absolute right-2 bg-primary text-white p-2 rounded-lg flex items-center justify-center shadow-sm">
+                        <span class="material-symbols-outlined text-[18px]">search</span>
                     </button>
                 </div>
             </div>
         </section>
 
-        <!-- Categories -->
-        <section class="py-stack-md px-container-margin">
-            <div class="flex justify-between items-start gap-gutter">
-                <a class="flex flex-col items-center gap-2 group w-1/4" href="#">
-                    <div class="w-14 h-14 rounded-full bg-primary-fixed flex items-center justify-center text-primary group-active:scale-95 transition-transform shadow-[0px_4px_20px_rgba(0,0,0,0.05)]">
-                        <span class="material-symbols-outlined text-[28px]" style="font-variation-settings: 'FILL' 1;">restaurant</span>
+        <!-- Categories Grid Mobile (6 items) -->
+        <section class="px-4">
+            <div class="grid grid-cols-3 gap-3">
+                <a class="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-white border border-gray-100 shadow-sm active:scale-95 transition-transform" href="#">
+                    <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                        <span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">restaurant</span>
                     </div>
-                    <span class="font-label-md text-label-md text-center text-on-surface whitespace-nowrap">Quán ăn</span>
+                    <span class="text-[12px] font-bold text-center text-on-surface">Quán ăn</span>
                 </a>
-                <a class="flex flex-col items-center gap-2 group w-1/4" href="#">
-                    <div class="w-14 h-14 rounded-full bg-secondary-container flex items-center justify-center text-secondary group-active:scale-95 transition-transform shadow-[0px_4px_20px_rgba(0,0,0,0.05)]">
-                        <span class="material-symbols-outlined text-[28px]" style="font-variation-settings: 'FILL' 1;">local_cafe</span>
+                <a class="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-white border border-gray-100 shadow-sm active:scale-95 transition-transform" href="#">
+                    <div class="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary">
+                        <span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">local_cafe</span>
                     </div>
-                    <span class="font-label-md text-label-md text-center text-on-surface whitespace-nowrap">Quán nước</span>
+                    <span class="text-[12px] font-bold text-center text-on-surface">Cà phê & Trà</span>
                 </a>
-                <a class="flex flex-col items-center gap-2 group w-1/4" href="#">
-                    <div class="w-14 h-14 rounded-full bg-tertiary-fixed flex items-center justify-center text-tertiary group-active:scale-95 transition-transform shadow-[0px_4px_20px_rgba(0,0,0,0.05)]">
-                        <span class="material-symbols-outlined text-[28px]" style="font-variation-settings: 'FILL' 1;">sports_esports</span>
+                <a class="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-white border border-gray-100 shadow-sm active:scale-95 transition-transform" href="#">
+                    <div class="w-12 h-12 rounded-xl bg-tertiary/10 flex items-center justify-center text-tertiary">
+                        <span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">sports_esports</span>
                     </div>
-                    <span class="font-label-md text-label-md text-center text-on-surface whitespace-nowrap">Bida</span>
+                    <span class="text-[12px] font-bold text-center text-on-surface">Bida & Giải trí</span>
                 </a>
-                <a class="flex flex-col items-center gap-2 group w-1/4" href="#">
-                    <div class="w-14 h-14 rounded-full bg-error-container flex items-center justify-center text-error group-active:scale-95 transition-transform shadow-[0px_4px_20px_rgba(0,0,0,0.05)]">
-                        <span class="material-symbols-outlined text-[28px]" style="font-variation-settings: 'FILL' 1;">fastfood</span>
+                <a class="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-white border border-gray-100 shadow-sm active:scale-95 transition-transform" href="#">
+                    <div class="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center text-red-600">
+                        <span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">fastfood</span>
                     </div>
-                    <span class="font-label-md text-label-md text-center text-on-surface whitespace-nowrap">Đồ ăn vặt</span>
+                    <span class="text-[12px] font-bold text-center text-on-surface">Đồ ăn vặt</span>
                 </a>
-            </div>
-        </section>
-
-        <!-- Hot Deals Carousel -->
-        <section class="py-stack-md">
-            <div class="px-container-margin mb-3 flex justify-between items-center">
-                <h2 class="font-title-md text-title-md text-on-surface">Ưu đãi hot</h2>
-                <a class="font-label-md text-label-md text-primary flex items-center" href="#">Xem tất cả <span class="material-symbols-outlined text-[16px]">chevron_right</span></a>
-            </div>
-            <div class="flex overflow-x-auto no-scrollbar gap-gutter px-container-margin snap-x snap-mandatory pb-4">
-                <!-- Deal Card 1 -->
-                <a href="/quan/1" class="block min-w-[280px] w-[85%] snap-center rounded-xl bg-surface-card overflow-hidden shadow-[0px_4px_20px_rgba(0,0,0,0.05)] border border-surface-variant flex flex-col active:shadow-lg transition-shadow">
-                    <div class="h-32 w-full relative">
-                        <img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBYUbUAf4rQHpTniopZ2033Wd2WsUaTB3SxAMqEFxvfLqoxLzyXy-NGJLNy3_o2tu7bxzH5bRRltA9dNs_43JJBGKnflIdzEzsNO1sESXycd0vy3Q1iTLh3fJHVHDFUhSWuOBS56BiYDmZ5BspSY_fxOxRgRzFim9BqfeVLIIudIY1BOH2CYBZDf-ahzzRhdoD_cK72kSdsiOiv40tUuMtqhnRUKJUK1nVv6atlJeZuiJvxvh94Yfoa"/>
-                        <div class="absolute top-2 left-2 bg-error text-on-error font-label-md text-label-md px-2 py-1 rounded-md">Giảm 20%</div>
+                <a class="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-white border border-gray-100 shadow-sm active:scale-95 transition-transform" href="#">
+                    <div class="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center text-amber-700">
+                        <span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">outdoor_grill</span>
                     </div>
-                    <div class="p-3">
-                        <h3 class="font-title-md text-title-md text-on-surface mb-1 flex items-center gap-1">Phở Thìn Lò Đúc <span class="material-symbols-outlined text-tick-xanh text-[16px]" style="font-variation-settings: 'FILL' 1;">verified</span></h3>
-                        <p class="font-body-sm text-body-sm text-text-muted flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">location_on</span> Quận 1, TP.HCM</p>
-                    </div>
+                    <span class="text-[12px] font-bold text-center text-on-surface">Lẩu & Nướng</span>
                 </a>
-                <!-- Deal Card 2 -->
-                <a href="/quan/1" class="block min-w-[280px] w-[85%] snap-center rounded-xl bg-surface-card overflow-hidden shadow-[0px_4px_20px_rgba(0,0,0,0.05)] border border-surface-variant flex flex-col active:shadow-lg transition-shadow">
-                    <div class="h-32 w-full relative">
-                        <img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAdRggjNj_HfU6UVkKPy5mCIomUlf78mfcD96RQBWOK5YiY0MQP5ckmQmVLVqv5zz9SjORF-cQR4MFcsPzPYNLirsRjmdKrkYDaMysn1DWfRWwzjVImwegXTQIzTSTR_1HtbyWBc0TwzMHli9iluGdas8sksA2iW8P4Tnu6pa8aGooEKC7WLiVf-tOnKUyMx6naDuvdwJLlrf9ufyBWwU_iUY9KLSqV-F47CYmCUWDFvcyuEz5uOMte"/>
-                        <div class="absolute top-2 left-2 bg-error text-on-error font-label-md text-label-md px-2 py-1 rounded-md">Mua 1 Tặng 1</div>
+                <a class="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-white border border-gray-100 shadow-sm active:scale-95 transition-transform" href="#">
+                    <div class="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center text-purple-700">
+                        <span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">nightlife</span>
                     </div>
-                    <div class="p-3">
-                        <h3 class="font-title-md text-title-md text-on-surface mb-1 flex items-center gap-1">The Coffee House</h3>
-                        <p class="font-body-sm text-body-sm text-text-muted flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">location_on</span> Quận 3, TP.HCM</p>
-                    </div>
+                    <span class="text-[12px] font-bold text-center text-on-surface">Quán Đêm 24/7</span>
                 </a>
             </div>
         </section>
 
-        <!-- Recommended List -->
-        <section class="py-stack-md px-container-margin">
-            <div class="mb-4">
-                <h2 class="font-title-md text-title-md text-on-surface">Gợi ý cho bạn</h2>
-                <p class="font-body-sm text-body-sm text-text-muted">Dựa trên các địa điểm bạn đã lưu</p>
+        <!-- Recommended List Mobile -->
+        <section class="px-4">
+            <div class="flex justify-between items-center mb-3">
+                <div>
+                    <h2 class="font-bold text-[16px] text-on-surface">Quán gợi ý nổi bật</h2>
+                    <p class="text-[12px] text-gray-500">Địa điểm đánh giá cao gần bạn</p>
+                </div>
+                <a class="text-xs text-primary font-bold flex items-center gap-0.5" href="#">Xem tất cả <span class="material-symbols-outlined text-[14px]">chevron_right</span></a>
             </div>
-            <div class="flex flex-col gap-stack-md">
-                <!-- Recommended Item 1 -->
-                <a href="/quan/1" class="block bg-surface-card rounded-xl p-3 flex gap-3 shadow-[0px_4px_20px_rgba(0,0,0,0.05)] border border-surface-variant active:bg-surface-container-low transition-colors">
-                    <div class="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 relative">
-                        <img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA-hv4Iw_MNnyf0On9OSu_2b5LN3iH4ik3VjczbOW-wloQKEsSF3WroKxkIoMgi45imzUtdar0N1qGL_CD4vq0vdHczi8UebwfXafj5JLs33JPqbdpExyNO79pq2pBMacA_K3zMEK9G3_qbdYX5dS99KDLfCKkOqnKd_jkz1a9K-6MhDm2dfaHKvlR6BHI94SCDt8HIuCmKpO2CpdMA9Umdx1HsQhxHnwAT-ApvAnSxAhkckeg3gv0x"/>
-                        <div class="absolute bottom-1 right-1 bg-surface/90 backdrop-blur-sm px-1.5 py-0.5 rounded text-[10px] font-bold flex items-center gap-0.5">
-                            <span class="material-symbols-outlined text-[10px] text-[#f59e0b]" style="font-variation-settings: 'FILL' 1;">star</span> 4.8
+            <div class="flex flex-col gap-3">
+                {{-- Item 1 --}}
+                <a href="/quan/1" class="bg-white rounded-2xl p-3 flex gap-3 shadow-sm border border-gray-100 active:bg-gray-50 transition-colors">
+                    <div class="w-24 h-24 rounded-xl overflow-hidden flex-shrink-0 relative">
+                        <img class="w-full h-full object-cover" src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=300&q=80"/>
+                        <div class="absolute bottom-1 right-1 bg-black/70 text-white px-1.5 py-0.5 rounded-md text-[10px] font-bold flex items-center gap-0.5">
+                            <span class="material-symbols-outlined text-[10px] text-amber-400" style="font-variation-settings: 'FILL' 1;">star</span> 4.9
                         </div>
                     </div>
-                    <div class="flex flex-col justify-center flex-1">
-                        <div class="flex justify-between items-start">
-                            <h3 class="font-title-md text-title-md text-on-surface leading-tight flex items-center gap-1">Bánh Mì Huỳnh Hoa <span class="material-symbols-outlined text-tick-xanh text-[16px]" style="font-variation-settings: 'FILL' 1;">verified</span></h3>
-                            <button class="text-on-surface-variant hover:text-error transition-colors p-1"><span class="material-symbols-outlined text-[20px]">favorite_border</span></button>
+                    <div class="flex flex-col justify-between flex-1 py-0.5">
+                        <div>
+                            <h3 class="font-bold text-[15px] text-on-surface leading-tight flex items-center gap-1">Phở Chào Hà Nội <span class="material-symbols-outlined text-tick-xanh text-[15px]" style="font-variation-settings: 'FILL' 1;">verified</span></h3>
+                            <p class="text-[12px] text-text-muted mt-1 truncate">123 Lê Lợi, Quận 1, TP.HCM</p>
                         </div>
-                        <p class="font-body-sm text-body-sm text-text-muted line-clamp-1 mt-1">Đồ ăn vặt • Bánh mì</p>
-                        <div class="flex items-center gap-2 mt-2">
-                            <span class="font-label-sm text-label-sm bg-primary-fixed text-on-primary-fixed-variant px-2 py-1 rounded">Gần đây</span>
-                            <span class="font-label-sm text-label-sm text-text-muted flex items-center gap-0.5"><span class="material-symbols-outlined text-[12px]">directions_walk</span> 500m</span>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-primary">35.000đ - 85.000đ</span>
+                            <span class="text-[11px] text-gray-400 flex items-center gap-0.5"><span class="material-symbols-outlined text-[12px]">directions_walk</span> 500m</span>
                         </div>
                     </div>
                 </a>
-                <!-- Recommended Item 2 -->
-                <a href="/quan/1" class="block bg-surface-card rounded-xl p-3 flex gap-3 shadow-[0px_4px_20px_rgba(0,0,0,0.05)] border border-surface-variant active:bg-surface-container-low transition-colors">
-                    <div class="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 relative">
-                        <img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBg3bq9omZUdQ2jr7tarebEfK57mJnyURKHejeZ-omsOcUpE7p9fqymX1IYtrRkvz5gBnRyBTYEozt00uYWzqgeOsFtVINX5CKWaMpn6ZCV_s75C31g7sGDOnTJiA8pooRTa6Oo88S_W05FjgesDOz_VkrLa0eguaGmPVwnPnH_0lE-yQmz5SU6EIAKiKh7DptLVyAJGgEdvCdEg6f9gVBHGch0bXfVCNGPc-fcuoMSsyXyg29PiTD6"/>
-                        <div class="absolute bottom-1 right-1 bg-surface/90 backdrop-blur-sm px-1.5 py-0.5 rounded text-[10px] font-bold flex items-center gap-0.5">
-                            <span class="material-symbols-outlined text-[10px] text-[#f59e0b]" style="font-variation-settings: 'FILL' 1;">star</span> 4.5
+
+                {{-- Item 2 --}}
+                <a href="/quan/1" class="bg-white rounded-2xl p-3 flex gap-3 shadow-sm border border-gray-100 active:bg-gray-50 transition-colors">
+                    <div class="w-24 h-24 rounded-xl overflow-hidden flex-shrink-0 relative">
+                        <img class="w-full h-full object-cover" src="https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=300&q=80"/>
+                        <div class="absolute bottom-1 right-1 bg-black/70 text-white px-1.5 py-0.5 rounded-md text-[10px] font-bold flex items-center gap-0.5">
+                            <span class="material-symbols-outlined text-[10px] text-amber-400" style="font-variation-settings: 'FILL' 1;">star</span> 4.8
                         </div>
                     </div>
-                    <div class="flex flex-col justify-center flex-1">
-                        <div class="flex justify-between items-start">
-                            <h3 class="font-title-md text-title-md text-on-surface leading-tight flex items-center gap-1">Bida Phúc Thịnh <span class="material-symbols-outlined text-tick-xanh text-[16px]" style="font-variation-settings: 'FILL' 1;">verified</span></h3>
-                            <button class="text-on-surface-variant hover:text-error transition-colors p-1"><span class="material-symbols-outlined text-[20px]">favorite_border</span></button>
+                    <div class="flex flex-col justify-between flex-1 py-0.5">
+                        <div>
+                            <h3 class="font-bold text-[15px] text-on-surface leading-tight flex items-center gap-1">The Garden Coffee <span class="material-symbols-outlined text-tick-xanh text-[15px]" style="font-variation-settings: 'FILL' 1;">verified</span></h3>
+                            <p class="text-[12px] text-text-muted mt-1 truncate">45 Nguyễn Thị Minh Khai, Q3</p>
                         </div>
-                        <p class="font-body-sm text-body-sm text-text-muted line-clamp-1 mt-1">Giải trí • Bida</p>
-                        <div class="flex items-center gap-2 mt-2">
-                            <span class="font-label-sm text-label-sm bg-secondary-fixed text-on-secondary-fixed-variant px-2 py-1 rounded">Mới mở</span>
-                            <span class="font-label-sm text-label-sm text-text-muted flex items-center gap-0.5"><span class="material-symbols-outlined text-[12px]">directions_car</span> 2.5km</span>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-primary">29.000đ - 65.000đ</span>
+                            <span class="text-[11px] text-gray-400 flex items-center gap-0.5"><span class="material-symbols-outlined text-[12px]">directions_car</span> 1.2km</span>
+                        </div>
+                    </div>
+                </a>
+
+                {{-- Item 3 --}}
+                <a href="/quan/1" class="bg-white rounded-2xl p-3 flex gap-3 shadow-sm border border-gray-100 active:bg-gray-50 transition-colors">
+                    <div class="w-24 h-24 rounded-xl overflow-hidden flex-shrink-0 relative">
+                        <img class="w-full h-full object-cover" src="https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=300&q=80"/>
+                        <div class="absolute bottom-1 right-1 bg-black/70 text-white px-1.5 py-0.5 rounded-md text-[10px] font-bold flex items-center gap-0.5">
+                            <span class="material-symbols-outlined text-[10px] text-amber-400" style="font-variation-settings: 'FILL' 1;">star</span> 4.7
+                        </div>
+                    </div>
+                    <div class="flex flex-col justify-between flex-1 py-0.5">
+                        <div>
+                            <h3 class="font-bold text-[15px] text-on-surface leading-tight flex items-center gap-1">Quán Nướng Ngói Phố Cổ <span class="material-symbols-outlined text-tick-xanh text-[15px]" style="font-variation-settings: 'FILL' 1;">verified</span></h3>
+                            <p class="text-[12px] text-text-muted mt-1 truncate">88 Hàng Bạc, Hoàn Kiếm, Hà Nội</p>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-primary">120.000đ - 250.000đ</span>
+                            <span class="text-[11px] text-gray-400 flex items-center gap-0.5"><span class="material-symbols-outlined text-[12px]">directions_car</span> 2.5km</span>
                         </div>
                     </div>
                 </a>
             </div>
         </section>
 
-        <!-- Latest Blog Bento Grid -->
-        <section class="py-stack-md px-container-margin mb-6">
-            <div class="mb-4 flex justify-between items-center">
-                <h2 class="font-title-md text-title-md text-on-surface">Blog ẩm thực</h2>
-                <a class="font-label-md text-label-md text-primary flex items-center" href="#">Xem thêm <span class="material-symbols-outlined text-[16px]">chevron_right</span></a>
+        <!-- Video Shorts Carousel Mobile -->
+        <section class="px-4">
+            <div class="flex justify-between items-center mb-3">
+                <div>
+                    <div class="inline-flex items-center gap-1 text-red-600 text-[11px] font-bold uppercase tracking-wider">
+                        <span class="material-symbols-outlined text-[14px]">play_circle</span>
+                        Short Video Review
+                    </div>
+                    <h2 class="font-bold text-[16px] text-on-surface">Video trải nghiệm thực tế</h2>
+                </div>
+                <a class="text-xs text-primary font-bold flex items-center gap-0.5" href="#">Tất cả <span class="material-symbols-outlined text-[14px]">chevron_right</span></a>
             </div>
-            <div class="grid grid-cols-2 gap-3">
-                <!-- Large Bento Item -->
-                <div class="col-span-2 relative h-48 rounded-xl overflow-hidden shadow-[0px_4px_20px_rgba(0,0,0,0.05)] group cursor-pointer">
-                    <img class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDmjAALenZjkGx1j0ShVDeq85fDBM6uYptvz2lsARZ86zvKJ5eqgzyBUBz6W3Wfnbu8NOBhv7kGk-cQanPiGSVVVyvn43639xCrl26_jLtei_iwjxE0BdlkXC-Jb9jQJ_mx7nRD46sG_mK3mp0s9SLD-GpJDUM5Lr0Xf8RDen-_L8l88F6wVtpRDHxehnkzABupKR0OrmvLgLy73P4bEjBbXqSZsMUvCr9KA5NPrXkoVwLjMTt4fiYl"/>
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
-                    <div class="absolute bottom-0 left-0 p-4 w-full">
-                        <span class="font-label-sm text-label-sm bg-primary text-on-primary px-2 py-1 rounded-md inline-block mb-2">Khám phá</span>
-                        <h3 class="font-title-md text-title-md text-white line-clamp-2">Top 10 quán ăn vỉa hè không thể bỏ qua tại Quận 1</h3>
+            <div class="flex overflow-x-auto no-scrollbar gap-3 snap-x snap-mandatory -mx-4 px-4 pb-2">
+                {{-- Video Item 1 --}}
+                <div class="min-w-[200px] w-[55%] snap-center relative h-72 rounded-2xl overflow-hidden group cursor-pointer shadow-sm border border-gray-100 flex-shrink-0">
+                    <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=400&q=80" alt="Video Phở" class="absolute inset-0 w-full h-full object-cover" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-black/20"></div>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <div class="w-11 h-11 rounded-full bg-white/30 backdrop-blur-md flex items-center justify-center text-white">
+                            <span class="material-symbols-outlined text-2xl ml-0.5" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+                        </div>
+                    </div>
+                    <div class="absolute top-2.5 right-2.5 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-full text-white text-[10px] font-bold flex items-center gap-0.5">
+                        <span class="material-symbols-outlined text-[12px]">visibility</span> 12.5k
+                    </div>
+                    <div class="absolute bottom-3 inset-x-3 text-white space-y-1">
+                        <h4 class="font-bold text-[13px] leading-tight line-clamp-2">Phở Bò Tái Lăn 65k chuẩn vị Hà Thành</h4>
+                        <p class="text-white/80 text-[11px]">Sài Gòn Foodie</p>
                     </div>
                 </div>
-                <!-- Small Bento Items -->
-                <div class="col-span-1 relative h-32 rounded-xl overflow-hidden shadow-[0px_4px_20px_rgba(0,0,0,0.05)] group cursor-pointer">
-                    <img class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC8FkHXqyHVNBaB8I7w_IhYaiMLqrYXLo3_9Gls0OxD8wWWR4Iw-RRax4y26XaQf1P7RJuh1KwYDUcLpdg1KXYOoAIpBVLui6_VcBVXXP0lvTlxqqVxMi1xmlheFQucRteBUl5sgkTqDM9of9XdL0QRogYlWCVTUdXpUco3dQ0adjaR-4qiD6IT7PG5eJ8e7DnZHmSdXPnf4kX19ZbEfuscg3qkajKZbepz-m6wMz7WsHdYIABM-Vhy"/>
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
-                    <div class="absolute bottom-0 left-0 p-3 w-full">
-                        <h3 class="font-label-md text-label-md text-white line-clamp-2">Quán cafe view đẹp cuối tuần</h3>
+
+                {{-- Video Item 2 --}}
+                <div class="min-w-[200px] w-[55%] snap-center relative h-72 rounded-2xl overflow-hidden group cursor-pointer shadow-sm border border-gray-100 flex-shrink-0">
+                    <img src="https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=400&q=80" alt="Video Cafe" class="absolute inset-0 w-full h-full object-cover" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-black/20"></div>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <div class="w-11 h-11 rounded-full bg-white/30 backdrop-blur-md flex items-center justify-center text-white">
+                            <span class="material-symbols-outlined text-2xl ml-0.5" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+                        </div>
+                    </div>
+                    <div class="absolute top-2.5 right-2.5 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-full text-white text-[10px] font-bold flex items-center gap-0.5">
+                        <span class="material-symbols-outlined text-[12px]">visibility</span> 28.3k
+                    </div>
+                    <div class="absolute bottom-3 inset-x-3 text-white space-y-1">
+                        <h4 class="font-bold text-[13px] leading-tight line-clamp-2">Quán cafe sân vườn kính ngắm mưa Q3</h4>
+                        <p class="text-white/80 text-[11px]">An An Review</p>
                     </div>
                 </div>
-                <div class="col-span-1 relative h-32 rounded-xl overflow-hidden shadow-[0px_4px_20px_rgba(0,0,0,0.05)] group cursor-pointer">
-                    <img class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBLJLoNIio-dL2f0pWJf13IwPZE_giyiTmRP209rPE125l9OelWE3x7HOu4jkJN_F5UpHWbpixpgvTYmbO4VnUj3DHOmpZ0TBxVuhdUdEslDpJK4galiqkvlgpUVeYshwrwn74vLKWqpxXnTvyjxlNTS9tqRNtCoLRM_fvvOAH6fgo4F_wikMEx5xTAfANUKCboVn_Ho1LrFrYtP6oQANL3m8yIC87sfdR7DGT9SjV_Xe9fSEJ5-nw2"/>
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
-                    <div class="absolute bottom-0 left-0 p-3 w-full">
-                        <h3 class="font-label-md text-label-md text-white line-clamp-2">Review lẩu cá kèo trứ danh</h3>
+
+                {{-- Video Item 3 --}}
+                <div class="min-w-[200px] w-[55%] snap-center relative h-72 rounded-2xl overflow-hidden group cursor-pointer shadow-sm border border-gray-100 flex-shrink-0">
+                    <img src="https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=400&q=80" alt="Video Lẩu Nướng" class="absolute inset-0 w-full h-full object-cover" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-black/20"></div>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <div class="w-11 h-11 rounded-full bg-white/30 backdrop-blur-md flex items-center justify-center text-white">
+                            <span class="material-symbols-outlined text-2xl ml-0.5" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+                        </div>
+                    </div>
+                    <div class="absolute top-2.5 right-2.5 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-full text-white text-[10px] font-bold flex items-center gap-0.5">
+                        <span class="material-symbols-outlined text-[12px]">visibility</span> 45.1k
+                    </div>
+                    <div class="absolute bottom-3 inset-x-3 text-white space-y-1">
+                        <h4 class="font-bold text-[13px] leading-tight line-clamp-2">Lẩu bò nướng ngói thơm lừng phố cổ</h4>
+                        <p class="text-white/80 text-[11px]">Hà Nội Street Food</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Curated Collections Mobile -->
+        <section class="px-4">
+            <div class="mb-3">
+                <h2 class="font-bold text-[16px] text-on-surface">Bộ sưu tập đề xuất</h2>
+                <p class="text-[12px] text-gray-500">Tuyển chọn các quán ăn theo gu</p>
+            </div>
+            <div class="flex overflow-x-auto no-scrollbar gap-3 snap-x snap-mandatory -mx-4 px-4 pb-2">
+                {{-- Collection 1 --}}
+                <div class="min-w-[240px] w-[70%] snap-center relative h-44 rounded-2xl overflow-hidden group cursor-pointer shadow-sm border border-gray-100 flex-shrink-0">
+                    <img src="https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&w=400&q=80" alt="BST Cà Phê Muối" class="absolute inset-0 w-full h-full object-cover" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
+                    <div class="absolute bottom-3 inset-x-3 space-y-0.5">
+                        <span class="bg-primary/80 backdrop-blur-sm text-white text-[9px] font-bold px-2 py-0.5 rounded">15 Địa điểm</span>
+                        <h3 class="font-bold text-[14px] text-white leading-tight">BST Cà phê muối béo ngậy</h3>
+                    </div>
+                </div>
+
+                {{-- Collection 2 --}}
+                <div class="min-w-[240px] w-[70%] snap-center relative h-44 rounded-2xl overflow-hidden group cursor-pointer shadow-sm border border-gray-100 flex-shrink-0">
+                    <img src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=400&q=80" alt="BST Quán Nướng" class="absolute inset-0 w-full h-full object-cover" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
+                    <div class="absolute bottom-3 inset-x-3 space-y-0.5">
+                        <span class="bg-secondary/80 backdrop-blur-sm text-white text-[9px] font-bold px-2 py-0.5 rounded">24 Địa điểm</span>
+                        <h3 class="font-bold text-[14px] text-white leading-tight">Top Lẩu nướng sân vườn</h3>
+                    </div>
+                </div>
+
+                {{-- Collection 3 --}}
+                <div class="min-w-[240px] w-[70%] snap-center relative h-44 rounded-2xl overflow-hidden group cursor-pointer shadow-sm border border-gray-100 flex-shrink-0">
+                    <img src="https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=400&q=80" alt="BST Ăn Đêm" class="absolute inset-0 w-full h-full object-cover" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
+                    <div class="absolute bottom-3 inset-x-3 space-y-0.5">
+                        <span class="bg-tertiary/80 backdrop-blur-sm text-white text-[9px] font-bold px-2 py-0.5 rounded">18 Địa điểm</span>
+                        <h3 class="font-bold text-[14px] text-white leading-tight">Quán ăn đêm 24/7 ngon mịt</h3>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Community Impact Stats Mobile -->
+        <section class="px-4 pt-2">
+            <div class="bg-gradient-to-br from-primary-fixed via-amber-50 to-orange-100 rounded-2xl p-5 border border-amber-200 space-y-4 shadow-sm">
+                <div class="space-y-1">
+                    <span class="bg-primary/10 text-primary px-2.5 py-0.5 rounded-full text-[10px] font-bold">Cộng đồng Quán Mới</span>
+                    <h3 class="font-black text-xl text-on-primary-fixed">1,200+ Quán ăn đã xác thực</h3>
+                    <p class="text-[12px] text-on-surface-variant">Hơn 85,000+ thành viên đã đóng góp hơn 150,000+ đánh giá thật.</p>
+                </div>
+                <div class="grid grid-cols-3 gap-2 text-center pt-1">
+                    <div class="bg-white/80 p-2.5 rounded-xl border border-white">
+                        <div class="font-black text-lg text-primary">1.2k+</div>
+                        <div class="text-[10px] text-gray-600 font-bold">Quán ăn</div>
+                    </div>
+                    <div class="bg-white/80 p-2.5 rounded-xl border border-white">
+                        <div class="font-black text-lg text-secondary">85k+</div>
+                        <div class="text-[10px] text-gray-600 font-bold">Thành viên</div>
+                    </div>
+                    <div class="bg-white/80 p-2.5 rounded-xl border border-white">
+                        <div class="font-black text-lg text-tertiary">150k+</div>
+                        <div class="text-[10px] text-gray-600 font-bold">Review thật</div>
                     </div>
                 </div>
             </div>
         </section>
     </main>
 @endsection
-
-@section('footer')
-    <!-- DESKTOP Footer -->
-    <footer class="hidden md:block bg-surface-container border-t border-outline-variant w-full mt-stack-lg font-body-sm text-body-sm transition-all duration-200">
-        <div class="max-w-[1200px] mx-auto py-stack-lg px-container-margin flex flex-col md:flex-row justify-between items-center gap-stack-md">
-            <div class="font-title-md text-title-md text-on-surface mb-4 md:mb-0">
-                Quán Mới
-            </div>
-            <div class="flex flex-wrap justify-center gap-6 mb-4 md:mb-0">
-                <a class="text-text-muted hover:text-primary underline transition-colors" href="#">Điều khoản dịch vụ</a>
-                <a class="text-text-muted hover:text-primary underline transition-colors" href="#">Chính sách bảo mật</a>
-                <a class="text-text-muted hover:text-primary underline transition-colors" href="#">Trung tâm hỗ trợ</a>
-                <a class="text-text-muted hover:text-primary underline transition-colors" href="#">Liên hệ</a>
-            </div>
-            <div class="text-text-muted text-center md:text-right">
-                © 2026 Quán Mới. Bảo lưu mọi quyền.
-            </div>
-        </div>
-    </footer>
-@endsection
-

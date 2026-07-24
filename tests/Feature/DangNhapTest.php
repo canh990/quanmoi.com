@@ -13,7 +13,7 @@ class DangNhapTest extends TestCase
 
     public function test_login_validation_errors(): void
     {
-        $response = $this->postJson('/dangnhap', [
+        $response = $this->postJson('/dang-nhap', [
             'email' => '',
             'mat_khau' => ''
         ]);
@@ -24,7 +24,7 @@ class DangNhapTest extends TestCase
 
     public function test_login_failure_with_wrong_credentials(): void
     {
-        $response = $this->postJson('/dangnhap', [
+        $response = $this->postJson('/dang-nhap', [
             'email' => 'wrong@example.com',
             'mat_khau' => 'wrongpassword'
         ]);
@@ -36,44 +36,18 @@ class DangNhapTest extends TestCase
             ]);
     }
 
-    public function test_login_failure_with_unverified_account(): void
+    public function test_login_success(): void
     {
-        // Create an unverified user
-        $user = User::create([
-            'ho_ten' => 'Nguyen Van Unverified',
-            'email' => 'unverified@example.com',
-            'mat_khau' => Hash::make('secret123'),
-            'da_xac_thuc' => false,
-        ]);
-
-        $response = $this->postJson('/dangnhap', [
-            'email' => 'unverified@example.com',
-            'mat_khau' => 'secret123'
-        ]);
-
-        $response->assertStatus(403)
-            ->assertJson([
-                'success' => false,
-                'needs_verification' => true,
-                'email' => 'unverified@example.com'
-            ]);
-
-        // User should not be authenticated
-        $this->assertGuest();
-    }
-
-    public function test_login_success_with_verified_account(): void
-    {
-        // Create a verified user
         $user = User::create([
             'ho_ten' => 'Nguyen Van Verified',
             'email' => 'verified@example.com',
             'mat_khau' => Hash::make('secret123'),
             'da_xac_thuc' => true,
             'ngay_xac_thuc' => now(),
+            'trang_thai' => 'hoat_dong',
         ]);
 
-        $response = $this->postJson('/dangnhap', [
+        $response = $this->postJson('/dang-nhap', [
             'email' => 'verified@example.com',
             'mat_khau' => 'secret123'
         ]);
@@ -85,7 +59,6 @@ class DangNhapTest extends TestCase
                 'redirect_to' => '/'
             ]);
 
-        // User should be authenticated
         $this->assertAuthenticatedAs($user);
     }
 
@@ -96,11 +69,10 @@ class DangNhapTest extends TestCase
             'email' => 'nva@example.com',
             'mat_khau' => Hash::make('secret123'),
             'da_xac_thuc' => true,
+            'trang_thai' => 'hoat_dong',
         ]);
 
-        $this->actingAs($user);
-
-        $response = $this->post('/dangxuat');
+        $response = $this->actingAs($user)->post('/dang-xuat');
 
         $response->assertRedirect('/');
         $this->assertGuest();

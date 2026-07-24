@@ -42,24 +42,12 @@ class DangNhapController extends Controller
         if (Auth::attempt($credentials, $remember)) {
             $user = Auth::user();
 
-            if (!$user->da_xac_thuc) {
-                // Log out immediately as they need to verify OTP first
+            // Check if user is locked
+            if ($user->trang_thai === 'bi_khoa') {
                 Auth::logout();
-
-                // Generate new OTP for them automatically to make it smoother!
-                try {
-                    // We can reuse the registration OTP generation code or let the frontend trigger it
-                    // For best UX, let's trigger sending OTP
-                    app(DangKyController::class)->resendOtp(new Request(['email' => $user->email]));
-                } catch (\Exception $e) {
-                    // Suppress error if it fails (e.g. method injection issues)
-                }
-
                 return response()->json([
                     'success' => false,
-                    'message' => 'Tài khoản chưa được xác thực OTP. Đã gửi lại mã xác thực mới đến email của bạn.',
-                    'needs_verification' => true,
-                    'email' => $user->email
+                    'message' => 'Tài khoản của bạn đã bị khoá. Vui lòng liên hệ quản trị viên.'
                 ], 403);
             }
 

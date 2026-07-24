@@ -44,47 +44,34 @@ class DangKyController extends Controller
         // Check if user exists
         $existingUser = User::where('email', $email)->first();
         if ($existingUser) {
-            if ($existingUser->da_xac_thuc) {
-                return response()->json([
-                    'success' => false,
-                    'errors' => ['email' => ['Email này đã được sử dụng.']]
-                ], 422);
-            }
-            // Delete unverified user to start fresh
-            $existingUser->delete();
+            return response()->json([
+                'success' => false,
+                'errors' => ['email' => ['Email này đã được đăng ký tài khoản.']]
+            ], 422);
         }
 
-        // Create unverified user
+        // Look up default role
+        $vaiTroNguoiDung = DB::table('vai_tro')->where('ten', 'nguoi_dung')->first();
+
+        // Create verified user directly
         $user = User::create([
             'ho_ten' => $request->ho_ten,
             'email' => $email,
             'mat_khau' => Hash::make($request->mat_khau),
-            'da_xac_thuc' => false,
+            'da_xac_thuc' => true,
+            'ngay_xac_thuc' => now(),
+            'vai_tro_id' => $vaiTroNguoiDung?->id,
+            'trang_thai' => 'hoat_dong',
         ]);
 
-        // Generate OTP
-        $otp = (string) rand(100000, 999999);
-        
-        // Delete older OTPs for this email
-        DB::table('xac_thuc_otp')->where('email', $email)->delete();
-
-        // Save new OTP
-        DB::table('xac_thuc_otp')->insert([
-            'email' => $email,
-            'otp' => $otp,
-            'expires_at' => now()->addMinutes(3),
-            'created_at' => now(),
-        ]);
-
-        // Log OTP for local testing
-        Log::info("=== MÃ OTP ĐĂNG KÝ CHO {$email} ===");
-        Log::info("OTP: {$otp}");
-        Log::info("====================================");
+        // Auto log in user
+        Auth::login($user, true);
+        $request->session()->regenerate();
 
         return response()->json([
             'success' => true,
-            'message' => 'Mã OTP đã được gửi đến email của bạn.',
-            'email' => $email
+            'message' => 'Đăng ký tài khoản thành công!',
+            'redirect_to' => '/'
         ]);
     }
 
