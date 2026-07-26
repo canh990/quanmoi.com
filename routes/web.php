@@ -1,12 +1,15 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\BanDoController;
+use App\Http\Controllers\Api\DiaChiController;
 use App\Http\Controllers\Auth\DangKyController;
 use App\Http\Controllers\Auth\DangNhapController;
+use App\Http\Controllers\ChuQuan\HinhAnhQuanController;
+use App\Http\Controllers\ChuQuan\QuanController;
+use App\Http\Controllers\NguoiDung\HomeController;
+use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', [HomeController::class, 'index'])->name('home');
 
 Route::get('/dang-ky', [DangKyController::class, 'showRegistrationForm'])->name('register');
 Route::post('/dang-ky', [DangKyController::class, 'register'])->name('register.submit');
@@ -17,28 +20,24 @@ Route::get('/dang-nhap', [DangNhapController::class, 'showLoginForm'])->name('lo
 Route::post('/dang-nhap', [DangNhapController::class, 'login'])->name('login.submit');
 Route::post('/dang-xuat', [DangNhapController::class, 'logout'])->name('logout');
 
-use App\Http\Controllers\ChuQuan\QuanController;
-use App\Http\Controllers\ChuQuan\HinhAnhQuanController;
-use App\Http\Controllers\Api\DiaChiController;
-use App\Http\Controllers\Api\BanDoController;
+Route::get('/dang-nhap/google', [App\Http\Controllers\Auth\GoogleController::class, 'redirectToGoogle'])->name('login.google');
+Route::get('/dang-nhap/google/callback', [App\Http\Controllers\Auth\GoogleController::class, 'handleGoogleCallback'])->name('login.google.callback');
 
-// 301 Permanent Redirects for SEO & Backward Compatibility
 Route::redirect('/dangnhap', '/dang-nhap', 301);
 Route::redirect('/dangky', '/dang-ky', 301);
 Route::redirect('/dangxuat', '/dang-xuat', 301);
 
-// Route Chủ Quán (Owner Venue Management)
 Route::prefix('chu-quan')->group(function () {
     Route::middleware('auth')->group(function () {
         Route::get('/dang-quan', [QuanController::class, 'create'])->name('chu-quan.dang-quan');
         Route::post('/dang-quan', [QuanController::class, 'store'])->name('chu-quan.quan.store');
+        Route::get('/quan', [QuanController::class, 'ownerIndex'])->name('chu-quan.quan.index');
+        Route::get('/quan/{slug}', [QuanController::class, 'show'])->name('chu-quan.quan.show');
+        Route::post('/quan/{quanId}/hinh-anh', [HinhAnhQuanController::class, 'store'])->name('chu-quan.hinh-anh.store');
+        Route::delete('/hinh-anh/{id}', [HinhAnhQuanController::class, 'destroy'])->name('chu-quan.hinh-anh.destroy');
     });
-    Route::get('/quan/{slug}', [QuanController::class, 'show'])->name('chu-quan.quan.show');
-    Route::post('/quan/{quanId}/hinh-anh', [HinhAnhQuanController::class, 'store'])->name('chu-quan.hinh-anh.store');
-    Route::delete('/hinh-anh/{id}', [HinhAnhQuanController::class, 'destroy'])->name('chu-quan.hinh-anh.destroy');
 });
 
-// Proxy API Chữa lỗi CORS cho Tỉnh Thành / Bản Đồ
 Route::prefix('api')->group(function () {
     Route::get('/dia-chi/tinh-thanh', [DiaChiController::class, 'getTinhThanh']);
     Route::get('/dia-chi/quan-huyen/{tinhCode}', [DiaChiController::class, 'getQuanHuyen']);
@@ -46,7 +45,4 @@ Route::prefix('api')->group(function () {
     Route::get('/ban-do/geocode', [BanDoController::class, 'geocode']);
 });
 
-// SEO Friendly Restaurant Detail Route
-Route::get('/quan/{slug}', function ($slug) {
-    return view('nguoi-dung.chi-tiet');
-})->name('quan.detail');
+Route::get('/quan/{slug}', [HomeController::class, 'show'])->name('quan.detail');

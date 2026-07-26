@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Quáº£n Trá»‹ Há»‡ Thá»‘ng - QuÃ¡n Má»›i')</title>
+    <title>@yield('title', 'Quản Trị Hệ Thống - Quán Mới')</title>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -13,7 +13,7 @@
         body { background-color: #f8f9fa; }
     </style>
 </head>
-<body class="text-on-surface bg-gray-50 flex min-h-screen">
+<body class="text-on-surface bg-gray-50 flex min-h-screen font-sans antialiased">
 
     {{-- Admin Sidebar --}}
     <aside class="w-64 bg-slate-900 text-white flex-shrink-0 flex flex-col justify-between p-4 hidden md:flex">
@@ -21,23 +21,27 @@
             <div class="flex items-center gap-3 px-3 py-4 border-b border-slate-800 mb-6">
                 <span class="material-symbols-outlined text-primary-container text-3xl" style="font-variation-settings: 'FILL' 1;">admin_panel_settings</span>
                 <div>
-                    <h1 class="font-black text-lg text-white tracking-tight">QuÃ¡n Má»›i Admin</h1>
-                    <p class="text-xs text-slate-400">Trang Quáº£n Trá»‹ Há»‡ Thá»‘ng</p>
+                    <h1 class="font-black text-lg text-white tracking-tight">Quán Mới Admin</h1>
+                    <p class="text-xs text-slate-400">Trang Quản Trị Hệ Thống</p>
                 </div>
             </div>
 
             <nav class="space-y-1.5">
                 <a href="{{ route('admin.nguoi-dung.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all {{ request()->routeIs('admin.nguoi-dung.*') ? 'bg-primary text-white shadow-lg' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                     <span class="material-symbols-outlined text-[20px]">group</span>
-                    Quáº£n LÃ½ NgÆ°á»i DÃ¹ng
+                    Quản Lý Người Dùng
                 </a>
-                <a href="{{ route('admin.quan.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all {{ request()->routeIs('admin.quan.*') ? 'bg-primary text-white shadow-lg' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                <a href="{{ route('admin.quan.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all {{ request()->routeIs('admin.quan.*') && request('status') !== 'chua_duyet' ? 'bg-primary text-white shadow-lg' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                     <span class="material-symbols-outlined text-[20px]">storefront</span>
-                    Quáº£n LÃ½ Äá»‹a Äiá»ƒm QuÃ¡n
+                    Quản Lý Địa Điểm Quán
+                </a>
+                <a href="{{ route('admin.quan.index', ['status' => 'chua_duyet']) }}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all {{ request()->routeIs('admin.quan.*') && request('status') === 'chua_duyet' ? 'bg-amber-600 text-white shadow-lg' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                    <span class="material-symbols-outlined text-[20px]">pending_actions</span>
+                    Quán Chờ Duyệt
                 </a>
                 <a href="/" target="_blank" class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm text-slate-400 hover:bg-slate-800 hover:text-white transition-all">
                     <span class="material-symbols-outlined text-[20px]">open_in_new</span>
-                    Xem Trang Chá»§ QuÃ¡n Má»›i
+                    Xem Trang Chủ Quán Mới
                 </a>
             </nav>
         </div>
@@ -53,7 +57,7 @@
             </div>
             <form action="{{ route('logout') }}" method="POST">
                 @csrf
-                <button type="submit" title="ÄÄƒng xuáº¥t" class="text-slate-400 hover:text-red-400 transition-colors">
+                <button type="submit" title="Đăng xuất" class="text-slate-400 hover:text-red-400 transition-colors">
                     <span class="material-symbols-outlined text-[20px]">logout</span>
                 </button>
             </form>
@@ -68,7 +72,7 @@
             <div class="flex items-center gap-3">
                 <span class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full text-xs font-bold border border-emerald-200">
                     <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    Quyá»n Admin Cao Cáº¥p
+                    Quyền Admin Cao Cấp
                 </span>
             </div>
         </header>
