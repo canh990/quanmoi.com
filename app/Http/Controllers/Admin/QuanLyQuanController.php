@@ -91,4 +91,21 @@ class QuanLyQuanController extends Controller
 
         return redirect()->route('admin.quan.index')->with('success', 'Đã khôi phục quán!');
     }
+
+    public function forceDestroy(string $id)
+    {
+        $quan = Quan::withTrashed()->findOrFail($id);
+        
+        // Force delete
+        $quan->forceDelete();
+
+        if (request()->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Đã xóa vĩnh viễn địa điểm quán thành công!'
+            ]);
+        }
+
+        return redirect()->route('admin.quan.index')->with('success', 'Đã xóa vĩnh viễn quán!');
+    }
 }

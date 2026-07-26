@@ -159,7 +159,7 @@
 
                         <p class="text-center text-[14px] text-on-surface-variant">
                             Bạn chưa có tài khoản?
-                            <button class="text-primary font-bold hover:underline ml-1" onclick="switchSection('register')">Đăng ký ngay</button>
+                            <a href="{{ route('register') }}" class="text-primary font-bold hover:underline ml-1">Đăng ký ngay</a>
                         </p>
                     </div>
 
@@ -484,14 +484,25 @@
                     return;
                 }
 
-                submitBtn.innerHTML = '<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: \'FILL\' 1;">check_circle</span> Thành công!';
-                submitBtn.classList.remove('bg-primary');
-                submitBtn.classList.add('bg-tick-xanh');
+                if (data.require_otp) {
+                    window.registrationEmail = email;
+                    document.getElementById('display-email').textContent = email;
+                    
+                    submitBtn.innerHTML = originalBtnHtml;
+                    submitBtn.disabled = false;
+                    
+                    switchSection('otp');
+                    startTimer();
+                } else {
+                    submitBtn.innerHTML = '<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: \'FILL\' 1;">check_circle</span> Thành công!';
+                    submitBtn.classList.remove('bg-primary');
+                    submitBtn.classList.add('bg-tick-xanh');
 
-                switchSection('success');
-                setTimeout(() => {
-                    window.location.href = data.redirect_to || '/';
-                }, 1200);
+                    switchSection('success');
+                    setTimeout(() => {
+                        window.location.href = data.redirect_to || '/';
+                    }, 1200);
+                }
             } catch (error) {
                 showRegisterError('general', 'Không thể kết nối máy chủ.');
                 submitBtn.disabled = false;

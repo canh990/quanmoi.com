@@ -23,11 +23,16 @@ class GoogleController extends Controller
             $googleUser = Socialite::driver('google')->user();
 
             // Find user by google_id or email
-            $user = User::where('google_id', $googleUser->getId())
+            $user = User::withTrashed()
+                ->where('google_id', $googleUser->getId())
                 ->orWhere('email', $googleUser->getEmail())
                 ->first();
 
             if ($user) {
+                if ($user->trashed()) {
+                    return redirect('/dang-nhap')->withErrors(['error' => 'Tài khoản của bạn đã bị vô hiệu hóa/xóa. Vui lòng liên hệ quản trị viên.']);
+                }
+
                 // If user exists, update google_id and avatar if missing
                 if (!$user->google_id) {
                     $user->update([
