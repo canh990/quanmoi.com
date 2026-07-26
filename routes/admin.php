@@ -15,6 +15,7 @@ Route::middleware(['auth', 'KiemTraQuyenHan:admin'])->group(function () {
     Route::put('/nguoi-dung/{id}', [QuanLyNguoiDungController::class, 'update'])->name('nguoi-dung.update');
     Route::delete('/nguoi-dung/{id}', [QuanLyNguoiDungController::class, 'destroy'])->name('nguoi-dung.destroy');
     Route::post('/nguoi-dung/{id}/restore', [QuanLyNguoiDungController::class, 'restore'])->name('nguoi-dung.restore');
+    Route::delete('/nguoi-dung/{id}/force', [QuanLyNguoiDungController::class, 'forceDestroy'])->name('nguoi-dung.force-destroy');
 
     // Quản lý quán CRUD & Restore & Approve
     Route::get('/quan', [QuanLyQuanController::class, 'index'])->name('quan.index');
@@ -22,4 +23,5 @@ Route::middleware(['auth', 'KiemTraQuyenHan:admin'])->group(function () {
     Route::put('/quan/{id}', [QuanLyQuanController::class, 'update'])->name('quan.update');
     Route::delete('/quan/{id}', [QuanLyQuanController::class, 'destroy'])->name('quan.destroy');
     Route::post('/quan/{id}/restore', [QuanLyQuanController::class, 'restore'])->name('quan.restore');
+    Route::delete('/quan/{id}/force', [QuanLyQuanController::class, 'forceDestroy'])->name('quan.force-destroy');
 });

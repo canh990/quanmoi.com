@@ -98,6 +98,13 @@
                                                 <span class="material-symbols-outlined text-lg">restore_from_trash</span>
                                             </button>
                                         </form>
+                                        <form action="{{ route('admin.nguoi-dung.force-destroy', $user->id) }}" method="POST" onsubmit="return confirm('CẢNH BÁO: Xóa cứng sẽ xóa vĩnh viễn người dùng này và tất cả các quán của họ khỏi cơ sở dữ liệu. Không thể khôi phục. Bạn có chắc chắn?');" class="inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="p-2 text-red-700 hover:bg-red-100 rounded-lg transition-all" title="Xóa cứng (Vĩnh viễn)">
+                                                <span class="material-symbols-outlined text-lg">delete_forever</span>
+                                            </button>
+                                        </form>
                                     @else
                                         <form action="{{ route('admin.nguoi-dung.destroy', $user->id) }}" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa tạm người dùng này? Các quán của họ cũng sẽ tạm khóa.');" class="inline">
                                             @csrf

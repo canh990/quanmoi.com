@@ -86,6 +86,13 @@
                                                 <span class="material-symbols-outlined text-lg">restore_from_trash</span>
                                             </button>
                                         </form>
+                                        <form action="{{ route('admin.quan.force-destroy', $quan->id) }}" method="POST" onsubmit="return confirm('CẢNH BÁO: Bạn có chắc chắn muốn xóa vĩnh viễn quán này khỏi cơ sở dữ liệu? Hành động này không thể khôi phục!');" class="inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="p-2 text-red-700 hover:bg-red-100 rounded-lg transition-all" title="Xóa cứng (Vĩnh viễn)">
+                                                <span class="material-symbols-outlined text-lg">delete_forever</span>
+                                            </button>
+                                        </form>
                                     @else
                                         <form action="{{ route('admin.quan.destroy', $quan->id) }}" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa tạm quán này?');" class="inline">
                                             @csrf

@@ -50,7 +50,12 @@
                     <div class="flex items-center gap-2.5 px-3 py-1.5 rounded-full hover:bg-primary/5 transition-all">
                         <img alt="Ảnh đại diện" class="w-8 h-8 rounded-full object-cover ring-2 ring-primary-fixed" src="{{ Auth::user()->anh_dai_dien ?? 'https://ui-avatars.com/api/?name=' . urlencode(Auth::user()->ho_ten) . '&background=ffdbcc&color=a04100&bold=true&size=128' }}"/>
                         <div class="flex flex-col text-left">
-                            <span class="font-bold text-[12px] text-on-surface leading-tight max-w-[100px] truncate">{{ Auth::user()->ho_ten }}</span>
+                            <div class="flex items-center gap-1">
+                                <span class="font-bold text-[12px] text-on-surface leading-tight max-w-[100px] truncate">{{ Auth::user()->ho_ten }}</span>
+                                @if(Auth::user()->da_xac_thuc)
+                                    <span class="material-symbols-outlined text-[14px] text-tick-xanh" title="Đã xác thực" style="font-variation-settings: 'FILL' 1;">verified</span>
+                                @endif
+                            </div>
                             <span class="text-[10px] text-text-muted leading-tight">{{ Auth::user()->ten_vai_tro_hien_thi }}</span>
                         </div>
                     </div>
@@ -128,10 +133,17 @@
 
         @auth
             <a href="#" class="flex flex-col items-center justify-center flex-1 h-full py-1 text-center group">
-                <div class="px-5 py-1 rounded-full transition-all duration-300 hover:bg-surface-container-high/50">
+                <div class="px-5 py-1 rounded-full transition-all duration-300 hover:bg-surface-container-high/50 relative inline-block">
                     <img alt="Ảnh đại diện" class="w-[22px] h-[22px] rounded-full object-cover ring-2 ring-primary-fixed" src="{{ Auth::user()->anh_dai_dien ?? 'https://ui-avatars.com/api/?name=' . urlencode(Auth::user()->ho_ten) . '&background=ffdbcc&color=a04100&bold=true&size=64' }}"/>
+                    @if(Auth::user()->da_xac_thuc)
+                        <span class="absolute top-0 right-4 w-2.5 h-2.5 bg-tick-xanh rounded-full border border-white flex items-center justify-center">
+                            <span class="material-symbols-outlined text-white text-[8px]" style="font-variation-settings: 'FILL' 1;">check</span>
+                        </span>
+                    @endif
                 </div>
-                <span class="text-[10px] font-bold mt-1 tracking-wide text-on-surface-variant">Tài khoản</span>
+                <span class="text-[10px] font-bold mt-1 tracking-wide text-on-surface-variant flex items-center gap-0.5">
+                    Tài khoản
+                </span>
             </a>
         @else
             <a href="{{ route('login') }}" class="flex flex-col items-center justify-center flex-1 h-full py-1 text-center group">

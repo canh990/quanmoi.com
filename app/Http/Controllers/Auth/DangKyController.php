@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\DangKyOtpMail;
 
 class DangKyController extends Controller
 {
@@ -42,36 +44,53 @@ class DangKyController extends Controller
         $email = $request->email;
 
         // Check if user exists
-        $existingUser = User::where('email', $email)->first();
+        $existingUser = User::withTrashed()->where('email', $email)->first();
         if ($existingUser) {
+            $msg = $existingUser->trashed() 
+                ? 'Email này thuộc về một tài khoản đã bị vô hiệu hóa/xóa.' 
+                : 'Email này đã được đăng ký tài khoản.';
             return response()->json([
                 'success' => false,
-                'errors' => ['email' => ['Email này đã được đăng ký tài khoản.']]
+                'errors' => ['email' => [$msg]]
             ], 422);
         }
 
         // Look up default role
         $vaiTroNguoiDung = DB::table('vai_tro')->where('ten', 'nguoi_dung')->first();
 
-        // Create verified user directly
+        // Create unverified user
         $user = User::create([
             'ho_ten' => $request->ho_ten,
             'email' => $email,
             'mat_khau' => Hash::make($request->mat_khau),
-            'da_xac_thuc' => true,
-            'ngay_xac_thuc' => now(),
+            'da_xac_thuc' => false,
+            'ngay_xac_thuc' => null,
             'vai_tro_id' => $vaiTroNguoiDung?->id,
             'trang_thai' => 'hoat_dong',
         ]);
 
-        // Auto log in user
-        Auth::login($user, true);
-        $request->session()->regenerate();
+        Auth::login($user);
+
+        // Generate and save OTP
+        $otp = (string) rand(100000, 999999);
+        DB::table('xac_thuc_otp')->insert([
+            'email' => $email,
+            'otp' => $otp,
+            'expires_at' => now()->addMinutes(3),
+            'created_at' => now(),
+        ]);
+
+        // Send Email
+        try {
+            Mail::to($email)->send(new DangKyOtpMail($otp));
+        } catch (\Exception $e) {
+            Log::error('Lỗi gửi email OTP: ' . $e->getMessage());
+        }
 
         return response()->json([
             'success' => true,
-            'message' => 'Đăng ký tài khoản thành công!',
-            'redirect_to' => '/'
+            'message' => 'Vui lòng kiểm tra email để lấy mã OTP.',
+            'require_otp' => true
         ]);
     }
 
@@ -117,6 +136,8 @@ class DangKyController extends Controller
         $user->da_xac_thuc = true;
         $user->ngay_xac_thuc = now();
         $user->save();
+
+        Auth::login($user);
 
         // Delete OTP record
         DB::table('xac_thuc_otp')->where('email', $email)->delete();
@@ -169,6 +190,12 @@ class DangKyController extends Controller
         Log::info("=== GỬI LẠI MÃ OTP ĐĂNG KÝ CHO {$email} ===");
         Log::info("OTP: {$otp}");
         Log::info("===========================================");
+
+        try {
+            Mail::to($email)->send(new DangKyOtpMail($otp));
+        } catch (\Exception $e) {
+            Log::error('Lỗi gửi lại email OTP: ' . $e->getMessage());
+        }
 
         return response()->json([
             'success' => true,

@@ -124,4 +124,26 @@ class QuanLyNguoiDungController extends Controller
 
         return redirect()->route('admin.nguoi-dung.index')->with('success', 'Đã khôi phục người dùng!');
     }
+
+    public function forceDestroy(string $id)
+    {
+        $user = User::withTrashed()->findOrFail($id);
+        
+        // Force delete linked venues owned by this user
+        foreach ($user->quan()->withTrashed()->get() as $quan) {
+            $quan->forceDelete();
+        }
+
+        // Force delete user
+        $user->forceDelete();
+
+        if (request()->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Đã xóa vĩnh viễn người dùng và các quán liên quan.'
+            ]);
+        }
+
+        return redirect()->route('admin.nguoi-dung.index')->with('success', 'Đã xóa vĩnh viễn người dùng!');
+    }
 }
