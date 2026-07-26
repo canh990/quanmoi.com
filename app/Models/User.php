@@ -34,7 +34,8 @@ class User extends Authenticatable
         'gioi_tinh',
         'ngay_sinh',
         'so_dien_thoai',
-        'dia_chi'
+        'dia_chi',
+        'google_id'
     ];
 
     protected $hidden = [

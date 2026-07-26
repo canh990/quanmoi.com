@@ -1,3 +1,9 @@
+@php
+    $ownerNavUrl = $ownerNavUrl ?? route('chu-quan.dang-quan');
+    $ownerNavLabel = $ownerNavLabel ?? 'Đăng quán';
+    $isOwnerNav = $isOwnerNav ?? false;
+@endphp
+
 {{-- Desktop Header --}}
 <header class="hidden md:block fixed top-0 left-0 right-0 w-full z-50 bg-white border-b border-gray-100 shadow-sm transition-all duration-300">
     <div class="w-full px-6 lg:px-10 h-18 py-3 flex justify-between items-center">
@@ -27,9 +33,9 @@
         </nav>
 
         <div class="flex items-center gap-3">
-            <a href="{{ route('chu-quan.dang-quan') }}" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-gradient-to-r from-primary via-tertiary to-secondary text-white font-bold text-[13.5px] shadow-[0_4px_14px_rgba(160,65,0,0.25)] hover:shadow-[0_6px_20px_rgba(160,65,0,0.35)] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all duration-200">
-                <span class="material-symbols-outlined text-[18px]">add_location_alt</span>
-                <span>Đăng quán</span>
+            <a href="{{ $ownerNavUrl }}" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-gradient-to-r from-primary via-tertiary to-secondary text-white font-bold text-[13.5px] shadow-[0_4px_14px_rgba(160,65,0,0.25)] hover:shadow-[0_6px_20px_rgba(160,65,0,0.35)] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all duration-200">
+                <span class="material-symbols-outlined text-[18px]">{{ $isOwnerNav ? 'storefront' : 'add_location_alt' }}</span>
+                <span>{{ $ownerNavLabel }}</span>
             </a>
 
             @auth
@@ -106,11 +112,11 @@
             <span class="text-[10px] font-bold mt-1 tracking-wide {{ request()->is('/') ? 'text-primary' : 'text-on-surface-variant' }}">Khám phá</span>
         </a>
 
-        <a href="{{ route('chu-quan.dang-quan') }}" class="flex flex-col items-center justify-center flex-1 h-full py-1 text-center group">
-            <div class="px-5 py-1 rounded-full transition-all duration-300 {{ request()->is('chu-quan/dang-quan') ? 'bg-primary-fixed text-on-primary-fixed' : 'text-primary hover:bg-primary/5' }}">
-                <span class="material-symbols-outlined text-[22px] block">add_location_alt</span>
+        <a href="{{ $ownerNavUrl }}" class="flex flex-col items-center justify-center flex-1 h-full py-1 text-center group">
+            <div class="px-5 py-1 rounded-full transition-all duration-300 {{ request()->is('chu-quan/dang-quan') || request()->is('chu-quan/quan') || request()->is('chu-quan/quan/*') ? 'bg-primary-fixed text-on-primary-fixed' : 'text-primary hover:bg-primary/5' }}">
+                <span class="material-symbols-outlined text-[22px] block">{{ $isOwnerNav ? 'storefront' : 'add_location_alt' }}</span>
             </div>
-            <span class="text-[10px] font-bold mt-1 tracking-wide text-primary">Đăng quán</span>
+            <span class="text-[10px] font-bold mt-1 tracking-wide text-primary">{{ $ownerNavLabel }}</span>
         </a>
 
         <a href="#" class="flex flex-col items-center justify-center flex-1 h-full py-1 text-center group">

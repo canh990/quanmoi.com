@@ -109,11 +109,11 @@
                         Xem tất cả <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
                     </a>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <!-- Venue 1 -->
-                    <a href="/quan/1" class="block bg-white rounded-2xl shadow-sm overflow-hidden group cursor-pointer hover:shadow-xl transition-all border border-gray-100">
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    @forelse($quanNoiBat as $quan)
+                    <a href="{{ route('quan.detail', $quan->slug) }}" class="block bg-white rounded-2xl shadow-sm overflow-hidden group cursor-pointer hover:shadow-xl transition-all border border-gray-100">
                         <div class="relative h-52 w-full overflow-hidden">
-                            <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=600&q=80"/>
+                            <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="{{ $quan->anh_bia ? Storage::url($quan->anh_bia) : 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=600&q=80' }}"/>
                             <div class="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-xl text-primary font-bold text-xs flex items-center gap-1 shadow-sm">
                                 <span class="material-symbols-outlined text-[15px]" style="font-variation-settings: 'FILL' 1;">star</span> 4.9 (520+)
                             </div>
@@ -121,78 +121,24 @@
                         </div>
                         <div class="p-5 space-y-2">
                             <div class="flex items-center justify-between">
-                                <h3 class="font-bold text-[17px] text-on-surface truncate group-hover:text-primary transition-colors">Phở Chào Hà Nội - Quận 1</h3>
+                                <h3 class="font-bold text-[17px] text-on-surface truncate group-hover:text-primary transition-colors">{{ $quan->ten_quan }}</h3>
                                 <span class="material-symbols-outlined text-tick-xanh text-[20px] flex-shrink-0" style="font-variation-settings: 'FILL' 1;" title="Đã xác thực">verified</span>
                             </div>
                             <p class="text-text-muted text-[13px] flex items-center gap-1">
                                 <span class="material-symbols-outlined text-[16px] text-gray-400">location_on</span>
-                                <span class="truncate">123 Lê Lợi, P. Bến Thành, Quận 1, TP.HCM</span>
+                                <span class="truncate">{{ $quan->dia_chi_chi_tiet }}, {{ $quan->ten_phuong_xa }}, {{ $quan->ten_quan_huyen }}</span>
                             </p>
                             <div class="flex items-center justify-between pt-2 border-t border-gray-100">
                                 <div class="flex gap-1.5">
-                                    <span class="bg-gray-100 px-2 py-0.5 rounded-md text-gray-600 text-[12px] font-medium">Phở bò</span>
-                                    <span class="bg-gray-100 px-2 py-0.5 rounded-md text-gray-600 text-[12px] font-medium">Truyền thống</span>
+                                    <span class="bg-gray-100 px-2 py-0.5 rounded-md text-gray-600 text-[12px] font-medium">{{ str_replace('_', ' ', \Illuminate\Support\Str::title($quan->loai_hinh_kinh_doanh ?? 'Quán ăn')) }}</span>
                                 </div>
-                                <span class="text-primary font-bold text-[14px]">35.000đ - 85.000đ</span>
+                                <span class="text-primary font-bold text-[14px]">{{ number_format($quan->gia_nho_nhat, 0, ',', '.') }}đ - {{ number_format($quan->gia_lon_nhat, 0, ',', '.') }}đ</span>
                             </div>
                         </div>
                     </a>
-
-                    <!-- Venue 2 -->
-                    <a href="/quan/1" class="block bg-white rounded-2xl shadow-sm overflow-hidden group cursor-pointer hover:shadow-xl transition-all border border-gray-100">
-                        <div class="relative h-52 w-full overflow-hidden">
-                            <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=600&q=80"/>
-                            <div class="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-xl text-primary font-bold text-xs flex items-center gap-1 shadow-sm">
-                                <span class="material-symbols-outlined text-[15px]" style="font-variation-settings: 'FILL' 1;">star</span> 4.8 (380+)
-                            </div>
-                            <div class="absolute top-3 right-3 bg-tertiary text-white text-[11px] font-bold px-2.5 py-1 rounded-lg">View Đẹp</div>
-                        </div>
-                        <div class="p-5 space-y-2">
-                            <div class="flex items-center justify-between">
-                                <h3 class="font-bold text-[17px] text-on-surface truncate group-hover:text-primary transition-colors">The Garden Coffee & Roastery</h3>
-                                <span class="material-symbols-outlined text-tick-xanh text-[20px] flex-shrink-0" style="font-variation-settings: 'FILL' 1;" title="Đã xác thực">verified</span>
-                            </div>
-                            <p class="text-text-muted text-[13px] flex items-center gap-1">
-                                <span class="material-symbols-outlined text-[16px] text-gray-400">location_on</span>
-                                <span class="truncate">45 Nguyễn Thị Minh Khai, Quận 3, TP.HCM</span>
-                            </p>
-                            <div class="flex items-center justify-between pt-2 border-t border-gray-100">
-                                <div class="flex gap-1.5">
-                                    <span class="bg-gray-100 px-2 py-0.5 rounded-md text-gray-600 text-[12px] font-medium">Cà phê muối</span>
-                                    <span class="bg-gray-100 px-2 py-0.5 rounded-md text-gray-600 text-[12px] font-medium">Sân vườn</span>
-                                </div>
-                                <span class="text-primary font-bold text-[14px]">29.000đ - 65.000đ</span>
-                            </div>
-                        </div>
-                    </a>
-
-                    <!-- Venue 3 -->
-                    <a href="/quan/1" class="block bg-white rounded-2xl shadow-sm overflow-hidden group cursor-pointer hover:shadow-xl transition-all border border-gray-100">
-                        <div class="relative h-52 w-full overflow-hidden">
-                            <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80"/>
-                            <div class="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-xl text-primary font-bold text-xs flex items-center gap-1 shadow-sm">
-                                <span class="material-symbols-outlined text-[15px]" style="font-variation-settings: 'FILL' 1;">star</span> 4.7 (290+)
-                            </div>
-                            <div class="absolute top-3 right-3 bg-secondary text-white text-[11px] font-bold px-2.5 py-1 rounded-lg">Lẩu Nướng</div>
-                        </div>
-                        <div class="p-5 space-y-2">
-                            <div class="flex items-center justify-between">
-                                <h3 class="font-bold text-[17px] text-on-surface truncate group-hover:text-primary transition-colors">Quán Nướng Ngói Phố Cổ</h3>
-                                <span class="material-symbols-outlined text-tick-xanh text-[20px] flex-shrink-0" style="font-variation-settings: 'FILL' 1;" title="Đã xác thực">verified</span>
-                            </div>
-                            <p class="text-text-muted text-[13px] flex items-center gap-1">
-                                <span class="material-symbols-outlined text-[16px] text-gray-400">location_on</span>
-                                <span class="truncate">88 Hàng Bạc, Hoàn Kiếm, Hà Nội</span>
-                            </p>
-                            <div class="flex items-center justify-between pt-2 border-t border-gray-100">
-                                <div class="flex gap-1.5">
-                                    <span class="bg-gray-100 px-2 py-0.5 rounded-md text-gray-600 text-[12px] font-medium">Nướng ngói</span>
-                                    <span class="bg-gray-100 px-2 py-0.5 rounded-md text-gray-600 text-[12px] font-medium">Bò nướng</span>
-                                </div>
-                                <span class="text-primary font-bold text-[14px]">120.000đ - 250.000đ</span>
-                            </div>
-                        </div>
-                    </a>
+                    @empty
+                    <p class="col-span-3 text-center text-gray-500 py-10">Chưa có quán nào nổi bật.</p>
+                    @endforelse
                 </div>
 
                 <div class="mt-10 rounded-[28px] bg-white border border-gray-100 shadow-sm p-6 md:p-7">
@@ -210,54 +156,35 @@
                         </a>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-                        <a href="/quan/1" class="group rounded-2xl border border-gray-100 bg-surface-card hover:bg-primary-fixed/20 transition-all p-4 flex items-start gap-4">
-                            <img class="w-24 h-24 rounded-2xl object-cover flex-shrink-0 shadow-sm" src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=300&q=80" alt="Quán mới 1" />
-                            <div class="min-w-0 flex-1">
-                                <div class="flex items-center gap-2 mb-2">
-                                    <span class="bg-primary/10 text-primary px-2.5 py-1 rounded-full text-[11px] font-bold">Mới thêm 2 giờ trước</span>
-                                    <span class="w-2 h-2 rounded-full bg-tick-xanh"></span>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                        @forelse($quanMoi as $quan)
+                        <a href="{{ route('quan.detail', $quan->slug) }}" class="group rounded-2xl border border-gray-100 bg-white hover:shadow-lg hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col h-full">
+                            <div class="relative w-full h-44 flex-shrink-0 overflow-hidden">
+                                <img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" src="{{ $quan->anh_bia ? Storage::url($quan->anh_bia) : 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=600&q=80' }}" alt="{{ $quan->ten_quan }}" />
+                                <div class="absolute top-2 left-2 bg-secondary text-white px-2 py-1 rounded-lg text-[10px] font-bold shadow-sm">Mới Mở</div>
+                            </div>
+                            <div class="p-4 flex flex-col flex-1">
+                                <div class="flex items-center gap-1.5 mb-1.5">
+                                    <span class="material-symbols-outlined text-[14px] text-primary">schedule</span>
+                                    <span class="text-[11px] text-primary font-bold">{{ $quan->created_at->diffForHumans() }}</span>
                                 </div>
-                                <h4 class="font-bold text-[16px] text-on-surface group-hover:text-primary transition-colors line-clamp-1">Bún Bò Góc Huế Signature</h4>
-                                <p class="text-[13px] text-text-muted mt-1 line-clamp-2">Không gian nhỏ gọn, nước dùng đậm vị và đang nhận nhiều lượt lưu từ cộng đồng địa phương.</p>
-                                <div class="flex items-center justify-between mt-3 text-[12px]">
-                                    <span class="text-gray-500">Phú Nhuận, TP.HCM</span>
-                                    <span class="font-bold text-primary">45.000đ - 68.000đ</span>
+                                <div class="flex items-center justify-between gap-2">
+                                    <h4 class="font-bold text-[15px] text-on-surface group-hover:text-primary transition-colors truncate">{{ $quan->ten_quan }}</h4>
+                                    <span class="material-symbols-outlined text-tick-xanh text-[16px] flex-shrink-0" style="font-variation-settings: 'FILL' 1;" title="Đã xác thực">verified</span>
+                                </div>
+                                <p class="text-[12px] text-text-muted mt-1 truncate flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-[14px]">location_on</span>
+                                    {{ $quan->ten_quan_huyen }}, {{ $quan->ten_tinh_thanh }}
+                                </p>
+                                <div class="mt-3 pt-3 flex items-center justify-between border-t border-gray-100">
+                                    <span class="bg-gray-50 text-gray-600 px-2 py-1 rounded-md text-[11px] font-medium">{{ str_replace('_', ' ', \Illuminate\Support\Str::title($quan->loai_hinh_kinh_doanh ?? 'Quán ăn')) }}</span>
+                                    <span class="font-bold text-primary text-[13px]">{{ number_format($quan->gia_nho_nhat, 0, ',', '.') }}đ</span>
                                 </div>
                             </div>
                         </a>
-
-                        <a href="/quan/1" class="group rounded-2xl border border-gray-100 bg-surface-card hover:bg-secondary-fixed/30 transition-all p-4 flex items-start gap-4">
-                            <img class="w-24 h-24 rounded-2xl object-cover flex-shrink-0 shadow-sm" src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=300&q=80" alt="Quán mới 2" />
-                            <div class="min-w-0 flex-1">
-                                <div class="flex items-center gap-2 mb-2">
-                                    <span class="bg-secondary/10 text-secondary px-2.5 py-1 rounded-full text-[11px] font-bold">Vừa mở tuần này</span>
-                                    <span class="text-[12px] text-gray-500">24 lượt quan tâm</span>
-                                </div>
-                                <h4 class="font-bold text-[16px] text-on-surface group-hover:text-primary transition-colors line-clamp-1">Tiệm Cơm Nhà Mộc</h4>
-                                <p class="text-[13px] text-text-muted mt-1 line-clamp-2">Menu cơm nhà thay đổi mỗi ngày, hợp dân văn phòng và nhóm gia đình ghé bữa trưa.</p>
-                                <div class="flex items-center justify-between mt-3 text-[12px]">
-                                    <span class="text-gray-500">Hải Châu, Đà Nẵng</span>
-                                    <span class="font-bold text-primary">39.000đ - 79.000đ</span>
-                                </div>
-                            </div>
-                        </a>
-
-                        <a href="/quan/1" class="group rounded-2xl border border-gray-100 bg-surface-card hover:bg-tertiary-fixed/20 transition-all p-4 flex items-start gap-4">
-                            <img class="w-24 h-24 rounded-2xl object-cover flex-shrink-0 shadow-sm" src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=300&q=80" alt="Quán mới 3" />
-                            <div class="min-w-0 flex-1">
-                                <div class="flex items-center gap-2 mb-2">
-                                    <span class="bg-tertiary/10 text-tertiary px-2.5 py-1 rounded-full text-[11px] font-bold">Đang được theo dõi</span>
-                                    <span class="text-[12px] text-gray-500">Cộng đồng đề cử</span>
-                                </div>
-                                <h4 class="font-bold text-[16px] text-on-surface group-hover:text-primary transition-colors line-clamp-1">Mây Rooftop Cafe</h4>
-                                <p class="text-[13px] text-text-muted mt-1 line-clamp-2">Quán cà phê rooftop mới với góc ngắm hoàng hôn đẹp, hợp đi chill buổi chiều tối.</p>
-                                <div class="flex items-center justify-between mt-3 text-[12px]">
-                                    <span class="text-gray-500">Ninh Kiều, Cần Thơ</span>
-                                    <span class="font-bold text-primary">35.000đ - 59.000đ</span>
-                                </div>
-                            </div>
-                        </a>
+                        @empty
+                        <p class="sm:col-span-2 lg:col-span-4 text-center text-gray-500 py-10">Chưa có quán mới nào.</p>
+                        @endforelse
                     </div>
                 </div>
             </div>
@@ -499,66 +426,29 @@
                 </div>
                 <a class="text-xs text-primary font-bold flex items-center gap-0.5" href="#">Xem tất cả <span class="material-symbols-outlined text-[14px]">chevron_right</span></a>
             </div>
-            <div class="flex flex-col gap-3">
-                {{-- Item 1 --}}
-                <a href="/quan/1" class="bg-white rounded-2xl p-3 flex gap-3 shadow-sm border border-gray-100 active:bg-gray-50 transition-colors">
+                        <div class="flex flex-col gap-3">
+                @forelse($quanNoiBat as $quan)
+                <a href="{{ route('quan.detail', $quan->slug) }}" class="bg-white rounded-2xl p-3 flex gap-3 shadow-sm border border-gray-100 active:bg-gray-50 transition-colors">
                     <div class="w-24 h-24 rounded-xl overflow-hidden flex-shrink-0 relative">
-                        <img class="w-full h-full object-cover" src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=300&q=80"/>
+                        <img class="w-full h-full object-cover" src="{{ $quan->anh_bia ? Storage::url($quan->anh_bia) : 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=300&q=80' }}"/>
                         <div class="absolute bottom-1 right-1 bg-black/70 text-white px-1.5 py-0.5 rounded-md text-[10px] font-bold flex items-center gap-0.5">
                             <span class="material-symbols-outlined text-[10px] text-amber-400" style="font-variation-settings: 'FILL' 1;">star</span> 4.9
                         </div>
                     </div>
                     <div class="flex flex-col justify-between flex-1 py-0.5">
                         <div>
-                            <h3 class="font-bold text-[15px] text-on-surface leading-tight flex items-center gap-1">Phở Chào Hà Nội <span class="material-symbols-outlined text-tick-xanh text-[15px]" style="font-variation-settings: 'FILL' 1;">verified</span></h3>
-                            <p class="text-[12px] text-text-muted mt-1 truncate">123 Lê Lợi, Quận 1, TP.HCM</p>
+                            <h3 class="font-bold text-[15px] text-on-surface leading-tight flex items-center gap-1">{{ $quan->ten_quan }} <span class="material-symbols-outlined text-tick-xanh text-[15px]" style="font-variation-settings: 'FILL' 1;">verified</span></h3>
+                            <p class="text-[12px] text-text-muted mt-1 truncate">{{ $quan->dia_chi_chi_tiet }}, {{ $quan->ten_quan_huyen }}</p>
                         </div>
                         <div class="flex items-center justify-between">
-                            <span class="text-xs font-bold text-primary">35.000đ - 85.000đ</span>
+                            <span class="text-xs font-bold text-primary">{{ number_format($quan->gia_nho_nhat, 0, ',', '.') }}đ - {{ number_format($quan->gia_lon_nhat, 0, ',', '.') }}đ</span>
                             <span class="text-[11px] text-gray-400 flex items-center gap-0.5"><span class="material-symbols-outlined text-[12px]">directions_walk</span> 500m</span>
                         </div>
                     </div>
                 </a>
-
-                {{-- Item 2 --}}
-                <a href="/quan/1" class="bg-white rounded-2xl p-3 flex gap-3 shadow-sm border border-gray-100 active:bg-gray-50 transition-colors">
-                    <div class="w-24 h-24 rounded-xl overflow-hidden flex-shrink-0 relative">
-                        <img class="w-full h-full object-cover" src="https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=300&q=80"/>
-                        <div class="absolute bottom-1 right-1 bg-black/70 text-white px-1.5 py-0.5 rounded-md text-[10px] font-bold flex items-center gap-0.5">
-                            <span class="material-symbols-outlined text-[10px] text-amber-400" style="font-variation-settings: 'FILL' 1;">star</span> 4.8
-                        </div>
-                    </div>
-                    <div class="flex flex-col justify-between flex-1 py-0.5">
-                        <div>
-                            <h3 class="font-bold text-[15px] text-on-surface leading-tight flex items-center gap-1">The Garden Coffee <span class="material-symbols-outlined text-tick-xanh text-[15px]" style="font-variation-settings: 'FILL' 1;">verified</span></h3>
-                            <p class="text-[12px] text-text-muted mt-1 truncate">45 Nguyễn Thị Minh Khai, Q3</p>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <span class="text-xs font-bold text-primary">29.000đ - 65.000đ</span>
-                            <span class="text-[11px] text-gray-400 flex items-center gap-0.5"><span class="material-symbols-outlined text-[12px]">directions_car</span> 1.2km</span>
-                        </div>
-                    </div>
-                </a>
-
-                {{-- Item 3 --}}
-                <a href="/quan/1" class="bg-white rounded-2xl p-3 flex gap-3 shadow-sm border border-gray-100 active:bg-gray-50 transition-colors">
-                    <div class="w-24 h-24 rounded-xl overflow-hidden flex-shrink-0 relative">
-                        <img class="w-full h-full object-cover" src="https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=300&q=80"/>
-                        <div class="absolute bottom-1 right-1 bg-black/70 text-white px-1.5 py-0.5 rounded-md text-[10px] font-bold flex items-center gap-0.5">
-                            <span class="material-symbols-outlined text-[10px] text-amber-400" style="font-variation-settings: 'FILL' 1;">star</span> 4.7
-                        </div>
-                    </div>
-                    <div class="flex flex-col justify-between flex-1 py-0.5">
-                        <div>
-                            <h3 class="font-bold text-[15px] text-on-surface leading-tight flex items-center gap-1">Quán Nướng Ngói Phố Cổ <span class="material-symbols-outlined text-tick-xanh text-[15px]" style="font-variation-settings: 'FILL' 1;">verified</span></h3>
-                            <p class="text-[12px] text-text-muted mt-1 truncate">88 Hàng Bạc, Hoàn Kiếm, Hà Nội</p>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <span class="text-xs font-bold text-primary">120.000đ - 250.000đ</span>
-                            <span class="text-[11px] text-gray-400 flex items-center gap-0.5"><span class="material-symbols-outlined text-[12px]">directions_car</span> 2.5km</span>
-                        </div>
-                    </div>
-                </a>
+                @empty
+                <p class="text-center text-gray-500 py-4">Chưa có quán nào.</p>
+                @endforelse
             </div>
         </section>
 
