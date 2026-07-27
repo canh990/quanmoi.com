@@ -26,7 +26,7 @@
                 Blog
             </a>
             @auth
-                <a class="nav-link py-2 text-[15px] font-semibold transition-all duration-200 text-on-surface-variant hover:text-primary" href="#">
+                <a class="nav-link py-2 text-[15px] font-semibold transition-all duration-200 {{ request()->is('tai-khoan*') ? 'active text-primary font-bold' : 'text-on-surface-variant hover:text-primary' }}" href="{{ route('tai-khoan.index') }}">
                     Tài khoản
                 </a>
             @endauth
@@ -132,8 +132,8 @@
         </a>
 
         @auth
-            <a href="#" class="flex flex-col items-center justify-center flex-1 h-full py-1 text-center group">
-                <div class="px-5 py-1 rounded-full transition-all duration-300 hover:bg-surface-container-high/50 relative inline-block">
+            <a href="{{ route('tai-khoan.index') }}" class="flex flex-col items-center justify-center flex-1 h-full py-1 text-center group">
+                <div class="px-5 py-1 rounded-full transition-all duration-300 {{ request()->is('tai-khoan*') ? 'bg-primary-fixed text-on-primary-fixed' : 'hover:bg-surface-container-high/50' }} relative inline-block">
                     <img alt="Ảnh đại diện" class="w-[22px] h-[22px] rounded-full object-cover ring-2 ring-primary-fixed" src="{{ Auth::user()->anh_dai_dien ?? 'https://ui-avatars.com/api/?name=' . urlencode(Auth::user()->ho_ten) . '&background=ffdbcc&color=a04100&bold=true&size=64' }}"/>
                     @if(Auth::user()->da_xac_thuc)
                         <span class="absolute top-0 right-4 w-2.5 h-2.5 bg-tick-xanh rounded-full border border-white flex items-center justify-center">
@@ -141,7 +141,7 @@
                         </span>
                     @endif
                 </div>
-                <span class="text-[10px] font-bold mt-1 tracking-wide text-on-surface-variant flex items-center gap-0.5">
+                <span class="text-[10px] font-bold mt-1 tracking-wide {{ request()->is('tai-khoan*') ? 'text-primary' : 'text-on-surface-variant' }} flex items-center gap-0.5">
                     Tài khoản
                 </span>
             </a>

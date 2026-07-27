@@ -7,6 +7,7 @@ use App\Http\Controllers\Auth\DangNhapController;
 use App\Http\Controllers\ChuQuan\HinhAnhQuanController;
 use App\Http\Controllers\ChuQuan\QuanController;
 use App\Http\Controllers\NguoiDung\HomeController;
+use App\Http\Controllers\NguoiDung\TaiKhoanController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -43,6 +44,12 @@ Route::prefix('api')->group(function () {
     Route::get('/dia-chi/quan-huyen/{tinhCode}', [DiaChiController::class, 'getQuanHuyen']);
     Route::get('/dia-chi/phuong-xa/{huyenCode}', [DiaChiController::class, 'getPhuongXa']);
     Route::get('/ban-do/geocode', [BanDoController::class, 'geocode']);
+});
+
+Route::middleware('auth')->group(function () {
+    Route::get('/tai-khoan', [TaiKhoanController::class, 'index'])->name('tai-khoan.index');
+    Route::put('/tai-khoan', [TaiKhoanController::class, 'update'])->name('tai-khoan.update');
+    Route::put('/tai-khoan/mat-khau', [TaiKhoanController::class, 'updatePassword'])->name('tai-khoan.update-password');
 });
 
 Route::get('/quan/{slug}', [HomeController::class, 'show'])->name('quan.detail');

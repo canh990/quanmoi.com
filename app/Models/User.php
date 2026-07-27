@@ -31,6 +31,7 @@ class User extends Authenticatable
         'vai_tro_id',
         'trang_thai',
         'anh_dai_dien',
+        'anh_dai_dien_key',
         'gioi_tinh',
         'ngay_sinh',
         'so_dien_thoai',

@@ -60,6 +60,26 @@ return [
             'report' => false,
         ],
 
+        /*
+        |--------------------------------------------------------------------------
+        | Cloudflare R2 — S3-compatible object storage
+        | R2 cung cấp API tương thích S3 (putObject, getObject, deleteObject, ...)
+        | nhưng không hỗ trợ toàn bộ S3 API. Các thao tác upload/read/delete
+        | đều hoạt động bình thường với driver này.
+        |--------------------------------------------------------------------------
+        */
+        'r2' => [
+            'driver'                  => 's3',
+            'key'                     => env('CLOUDFLARE_R2_ACCESS_KEY_ID'),
+            'secret'                  => env('CLOUDFLARE_R2_SECRET_ACCESS_KEY'),
+            'region'                  => 'auto',
+            'bucket'                  => env('CLOUDFLARE_R2_BUCKET'),
+            'endpoint'                => env('CLOUDFLARE_R2_ENDPOINT'),       // https://<ACCOUNT_ID>.r2.cloudflarestorage.com
+            'url'                     => env('CLOUDFLARE_R2_URL'),            // https://cdn.quanmoi.com (custom domain)
+            'use_path_style_endpoint' => true,
+            'throw'                   => true,                                // Ném exception khi R2 trả lỗi
+        ],
+
     ],
 
     /*

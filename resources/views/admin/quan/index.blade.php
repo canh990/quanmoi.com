@@ -45,7 +45,7 @@
                         <tr class="hover:bg-gray-50/80 transition-colors {{ $quan->trashed() ? 'bg-red-50/30' : '' }}">
                             <td class="py-3.5 px-4">
                                 <div class="flex items-center gap-3">
-                                    <img src="{{ $quan->anh_bia ? asset('storage/' . $quan->anh_bia) : 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=100&q=80' }}" class="w-12 h-12 rounded-xl object-cover border border-gray-200" alt="" />
+                                    <img src="{{ $quan->anh_bia ? $quan->anh_bia : 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=100&q=80' }}" class="w-12 h-12 rounded-xl object-cover border border-gray-200" alt="" />
                                     <div>
                                         <p class="font-bold text-gray-900 leading-snug">{{ $quan->ten_quan }}</p>
                                         <span class="inline-block bg-orange-100 text-primary px-2 py-0.5 rounded text-[11px] font-bold mt-0.5">
