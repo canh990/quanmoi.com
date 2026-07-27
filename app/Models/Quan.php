@@ -39,6 +39,7 @@ class Quan extends Model
         'gia_nho_nhat',
         'gia_lon_nhat',
         'anh_bia',
+        'anh_bia_key',
         'trang_thai',
     ];
 

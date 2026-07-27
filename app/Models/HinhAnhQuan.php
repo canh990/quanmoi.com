@@ -17,7 +17,8 @@ class HinhAnhQuan extends Model
 
     protected $fillable = [
         'quan_id',
-        'duong_dan',
+        'duong_dan',    // CDN URL — https://cdn.quanmoi.com/quan/gallery/...
+        'object_key',   // R2 object key — dùng để xóa file khi cần
         'tieu_de',
     ];
 

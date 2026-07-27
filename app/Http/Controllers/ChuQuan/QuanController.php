@@ -9,7 +9,10 @@ use App\Models\VaiTro;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Intervention\Image\ImageManager;
+use Intervention\Image\Drivers\Gd\Driver;
 
 class QuanController extends Controller
 {
@@ -38,8 +41,20 @@ class QuanController extends Controller
         }
 
         $anhBiaPath = null;
+        $anhBiaKey  = null;
         if ($request->hasFile('anh_bia')) {
-            $anhBiaPath = $request->file('anh_bia')->store('quan/anh-bia', 'public');
+            $file = $request->file('anh_bia');
+            $filename = Str::uuid() . '.webp';
+            
+            $manager = new ImageManager(new Driver());
+            $image   = $manager->decode($file->getRealPath());
+            $encoded = $image->encodeUsingFileExtension('webp', 80);
+
+            $objectKey = 'quan/anh-bia/' . $filename;
+            Storage::disk('r2')->put($objectKey, (string) $encoded);
+
+            $anhBiaPath = Storage::disk('r2')->url($objectKey);
+            $anhBiaKey  = $objectKey;
         }
 
         $baseSlug = Str::slug($validated['ten_quan']);
@@ -75,6 +90,7 @@ class QuanController extends Controller
             'gia_nho_nhat' => $validated['gia_nho_nhat'] ?? 0,
             'gia_lon_nhat' => $validated['gia_lon_nhat'] ?? 0,
             'anh_bia' => $anhBiaPath,
+            'anh_bia_key' => $anhBiaKey,
             'trang_thai' => 'chua_duyet',
         ]);
 

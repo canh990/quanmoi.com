@@ -17,7 +17,7 @@
     <div class="bg-white rounded-[28px] border border-gray-100 shadow-sm overflow-hidden mb-8">
         {{-- Cover Image --}}
         <div class="h-64 md:h-80 w-full bg-gray-100 relative">
-            <img src="{{ $quan->anh_bia ? asset('storage/' . $quan->anh_bia) : 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80' }}" class="w-full h-full object-cover" alt="{{ $quan->ten_quan }}" />
+            <img src="{{ $quan->anh_bia ? $quan->anh_bia : 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80' }}" class="w-full h-full object-cover" alt="{{ $quan->ten_quan }}" />
             <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
             
             <div class="absolute bottom-6 left-6 right-6 flex flex-col md:flex-row md:items-end justify-between gap-4 text-white">
