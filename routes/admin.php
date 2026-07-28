@@ -26,6 +26,7 @@ Route::middleware(['auth', 'KiemTraQuyenHan:admin'])->group(function () {
     Route::post('/quan/{id}/restore', [QuanLyQuanController::class, 'restore'])->name('quan.restore');
     Route::delete('/quan/{id}/force', [QuanLyQuanController::class, 'forceDestroy'])->name('quan.force-destroy');
     Route::put('/quan/{id}/toggle-noi-bat', [QuanLyQuanController::class, 'toggleNoiBat'])->name('quan.toggle-noi-bat');
+    Route::put('/quan/{id}/toggle-xac-thuc', [QuanLyQuanController::class, 'toggleXacThuc'])->name('quan.toggle-xac-thuc');
 
     // Quản lý SEO
     Route::get('/seo', [SeoController::class, 'index'])->name('seo.index');

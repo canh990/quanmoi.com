@@ -123,4 +123,13 @@ class QuanLyQuanController extends Controller
         $statusStr = $quan->is_noi_bat ? 'Đã thêm quán vào danh sách nổi bật' : 'Đã gỡ quán khỏi danh sách nổi bật';
         return back()->with('success', $statusStr);
     }
+    public function toggleXacThuc(string $id)
+    {
+        $quan = Quan::withTrashed()->findOrFail($id);
+        $quan->is_xac_thuc = !$quan->is_xac_thuc;
+        $quan->save();
+
+        $statusStr = $quan->is_xac_thuc ? 'Đã cấp Tick Xanh cho quán' : 'Đã gỡ Tick Xanh của quán';
+        return back()->with('success', $statusStr);
+    }
 }

@@ -42,6 +42,13 @@ class Quan extends Model
         'anh_bia_key',
         'trang_thai',
         'is_noi_bat',
+        'is_xac_thuc',
+        'luot_xem',
+    ];
+
+    protected $casts = [
+        'is_noi_bat' => 'boolean',
+        'is_xac_thuc' => 'boolean',
     ];
 
     public function chuQuan()
@@ -57,5 +64,10 @@ class Quan extends Model
     public function danhMucMenu()
     {
         return $this->hasMany(DanhMucMenu::class, 'quan_id')->orderBy('thu_tu', 'asc');
+    }
+
+    public function savedByUsers(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'quan_da_luu', 'quan_id', 'nguoi_dung_id')->withTimestamps();
     }
 }

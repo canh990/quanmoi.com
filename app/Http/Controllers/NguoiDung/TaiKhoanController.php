@@ -21,41 +21,22 @@ class TaiKhoanController extends Controller
         return view('nguoi-dung.tai-khoan.index', compact('user'));
     }
 
-    public function update(CapNhatTaiKhoanRequest $request)
+
+
+    public function update(CapNhatTaiKhoanRequest $request, \App\Services\UploadAnhService $uploadService)
     {
         $user = Auth::user();
         $validated = $request->validated();
 
         if ($request->hasFile('anh_dai_dien')) {
-            // 1. Xóa ảnh cũ trên R2 (nếu có) trước khi upload ảnh mới
-            if ($user->anh_dai_dien_key) {
-                try {
-                    Storage::disk('r2')->delete($user->anh_dai_dien_key);
-                } catch (\Exception $e) {
-                    // Ghi log nhưng không chặn việc upload ảnh mới
-                    Log::warning('Không thể xóa ảnh cũ trên R2: ' . $e->getMessage(), [
-                        'user_id' => $user->id,
-                        'key'     => $user->anh_dai_dien_key,
-                    ]);
-                }
-            }
+            $result = $uploadService->uploadAvatar(
+                $request->file('anh_dai_dien'),
+                $user->id,
+                $user->anh_dai_dien_key
+            );
 
-            // 2. Upload ảnh mới lên R2 (convert sang WebP)
-            // Tên file: avatars/{user_id}/{uuid}.webp
-            $file     = $request->file('anh_dai_dien');
-            $filename = Str::uuid() . '.webp';
-
-            // Convert sang WebP với quality 80
-            $manager = new ImageManager(new Driver());
-            $image   = $manager->decode($file->getRealPath());
-            $encoded = $image->encodeUsingFileExtension('webp', 80);
-
-            $objectKey = 'avatars/' . $user->id . '/' . $filename;
-            Storage::disk('r2')->put($objectKey, (string) $encoded);
-
-            // 3. Lấy CDN URL qua disk (đọc từ config, không gọi env() trực tiếp)
-            $validated['anh_dai_dien']     = Storage::disk('r2')->url($objectKey);
-            $validated['anh_dai_dien_key'] = $objectKey;
+            $validated['anh_dai_dien']     = $result['url'];
+            $validated['anh_dai_dien_key'] = $result['key'];
         } else {
             // Không upload ảnh mới → không thay đổi anh_dai_dien & anh_dai_dien_key
             unset($validated['anh_dai_dien']);

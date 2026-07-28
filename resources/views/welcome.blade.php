@@ -148,19 +148,25 @@
                                 <span class="material-symbols-outlined text-[15px]" style="font-variation-settings: 'FILL' 1;">star</span> 4.9 (520+)
                             </div>
                             <div class="absolute top-3 right-3 bg-primary text-white text-[11px] font-bold px-2.5 py-1 rounded-lg">Top 1 Đề Xuất</div>
+                            <button type="button" onclick="event.preventDefault(); toggleSave(this, '{{ $quan->id }}')" class="absolute bottom-3 right-3 w-9 h-9 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center text-red-500 shadow-sm hover:scale-110 transition-transform z-10" title="Lưu quán">
+                                <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' {{ in_array($quan->id, $savedQuanIds) ? '1' : '0' }};">favorite</span>
+                            </button>
                         </div>
                         <div class="p-5 space-y-2">
                             <div class="flex items-center justify-between">
                                 <h3 class="font-bold text-[17px] text-on-surface truncate group-hover:text-primary transition-colors">{{ $quan->ten_quan }}</h3>
-                                <span class="material-symbols-outlined text-tick-xanh text-[20px] flex-shrink-0" style="font-variation-settings: 'FILL' 1;" title="Đã xác thực">verified</span>
+                                @if($quan->is_xac_thuc)
+                                    <span class="material-symbols-outlined text-tick-xanh text-[20px] flex-shrink-0" style="font-variation-settings: 'FILL' 1;" title="Đã xác thực">verified</span>
+                                @endif
                             </div>
                             <p class="text-text-muted text-[13px] flex items-center gap-1">
                                 <span class="material-symbols-outlined text-[16px] text-gray-400">location_on</span>
                                 <span class="truncate">{{ $quan->dia_chi_chi_tiet }}, {{ $quan->ten_phuong_xa }}, {{ $quan->ten_quan_huyen }}</span>
                             </p>
                             <div class="flex items-center justify-between pt-2 border-t border-gray-100">
-                                <div class="flex gap-1.5">
+                                <div class="flex gap-1.5 items-center">
                                     <span class="bg-gray-100 px-2 py-0.5 rounded-md text-gray-600 text-[12px] font-medium">{{ str_replace('_', ' ', \Illuminate\Support\Str::title($quan->loai_hinh_kinh_doanh ?? 'Quán ăn')) }}</span>
+                                    <span class="flex items-center gap-1 text-gray-500 text-[12px] ml-1"><span class="material-symbols-outlined text-[14px]">visibility</span>{{ number_format($quan->luot_xem) }}</span>
                                 </div>
                                 <span class="text-primary font-bold text-[14px]">{{ number_format($quan->gia_nho_nhat, 0, ',', '.') }}đ - {{ number_format($quan->gia_lon_nhat, 0, ',', '.') }}đ</span>
                             </div>
@@ -201,6 +207,9 @@
                             <div class="relative w-full h-44 flex-shrink-0 overflow-hidden">
                                 <img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" src="{{ $quan->anh_bia ? $quan->anh_bia : 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=600&q=80' }}" alt="{{ $quan->ten_quan }}" />
                                 <div class="absolute top-2 left-2 bg-secondary text-white px-2 py-1 rounded-lg text-[10px] font-bold shadow-sm">Mới Mở</div>
+                                <button type="button" onclick="event.preventDefault(); toggleSave(this, '{{ $quan->id }}')" class="absolute top-2 right-2 w-8 h-8 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center text-red-500 shadow-sm hover:scale-110 transition-transform z-10" title="Lưu quán">
+                                    <span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' {{ in_array($quan->id, $savedQuanIds) ? '1' : '0' }};">favorite</span>
+                                </button>
                             </div>
                             <div class="p-4 flex flex-col flex-1">
                                 <div class="flex items-center gap-1.5 mb-1.5">
@@ -209,14 +218,19 @@
                                 </div>
                                 <div class="flex items-center justify-between gap-2">
                                     <h4 class="font-bold text-[15px] text-on-surface group-hover:text-primary transition-colors truncate">{{ $quan->ten_quan }}</h4>
-                                    <span class="material-symbols-outlined text-tick-xanh text-[16px] flex-shrink-0" style="font-variation-settings: 'FILL' 1;" title="Đã xác thực">verified</span>
+                                    @if($quan->is_xac_thuc)
+                                        <span class="material-symbols-outlined text-tick-xanh text-[16px] flex-shrink-0" style="font-variation-settings: 'FILL' 1;" title="Đã xác thực">verified</span>
+                                    @endif
                                 </div>
                                 <p class="text-[12px] text-text-muted mt-1 truncate flex items-center gap-1">
                                     <span class="material-symbols-outlined text-[14px]">location_on</span>
                                     {{ $quan->ten_quan_huyen }}, {{ $quan->ten_tinh_thanh }}
                                 </p>
                                 <div class="mt-3 pt-3 flex items-center justify-between border-t border-gray-100">
-                                    <span class="bg-gray-50 text-gray-600 px-2 py-1 rounded-md text-[11px] font-medium">{{ str_replace('_', ' ', \Illuminate\Support\Str::title($quan->loai_hinh_kinh_doanh ?? 'Quán ăn')) }}</span>
+                                    <div class="flex gap-1.5 items-center">
+                                        <span class="bg-gray-50 text-gray-600 px-2 py-1 rounded-md text-[11px] font-medium">{{ str_replace('_', ' ', \Illuminate\Support\Str::title($quan->loai_hinh_kinh_doanh ?? 'Quán ăn')) }}</span>
+                                        <span class="flex items-center gap-1 text-gray-500 text-[11px] ml-1"><span class="material-symbols-outlined text-[13px]">visibility</span>{{ number_format($quan->luot_xem) }}</span>
+                                    </div>
                                     <span class="font-bold text-primary text-[13px]">{{ number_format($quan->gia_nho_nhat, 0, ',', '.') }}đ</span>
                                 </div>
                             </div>
@@ -649,3 +663,42 @@
         });
     </script>
 @endsection
+
+@push('scripts')
+<script>
+    async function toggleSave(btn, quanId) {
+        @guest
+            window.location.href = "{{ route('login') }}";
+            return;
+        @endguest
+
+        try {
+            const res = await fetch(`/quan-da-luu/${quanId}/toggle`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                }
+            });
+            const data = await res.json();
+            if (data.success) {
+                const icon = btn.querySelector('.material-symbols-outlined');
+                if (data.status === 'saved') {
+                    icon.style.fontVariationSettings = "'FILL' 1";
+                    // Add a tiny bump animation
+                    btn.style.transform = 'scale(1.2)';
+                    setTimeout(() => btn.style.transform = 'scale(1)', 200);
+                } else {
+                    icon.style.fontVariationSettings = "'FILL' 0";
+                }
+            } else {
+                if (res.status === 401) {
+                    window.location.href = "{{ route('login') }}";
+                }
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }
+</script>
+@endpush

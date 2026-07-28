@@ -26,12 +26,14 @@ class AppServiceProvider extends ServiceProvider
             $currentUser = Auth::user();
             $isOwnerNav = false;
             $ownerNavLabel = 'Đăng quán';
+            $ownerNavIcon = 'add_location_alt';
             $ownerNavUrl = route('chu-quan.dang-quan');
 
             if ($currentUser) {
                 if ($currentUser->isAdmin()) {
                     $isOwnerNav = true;
-                    $ownerNavLabel = 'Quản lý cửa hàng';
+                    $ownerNavLabel = 'Trang quản trị';
+                    $ownerNavIcon = 'admin_panel_settings';
                     $ownerNavUrl = Route::has('admin.quan.index')
                         ? route('admin.quan.index')
                         : route('chu-quan.dang-quan');
@@ -42,6 +44,7 @@ class AppServiceProvider extends ServiceProvider
                     if ($hasOwnedQuan || $isOwnerRole) {
                         $isOwnerNav = true;
                         $ownerNavLabel = 'Quản lý cửa hàng';
+                        $ownerNavIcon = 'storefront';
                         $ownerNavUrl = $hasOwnedQuan && Route::has('chu-quan.quan.index')
                             ? route('chu-quan.quan.index')
                             : route('chu-quan.dang-quan');
@@ -53,6 +56,7 @@ class AppServiceProvider extends ServiceProvider
                 'currentUser' => $currentUser,
                 'isOwnerNav' => $isOwnerNav,
                 'ownerNavLabel' => $ownerNavLabel,
+                'ownerNavIcon' => $ownerNavIcon,
                 'ownerNavUrl' => $ownerNavUrl,
             ]);
         });

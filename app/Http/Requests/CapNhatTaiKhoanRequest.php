@@ -19,11 +19,11 @@ class CapNhatTaiKhoanRequest extends FormRequest
             'so_dien_thoai' => 'nullable|string|regex:/(0)[0-9]{9}/',
             'dia_chi'       => 'nullable|string|max:255',
             'ngay_sinh'     => 'nullable|date|before_or_equal:today',
-            'gioi_tinh'     => 'nullable|in:nam,nu,khac',
+            'gioi_tinh'     => 'nullable|in:nam,nữ,khác',
 
             // --- Ảnh đại diện (upload file) ---
             // Chỉ hiện diện khi user gửi file từ tab ảnh đại diện
-            'anh_dai_dien'  => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'anh_dai_dien'  => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ];
     }
 
@@ -37,8 +37,8 @@ class CapNhatTaiKhoanRequest extends FormRequest
             'ngay_sinh.before_or_equal' => 'Ngày sinh không thể là ngày trong tương lai.',
             'gioi_tinh.in'              => 'Giới tính không hợp lệ.',
             'anh_dai_dien.image'        => 'File tải lên phải là hình ảnh hợp lệ.',
-            'anh_dai_dien.mimes'        => 'Định dạng ảnh phải là: jpeg, png, jpg, gif hoặc webp.',
-            'anh_dai_dien.max'          => 'Kích thước ảnh không được vượt quá 5MB.',
+            'anh_dai_dien.mimes'        => 'Định dạng ảnh phải là: jpeg, png, jpg hoặc webp.',
+            'anh_dai_dien.max'          => 'Kích thước ảnh không được vượt quá 2MB.',
         ];
     }
 }

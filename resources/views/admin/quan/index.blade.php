@@ -76,6 +76,14 @@
                             <td class="py-3.5 px-4 text-right">
                                 <div class="flex items-center justify-end gap-2">
                                     @if(!$quan->trashed())
+                                        <form action="{{ route('admin.quan.toggle-xac-thuc', $quan->id) }}" method="POST" class="inline">
+                                            @csrf
+                                            @method('PUT')
+                                            <button type="submit" class="p-2 rounded-lg transition-all {{ $quan->is_xac_thuc ? 'text-blue-500 hover:bg-blue-50' : 'text-gray-400 hover:text-blue-500 hover:bg-gray-100' }}" title="{{ $quan->is_xac_thuc ? 'Gỡ Tick Xanh' : 'Cấp Tick Xanh' }}">
+                                                <span class="material-symbols-outlined text-lg" {!! $quan->is_xac_thuc ? 'style="font-variation-settings: \'FILL\' 1;"' : '' !!}>verified</span>
+                                            </button>
+                                        </form>
+
                                         <form action="{{ route('admin.quan.toggle-noi-bat', $quan->id) }}" method="POST" class="inline">
                                             @csrf
                                             @method('PUT')

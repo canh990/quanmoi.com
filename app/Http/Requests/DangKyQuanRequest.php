@@ -46,7 +46,7 @@ class DangKyQuanRequest extends FormRequest
             'gio_dong_cua'      => 'required|string',
             'gia_nho_nhat'      => 'nullable|numeric|min:0',
             'gia_lon_nhat'      => 'nullable|numeric|min:0',
-            'anh_bia'           => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
+            'anh_bia'           => 'required|image|mimes:jpeg,png,jpg,webp|max:5120',
             'danh_sach_anh.*'   => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
             'danh_sach_anh'     => 'nullable|array|max:5',
             'menu_categories'   => 'nullable|array',

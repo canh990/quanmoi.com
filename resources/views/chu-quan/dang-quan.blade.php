@@ -32,18 +32,7 @@
                 {{-- Left Column: Form Fields --}}
                 <section class="col-span-12 lg:col-span-7 flex flex-col gap-6">
                     
-                    {{-- Progress Stepper --}}
-                    <div class="flex items-center gap-4 mb-1 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                        <div class="flex items-center gap-2">
-                            <span class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm">1</span>
-                            <span class="text-[16px] font-bold text-primary">Thông tin cơ bản</span>
-                        </div>
-                        <div class="h-px bg-gray-300 flex-1"></div>
-                        <div class="flex items-center gap-2 opacity-50" id="step-2-indicator">
-                            <span class="w-8 h-8 rounded-full bg-gray-200 text-gray-700 flex items-center justify-center font-bold text-sm indicator-num">2</span>
-                            <span class="text-[16px] font-bold text-gray-600 indicator-text">Thực đơn</span>
-                        </div>
-                    </div>
+
 
                     {{-- Business Type Selection --}}
                     <div class="bg-white p-6 rounded-xl shadow-[0px_4px_20px_rgba(0,0,0,0.05)] border border-gray-200 space-y-4">
@@ -125,9 +114,9 @@
 
                     {{-- CTA Desktop --}}
                     <div class="flex justify-end pt-2">
-                        <button type="button" onclick="goToStep2()" class="bg-primary text-white px-8 py-4 rounded-xl font-bold text-[16px] shadow-lg hover:shadow-xl hover:bg-primary/90 active:scale-[0.98] transition-all flex items-center gap-2 cursor-pointer">
-                            Tiếp tục thiết lập thực đơn
-                            <span class="material-symbols-outlined">arrow_forward</span>
+                        <button id="submit-btn" type="submit" class="bg-primary text-white px-8 py-4 rounded-xl font-bold text-[16px] shadow-lg hover:shadow-xl hover:bg-primary/90 active:scale-[0.98] transition-all flex items-center gap-2 cursor-pointer">
+                            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                            Hoàn tất & Chuyển sang Tạo thực đơn
                         </button>
                     </div>
 
@@ -166,14 +155,23 @@
                         </div>
 
                         {{-- Gallery Thumbnails --}}
-                        <div id="gallery-previews-container" class="contents">
-                            <!-- Previews will be injected here by JS -->
+                        @for($i = 1; $i <= 5; $i++)
+                        <div class="aspect-[4/3] rounded-lg border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-1 text-gray-400 hover:border-primary hover:text-primary transition-all cursor-pointer relative group bg-gray-50" onclick="document.getElementById('gallery_{{ $i }}').click()">
+                            <input type="file" id="gallery_{{ $i }}" name="danh_sach_anh[]" accept="image/*" multiple class="hidden" onchange="previewSingleGalleryPhoto(this, {{ $i }})" onclick="event.stopPropagation()" />
+                            
+                            <div id="gallery-preview-container-{{ $i }}" class="hidden absolute inset-0 w-full h-full">
+                                <img id="gallery-preview-img-{{ $i }}" class="w-full h-full object-cover rounded-lg" src="" />
+                                <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button type="button" onclick="event.stopPropagation(); removeGalleryPhoto({{ $i }});" class="p-2 bg-white rounded-full text-red-600 shadow-md hover:bg-gray-100 flex items-center justify-center"><span class="material-symbols-outlined text-[18px]">delete</span></button>
+                                </div>
+                            </div>
+
+                            <div id="gallery-placeholder-{{ $i }}" class="flex flex-col items-center justify-center w-full h-full p-2 text-center">
+                                <span class="material-symbols-outlined text-xl mb-1">add_a_photo</span>
+                                <span class="text-[10px] font-bold leading-tight">Thêm ảnh<br>phụ {{ $i }}</span>
+                            </div>
                         </div>
-                        <div id="gallery-add-btn" class="aspect-[4/3] rounded-lg border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-1 text-gray-400 hover:border-primary hover:text-primary transition-all cursor-pointer" onclick="document.getElementById('danh_sach_anh').click()">
-                            <input type="file" id="danh_sach_anh" name="danh_sach_anh[]" accept="image/*" multiple class="hidden" onchange="previewGalleryPhotos(this)" onclick="event.stopPropagation()" />
-                            <span class="material-symbols-outlined text-2xl">add_a_photo</span>
-                            <span class="text-[11px] font-bold text-center px-1">Thêm ảnh<br>(tối đa 5)</span>
-                        </div>
+                        @endfor
                     </div>
                 </div>
 
@@ -226,18 +224,22 @@
 
                     {{-- Map Preview Container --}}
                     <div class="relative h-[220px] rounded-lg overflow-hidden border border-gray-200 bg-gray-100 group">
-                        <img class="w-full h-full object-cover grayscale-[0.2] group-hover:grayscale-0 transition-all duration-500" src="https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&w=800&q=80" alt="Bản đồ vị trí" />
-                        <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-                            <div class="w-12 h-12 text-primary animate-bounce">
-                                <span class="material-symbols-outlined text-5xl" style="font-variation-settings: 'FILL' 1;">location_on</span>
-                            </div>
-                        </div>
-                        <div class="absolute bottom-3 left-3 right-3 bg-white/95 backdrop-blur-sm p-2.5 rounded-lg shadow-md border border-gray-200">
+                        <iframe 
+                            id="map-iframe"
+                            src="https://maps.google.com/maps?q={{ urlencode('Việt Nam') }}&t=&z=14&ie=UTF8&iwloc=&output=embed" 
+                            width="100%" 
+                            height="100%" 
+                            style="border:0;" 
+                            allowfullscreen="" 
+                            loading="lazy" 
+                            referrerpolicy="no-referrer-when-downgrade">
+                        </iframe>
+                        <div class="absolute bottom-3 left-3 right-3 bg-white/95 backdrop-blur-sm p-2.5 rounded-lg shadow-md border border-gray-200 pointer-events-none transition-opacity duration-300">
                             <div class="flex items-start gap-2.5">
                                 <span class="material-symbols-outlined text-secondary mt-0.5 text-[20px]">map</span>
                                 <div>
                                     <p class="text-[12px] font-bold text-on-surface">Đang chọn vị trí:</p>
-                                    <p class="text-[12px] text-gray-600 leading-tight" id="address-preview-text">123 Phố Huế, Hai Bà Trưng, Hà Nội</p>
+                                    <p class="text-[12px] text-gray-600 leading-tight" id="address-preview-text">Chưa chọn vị trí</p>
                                 </div>
                             </div>
                         </div>
@@ -250,44 +252,7 @@
         </div>
         </div>
 
-        <div id="section-step-2" class="hidden">
-            <div class="bg-white p-6 rounded-xl shadow-[0px_4px_20px_rgba(0,0,0,0.05)] border border-gray-200">
-                <div class="flex items-center justify-between mb-6 border-b border-gray-100 pb-4">
-                    <div>
-                        <h2 class="text-xl font-black text-on-surface flex items-center gap-2">
-                            <span class="material-symbols-outlined text-primary text-[24px]">restaurant_menu</span>
-                            Xây dựng thực đơn
-                        </h2>
-                        <p class="text-sm text-gray-500 mt-1">Thêm các danh mục và món ăn cho quán của bạn</p>
-                    </div>
-                    <button type="button" onclick="addCategory()" class="bg-primary/10 text-primary px-4 py-2 rounded-lg font-bold text-sm hover:bg-primary/20 transition-all flex items-center gap-1">
-                        <span class="material-symbols-outlined text-[18px]">add_circle</span> Thêm danh mục
-                    </button>
-                </div>
 
-                <div id="menu-categories-container" class="space-y-6 min-h-[200px]">
-                    <!-- Categories will be added here via JS -->
-                    <div id="empty-menu-state" class="flex flex-col items-center justify-center h-48 text-gray-400">
-                        <span class="material-symbols-outlined text-5xl mb-2">menu_book</span>
-                        <p class="text-sm font-medium">Chưa có danh mục nào. Hãy thêm danh mục đầu tiên!</p>
-                    </div>
-                </div>
-
-                <input type="hidden" id="menu_data" name="menu_data" value="[]" />
-
-                <div class="flex items-center justify-between mt-8 pt-6 border-t border-gray-100">
-                    <button type="button" onclick="goToStep1()" class="text-gray-500 font-bold px-6 py-3 rounded-xl hover:bg-gray-100 transition-all flex items-center gap-2">
-                        <span class="material-symbols-outlined">arrow_back</span>
-                        Quay lại
-                    </button>
-
-                    <button id="submit-btn" type="submit" class="bg-primary text-white px-8 py-3.5 rounded-xl font-bold text-[16px] shadow-lg hover:shadow-xl hover:bg-primary/90 active:scale-[0.98] transition-all flex items-center gap-2 cursor-pointer">
-                        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">check_circle</span>
-                        Hoàn tất đăng quán
-                    </button>
-                </div>
-            </div>
-        </div>
     </form>
 </main>
 @endsection
@@ -399,10 +364,16 @@
         const city = document.getElementById('ten_tinh_thanh').value;
 
         const parts = [street, ward, district, city].filter(Boolean);
-        const full = parts.length > 0 ? parts.join(', ') : '123 Phố Huế, Hai Bà Trưng, Hà Nội';
+        const full = parts.length > 0 ? parts.join(', ') : 'Chưa chọn vị trí';
         
         const previewEl = document.getElementById('address-preview-text');
         if (previewEl) previewEl.textContent = full;
+
+        // Update Google Maps iframe
+        const iframe = document.getElementById('map-iframe');
+        if (iframe && parts.length > 0) {
+            iframe.src = `https://maps.google.com/maps?q=${encodeURIComponent(full)}&t=&z=16&ie=UTF8&iwloc=&output=embed`;
+        }
     }
 
     function previewCoverPhoto(input) {
@@ -423,177 +394,63 @@
         document.getElementById('cover-upload-placeholder').classList.remove('hidden');
     }
 
-    function previewGalleryPhotos(input) {
-        const container = document.getElementById('gallery-previews-container');
-        container.innerHTML = '';
-        const addBtn = document.getElementById('gallery-add-btn');
+    function previewSingleGalleryPhoto(input, clickedIndex) {
+        if (!input.files || input.files.length === 0) return;
         
-        if (input.files && input.files.length > 0) {
-            let files = Array.from(input.files);
-            if (files.length > 5) {
-                alert('Bạn chỉ được chọn tối đa 5 ảnh phụ.');
-                files = files.slice(0, 5);
-                
-                // Need to update the input's file list to match the sliced array
-                const dt = new DataTransfer();
-                files.forEach(file => dt.items.add(file));
-                input.files = dt.files;
-            }
+        let files = Array.from(input.files);
+        
+        let fileToSlotMap = [];
+        fileToSlotMap.push({ file: files[0], slot: clickedIndex });
+        
+        let fileIndex = 1;
+        for (let i = 1; i <= 5; i++) {
+            if (fileIndex >= files.length) break;
+            if (i === clickedIndex) continue;
             
-            files.forEach(file => {
-                const reader = new FileReader();
-                reader.onload = e => {
-                    const div = document.createElement('div');
-                    div.className = 'aspect-[4/3] rounded-lg overflow-hidden border border-gray-200 relative group bg-gray-50';
-                    div.innerHTML = `<img src="${e.target.result}" class="w-full h-full object-cover">
-                                     <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer" onclick="document.getElementById('danh_sach_anh').click()">
-                                        <span class="material-symbols-outlined text-white">edit</span>
-                                     </div>`;
-                    container.appendChild(div);
-                };
-                reader.readAsDataURL(file);
-            });
-            
-            if (files.length >= 5) {
-                addBtn.classList.add('hidden');
-            } else {
-                addBtn.classList.remove('hidden');
+            const targetInput = document.getElementById(`gallery_${i}`);
+            if (!targetInput.files || targetInput.files.length === 0) {
+                fileToSlotMap.push({ file: files[fileIndex], slot: i });
+                fileIndex++;
             }
-        } else {
-            addBtn.classList.remove('hidden');
         }
-    }
-
-    let menuCategories = [];
-    let categoryCounter = 0;
-    let itemCounter = 0;
-
-    function goToStep2() {
-        const form = document.getElementById('dang-quan-form');
-        // Validate HTML5 required fields
-        if (!form.reportValidity()) {
-            return;
+        
+        if (fileIndex < files.length) {
+            alert(`Đã điền đầy các ô trống. Bỏ qua ${files.length - fileIndex} ảnh thừa.`);
         }
-
-        document.getElementById('section-step-1').classList.add('hidden');
-        document.getElementById('section-step-2').classList.remove('hidden');
         
-        // Update indicator
-        const indNum = document.querySelector('#step-2-indicator .indicator-num');
-        const indText = document.querySelector('#step-2-indicator .indicator-text');
-        
-        indNum.classList.remove('bg-gray-200', 'text-gray-700');
-        indNum.classList.add('bg-primary', 'text-white');
-        
-        indText.classList.remove('text-gray-600');
-        indText.classList.add('text-primary');
+        fileToSlotMap.forEach(mapping => {
+            const dt = new DataTransfer();
+            dt.items.add(mapping.file);
+            const targetInput = document.getElementById(`gallery_${mapping.slot}`);
+            targetInput.files = dt.files;
+            
+            const reader = new FileReader();
+            reader.onload = e => {
+                document.getElementById(`gallery-preview-img-${mapping.slot}`).src = e.target.result;
+                document.getElementById(`gallery-preview-container-${mapping.slot}`).classList.remove('hidden');
+                document.getElementById(`gallery-placeholder-${mapping.slot}`).classList.add('hidden');
+            };
+            reader.readAsDataURL(mapping.file);
+        });
     }
 
-    function goToStep1() {
-        document.getElementById('section-step-1').classList.remove('hidden');
-        document.getElementById('section-step-2').classList.add('hidden');
-        
-        // Revert indicator
-        const indNum = document.querySelector('#step-2-indicator .indicator-num');
-        const indText = document.querySelector('#step-2-indicator .indicator-text');
-        
-        indNum.classList.remove('bg-primary', 'text-white');
-        indNum.classList.add('bg-gray-200', 'text-gray-700');
-        
-        indText.classList.remove('text-primary');
-        indText.classList.add('text-gray-600');
-    }
-
-    function addCategory() {
-        document.getElementById('empty-menu-state')?.classList.add('hidden');
-        
-        const catId = ++categoryCounter;
-        const catObj = { id: catId, name: '', items: [] };
-        menuCategories.push(catObj);
-
-        const container = document.getElementById('menu-categories-container');
-        const html = `
-            <div id="category-box-${catId}" class="border border-gray-200 rounded-xl overflow-hidden bg-gray-50/30">
-                <div class="bg-gray-50 px-4 py-3 border-b border-gray-200 flex items-center justify-between">
-                    <input type="text" placeholder="Tên danh mục (vd: Khai vị, Món chính)..." onchange="updateCategoryName(${catId}, this.value)" class="bg-transparent font-bold text-gray-800 outline-none w-2/3" required />
-                    <button type="button" onclick="removeCategory(${catId})" class="text-red-500 hover:text-red-600"><span class="material-symbols-outlined">delete</span></button>
-                </div>
-                <div class="p-4 space-y-3" id="category-items-${catId}">
-                    <!-- Items go here -->
-                </div>
-                <div class="px-4 py-3 border-t border-gray-100">
-                    <button type="button" onclick="addMenuItem(${catId})" class="text-sm font-bold text-primary flex items-center gap-1 hover:underline">
-                        <span class="material-symbols-outlined text-[16px]">add</span> Thêm món vào danh mục này
-                    </button>
-                </div>
-            </div>
-        `;
-        container.insertAdjacentHTML('beforeend', html);
-        addMenuItem(catId); // Auto add first item
-    }
-
-    function removeCategory(catId) {
-        if (!confirm('Bạn có chắc muốn xóa danh mục này?')) return;
-        menuCategories = menuCategories.filter(c => c.id !== catId);
-        document.getElementById(`category-box-${catId}`).remove();
-        if (menuCategories.length === 0) {
-            document.getElementById('empty-menu-state')?.classList.remove('hidden');
-        }
-    }
-
-    function updateCategoryName(catId, val) {
-        const cat = menuCategories.find(c => c.id === catId);
-        if (cat) cat.name = val;
-    }
-
-    function addMenuItem(catId) {
-        const cat = menuCategories.find(c => c.id === catId);
-        if (!cat) return;
-        
-        const itemId = ++itemCounter;
-        cat.items.push({ id: itemId, name: '', price: '', description: '' });
-
-        const container = document.getElementById(`category-items-${catId}`);
-        const html = `
-            <div id="item-box-${itemId}" class="flex gap-3 items-start bg-white p-3 rounded-lg border border-gray-100 shadow-sm relative group">
-                <button type="button" onclick="removeMenuItem(${catId}, ${itemId})" class="absolute -right-2 -top-2 bg-red-100 text-red-600 rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"><span class="material-symbols-outlined text-[14px]">close</span></button>
-                
-                <div class="flex-1 space-y-2">
-                    <div class="flex gap-2">
-                        <input type="text" placeholder="Tên món ăn..." onchange="updateItem(${catId}, ${itemId}, 'name', this.value)" class="flex-1 border border-gray-200 rounded px-2 py-1.5 text-sm outline-none focus:border-primary" required />
-                        <input type="number" placeholder="Giá (VNĐ)" onchange="updateItem(${catId}, ${itemId}, 'price', this.value)" class="w-28 border border-gray-200 rounded px-2 py-1.5 text-sm outline-none focus:border-primary" />
-                    </div>
-                    <input type="text" placeholder="Mô tả ngắn (tùy chọn)..." onchange="updateItem(${catId}, ${itemId}, 'description', this.value)" class="w-full border border-gray-200 rounded px-2 py-1.5 text-sm outline-none focus:border-primary text-gray-500" />
-                </div>
-            </div>
-        `;
-        container.insertAdjacentHTML('beforeend', html);
-    }
-
-    function removeMenuItem(catId, itemId) {
-        const cat = menuCategories.find(c => c.id === catId);
-        if (cat) {
-            cat.items = cat.items.filter(i => i.id !== itemId);
-            document.getElementById(`item-box-${itemId}`).remove();
-        }
-    }
-
-    function updateItem(catId, itemId, field, val) {
-        const cat = menuCategories.find(c => c.id === catId);
-        if (cat) {
-            const item = cat.items.find(i => i.id === itemId);
-            if (item) item[field] = val;
-        }
+    function removeGalleryPhoto(index) {
+        document.getElementById(`gallery_${index}`).value = '';
+        document.getElementById(`gallery-preview-container-${index}`).classList.add('hidden');
+        document.getElementById(`gallery-placeholder-${index}`).classList.remove('hidden');
+        document.getElementById(`gallery-preview-img-${index}`).src = '';
     }
 
     async function submitForm() {
         const form = document.getElementById('dang-quan-form');
+        const anhBiaInput = document.getElementById('anh_bia');
         
-        // Ensure all required fields in menu builder are filled by calling reportValidity
-        if (!form.reportValidity()) return;
+        if (!anhBiaInput.files || anhBiaInput.files.length === 0) {
+            alert('Vui lòng thêm ảnh chính cho không gian quán!');
+            return;
+        }
 
-        // Populate menu_data hidden input
-        document.getElementById('menu_data').value = JSON.stringify(menuCategories);
+        if (!form.reportValidity()) return;
 
         const formData = new FormData(form);
         const btn = document.getElementById('submit-btn');
