@@ -10,7 +10,15 @@ use App\Http\Controllers\NguoiDung\HomeController;
 use App\Http\Controllers\NguoiDung\TaiKhoanController;
 use Illuminate\Support\Facades\Route;
 
+use App\Http\Controllers\NguoiDung\BlogController;
+use App\Http\Controllers\NguoiDung\KhamPhaController;
+
 Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/kham-pha', [KhamPhaController::class, 'index'])->name('kham-pha');
+Route::get('/quan-moi', [KhamPhaController::class, 'quanMoi'])->name('quan-moi');
+Route::get('/quan-noi-bat', [KhamPhaController::class, 'quanNoiBat'])->name('quan-noi-bat');
+Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
+Route::view('/gioi-thieu', 'pages.about')->name('about');
 
 Route::get('/dang-ky', [DangKyController::class, 'showRegistrationForm'])->name('register');
 Route::post('/dang-ky', [DangKyController::class, 'register'])->name('register.submit');

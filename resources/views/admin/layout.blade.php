@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Quản Trị Hệ Thống - Quán Mới')</title>
+    <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -31,13 +32,21 @@
                     <span class="material-symbols-outlined text-[20px]">group</span>
                     Quản Lý Người Dùng
                 </a>
-                <a href="{{ route('admin.quan.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all {{ request()->routeIs('admin.quan.*') && request('status') !== 'chua_duyet' ? 'bg-primary text-white shadow-lg' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                <a href="{{ route('admin.quan.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all {{ request()->routeIs('admin.quan.*') && !request()->has('status') && !request()->has('is_noi_bat') ? 'bg-primary text-white shadow-lg' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                     <span class="material-symbols-outlined text-[20px]">storefront</span>
                     Quản Lý Địa Điểm Quán
                 </a>
                 <a href="{{ route('admin.quan.index', ['status' => 'chua_duyet']) }}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all {{ request()->routeIs('admin.quan.*') && request('status') === 'chua_duyet' ? 'bg-amber-600 text-white shadow-lg' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                     <span class="material-symbols-outlined text-[20px]">pending_actions</span>
                     Quán Chờ Duyệt
+                </a>
+                <a href="{{ route('admin.quan.index', ['is_noi_bat' => 1]) }}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all {{ request()->routeIs('admin.quan.*') && request('is_noi_bat') == 1 ? 'bg-yellow-600 text-white shadow-lg' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                    <span class="material-symbols-outlined text-[20px]">star</span>
+                    Quản Lý Quán Nổi Bật
+                </a>
+                <a href="{{ route('admin.seo.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all {{ request()->routeIs('admin.seo.*') ? 'bg-emerald-700 text-white shadow-lg' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                    <span class="material-symbols-outlined text-[20px]">search</span>
+                    Quản Lý SEO
                 </a>
                 <a href="/" target="_blank" class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm text-slate-400 hover:bg-slate-800 hover:text-white transition-all">
                     <span class="material-symbols-outlined text-[20px]">open_in_new</span>

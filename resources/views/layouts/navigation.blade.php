@@ -22,7 +22,7 @@
             <a class="nav-link py-2 text-[15px] font-semibold transition-all duration-200 text-on-surface-variant hover:text-primary flex items-center gap-1" href="#">
                 Đã lưu
             </a>
-            <a class="nav-link py-2 text-[15px] font-semibold transition-all duration-200 text-on-surface-variant hover:text-primary" href="#">
+            <a class="nav-link py-2 text-[15px] font-semibold transition-all duration-200 {{ request()->routeIs('blog.*') ? 'active text-primary font-bold' : 'text-on-surface-variant hover:text-primary' }}" href="{{ route('blog.index') }}">
                 Blog
             </a>
             @auth
@@ -59,12 +59,9 @@
                             <span class="text-[10px] text-text-muted leading-tight">{{ Auth::user()->ten_vai_tro_hien_thi }}</span>
                         </div>
                     </div>
-                    <form action="{{ route('logout') }}" method="POST" class="inline">
-                        @csrf
-                        <button type="submit" class="p-2.5 rounded-full hover:bg-red-50 text-on-surface-variant hover:text-error transition-all active:scale-95" title="Đăng xuất">
-                            <span class="material-symbols-outlined text-[20px]">logout</span>
-                        </button>
-                    </form>
+                    <button type="button" onclick="openLogoutModal()" class="p-2.5 rounded-full hover:bg-red-50 text-on-surface-variant hover:text-error transition-all active:scale-95" title="Đăng xuất">
+                        <span class="material-symbols-outlined text-[20px]">logout</span>
+                    </button>
                 </div>
             @else
                 <div class="relative group/auth-menu">

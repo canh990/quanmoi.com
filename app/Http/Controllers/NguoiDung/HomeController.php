@@ -12,17 +12,20 @@ class HomeController extends Controller
     {
         // Lấy danh sách quán nổi bật (hiện tại lấy ngẫu nhiên hoặc theo lượt xem/đánh giá, tạm thời lấy random)
         $quanNoiBat = Quan::where('trang_thai', 'da_duyet')
-            ->inRandomOrder()
-            ->take(6)
+            ->where('is_noi_bat', true)
+            ->orderBy('updated_at', 'desc')
+            ->take(9)
             ->get();
 
         // Lấy danh sách quán mới nhất
         $quanMoi = Quan::where('trang_thai', 'da_duyet')
             ->orderBy('created_at', 'desc')
-            ->take(6)
+            ->take(12)
             ->get();
+        $totalQuanMoi = Quan::where('trang_thai', 'da_duyet')->count();
+        $totalQuanNoiBat = Quan::where('trang_thai', 'da_duyet')->where('is_noi_bat', true)->count();
 
-        return view('welcome', compact('quanNoiBat', 'quanMoi'));
+        return view('welcome', compact('quanNoiBat', 'quanMoi', 'totalQuanMoi', 'totalQuanNoiBat'));
     }
 
     public function show($slug)

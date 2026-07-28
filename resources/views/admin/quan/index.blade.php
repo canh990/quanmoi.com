@@ -75,6 +75,16 @@
                             </td>
                             <td class="py-3.5 px-4 text-right">
                                 <div class="flex items-center justify-end gap-2">
+                                    @if(!$quan->trashed())
+                                        <form action="{{ route('admin.quan.toggle-noi-bat', $quan->id) }}" method="POST" class="inline">
+                                            @csrf
+                                            @method('PUT')
+                                            <button type="submit" class="p-2 rounded-lg transition-all {{ $quan->is_noi_bat ? 'text-yellow-500 hover:bg-yellow-50' : 'text-gray-400 hover:text-yellow-500 hover:bg-gray-100' }}" title="{{ $quan->is_noi_bat ? 'Gỡ khỏi danh sách nổi bật' : 'Đánh dấu nổi bật' }}">
+                                                <span class="material-symbols-outlined text-lg" {!! $quan->is_noi_bat ? 'style="font-variation-settings: \'FILL\' 1;"' : '' !!}>star</span>
+                                            </button>
+                                        </form>
+                                    @endif
+
                                     <a href="{{ route('admin.quan.edit', $quan->id) }}" class="p-2 text-gray-600 hover:text-primary hover:bg-gray-100 rounded-lg transition-all" title="Chỉnh sửa & Duyệt">
                                         <span class="material-symbols-outlined text-lg">edit</span>
                                     </a>
