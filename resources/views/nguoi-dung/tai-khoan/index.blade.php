@@ -61,7 +61,7 @@
                         <span class="material-symbols-outlined">bookmark</span>
                         <span class="font-body-lg text-body-lg">Địa điểm đã lưu</span>
                     </a>
-                    <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container transition-all" href="#">
+                    <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container transition-all" href="{{ route('blog.index') }}">
                         <span class="material-symbols-outlined">article</span>
                         <span class="font-body-lg text-body-lg">Bài viết</span>
                     </a>
@@ -70,13 +70,10 @@
                         <span class="font-body-lg text-body-lg">Cài đặt</span>
                     </a>
                     <hr class="my-2 border-outline-variant opacity-50"/>
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button type="submit" class="flex w-full items-center gap-3 px-4 py-3 rounded-lg text-error hover:bg-error-container transition-all">
-                            <span class="material-symbols-outlined">logout</span>
-                            <span class="font-body-lg text-body-lg">Đăng xuất</span>
-                        </button>
-                    </form>
+                    <button type="button" onclick="openLogoutModal()" class="flex w-full items-center gap-3 px-4 py-3 rounded-lg text-error hover:bg-error-container transition-all">
+                        <span class="material-symbols-outlined">logout</span>
+                        <span class="font-body-lg text-body-lg">Đăng xuất</span>
+                    </button>
                 </nav>
             </div>
             <!-- Verification Status Card -->

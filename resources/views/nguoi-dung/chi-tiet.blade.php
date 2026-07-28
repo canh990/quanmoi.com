@@ -178,23 +178,33 @@
                     </div>
 
                     <!-- Map Card -->
-                    <div class="bg-surface-card rounded-xl overflow-hidden shadow-[0px_4px_20px_rgba(0,0,0,0.05)]">
-                        <div class="h-48 w-full bg-surface-variant relative">
-                            <div class="w-full h-full bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&w=600&q=80')">
-                                <div class="absolute inset-0 flex items-center justify-center">
-                                    <div class="bg-primary text-white p-2 rounded-full shadow-lg pulse-animation">
-                                        <span class="material-symbols-outlined fill-icon">location_on</span>
-                                    </div>
-                                </div>
-                            </div>
+                    <div class="bg-surface-card rounded-xl overflow-hidden shadow-[0px_4px_20px_rgba(0,0,0,0.05)] border border-gray-100">
+                        <div class="h-64 w-full bg-surface-variant relative">
+                            <iframe 
+                                src="https://maps.google.com/maps?q={{ urlencode($quan->ten_quan . ', ' . $quan->dia_chi_chi_tiet . ', ' . $quan->ten_phuong_xa . ', ' . $quan->ten_quan_huyen . ', ' . $quan->ten_tinh_thanh) }}&t=&z=16&ie=UTF8&iwloc=&output=embed" 
+                                width="100%" 
+                                height="100%" 
+                                style="border:0;" 
+                                allowfullscreen="" 
+                                loading="lazy" 
+                                referrerpolicy="no-referrer-when-downgrade">
+                            </iframe>
                         </div>
-                        <div class="p-4">
-                            <div class="flex justify-between items-center mb-4">
-                                <span class="font-label-md text-label-md text-on-surface-variant">CHỈ ĐƯỜNG</span>
-                                <a href="https://maps.google.com/?q={{ urlencode($quan->dia_chi_chi_tiet . ', ' . $quan->ten_phuong_xa . ', ' . $quan->ten_quan_huyen) }}" target="_blank" class="text-primary font-bold text-sm flex items-center gap-1 hover:underline">
-                                    Mở Google Maps
-                                    <span class="material-symbols-outlined text-sm">open_in_new</span>
-                                </a>
+                        <div class="p-5 bg-white">
+                            <div class="flex flex-col gap-3">
+                                <div class="flex justify-between items-center">
+                                    <span class="font-label-md text-label-md text-gray-500 font-bold uppercase tracking-wider">Bản đồ chỉ đường</span>
+                                    <a href="https://maps.google.com/?q={{ urlencode($quan->ten_quan . ', ' . $quan->dia_chi_chi_tiet . ', ' . $quan->ten_phuong_xa . ', ' . $quan->ten_quan_huyen . ', ' . $quan->ten_tinh_thanh) }}" target="_blank" class="text-primary font-bold text-sm flex items-center gap-1 hover:underline bg-primary/5 px-3 py-1.5 rounded-lg transition-colors">
+                                        Mở Google Maps
+                                        <span class="material-symbols-outlined text-[18px]">open_in_new</span>
+                                    </a>
+                                </div>
+                                <div class="flex items-start gap-2.5">
+                                    <span class="material-symbols-outlined text-gray-400 text-[20px] shrink-0 mt-0.5" style="font-variation-settings: 'FILL' 1;">location_on</span>
+                                    <p class="text-[14.5px] text-gray-700 leading-snug">
+                                        {{ $quan->dia_chi_chi_tiet }}, {{ $quan->ten_phuong_xa }}, {{ $quan->ten_quan_huyen }}, {{ $quan->ten_tinh_thanh }}
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </div>

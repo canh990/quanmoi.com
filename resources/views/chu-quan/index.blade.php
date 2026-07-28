@@ -31,15 +31,15 @@
                         </span>
                     </div>
 
-                    <p class="text-sm text-gray-500 mt-4 line-clamp-2">{{ $quan->mo_ta ?: 'Cập nhật mô tả để cửa hàng nổi bật hơn trên hệ thống.' }}</p>
+                    <p class="text-sm text-gray-500 mt-4 line-clamp-2 flex-grow">{{ $quan->mo_ta ?: 'Cập nhật mô tả để cửa hàng nổi bật hơn trên hệ thống.' }}</p>
 
-                    <div class="mt-5 flex items-center justify-between text-sm">
-                        <span class="text-gray-500">{{ $quan->gio_mo_cua }} - {{ $quan->gio_dong_cua }}</span>
-                        <span class="font-bold text-primary">{{ number_format($quan->gia_nho_nhat, 0, ',', '.') }}đ - {{ number_format($quan->gia_lon_nhat, 0, ',', '.') }}đ</span>
-                    </div>
+                    <div class="mt-auto pt-4 flex flex-col gap-4">
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="text-gray-500">{{ $quan->gio_mo_cua }} - {{ $quan->gio_dong_cua }}</span>
+                            <span class="font-bold text-primary">{{ number_format($quan->gia_nho_nhat, 0, ',', '.') }}đ - {{ number_format($quan->gia_lon_nhat, 0, ',', '.') }}đ</span>
+                        </div>
 
-                    <div class="mt-5">
-                        <a href="{{ route('chu-quan.quan.show', ['slug' => $quan->slug]) }}" class="h-11 rounded-2xl bg-primary text-white font-bold text-sm flex items-center justify-center gap-2 hover:bg-primary/90 transition-all">
+                        <a href="{{ route('chu-quan.quan.show', ['slug' => $quan->slug]) }}" class="w-full h-11 rounded-2xl bg-primary text-white font-bold text-sm flex items-center justify-center gap-2 hover:bg-primary/90 transition-all shadow-sm">
                             <span class="material-symbols-outlined text-[18px]">storefront</span>
                             Quản lý cửa hàng
                         </a>

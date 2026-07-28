@@ -41,6 +41,7 @@ class Quan extends Model
         'anh_bia',
         'anh_bia_key',
         'trang_thai',
+        'is_noi_bat',
     ];
 
     public function chuQuan()

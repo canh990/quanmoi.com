@@ -46,7 +46,7 @@
             <div class="space-y-3">
                 <h4 class="font-bold text-[15px] text-on-surface uppercase tracking-wider">Về Quán Mới</h4>
                 <ul class="space-y-2.5 text-[14px]">
-                    <li><a href="#" class="text-on-surface-variant hover:text-primary transition-colors">Giới thiệu về chúng tôi</a></li>
+                    <li><a href="{{ route('about') }}" class="text-on-surface-variant hover:text-primary transition-colors">Giới thiệu về chúng tôi</a></li>
                     <li><a href="#" class="text-on-surface-variant hover:text-primary transition-colors">Blog ẩm thực</a></li>
                     <li><a href="#" class="text-on-surface-variant hover:text-primary transition-colors">Dành cho chủ quán</a></li>
                     <li><a href="#" class="text-on-surface-variant hover:text-primary transition-colors">Tuyển dụng</a></li>

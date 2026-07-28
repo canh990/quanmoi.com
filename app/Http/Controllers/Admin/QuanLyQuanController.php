@@ -30,6 +30,11 @@ class QuanLyQuanController extends Controller
             $query->whereNull('ngay_xoa')->where('trang_thai', $request->input('status'));
         }
 
+        // Filter by is_noi_bat
+        if ($request->input('is_noi_bat') == 1) {
+            $query->where('is_noi_bat', true);
+        }
+
         $quanList = $query->orderBy('created_at', 'desc')->paginate(15)->withQueryString();
 
         return view('admin.quan.index', compact('quanList'));
@@ -107,5 +112,15 @@ class QuanLyQuanController extends Controller
         }
 
         return redirect()->route('admin.quan.index')->with('success', 'Đã xóa vĩnh viễn quán!');
+    }
+
+    public function toggleNoiBat(string $id)
+    {
+        $quan = Quan::withTrashed()->findOrFail($id);
+        $quan->is_noi_bat = !$quan->is_noi_bat;
+        $quan->save();
+
+        $statusStr = $quan->is_noi_bat ? 'Đã thêm quán vào danh sách nổi bật' : 'Đã gỡ quán khỏi danh sách nổi bật';
+        return back()->with('success', $statusStr);
     }
 }

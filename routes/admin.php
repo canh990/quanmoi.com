@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\QuanLyNguoiDungController;
 use App\Http\Controllers\Admin\QuanLyQuanController;
+use App\Http\Controllers\Admin\SeoController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'KiemTraQuyenHan:admin'])->group(function () {
@@ -24,4 +25,10 @@ Route::middleware(['auth', 'KiemTraQuyenHan:admin'])->group(function () {
     Route::delete('/quan/{id}', [QuanLyQuanController::class, 'destroy'])->name('quan.destroy');
     Route::post('/quan/{id}/restore', [QuanLyQuanController::class, 'restore'])->name('quan.restore');
     Route::delete('/quan/{id}/force', [QuanLyQuanController::class, 'forceDestroy'])->name('quan.force-destroy');
+    Route::put('/quan/{id}/toggle-noi-bat', [QuanLyQuanController::class, 'toggleNoiBat'])->name('quan.toggle-noi-bat');
+
+    // Quản lý SEO
+    Route::get('/seo', [SeoController::class, 'index'])->name('seo.index');
+    Route::get('/seo/{trang}/edit', [SeoController::class, 'edit'])->name('seo.edit');
+    Route::put('/seo/{trang}', [SeoController::class, 'update'])->name('seo.update');
 });

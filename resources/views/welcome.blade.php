@@ -1,14 +1,44 @@
 @extends('layouts.app')
 
-@section('title', 'Quán Mới - Khám phá tinh hoa ẩm thực địa phương')
+@php $seo = \App\Models\SeoSetting::forPage('home'); @endphp
+
+@section('title', $seo->meta_title ?: 'Quán Mới - Khám phá tinh hoa ẩm thực địa phương')
+
+@push('seo')
+    @if($seo->meta_description)
+    <meta name="description" content="{{ $seo->meta_description }}">
+    @endif
+    @if($seo->meta_keywords)
+    <meta name="keywords" content="{{ $seo->meta_keywords }}">
+    @endif
+    <meta property="og:title" content="{{ $seo->og_title ?: $seo->meta_title ?: 'Quán Mới' }}">
+    <meta property="og:description" content="{{ $seo->og_description ?: $seo->meta_description ?: '' }}">
+    @if($seo->og_image)
+    <meta property="og:image" content="{{ $seo->og_image }}">
+    @endif
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ url('/') }}">
+@endpush
 
 @section('content')
-    <!-- DESKTOP Main Content -->
+    {{-- DESKTOP Main Content --}}
     <main class="hidden md:block flex-grow">
-        <!-- Hero Section -->
+        {{-- Hero Section --}}
         <section class="relative w-full h-[540px] flex items-center justify-center overflow-hidden">
-            <div class="absolute inset-0 bg-cover bg-center scale-105 transform hover:scale-100 transition-transform duration-1000" style="background-image: url('https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1600&q=80')">
-                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/30"></div>
+            {{-- Slider Track --}}
+            <div id="hero-slider-track" class="absolute inset-0 flex w-[300%] transition-transform duration-1000 ease-in-out" style="transform: translateX(0%);">
+                {{-- Slide 1 --}}
+                <div class="w-1/3 h-full bg-cover bg-center relative" style="background-image: url('{{ asset('images/hero_banner.png') }}')">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/30"></div>
+                </div>
+                {{-- Slide 2 --}}
+                <div class="w-1/3 h-full bg-cover bg-center relative" style="background-image: url('{{ asset('images/hero_banner_2.png') }}')">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/30"></div>
+                </div>
+                {{-- Slide 3 --}}
+                <div class="w-1/3 h-full bg-cover bg-center relative" style="background-image: url('{{ asset('images/hero_banner_3.png') }}')">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/30"></div>
+                </div>
             </div>
             <div class="relative z-10 text-center px-4 max-w-4xl space-y-6">
                 <div class="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-4 py-1.5 rounded-full text-white text-sm font-semibold border border-white/30 mb-2">
@@ -33,7 +63,7 @@
             </div>
         </section>
 
-        <!-- Categories Section -->
+        {{-- Categories Section --}}
         <section class="max-w-[1240px] mx-auto py-16 px-container-margin">
             <div class="flex justify-between items-end mb-8">
                 <div>
@@ -42,58 +72,58 @@
                 </div>
             </div>
             <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-5">
-                <!-- Category 1 -->
-                <div class="bg-surface-card rounded-2xl shadow-sm border border-surface-container hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer p-6 flex flex-col items-center text-center group">
+                {{-- Category 1 --}}
+                <a href="{{ route('kham-pha', ['danh_muc' => 'Nhà hàng']) }}" class="block bg-surface-card rounded-2xl shadow-sm border border-surface-container hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer p-6 flex flex-col items-center text-center group">
                     <div class="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-3 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
                         <span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">restaurant</span>
                     </div>
-                    <h3 class="font-bold text-[16px] text-on-surface">Quán ăn</h3>
+                    <h3 class="font-bold text-[16px] text-on-surface">Nhà hàng</h3>
                     <p class="text-text-muted text-[13px] mt-1">Bữa chính đậm đà</p>
-                </div>
-                <!-- Category 2 -->
-                <div class="bg-surface-card rounded-2xl shadow-sm border border-surface-container hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer p-6 flex flex-col items-center text-center group">
+                </a>
+                {{-- Category 2 --}}
+                <a href="{{ route('kham-pha', ['danh_muc' => 'Cà phê & Trà']) }}" class="block bg-surface-card rounded-2xl shadow-sm border border-surface-container hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer p-6 flex flex-col items-center text-center group">
                     <div class="w-16 h-16 rounded-2xl bg-secondary/10 flex items-center justify-center mb-3 text-secondary group-hover:bg-secondary group-hover:text-white transition-colors">
                         <span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">local_cafe</span>
                     </div>
                     <h3 class="font-bold text-[16px] text-on-surface">Cà phê & Trà</h3>
                     <p class="text-text-muted text-[13px] mt-1">Tụ tập & Làm việc</p>
-                </div>
-                <!-- Category 3 -->
-                <div class="bg-surface-card rounded-2xl shadow-sm border border-surface-container hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer p-6 flex flex-col items-center text-center group">
+                </a>
+                {{-- Category 3 --}}
+                <a href="{{ route('kham-pha', ['danh_muc' => 'Billiards & Giải trí']) }}" class="block bg-surface-card rounded-2xl shadow-sm border border-surface-container hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer p-6 flex flex-col items-center text-center group">
                     <div class="w-16 h-16 rounded-2xl bg-tertiary/10 flex items-center justify-center mb-3 text-tertiary group-hover:bg-tertiary group-hover:text-white transition-colors">
                         <span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">sports_esports</span>
                     </div>
-                    <h3 class="font-bold text-[16px] text-on-surface">Bida & Giải trí</h3>
+                    <h3 class="font-bold text-[16px] text-on-surface">Billiards & Giải trí</h3>
                     <p class="text-text-muted text-[13px] mt-1">Vui chơi cuối tuần</p>
-                </div>
-                <!-- Category 4 -->
-                <div class="bg-surface-card rounded-2xl shadow-sm border border-surface-container hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer p-6 flex flex-col items-center text-center group">
+                </a>
+                {{-- Category 4 --}}
+                <a href="{{ route('kham-pha', ['danh_muc' => 'Đồ ăn vặt']) }}" class="block bg-surface-card rounded-2xl shadow-sm border border-surface-container hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer p-6 flex flex-col items-center text-center group">
                     <div class="w-16 h-16 rounded-2xl bg-red-500/10 flex items-center justify-center mb-3 text-red-600 group-hover:bg-red-600 group-hover:text-white transition-colors">
                         <span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">fastfood</span>
                     </div>
                     <h3 class="font-bold text-[16px] text-on-surface">Đồ ăn vặt</h3>
                     <p class="text-text-muted text-[13px] mt-1">Ngon rẻ chuẩn gu</p>
-                </div>
-                <!-- Category 5 -->
-                <div class="bg-surface-card rounded-2xl shadow-sm border border-surface-container hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer p-6 flex flex-col items-center text-center group">
+                </a>
+                {{-- Category 5 --}}
+                <a href="{{ route('kham-pha', ['danh_muc' => 'Lẩu & Nướng']) }}" class="block bg-surface-card rounded-2xl shadow-sm border border-surface-container hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer p-6 flex flex-col items-center text-center group">
                     <div class="w-16 h-16 rounded-2xl bg-amber-500/10 flex items-center justify-center mb-3 text-amber-600 group-hover:bg-amber-600 group-hover:text-white transition-colors">
                         <span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">outdoor_grill</span>
                     </div>
                     <h3 class="font-bold text-[16px] text-on-surface">Lẩu & Nướng</h3>
                     <p class="text-text-muted text-[13px] mt-1">Tiệc tùng nhóm</p>
-                </div>
-                <!-- Category 6 -->
-                <div class="bg-surface-card rounded-2xl shadow-sm border border-surface-container hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer p-6 flex flex-col items-center text-center group">
+                </a>
+                {{-- Category 6 --}}
+                <a href="{{ route('kham-pha', ['danh_muc' => 'Quán Đêm 24/7']) }}" class="block bg-surface-card rounded-2xl shadow-sm border border-surface-container hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer p-6 flex flex-col items-center text-center group">
                     <div class="w-16 h-16 rounded-2xl bg-purple-500/10 flex items-center justify-center mb-3 text-purple-600 group-hover:bg-purple-600 group-hover:text-white transition-colors">
                         <span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">nightlife</span>
                     </div>
                     <h3 class="font-bold text-[16px] text-on-surface">Quán Đêm 24/7</h3>
                     <p class="text-text-muted text-[13px] mt-1">Ăn đêm & Xuyên đêm</p>
-                </div>
+                </a>
             </div>
         </section>
 
-        <!-- SECTION 1: Trending Venues / Quán Nổi Bật -->
+        {{-- SECTION 1: Trending Venues / Quán Nổi Bật --}}
         <section class="bg-surface-container-low py-16">
             <div class="max-w-[1240px] mx-auto px-container-margin">
                 <div class="flex justify-between items-end mb-8">
@@ -105,7 +135,7 @@
                         <h2 class="text-2xl font-black text-on-surface">Quán ăn nổi bật được đánh giá cao</h2>
                         <p class="text-text-muted text-[15px] mt-1">Những địa điểm nhận được nhiều phản hồi tích cực nhất từ cộng đồng</p>
                     </div>
-                    <a class="text-primary font-bold text-[14px] flex items-center hover:underline gap-1" href="#">
+                    <a class="text-primary font-bold text-[14px] flex items-center hover:underline gap-1" href="{{ route('quan-noi-bat') }}">
                         Xem tất cả <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
                     </a>
                 </div>
@@ -140,6 +170,15 @@
                     <p class="col-span-3 text-center text-gray-500 py-10">Chưa có quán nào nổi bật.</p>
                     @endforelse
                 </div>
+
+                @if($totalQuanNoiBat > 9)
+                <div class="mt-10 flex justify-center">
+                    <a href="{{ route('quan-noi-bat') }}" class="inline-flex items-center justify-center bg-white border-2 border-primary text-primary px-8 py-3.5 rounded-full font-bold text-[15px] hover:bg-primary hover:text-white transition-all shadow-sm group">
+                        Xem thêm {{ $totalQuanNoiBat - 9 }} địa điểm khác
+                        <span class="material-symbols-outlined ml-2 group-hover:translate-x-1 transition-transform text-[20px]">arrow_forward</span>
+                    </a>
+                </div>
+                @endif
 
                 <div class="mt-10 rounded-[28px] bg-white border border-gray-100 shadow-sm p-6 md:p-7">
                     <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-6">
@@ -186,11 +225,20 @@
                         <p class="sm:col-span-2 lg:col-span-4 text-center text-gray-500 py-10">Chưa có quán mới nào.</p>
                         @endforelse
                     </div>
+
+                    @if($totalQuanMoi > 12)
+                    <div class="mt-8 pt-6 border-t border-gray-100 flex justify-center">
+                        <a href="{{ route('quan-moi') }}" class="inline-flex items-center justify-center bg-gray-50 border-2 border-gray-200 text-gray-700 px-8 py-3.5 rounded-full font-bold text-[15px] hover:bg-primary hover:border-primary hover:text-white transition-all shadow-sm group">
+                            Khám phá thêm {{ $totalQuanMoi - 12 }} quán mới
+                            <span class="material-symbols-outlined ml-2 group-hover:translate-x-1 transition-transform text-[20px]">arrow_forward</span>
+                        </a>
+                    </div>
+                    @endif
                 </div>
             </div>
         </section>
 
-        <!-- SECTION 2: Video Reviews Carousel (Mới thêm) -->
+        {{-- SECTION 2: Video Reviews Carousel (Mới thêm) --}}
         <section class="max-w-[1240px] mx-auto py-16 px-container-margin">
             <div class="flex justify-between items-end mb-8">
                 <div>
@@ -285,7 +333,7 @@
             </div>
         </section>
 
-        <!-- SECTION 3: Community Collections / BST Bộ Thẩm Ẩm Thực -->
+        {{-- SECTION 3: Community Collections / BST Bộ Thẩm Ẩm Thực --}}
         <section class="bg-gray-900 text-white py-16">
             <div class="max-w-[1240px] mx-auto px-container-margin">
                 <div class="flex justify-between items-end mb-8">
@@ -329,7 +377,7 @@
             </div>
         </section>
 
-        <!-- SECTION 4: Community Impact Statistics -->
+        {{-- SECTION 4: Community Impact Statistics --}}
         <section class="max-w-[1240px] mx-auto py-20 px-container-margin">
             <div class="bg-gradient-to-br from-primary-fixed via-amber-50 to-orange-100 rounded-3xl p-10 md:p-14 flex flex-col md:flex-row items-center justify-between shadow-sm relative overflow-hidden border border-amber-200">
                 <div class="relative z-10 md:w-1/3 mb-8 md:mb-0 space-y-3">
@@ -355,9 +403,9 @@
         </section>
     </main>
 
-    <!-- MOBILE Main Content -->
+    {{-- MOBILE Main Content --}}
     <main class="max-w-[1200px] mx-auto w-full md:hidden flex-grow space-y-6 pb-12">
-        <!-- Hero Section -->
+        {{-- Hero Section --}}
         <section class="px-4 pt-4 pb-6 bg-white rounded-b-2xl shadow-sm relative overflow-hidden border-b border-gray-100">
             <div class="relative z-10 space-y-3">
                 <div class="inline-flex items-center gap-1 text-primary text-[11px] font-bold uppercase tracking-wider">
@@ -375,40 +423,40 @@
             </div>
         </section>
 
-        <!-- Categories Grid Mobile (6 items) -->
+        {{-- Categories Grid Mobile (6 items) --}}
         <section class="px-4">
             <div class="grid grid-cols-3 gap-3">
-                <a class="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-white border border-gray-100 shadow-sm active:scale-95 transition-transform" href="#">
+                <a class="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-white border border-gray-100 shadow-sm active:scale-95 transition-transform" href="{{ route('kham-pha', ['danh_muc' => 'Nhà hàng']) }}">
                     <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
                         <span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">restaurant</span>
                     </div>
-                    <span class="text-[12px] font-bold text-center text-on-surface">Quán ăn</span>
+                    <span class="text-[12px] font-bold text-center text-on-surface">Nhà hàng</span>
                 </a>
-                <a class="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-white border border-gray-100 shadow-sm active:scale-95 transition-transform" href="#">
+                <a class="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-white border border-gray-100 shadow-sm active:scale-95 transition-transform" href="{{ route('kham-pha', ['danh_muc' => 'Cà phê & Trà']) }}">
                     <div class="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary">
                         <span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">local_cafe</span>
                     </div>
                     <span class="text-[12px] font-bold text-center text-on-surface">Cà phê & Trà</span>
                 </a>
-                <a class="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-white border border-gray-100 shadow-sm active:scale-95 transition-transform" href="#">
+                <a class="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-white border border-gray-100 shadow-sm active:scale-95 transition-transform" href="{{ route('kham-pha', ['danh_muc' => 'Billiards & Giải trí']) }}">
                     <div class="w-12 h-12 rounded-xl bg-tertiary/10 flex items-center justify-center text-tertiary">
                         <span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">sports_esports</span>
                     </div>
-                    <span class="text-[12px] font-bold text-center text-on-surface">Bida & Giải trí</span>
+                    <span class="text-[12px] font-bold text-center text-on-surface">Billiards & Giải trí</span>
                 </a>
-                <a class="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-white border border-gray-100 shadow-sm active:scale-95 transition-transform" href="#">
+                <a class="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-white border border-gray-100 shadow-sm active:scale-95 transition-transform" href="{{ route('kham-pha', ['danh_muc' => 'Đồ ăn vặt']) }}">
                     <div class="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center text-red-600">
                         <span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">fastfood</span>
                     </div>
                     <span class="text-[12px] font-bold text-center text-on-surface">Đồ ăn vặt</span>
                 </a>
-                <a class="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-white border border-gray-100 shadow-sm active:scale-95 transition-transform" href="#">
+                <a class="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-white border border-gray-100 shadow-sm active:scale-95 transition-transform" href="{{ route('kham-pha', ['danh_muc' => 'Lẩu & Nướng']) }}">
                     <div class="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center text-amber-700">
                         <span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">outdoor_grill</span>
                     </div>
                     <span class="text-[12px] font-bold text-center text-on-surface">Lẩu & Nướng</span>
                 </a>
-                <a class="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-white border border-gray-100 shadow-sm active:scale-95 transition-transform" href="#">
+                <a class="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-white border border-gray-100 shadow-sm active:scale-95 transition-transform" href="{{ route('kham-pha', ['danh_muc' => 'Quán Đêm 24/7']) }}">
                     <div class="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center text-purple-700">
                         <span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">nightlife</span>
                     </div>
@@ -417,7 +465,7 @@
             </div>
         </section>
 
-        <!-- Recommended List Mobile -->
+        {{-- Recommended List Mobile --}}
         <section class="px-4">
             <div class="flex justify-between items-center mb-3">
                 <div>
@@ -452,7 +500,7 @@
             </div>
         </section>
 
-        <!-- Video Shorts Carousel Mobile -->
+        {{-- Video Shorts Carousel Mobile --}}
         <section class="px-4">
             <div class="flex justify-between items-center mb-3">
                 <div>
@@ -521,7 +569,7 @@
             </div>
         </section>
 
-        <!-- Curated Collections Mobile -->
+        {{-- Curated Collections Mobile --}}
         <section class="px-4">
             <div class="mb-3">
                 <h2 class="font-bold text-[16px] text-on-surface">Bộ sưu tập đề xuất</h2>
@@ -560,7 +608,7 @@
             </div>
         </section>
 
-        <!-- Community Impact Stats Mobile -->
+        {{-- Community Impact Stats Mobile --}}
         <section class="px-4 pt-2">
             <div class="bg-gradient-to-br from-primary-fixed via-amber-50 to-orange-100 rounded-2xl p-5 border border-amber-200 space-y-4 shadow-sm">
                 <div class="space-y-1">
@@ -585,4 +633,19 @@
             </div>
         </section>
     </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const track = document.getElementById('hero-slider-track');
+            if (!track) return;
+            
+            let currentSlide = 0;
+            const totalSlides = 3;
+            
+            setInterval(() => {
+                currentSlide = (currentSlide + 1) % totalSlides;
+                track.style.transform = `translateX(-${currentSlide * (100 / totalSlides)}%)`;
+            }, 4000);
+        });
+    </script>
 @endsection
