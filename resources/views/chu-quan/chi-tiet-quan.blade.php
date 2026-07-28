@@ -13,20 +13,36 @@
         </div>
     @endif
 
+    @push('styles')
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css" />
+    @endpush
+
     {{-- Header / Cover Photo & Basic Info --}}
     <div class="bg-white rounded-[28px] border border-gray-100 shadow-sm overflow-hidden mb-8">
         {{-- Cover Image --}}
-        <div class="h-64 md:h-80 w-full bg-gray-100 relative">
+        <div class="h-64 md:h-80 w-full bg-gray-100 relative group cursor-pointer" data-fancybox="gallery" data-src="{{ $quan->anh_bia ? $quan->anh_bia : 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80' }}">
             <img src="{{ $quan->anh_bia ? $quan->anh_bia : 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80' }}" class="w-full h-full object-cover" alt="{{ $quan->ten_quan }}" />
-            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-10 pointer-events-none"></div>
             
-            <div class="absolute bottom-6 left-6 right-6 flex flex-col md:flex-row md:items-end justify-between gap-4 text-white">
+            <div class="absolute bottom-6 left-6 right-6 flex flex-col md:flex-row md:items-end justify-between gap-4 text-white z-20">
                 <div>
                     <div class="flex items-center gap-2 mb-2">
-                        <div class="inline-flex items-center gap-1.5 bg-tick-xanh text-white px-3 py-1 rounded-full text-xs font-bold">
-                            <span class="material-symbols-outlined text-[14px]">verified</span>
-                            Đã duyệt & Đang hoạt động
-                        </div>
+                        @if($quan->trang_thai === 'da_duyet')
+                            <div class="inline-flex items-center gap-1.5 bg-tick-xanh text-white px-3 py-1 rounded-full text-xs font-bold">
+                                <span class="material-symbols-outlined text-[14px]">verified</span>
+                                Đã duyệt & Đang hoạt động
+                            </div>
+                        @elseif($quan->trang_thai === 'chua_duyet')
+                            <div class="inline-flex items-center gap-1.5 bg-yellow-500 text-white px-3 py-1 rounded-full text-xs font-bold">
+                                <span class="material-symbols-outlined text-[14px]">pending</span>
+                                Đang chờ duyệt
+                            </div>
+                        @else
+                            <div class="inline-flex items-center gap-1.5 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold">
+                                <span class="material-symbols-outlined text-[14px]">cancel</span>
+                                Bị từ chối / Khóa
+                            </div>
+                        @endif
                         <div class="inline-flex items-center gap-1 bg-white/20 backdrop-blur-md text-white px-3 py-1 rounded-full text-xs font-bold border border-white/30">
                             <span class="material-symbols-outlined text-[14px]">category</span>
                             {{ $quan->loai_hinh_kinh_doanh ?? 'Quán ăn' }}
@@ -73,17 +89,6 @@
         
         {{-- Left: Details & Gallery --}}
         <div class="lg:col-span-2 space-y-8">
-            {{-- Description --}}
-            <div class="bg-white rounded-[24px] p-6 md:p-8 border border-gray-100 shadow-sm space-y-4">
-                <h3 class="text-xl font-extrabold text-on-surface flex items-center gap-2">
-                    <span class="material-symbols-outlined text-primary">description</span>
-                    Mô tả thông tin quán
-                </h3>
-                <p class="text-gray-600 leading-relaxed text-[15px]">
-                    {{ $quan->mo_ta ?: 'Chưa có mô tả chi tiết cho quán ăn này.' }}
-                </p>
-            </div>
-
             {{-- Gallery Upload --}}
             <div class="bg-white rounded-[24px] p-6 md:p-8 border border-gray-100 shadow-sm space-y-4">
                 <div class="flex items-center justify-between">
@@ -99,15 +104,29 @@
 
                 <div id="gallery-grid" class="grid grid-cols-2 md:grid-cols-4 gap-3">
                     @forelse($quan->hinhAnh as $img)
-                        <div class="relative group rounded-xl overflow-hidden h-32 bg-gray-100 border border-gray-100">
-                            <img src="{{ asset('storage/' . $img->duong_dan) }}" class="w-full h-full object-cover" alt="Ảnh quán" />
-                        </div>
+                        @php
+                            $imgSrc = Str::startsWith($img->duong_dan, 'http') ? $img->duong_dan : asset('storage/' . $img->duong_dan);
+                        @endphp
+                        <a href="{{ $imgSrc }}" data-fancybox="gallery" class="relative group rounded-xl overflow-hidden h-32 bg-gray-100 border border-gray-100 block">
+                            <img src="{{ $imgSrc }}" class="w-full h-full object-cover" alt="Ảnh quán" />
+                        </a>
                     @empty
                         <div class="col-span-full py-8 text-center text-gray-400 text-sm">
                             Chưa có hình ảnh nào trong thư viện quán.
                         </div>
                     @endforelse
                 </div>
+            </div>
+
+            {{-- Description --}}
+            <div class="bg-white rounded-[24px] p-6 md:p-8 border border-gray-100 shadow-sm space-y-4">
+                <h3 class="text-xl font-extrabold text-on-surface flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">description</span>
+                    Mô tả thông tin quán
+                </h3>
+                <p class="text-gray-600 leading-relaxed text-[15px]">
+                    {{ $quan->mo_ta ?: 'Chưa có mô tả chi tiết cho quán ăn này.' }}
+                </p>
             </div>
         </div>
 
@@ -132,7 +151,31 @@
 @endsection
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js"></script>
 <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        Fancybox.bind('[data-fancybox="gallery"]', {
+            Thumbs: {
+                autoStart: true,
+            },
+            Toolbar: {
+                display: {
+                    left: ["infobar"],
+                    middle: [
+                        "zoomIn",
+                        "zoomOut",
+                        "toggle1to1",
+                        "rotateCCW",
+                        "rotateCW",
+                        "flipX",
+                        "flipY",
+                    ],
+                    right: ["slideshow", "thumbs", "close"],
+                },
+            },
+        });
+    });
+
     async function uploadGalleryImages(input, quanId) {
         if (!input.files || input.files.length === 0) return;
 

@@ -25,7 +25,12 @@ class HomeController extends Controller
         $totalQuanMoi = Quan::where('trang_thai', 'da_duyet')->count();
         $totalQuanNoiBat = Quan::where('trang_thai', 'da_duyet')->where('is_noi_bat', true)->count();
 
-        return view('welcome', compact('quanNoiBat', 'quanMoi', 'totalQuanMoi', 'totalQuanNoiBat'));
+        $savedQuanIds = [];
+        if (auth()->check()) {
+            $savedQuanIds = auth()->user()->savedQuan()->pluck('quan_id')->toArray();
+        }
+
+        return view('welcome', compact('quanNoiBat', 'quanMoi', 'totalQuanMoi', 'totalQuanNoiBat', 'savedQuanIds'));
     }
 
     public function show($slug)
@@ -34,6 +39,9 @@ class HomeController extends Controller
             ->where('slug', $slug)
             ->where('trang_thai', 'da_duyet')
             ->firstOrFail();
+
+        // Tăng lượt xem
+        $quan->increment('luot_xem');
 
         return view('nguoi-dung.chi-tiet', compact('quan'));
     }

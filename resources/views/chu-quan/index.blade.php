@@ -18,7 +18,7 @@
 
     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         @forelse ($quanList as $quan)
-            <article class="bg-white rounded-[28px] border border-gray-100 shadow-sm overflow-hidden flex flex-col">
+            <article class="bg-white rounded-[28px] border border-gray-100 shadow-sm overflow-hidden flex flex-col h-full">
                 <img src="{{ $quan->anh_bia ? $quan->anh_bia : 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=900&q=80' }}" alt="{{ $quan->ten_quan }}" class="w-full h-52 object-cover">
                 <div class="p-5 flex-1 flex flex-col">
                     <div class="flex items-start justify-between gap-3">
@@ -26,12 +26,12 @@
                             <h2 class="text-xl font-black text-on-surface line-clamp-1">{{ $quan->ten_quan }}</h2>
                             <p class="text-sm text-gray-500 mt-1 line-clamp-1">{{ $quan->ten_quan_huyen }}, {{ $quan->ten_tinh_thanh }}</p>
                         </div>
-                        <span class="px-3 py-1 rounded-full text-xs font-bold {{ $quan->trang_thai === 'da_duyet' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-800' }}">
+                        <span class="whitespace-nowrap flex-shrink-0 px-3 py-1 rounded-full text-xs font-bold {{ $quan->trang_thai === 'da_duyet' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-800' }}">
                             {{ $quan->trang_thai === 'da_duyet' ? 'Đã duyệt' : 'Chờ duyệt' }}
                         </span>
                     </div>
 
-                    <p class="text-sm text-gray-500 mt-4 line-clamp-2 flex-grow">{{ $quan->mo_ta ?: 'Cập nhật mô tả để cửa hàng nổi bật hơn trên hệ thống.' }}</p>
+                    <p class="text-sm text-gray-500 mt-4 line-clamp-2">{{ $quan->mo_ta ?: 'Cập nhật mô tả để cửa hàng nổi bật hơn trên hệ thống.' }}</p>
 
                     <div class="mt-auto pt-4 flex flex-col gap-4">
                         <div class="flex items-center justify-between text-sm">

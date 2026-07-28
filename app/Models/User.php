@@ -67,6 +67,11 @@ class User extends Authenticatable
         return $this->hasMany(Quan::class, 'chu_quan_id');
     }
 
+    public function savedQuan(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Quan::class, 'quan_da_luu', 'nguoi_dung_id', 'quan_id')->withTimestamps();
+    }
+
     public function isAdmin(): bool
     {
         return $this->vaiTro?->ten === 'admin' || strtolower($this->email) === 'admin@quanmoi.com';

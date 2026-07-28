@@ -43,7 +43,8 @@ Route::prefix('chu-quan')->group(function () {
         Route::get('/quan', [QuanController::class, 'ownerIndex'])->name('chu-quan.quan.index');
         Route::get('/quan/{slug}', [QuanController::class, 'show'])->name('chu-quan.quan.show');
         Route::post('/quan/{quanId}/hinh-anh', [HinhAnhQuanController::class, 'store'])->name('chu-quan.hinh-anh.store');
-        Route::delete('/hinh-anh/{id}', [HinhAnhQuanController::class, 'destroy'])->name('chu-quan.hinh-anh.destroy');
+        Route::get('/quan/{slug}/thuc-don', [\App\Http\Controllers\ChuQuan\MenuController::class, 'edit'])->name('chu-quan.quan.menu.edit');
+        Route::post('/quan/{slug}/thuc-don', [\App\Http\Controllers\ChuQuan\MenuController::class, 'update'])->name('chu-quan.quan.menu.update');
     });
 });
 
@@ -56,6 +57,8 @@ Route::prefix('api')->group(function () {
 
 Route::middleware('auth')->group(function () {
     Route::get('/tai-khoan', [TaiKhoanController::class, 'index'])->name('tai-khoan.index');
+    Route::get('/quan-da-luu', [\App\Http\Controllers\NguoiDung\QuanDaLuuController::class, 'index'])->name('quan-da-luu.index');
+    Route::post('/quan-da-luu/{quanId}/toggle', [\App\Http\Controllers\NguoiDung\QuanDaLuuController::class, 'toggle'])->name('quan-da-luu.toggle');
     Route::put('/tai-khoan', [TaiKhoanController::class, 'update'])->name('tai-khoan.update');
     Route::put('/tai-khoan/mat-khau', [TaiKhoanController::class, 'updatePassword'])->name('tai-khoan.update-password');
 });

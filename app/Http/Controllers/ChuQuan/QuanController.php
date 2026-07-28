@@ -90,7 +90,7 @@ class QuanController extends Controller
         $chuQuanId = $user?->id ?? (Auth::check() ? Auth::id() : DB::table('nguoi_dung')->first()?->id);
 
         try {
-            $quan = DB::transaction(function () use ($validated, $request, $chuQuanId, $slug, $anhBiaPath, $anhBiaKey) {
+            $quan = DB::transaction(function () use ($validated, $request, $chuQuanId, $slug, $anhBiaPath, $anhBiaKey, $galleryKeys, $galleryPaths) {
                 $q = Quan::create([
                     'chu_quan_id' => $chuQuanId,
                     'ten_quan' => $validated['ten_quan'],
@@ -116,35 +116,6 @@ class QuanController extends Controller
                     'anh_bia_key' => $anhBiaKey,
                     'trang_thai' => 'chua_duyet',
                 ]);
-
-                // Save Menu Data
-                if ($request->filled('menu_data')) {
-                    $menuCategories = json_decode($request->menu_data, true);
-                    if (is_array($menuCategories)) {
-                        foreach ($menuCategories as $catIndex => $catData) {
-                            if (empty(trim($catData['name']))) continue;
-
-                            $danhMuc = DanhMucMenu::create([
-                                'quan_id' => $q->id,
-                                'ten_danh_muc' => trim($catData['name']),
-                                'thu_tu' => $catIndex,
-                            ]);
-
-                            if (!empty($catData['items']) && is_array($catData['items'])) {
-                                foreach ($catData['items'] as $itemData) {
-                                    if (empty(trim($itemData['name']))) continue;
-
-                                    MonTrongMenu::create([
-                                        'danh_muc_id' => $danhMuc->id,
-                                        'ten_mon' => trim($itemData['name']),
-                                        'gia' => !empty($itemData['price']) ? $itemData['price'] : 0,
-                                        'mo_ta' => $itemData['description'] ?? null,
-                                    ]);
-                                }
-                            }
-                        }
-                    }
-                }
 
                 // Save Gallery Images
                 foreach ($galleryKeys as $index => $key) {
@@ -173,13 +144,13 @@ class QuanController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Dang quan thanh cong!',
-                'redirect_to' => route('chu-quan.quan.show', ['slug' => $quan->slug]),
+                'redirect_to' => route('chu-quan.quan.menu.edit', ['slug' => $quan->slug]),
                 'data' => $quan,
             ]);
         }
 
         return redirect()
-            ->route('chu-quan.quan.show', ['slug' => $quan->slug])
+            ->route('chu-quan.quan.menu.edit', ['slug' => $quan->slug])
             ->with('success', 'Dang quan moi thanh cong!');
     }
 

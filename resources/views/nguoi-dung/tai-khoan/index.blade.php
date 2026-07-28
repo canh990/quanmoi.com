@@ -57,10 +57,6 @@
                         <span class="material-symbols-outlined">person</span>
                         <span class="font-body-lg text-body-lg">Hồ sơ cá nhân</span>
                     </a>
-                    <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container transition-all" href="#">
-                        <span class="material-symbols-outlined">bookmark</span>
-                        <span class="font-body-lg text-body-lg">Địa điểm đã lưu</span>
-                    </a>
                     <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container transition-all" href="{{ route('blog.index') }}">
                         <span class="material-symbols-outlined">article</span>
                         <span class="font-body-lg text-body-lg">Bài viết</span>
@@ -113,9 +109,9 @@
                         <div class="space-y-1">
                             <label class="font-label-md text-label-md text-on-surface-variant block">Giới tính</label>
                             <select name="gioi_tinh" class="w-full px-4 py-3 bg-surface-container-low border {{ $errors->has('gioi_tinh') ? 'border-error' : 'border-outline-variant' }} rounded-xl focus:ring-2 focus:ring-primary outline-none appearance-none">
-                                <option value="nu" {{ old('gioi_tinh', $user->gioi_tinh) == 'nu' ? 'selected' : '' }}>Nữ</option>
+                                <option value="nữ" {{ old('gioi_tinh', $user->gioi_tinh) == 'nữ' ? 'selected' : '' }}>Nữ</option>
                                 <option value="nam" {{ old('gioi_tinh', $user->gioi_tinh) == 'nam' ? 'selected' : '' }}>Nam</option>
-                                <option value="khac" {{ old('gioi_tinh', $user->gioi_tinh) == 'khac' ? 'selected' : '' }}>Khác</option>
+                                <option value="khác" {{ old('gioi_tinh', $user->gioi_tinh) == 'khác' ? 'selected' : '' }}>Khác</option>
                             </select>
                         </div>
                         <div class="space-y-1">

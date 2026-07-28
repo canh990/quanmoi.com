@@ -19,7 +19,7 @@
             <a class="nav-link py-2 text-[15px] font-semibold transition-all duration-200 text-on-surface-variant hover:text-primary" href="#">
                 Video review
             </a>
-            <a class="nav-link py-2 text-[15px] font-semibold transition-all duration-200 text-on-surface-variant hover:text-primary flex items-center gap-1" href="#">
+            <a class="nav-link py-2 text-[15px] font-semibold transition-all duration-200 {{ request()->routeIs('quan-da-luu.index') ? 'active text-primary font-bold' : 'text-on-surface-variant hover:text-primary' }} flex items-center gap-1" href="{{ route('quan-da-luu.index') }}">
                 Đã lưu
             </a>
             <a class="nav-link py-2 text-[15px] font-semibold transition-all duration-200 {{ request()->routeIs('blog.*') ? 'active text-primary font-bold' : 'text-on-surface-variant hover:text-primary' }}" href="{{ route('blog.index') }}">
@@ -34,7 +34,7 @@
 
         <div class="flex items-center gap-3">
             <a href="{{ $ownerNavUrl }}" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-gradient-to-r from-primary via-tertiary to-secondary text-white font-bold text-[13.5px] shadow-[0_4px_14px_rgba(160,65,0,0.25)] hover:shadow-[0_6px_20px_rgba(160,65,0,0.35)] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all duration-200">
-                <span class="material-symbols-outlined text-[18px]">{{ $isOwnerNav ? 'storefront' : 'add_location_alt' }}</span>
+                <span class="material-symbols-outlined text-[18px]">{{ $ownerNavIcon ?? 'add_location_alt' }}</span>
                 <span>{{ $ownerNavLabel }}</span>
             </a>
 
@@ -116,16 +116,16 @@
 
         <a href="{{ $ownerNavUrl }}" class="flex flex-col items-center justify-center flex-1 h-full py-1 text-center group">
             <div class="px-5 py-1 rounded-full transition-all duration-300 {{ request()->is('chu-quan/dang-quan') || request()->is('chu-quan/quan') || request()->is('chu-quan/quan/*') ? 'bg-primary-fixed text-on-primary-fixed' : 'text-primary hover:bg-primary/5' }}">
-                <span class="material-symbols-outlined text-[22px] block">{{ $isOwnerNav ? 'storefront' : 'add_location_alt' }}</span>
+                <span class="material-symbols-outlined text-[22px] block">{{ $ownerNavIcon ?? 'add_location_alt' }}</span>
             </div>
             <span class="text-[10px] font-bold mt-1 tracking-wide text-primary">{{ $ownerNavLabel }}</span>
         </a>
 
-        <a href="#" class="flex flex-col items-center justify-center flex-1 h-full py-1 text-center group">
-            <div class="px-5 py-1 rounded-full transition-all duration-300 text-on-surface-variant hover:bg-surface-container-high/50">
-                <span class="material-symbols-outlined text-[22px] block">bookmark</span>
+        <a href="{{ route('quan-da-luu.index') }}" class="flex flex-col items-center justify-center flex-1 h-full py-1 text-center group">
+            <div class="px-5 py-1 rounded-full transition-all duration-300 {{ request()->routeIs('quan-da-luu.index') ? 'bg-primary-fixed text-on-primary-fixed' : 'text-on-surface-variant hover:bg-surface-container-high/50' }}">
+                <span class="material-symbols-outlined text-[22px] block" style="font-variation-settings: 'FILL' {{ request()->routeIs('quan-da-luu.index') ? '1' : '0' }};">favorite</span>
             </div>
-            <span class="text-[10px] font-bold mt-1 tracking-wide text-on-surface-variant">Đã lưu</span>
+            <span class="text-[10px] font-bold mt-1 tracking-wide {{ request()->routeIs('quan-da-luu.index') ? 'text-primary' : 'text-on-surface-variant' }}">Đã lưu</span>
         </a>
 
         @auth

@@ -37,6 +37,7 @@
             color: #a04100;
         }
     </style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css" />
 @endpush
 
 @section('content')
@@ -51,23 +52,30 @@
                     $img3 = $hinhAnhs->count() > 1 ? $hinhAnhs[1]->duong_dan : 'https://lh3.googleusercontent.com/aida-public/AB6AXuC3bzrIzaqyG4B_yvZnS4Po8P9iifDNOlmkoZW-CkCRe3OtnGLgU0uzl0qdjB4FDgI1TgyNX21O1P9hfh3SsUrzHSFJW4pWjH3ibrjomvnY5wtcYKOrNP-OruwGf5REKaxsF1IdXYH6kO1PzwhIycGIT8QbgiUZ-skSvJkioA7BbMyMZqIuDVBAebFYczNCNAJM0VKixfDVfLnhdo0plxXmad2kEjdIk01MEUN64cbsrgVlWJQOwaDd';
                     $img4 = $hinhAnhs->count() > 2 ? $hinhAnhs[2]->duong_dan : 'https://lh3.googleusercontent.com/aida-public/AB6AXuCfnTVIpmnxpE0pdetcfCZ2GMfN5F0yivGeSsRcxiD7rBqLQE74yWLzaFDYm5kFq82e1RHUwK-PhICSALqS2DYMANoWXy_P0OwtlwoShLH7Qph3_oohL6bWg1e45CE6ysjbUE6jUdCAk9Pp7pz33obm5JKvdkL_yhOKl0dhugz0OpJ4SBiZ7eBY7AsUdiEk02wTOhXwHQPlCd48tbnR8l8iVyyeaJyVg4tX1Mg0eRC-N2o5akKrHUpI';
                 @endphp
-                <div class="bento-item-1 rounded-xl overflow-hidden cursor-pointer group relative">
-                    <div class="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-all"></div>
+                <a href="{{ $biaUrl }}" data-fancybox="gallery" class="bento-item-1 rounded-xl overflow-hidden cursor-pointer group relative block">
+                    <div class="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-all z-10"></div>
                     <div class="w-full h-full bg-cover bg-center" style="background-image: url('{{ $biaUrl }}')"></div>
-                </div>
-                <div class="bento-item-2 rounded-xl overflow-hidden cursor-pointer group relative">
+                </a>
+                <a href="{{ $img2 }}" data-fancybox="gallery" class="bento-item-2 rounded-xl overflow-hidden cursor-pointer group relative block">
                     <div class="w-full h-full bg-cover bg-center" style="background-image: url('{{ $img2 }}')"></div>
-                </div>
-                <div class="bento-item-3 rounded-xl overflow-hidden cursor-pointer group relative">
+                </a>
+                <a href="{{ $img3 }}" data-fancybox="gallery" class="bento-item-3 rounded-xl overflow-hidden cursor-pointer group relative block">
                     <div class="w-full h-full bg-cover bg-center" style="background-image: url('{{ $img3 }}')"></div>
-                </div>
-                <div class="bento-item-4 rounded-xl overflow-hidden cursor-pointer group relative bg-on-background flex items-center justify-center text-white">
-                    <div class="w-full h-full bg-cover bg-center opacity-40" style="background-image: url('{{ $img4 }}')"></div>
-                    <div class="absolute inset-0 flex flex-col items-center justify-center bg-black/40">
+                </a>
+                <a href="{{ $img4 }}" data-fancybox="gallery" class="bento-item-4 rounded-xl overflow-hidden cursor-pointer group relative bg-on-background flex items-center justify-center text-white block">
+                    <div class="w-full h-full absolute inset-0 bg-cover bg-center opacity-40" style="background-image: url('{{ $img4 }}')"></div>
+                    <div class="absolute inset-0 flex flex-col items-center justify-center bg-black/40 group-hover:bg-black/20 transition-colors duration-500 z-10">
                         <span class="material-symbols-outlined text-3xl">grid_view</span>
                         <span class="font-label-md text-label-md mt-1">Xem tất cả</span>
                     </div>
-                </div>
+                </a>
+                
+                {{-- Hidden gallery images for lightbox --}}
+                @if($hinhAnhs->count() > 3)
+                    @for($i = 3; $i < $hinhAnhs->count(); $i++)
+                        <a href="{{ $hinhAnhs[$i]->duong_dan }}" data-fancybox="gallery" class="hidden"></a>
+                    @endfor
+                @endif
             </div>
         </section>
 
@@ -79,7 +87,9 @@
                 <div class="mb-8">
                     <div class="flex items-center gap-2 mb-2">
                         <h1 class="font-headline-lg text-headline-lg text-on-background font-black">{{ $quan->ten_quan }}</h1>
-                        <span class="material-symbols-outlined text-tick-xanh fill-icon text-xl" title="Verified">verified</span>
+                        @if($quan->is_xac_thuc)
+                            <span class="material-symbols-outlined text-tick-xanh fill-icon text-xl" title="Verified">verified</span>
+                        @endif
                     </div>
                     <p class="text-on-surface-variant flex items-center gap-1 mb-4 font-body-lg text-body-lg">
                         <span class="material-symbols-outlined text-lg">location_on</span>
@@ -90,6 +100,10 @@
                             <span class="material-symbols-outlined text-primary fill-icon">star</span>
                             <span class="font-bold text-lg">4.9</span>
                             <span class="text-on-surface-variant text-sm">(Đánh giá)</span>
+                        </div>
+                        <div class="flex items-center gap-1 text-on-surface-variant">
+                            <span class="material-symbols-outlined">visibility</span>
+                            <span class="text-sm font-semibold">{{ number_format($quan->luot_xem) }} lượt xem</span>
                         </div>
                         <div class="flex items-center gap-1 text-on-surface-variant">
                             <span class="material-symbols-outlined">schedule</span>
@@ -232,6 +246,32 @@
 @endsection
 
 @push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            Fancybox.bind('[data-fancybox="gallery"]', {
+                Thumbs: {
+                    autoStart: true,
+                },
+                Toolbar: {
+                    display: {
+                        left: ["infobar"],
+                        middle: [
+                            "zoomIn",
+                            "zoomOut",
+                            "toggle1to1",
+                            "rotateCCW",
+                            "rotateCW",
+                            "flipX",
+                            "flipY",
+                        ],
+                        right: ["slideshow", "thumbs", "close"],
+                    },
+                },
+            });
+        });
+    </script>
+
     <script>
         const tabs = document.querySelectorAll('button[class*="text-on-surface-variant"]');
         tabs.forEach(tab => {
