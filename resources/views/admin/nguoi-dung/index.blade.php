@@ -27,6 +27,12 @@
                 <option value="soft_deleted" {{ request('status') == 'soft_deleted' ? 'selected' : '' }}>Đã xóa (Soft-delete)</option>
             </select>
 
+            <select name="da_xac_thuc" class="px-3 py-2 rounded-xl border border-gray-200 text-sm outline-none focus:border-primary bg-white">
+                <option value="">-- Tick Xanh --</option>
+                <option value="1" {{ request('da_xac_thuc') == '1' ? 'selected' : '' }}>Có Tick Xanh</option>
+                <option value="0" {{ request('da_xac_thuc') == '0' ? 'selected' : '' }}>Chưa có Tick Xanh</option>
+            </select>
+
             <button type="submit" class="bg-primary text-white px-5 py-2 rounded-xl font-bold text-sm hover:bg-primary/90 transition-all flex items-center gap-1">
                 <span class="material-symbols-outlined text-lg">filter_alt</span> Lọc
             </button>
@@ -57,7 +63,10 @@
                                         <p class="font-bold text-gray-900 flex items-center gap-1">
                                             {{ $user->ho_ten }}
                                             @if($user->isAdmin())
-                                                <span class="material-symbols-outlined text-amber-500 text-sm" title="Admin">verified</span>
+                                                <span class="material-symbols-outlined text-amber-500 text-sm" title="Admin">shield</span>
+                                            @endif
+                                            @if($user->da_xac_thuc)
+                                                <span class="material-symbols-outlined text-blue-500 text-[16px]" title="Có Tick Xanh" style="font-variation-settings: 'FILL' 1;">verified</span>
                                             @endif
                                         </p>
                                         <span class="text-xs text-gray-400">ID: {{ substr($user->id, 0, 8) }}...</span>
@@ -87,6 +96,16 @@
                             </td>
                             <td class="py-3.5 px-4 text-right">
                                 <div class="flex items-center justify-end gap-2">
+                                    @if(!$user->trashed())
+                                        <form action="{{ route('admin.nguoi-dung.toggle-xac-thuc', $user->id) }}" method="POST" class="inline">
+                                            @csrf
+                                            @method('PUT')
+                                            <button type="submit" class="p-2 rounded-lg transition-all {{ $user->da_xac_thuc ? 'text-blue-500 hover:bg-blue-50' : 'text-gray-400 hover:text-blue-500 hover:bg-gray-100' }}" title="{{ $user->da_xac_thuc ? 'Gỡ Tick Xanh' : 'Cấp Tick Xanh' }}">
+                                                <span class="material-symbols-outlined text-lg" {!! $user->da_xac_thuc ? 'style="font-variation-settings: \'FILL\' 1;"' : '' !!}>verified</span>
+                                            </button>
+                                        </form>
+                                    @endif
+
                                     <a href="{{ route('admin.nguoi-dung.edit', $user->id) }}" class="p-2 text-gray-600 hover:text-primary hover:bg-gray-100 rounded-lg transition-all" title="Chỉnh sửa">
                                         <span class="material-symbols-outlined text-lg">edit</span>
                                     </a>

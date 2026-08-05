@@ -6,6 +6,7 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -14,12 +15,14 @@ use Illuminate\Notifications\Notifiable;
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, HasUuids, SoftDeletes;
+    use HasFactory, HasUuids, Notifiable, SoftDeletes;
 
     protected $table = 'nguoi_dung';
+
     const DELETED_AT = 'ngay_xoa';
 
     public $incrementing = false;
+
     protected $keyType = 'string';
 
     protected $fillable = [
@@ -36,7 +39,7 @@ class User extends Authenticatable
         'ngay_sinh',
         'so_dien_thoai',
         'dia_chi',
-        'google_id'
+        'google_id',
     ];
 
     protected $hidden = [
@@ -47,6 +50,7 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
+            'da_xac_thuc' => 'boolean',
             'ngay_xac_thuc' => 'datetime',
             'mat_khau' => 'hashed',
         ];
@@ -67,22 +71,29 @@ class User extends Authenticatable
         return $this->hasMany(Quan::class, 'chu_quan_id');
     }
 
-    public function savedQuan(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function savedQuan(): BelongsToMany
     {
         return $this->belongsToMany(Quan::class, 'quan_da_luu', 'nguoi_dung_id', 'quan_id')->withTimestamps();
     }
 
+    public function blogModerationLogs(): HasMany
+    {
+        return $this->hasMany(BlogModerationLog::class, 'admin_id');
+    }
+
     public function isAdmin(): bool
     {
-        return $this->vaiTro?->ten === 'admin' || strtolower($this->email) === 'admin@quanmoi.com';
+        return $this->hasRole('admin');
     }
 
     public function hasRole(string $roleName): bool
     {
-        if ($roleName === 'admin' && strtolower($this->email) === 'admin@quanmoi.com') {
-            return true;
-        }
         return strtolower($this->vaiTro?->ten ?? '') === strtolower($roleName);
+    }
+
+    public function isActive(): bool
+    {
+        return $this->trang_thai === 'hoat_dong' && ! $this->trashed();
     }
 
     public function getTenVaiTroHienThiAttribute(): string
@@ -96,5 +107,25 @@ class User extends Authenticatable
             'nguoi_dung' => 'Thành viên',
             default => 'Thành viên',
         };
+    }
+
+    public function blogs(): HasMany
+    {
+        return $this->hasMany(Blog::class);
+    }
+
+    public function blogComments(): HasMany
+    {
+        return $this->hasMany(BlogComment::class);
+    }
+
+    public function blogReports(): HasMany
+    {
+        return $this->hasMany(BlogReport::class);
+    }
+
+    public function blogRevisions(): HasMany
+    {
+        return $this->hasMany(BlogRevision::class);
     }
 }

@@ -3,203 +3,172 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\DangKyRequest;
+use App\Http\Requests\GuiLaiOtpRequest;
+use App\Http\Requests\XacThucOtpRequest;
+use App\Mail\DangKyOtpMail;
 use App\Models\User;
-use Illuminate\Http\Request;
+use App\Models\XacThucOtp;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Mail;
-use App\Mail\DangKyOtpMail;
 
 class DangKyController extends Controller
 {
+    private const OTP_TTL_MINUTES = 3;
+
+    private const OTP_MAX_ATTEMPTS = 5;
+
+    private const OTP_LOCK_MINUTES = 15;
+
     public function showRegistrationForm()
     {
         return view('auth.dangky');
     }
 
-    public function register(Request $request)
+    public function register(DangKyRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'ho_ten' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255',
-            'mat_khau' => 'required|string|min:6',
-        ], [
-            'ho_ten.required' => 'Vui lòng nhập họ và tên.',
-            'email.required' => 'Vui lòng nhập địa chỉ email.',
-            'email.email' => 'Email không đúng định dạng.',
-            'mat_khau.required' => 'Vui lòng nhập mật khẩu.',
-            'mat_khau.min' => 'Mật khẩu phải chứa ít nhất 6 ký tự.',
-        ]);
+        $data = $request->validated();
+        $user = User::withTrashed()->where('email', $data['email'])->first();
 
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
+        if (! $user) {
+            $roleId = DB::table('vai_tro')->where('ten', 'nguoi_dung')->value('id');
+
+            $user = User::create([
+                'ho_ten' => $data['ho_ten'],
+                'email' => $data['email'],
+                'mat_khau' => Hash::make($data['mat_khau']),
+                'da_xac_thuc' => false,
+                'ngay_xac_thuc' => null,
+                'vai_tro_id' => $roleId,
+                'trang_thai' => 'hoat_dong',
+            ]);
         }
 
-        $email = $request->email;
-
-        // Check if user exists
-        $existingUser = User::withTrashed()->where('email', $email)->first();
-        if ($existingUser) {
-            $msg = $existingUser->trashed() 
-                ? 'Email này thuộc về một tài khoản đã bị vô hiệu hóa/xóa.' 
-                : 'Email này đã được đăng ký tài khoản.';
-            return response()->json([
-                'success' => false,
-                'errors' => ['email' => [$msg]]
-            ], 422);
-        }
-
-        // Look up default role
-        $vaiTroNguoiDung = DB::table('vai_tro')->where('ten', 'nguoi_dung')->first();
-
-        // Create unverified user
-        $user = User::create([
-            'ho_ten' => $request->ho_ten,
-            'email' => $email,
-            'mat_khau' => Hash::make($request->mat_khau),
-            'da_xac_thuc' => false,
-            'ngay_xac_thuc' => null,
-            'vai_tro_id' => $vaiTroNguoiDung?->id,
-            'trang_thai' => 'hoat_dong',
-        ]);
-
-        Auth::login($user);
-
-        // Generate and save OTP
-        $otp = (string) rand(100000, 999999);
-        DB::table('xac_thuc_otp')->insert([
-            'email' => $email,
-            'otp' => $otp,
-            'expires_at' => now()->addMinutes(3),
-            'created_at' => now(),
-        ]);
-
-        // Send Email
-        try {
-            Mail::to($email)->send(new DangKyOtpMail($otp));
-        } catch (\Exception $e) {
-            Log::error('Lỗi gửi email OTP: ' . $e->getMessage());
+        // Keep the response uniform so this endpoint does not enumerate accounts.
+        if (! $user->trashed() && ! $user->da_xac_thuc && $user->trang_thai === 'hoat_dong') {
+            $this->sendOtp($user);
         }
 
         return response()->json([
             'success' => true,
-            'message' => 'Vui lòng kiểm tra email để lấy mã OTP.',
-            'require_otp' => true
+            'message' => 'Nếu email đủ điều kiện, mã xác thực đã được gửi. Vui lòng kiểm tra hộp thư.',
+            'require_otp' => true,
         ]);
     }
 
-    public function verifyOtp(Request $request)
+    public function verifyOtp(XacThucOtpRequest $request)
     {
-        $request->validate([
-            'email' => 'required|email',
-            'otp' => 'required|string|size:6',
-        ]);
+        $data = $request->validated();
 
-        $email = $request->email;
-        $otpCode = $request->otp;
+        $result = DB::transaction(function () use ($data) {
+            $record = XacThucOtp::where('email', $data['email'])
+                ->latest('id')
+                ->lockForUpdate()
+                ->first();
 
-        // Find OTP record
-        $otpRecord = DB::table('xac_thuc_otp')
-            ->where('email', $email)
-            ->where('otp', $otpCode)
-            ->first();
+            // Legacy plaintext records are deliberately no longer accepted.
+            if (! $record || ! $record->otp_hash) {
+                return ['status' => 'invalid'];
+            }
 
-        if (!$otpRecord) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Mã OTP không chính xác.'
-            ], 400);
+            if ($record->locked_until?->isFuture()) {
+                return ['status' => 'locked'];
+            }
+
+            if ($record->expires_at->isPast()) {
+                $record->delete();
+
+                return ['status' => 'expired'];
+            }
+
+            if (! Hash::check($data['otp'], $record->otp_hash)) {
+                $record->attempts++;
+                if ($record->attempts >= self::OTP_MAX_ATTEMPTS) {
+                    $record->locked_until = now()->addMinutes(self::OTP_LOCK_MINUTES);
+                }
+                $record->save();
+
+                return ['status' => $record->locked_until?->isFuture() ? 'locked' : 'invalid'];
+            }
+
+            $user = User::where('email', $data['email'])->lockForUpdate()->first();
+            if (! $user || $user->trang_thai !== 'hoat_dong') {
+                return ['status' => 'invalid'];
+            }
+
+            $user->update([
+                'da_xac_thuc' => true,
+                'ngay_xac_thuc' => now(),
+            ]);
+
+            // Consume the OTP in the same transaction that verifies the account.
+            $record->delete();
+
+            return ['status' => 'verified', 'user' => $user];
+        });
+
+        if ($result['status'] !== 'verified') {
+            $message = match ($result['status']) {
+                'expired' => 'Mã OTP đã hết hạn. Vui lòng gửi lại mã mới.',
+                'locked' => 'Bạn đã nhập sai quá nhiều lần. Vui lòng thử lại sau.',
+                default => 'Mã OTP không chính xác hoặc không còn hiệu lực.',
+            };
+
+            return response()->json(['success' => false, 'message' => $message], 400);
         }
 
-        if (now()->gt($otpRecord->expires_at)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Mã OTP đã hết hạn.'
-            ], 400);
-        }
-
-        // Find and activate user
-        $user = User::where('email', $email)->first();
-        if (!$user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Không tìm thấy thông tin tài khoản.'
-            ], 404);
-        }
-
-        $user->da_xac_thuc = true;
-        $user->ngay_xac_thuc = now();
-        $user->save();
-
-        Auth::login($user);
-
-        // Delete OTP record
-        DB::table('xac_thuc_otp')->where('email', $email)->delete();
-
-        // Log user in
-        Auth::login($user);
+        Auth::login($result['user']);
+        $request->session()->regenerate();
 
         return response()->json([
             'success' => true,
-            'message' => 'Xác thực tài khoản thành công!'
+            'message' => 'Xác thực tài khoản thành công!',
         ]);
     }
 
-    public function resendOtp(Request $request)
+    public function resendOtp(GuiLaiOtpRequest $request)
     {
-        $request->validate([
-            'email' => 'required|email',
-        ]);
-
-        $email = $request->email;
-
-        // Check if user is registered and unverified
+        $email = $request->validated('email');
         $user = User::where('email', $email)->first();
-        if (!$user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Thông tin đăng ký không hợp lệ.'
-            ], 404);
-        }
 
-        if ($user->da_xac_thuc) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Tài khoản đã được xác thực.'
-            ], 400);
-        }
-
-        // Generate and save new OTP
-        $otp = (string) rand(100000, 999999);
-        
-        DB::table('xac_thuc_otp')->where('email', $email)->delete();
-
-        DB::table('xac_thuc_otp')->insert([
-            'email' => $email,
-            'otp' => $otp,
-            'expires_at' => now()->addMinutes(3),
-            'created_at' => now(),
-        ]);
-
-        Log::info("=== GỬI LẠI MÃ OTP ĐĂNG KÝ CHO {$email} ===");
-        Log::info("OTP: {$otp}");
-        Log::info("===========================================");
-
-        try {
-            Mail::to($email)->send(new DangKyOtpMail($otp));
-        } catch (\Exception $e) {
-            Log::error('Lỗi gửi lại email OTP: ' . $e->getMessage());
+        if ($user && ! $user->da_xac_thuc && $user->trang_thai === 'hoat_dong') {
+            $this->sendOtp($user);
         }
 
         return response()->json([
             'success' => true,
-            'message' => 'Đã gửi lại mã OTP mới.'
+            'message' => 'Nếu email đủ điều kiện, mã xác thực mới đã được gửi.',
         ]);
+    }
+
+    private function sendOtp(User $user): void
+    {
+        $otp = (string) random_int(100000, 999999);
+
+        DB::transaction(function () use ($user, $otp) {
+            // A resend invalidates every prior code for this address.
+            XacThucOtp::where('email', $user->email)->delete();
+
+            XacThucOtp::create([
+                'email' => $user->email,
+                // The legacy non-null column receives an unrelated marker, never the OTP.
+                'otp' => hash('sha256', random_bytes(32)),
+                'otp_hash' => Hash::make($otp),
+                'expires_at' => now()->addMinutes(self::OTP_TTL_MINUTES),
+                'attempts' => 0,
+                'locked_until' => null,
+                'last_sent_at' => now(),
+            ]);
+        });
+
+        try {
+            Mail::to($user->email)->send(new DangKyOtpMail($otp));
+        } catch (\Throwable $exception) {
+            // Do not include email, OTP, or transport details in application logs.
+            Log::error('Không thể gửi email xác thực tài khoản.');
+        }
     }
 }

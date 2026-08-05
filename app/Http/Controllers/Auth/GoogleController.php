@@ -34,13 +34,13 @@ class GoogleController extends Controller
                 }
 
                 // If user exists, update google_id and avatar if missing
-                if (!$user->google_id) {
+                if (! $user->google_id) {
                     $user->update([
                         'google_id' => $googleUser->getId(),
                         'anh_dai_dien' => $user->anh_dai_dien ?? $googleUser->getAvatar(),
                     ]);
                 }
-                
+
                 if ($user->trang_thai === 'bi_khoa') {
                     return redirect('/dang-nhap')->withErrors(['error' => 'Tài khoản của bạn đã bị khoá. Vui lòng liên hệ quản trị viên.']);
                 }
@@ -64,6 +64,8 @@ class GoogleController extends Controller
 
                 Auth::login($newUser);
             }
+
+            request()->session()->regenerate();
 
             return redirect()->intended('/');
 

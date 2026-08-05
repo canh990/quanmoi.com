@@ -11,7 +11,7 @@
 @endpush
 
 @section('content')
-<main class="max-w-[1200px] mx-auto px-container-margin py-stack-lg min-h-[819px] pt-24">
+<main class="max-w-[1200px] mx-auto px-container-margin py-stack-lg min-h-[819px] pt-6">
     @if(session('success'))
     <div id="toast-success" class="mb-6 flex items-center gap-3 bg-white border border-green-200 rounded-2xl px-5 py-4 shadow-lg shadow-green-100/50">
         <div class="w-9 h-9 rounded-xl bg-green-100 flex items-center justify-center shrink-0">
@@ -57,9 +57,9 @@
                         <span class="material-symbols-outlined">person</span>
                         <span class="font-body-lg text-body-lg">Hồ sơ cá nhân</span>
                     </a>
-                    <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container transition-all" href="{{ route('blog.index') }}">
+                    <a class="flex items-center gap-3 px-4 py-3 rounded-lg {{ request()->routeIs('nguoi-dung.blog.*') ? 'bg-primary-container/10 text-primary font-bold' : 'text-on-surface-variant hover:bg-surface-container' }} transition-all" href="{{ route('nguoi-dung.blog.index') }}">
                         <span class="material-symbols-outlined">article</span>
-                        <span class="font-body-lg text-body-lg">Bài viết</span>
+                        <span class="font-body-lg text-body-lg">Quản lý bài viết</span>
                     </a>
                     <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container transition-all" href="#">
                         <span class="material-symbols-outlined">settings</span>

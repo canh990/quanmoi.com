@@ -10,7 +10,7 @@
 @endpush
 
 @section('content')
-<main class="mt-24 max-w-[1200px] mx-auto px-container-margin pb-stack-lg min-h-[800px]">
+<main class="mt-6 max-w-[1200px] mx-auto px-container-margin pb-stack-lg min-h-[800px]">
     <!-- Featured Post Hero -->
     <section class="relative w-full h-[480px] rounded-xl overflow-hidden mb-stack-lg group cursor-pointer">
         <div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBgE9AhiwhRG0iMIDalUuezBkh8QgtuGivtqJDWACIc-l5B3ILO8qbq1wl58ArJH6J1qcTS0pyEo7XSimbdICDPXazjP3CdkPC57NdYvS7fuPkjG18mf0PKW8vSh-xHP3Z39VjZl0p5MOr5jmZkrUPMiiFaZZi0haIHI8QZAaiTq6F-1yg00ptU5svD1XHADCaHFcfbV9QjjEhMJh9koOKfHu6pYaGc7ntl2uqjzktotsVlFwbX9ass0wxve2B_xfK7acLfp5tkG2w')">

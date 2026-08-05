@@ -3,11 +3,15 @@
 namespace App\Http\Controllers\ChuQuan;
 
 use App\Http\Controllers\Controller;
-use App\Models\Quan;
 use App\Models\DanhMucMenu;
 use App\Models\MonTrongMenu;
+use App\Models\Quan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\ImageManager;
 
 class MenuController extends Controller
 {
@@ -16,12 +20,16 @@ class MenuController extends Controller
      */
     public function edit(Request $request, $slug)
     {
-        $quan = $request->user()->quan()->where('slug', $slug)->firstOrFail();
-        
+        $quan = Quan::where('slug', $slug)
+            ->where('chu_quan_id', $request->user()->id)
+            ->where('trang_thai', 'da_duyet')
+            ->firstOrFail();
+        $this->authorize('update', $quan);
+
         // Eager load danh muc va mon an
-        $quan->load(['danhMucMenu' => function($q) {
+        $quan->load(['danhMucMenu' => function ($q) {
             $q->orderBy('thu_tu', 'asc');
-        }, 'danhMucMenu.monTrongMenu']);
+        }, 'danhMucMenu.monAn']);
 
         return view('chu-quan.thuc-don', compact('quan'));
     }
@@ -31,69 +39,113 @@ class MenuController extends Controller
      */
     public function update(Request $request, $slug)
     {
-        $quan = $request->user()->quan()->where('slug', $slug)->firstOrFail();
+        $quan = Quan::where('slug', $slug)
+            ->where('chu_quan_id', $request->user()->id)
+            ->where('trang_thai', 'da_duyet')
+            ->firstOrFail();
+        $this->authorize('update', $quan);
 
-        $request->validate([
-            'menu_data' => 'required|string',
-        ]);
-
+        // Decode JSON trước để validate cấu trúc mảng
         $menuCategories = json_decode($request->menu_data, true);
-        
-        if (!is_array($menuCategories)) {
+
+        if (! is_array($menuCategories)) {
             return back()->with('error', 'Dữ liệu thực đơn không hợp lệ.');
         }
 
+        // Validate nghiêm ngặt bằng Laravel Validator
+        $request->merge(['menu_categories_array' => $menuCategories]);
+
+        $validatedData = $request->validate([
+            'menu_categories_array' => 'array',
+            'menu_categories_array.*.name' => 'required|string|max:255',
+            'menu_categories_array.*.db_id' => 'nullable|string',
+            'menu_categories_array.*.items' => 'nullable|array',
+            'menu_categories_array.*.items.*.name' => 'required|string|max:255',
+            'menu_categories_array.*.items.*.db_id' => 'nullable|string',
+            'menu_categories_array.*.items.*.tmp_id' => 'nullable|integer',
+            'menu_categories_array.*.items.*.price' => 'nullable|numeric|min:0|max:999999999',
+            'menu_categories_array.*.items.*.description' => 'nullable|string|max:2000',
+        ]);
+
+        $safeMenuCategories = $validatedData['menu_categories_array'];
+
         try {
-            DB::transaction(function () use ($quan, $menuCategories) {
-                // To keep it simple, we delete old menu items and recreate them. 
-                // Or we can sync. For a menu builder, deleting and recreating is often safest 
-                // unless we need to preserve IDs for foreign keys (like order items).
-                // Let's preserve IDs where possible.
-                
+            DB::transaction(function () use ($quan, $safeMenuCategories, $request) {
                 $existingCategoryIds = $quan->danhMucMenu()->pluck('id')->toArray();
                 $keptCategoryIds = [];
                 $keptItemIds = [];
 
-                foreach ($menuCategories as $catIndex => $catData) {
-                    if (empty(trim($catData['name']))) continue;
+                foreach ($safeMenuCategories as $catIndex => $catData) {
+                    // Chống XSS bằng strip_tags
+                    $catName = strip_tags(trim($catData['name']));
+                    if (empty($catName)) {
+                        continue;
+                    }
 
                     // Update or create category
                     $danhMucId = $catData['db_id'] ?? null;
-                    
+
                     if ($danhMucId && in_array($danhMucId, $existingCategoryIds)) {
                         $danhMuc = DanhMucMenu::find($danhMucId);
                         $danhMuc->update([
-                            'ten_danh_muc' => trim($catData['name']),
+                            'ten_danh_muc' => $catName,
                             'thu_tu' => $catIndex,
                         ]);
                     } else {
                         $danhMuc = DanhMucMenu::create([
                             'quan_id' => $quan->id,
-                            'ten_danh_muc' => trim($catData['name']),
+                            'ten_danh_muc' => $catName,
                             'thu_tu' => $catIndex,
                         ]);
                     }
-                    
+
                     $keptCategoryIds[] = $danhMuc->id;
 
-                    if (!empty($catData['items']) && is_array($catData['items'])) {
+                    if (! empty($catData['items']) && is_array($catData['items'])) {
                         foreach ($catData['items'] as $itemData) {
-                            if (empty(trim($itemData['name']))) continue;
+                            $itemName = strip_tags(trim($itemData['name']));
+                            if (empty($itemName)) {
+                                continue;
+                            }
+
+                            // Ép kiểu float và chống XSS cho description
+                            $price = isset($itemData['price']) ? (float) $itemData['price'] : 0;
+                            $description = isset($itemData['description']) ? strip_tags(trim($itemData['description'])) : null;
 
                             $itemId = $itemData['db_id'] ?? null;
+                            $tmpId = $itemData['tmp_id'] ?? null;
+                            $imagePath = null;
+
+                            // Handle Image Upload
+                            if ($tmpId && $request->hasFile("item_image_{$tmpId}")) {
+                                $file = $request->file("item_image_{$tmpId}");
+                                $manager = new ImageManager(new Driver);
+                                $image = $manager->decode($file->getRealPath());
+                                $image->scaleDown(width: 800);
+                                $encoded = $image->encodeUsingFileExtension('webp', 80);
+                                $fileName = 'menu/'.uniqid('mon_').'.webp';
+                                Storage::disk('r2')->put($fileName, $encoded->toString(), 'public');
+                                $imagePath = $fileName;
+                            }
+
                             if ($itemId && MonTrongMenu::where('id', $itemId)->where('danh_muc_id', $danhMuc->id)->exists()) {
                                 $mon = MonTrongMenu::find($itemId);
-                                $mon->update([
-                                    'ten_mon' => trim($itemData['name']),
-                                    'gia' => !empty($itemData['price']) ? $itemData['price'] : 0,
-                                    'mo_ta' => $itemData['description'] ?? null,
-                                ]);
+                                $updateData = [
+                                    'ten_mon' => $itemName,
+                                    'gia' => $price,
+                                    'mo_ta' => $description,
+                                ];
+                                if ($imagePath) {
+                                    $updateData['hinh_anh'] = $imagePath;
+                                }
+                                $mon->update($updateData);
                             } else {
                                 $mon = MonTrongMenu::create([
                                     'danh_muc_id' => $danhMuc->id,
-                                    'ten_mon' => trim($itemData['name']),
-                                    'gia' => !empty($itemData['price']) ? $itemData['price'] : 0,
-                                    'mo_ta' => $itemData['description'] ?? null,
+                                    'ten_mon' => $itemName,
+                                    'gia' => $price,
+                                    'mo_ta' => $description,
+                                    'hinh_anh' => $imagePath,
                                 ]);
                             }
                             $keptItemIds[] = $mon->id;
@@ -119,13 +171,20 @@ class MenuController extends Controller
                 ->with('success', 'Cập nhật thực đơn thành công!');
 
         } catch (\Exception $e) {
+            Log::error('Venue menu update failed.', [
+                'quan_id' => $quan->id,
+                'user_id' => $request->user()->id,
+                'exception' => $e,
+            ]);
+
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Lỗi hệ thống: ' . $e->getMessage(),
+                    'message' => 'Không thể cập nhật thực đơn lúc này. Vui lòng thử lại sau.',
                 ], 500);
             }
-            return back()->with('error', 'Lỗi hệ thống: ' . $e->getMessage());
+
+            return back()->with('error', 'Không thể cập nhật thực đơn lúc này. Vui lòng thử lại sau.');
         }
     }
 }

@@ -35,7 +35,7 @@
                 @error('so_dien_thoai') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                     <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Vai trò hệ thống</label>
                     <select name="vai_tro_id" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-primary bg-white">
@@ -52,6 +52,17 @@
                         <option value="hoat_dong" {{ old('trang_thai', $user->trang_thai) === 'hoat_dong' ? 'selected' : '' }}>Hoạt động</option>
                         <option value="bi_khoa" {{ old('trang_thai', $user->trang_thai) === 'bi_khoa' ? 'selected' : '' }}>Bị khóa</option>
                     </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Cấp Tick Xanh</label>
+                    <div class="flex items-center h-[42px] px-4 rounded-xl border border-gray-200 bg-gray-50">
+                        <label class="flex items-center gap-2 cursor-pointer w-full">
+                            <input type="hidden" name="da_xac_thuc" value="0">
+                            <input type="checkbox" name="da_xac_thuc" value="1" class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary" {{ old('da_xac_thuc', $user->da_xac_thuc) ? 'checked' : '' }}>
+                            <span class="text-sm font-medium text-gray-700 flex items-center gap-1">Xác thực tài khoản <span class="material-symbols-outlined text-blue-500 text-[16px]" style="font-variation-settings: 'FILL' 1;">verified</span></span>
+                        </label>
+                    </div>
                 </div>
             </div>
 

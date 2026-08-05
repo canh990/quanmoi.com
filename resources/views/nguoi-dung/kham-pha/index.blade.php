@@ -27,7 +27,7 @@
 @endpush
 
 @section('content')
-<main class="pt-[72px] md:pt-[104px] pb-24 bg-surface-container-lowest min-h-screen">
+<main class="pb-24 bg-surface-container-lowest min-h-screen">
     
     {{-- Header Banner --}}
     <div class="bg-primary/5 border-b border-primary/10">
@@ -55,7 +55,7 @@
                 </a>
             </div>
         @else
-            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 @foreach($quans as $quan)
                     <a href="{{ route('quan.detail', $quan->slug) }}" class="block bg-white rounded-2xl shadow-sm overflow-hidden group cursor-pointer hover:shadow-xl transition-all border border-gray-100 flex flex-col h-full">
                         <div class="relative h-48 w-full overflow-hidden flex-shrink-0">

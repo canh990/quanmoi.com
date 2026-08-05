@@ -5,9 +5,14 @@
 
             {{-- Column 1: Brand Info (Spans 2 cols on lg) --}}
             <div class="lg:col-span-2 space-y-4">
-                <a href="/" class="inline-flex items-center gap-2 group">
-                    <span class="material-symbols-outlined text-primary text-3xl group-hover:rotate-12 transition-transform duration-300" style="font-variation-settings: 'FILL' 1;">restaurant</span>
-                    <span class="font-display-lg text-[26px] text-primary tracking-tight font-black">Quán Mới</span>
+                <a href="/" class="inline-flex items-center gap-1.5 group">
+                    <svg class="w-10 h-10 transition-transform duration-300 group-hover:scale-105 drop-shadow-sm" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M89.5 18C50.95 18 19.7 49.25 19.7 87.8C19.7 126.35 50.95 157.6 89.5 157.6C106.1 157.6 121.35 151.8 133.3 142.12L152.7 161.5L166.9 147.3L147.75 128.15C154.25 116.55 158 102.9 158 87.8C158 49.25 128.05 18 89.5 18ZM89.5 42.5C114.5 42.5 134.8 62.8 134.8 87.8C134.8 97.15 132 105.85 127.2 113.1L109.7 95.6H117V79H86.3V109.7H102.9V102.4L112.7 112.2C106.1 117.25 98.12 120.15 89.5 120.15C64.5 120.15 44.2 100 44.2 87.8C44.2 62.8 64.5 42.5 89.5 42.5Z" fill="#c97a3a" />
+                        <path d="M63.8 101.5V84.8H73.4V101.5H63.8ZM80.2 101.5V70.2H89.8V101.5H80.2ZM96.6 101.5V58.3H106.2V101.5H96.6Z" fill="#1a1a1a" />
+                        <path d="M61.2 72.7L77.5 60.1L88.1 67.4L106.8 48.6" stroke="#1a1a1a" stroke-width="5.4" stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M99 48.6H106.8V56.4" stroke="#1a1a1a" stroke-width="5.4" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    <span class="text-[28px] tracking-tight font-extrabold transition-all duration-300 group-hover:opacity-90" style="font-family: 'Raleway', sans-serif; color: #1a1a1a; line-height: 0.88; letter-spacing: -0.05em;">QuanMoi</span>
                 </a>
                 <p class="text-on-surface-variant text-[14px] leading-relaxed max-w-sm">
                     Cộng đồng khám phá, đánh giá và chia sẻ những địa điểm ẩm thực chất lượng, uy tín nhất tại địa phương của bạn.

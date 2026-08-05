@@ -8,7 +8,7 @@
     <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Raleway:wght@500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
     <style>
         body { background-color: #f8f9fa; }
@@ -20,9 +20,14 @@
     <aside class="w-64 bg-slate-900 text-white flex-shrink-0 flex flex-col justify-between p-4 hidden md:flex">
         <div>
             <div class="flex items-center gap-3 px-3 py-4 border-b border-slate-800 mb-6">
-                <span class="material-symbols-outlined text-primary-container text-3xl" style="font-variation-settings: 'FILL' 1;">admin_panel_settings</span>
+                <svg class="w-9 h-9" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path d="M89.5 18C50.95 18 19.7 49.25 19.7 87.8C19.7 126.35 50.95 157.6 89.5 157.6C106.1 157.6 121.35 151.8 133.3 142.12L152.7 161.5L166.9 147.3L147.75 128.15C154.25 116.55 158 102.9 158 87.8C158 49.25 128.05 18 89.5 18ZM89.5 42.5C114.5 42.5 134.8 62.8 134.8 87.8C134.8 97.15 132 105.85 127.2 113.1L109.7 95.6H117V79H86.3V109.7H102.9V102.4L112.7 112.2C106.1 117.25 98.12 120.15 89.5 120.15C64.5 120.15 44.2 100 44.2 87.8C44.2 62.8 64.5 42.5 89.5 42.5Z" fill="#c97a3a" />
+                    <path d="M63.8 101.5V84.8H73.4V101.5H63.8ZM80.2 101.5V70.2H89.8V101.5H80.2ZM96.6 101.5V58.3H106.2V101.5H96.6Z" fill="#ffffff" />
+                    <path d="M61.2 72.7L77.5 60.1L88.1 67.4L106.8 48.6" stroke="#ffffff" stroke-width="5.4" stroke-linecap="round" stroke-linejoin="round" />
+                    <path d="M99 48.6H106.8V56.4" stroke="#ffffff" stroke-width="5.4" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
                 <div>
-                    <h1 class="font-black text-lg text-white tracking-tight">Quán Mới Admin</h1>
+                    <h1 class="font-extrabold text-lg text-white tracking-tight" style="font-family: 'Raleway', sans-serif;">QuanMoi Admin</h1>
                     <p class="text-xs text-slate-400">Trang Quản Trị Hệ Thống</p>
                 </div>
             </div>
@@ -48,6 +53,26 @@
                     <span class="material-symbols-outlined text-[20px]">search</span>
                     Quản Lý SEO
                 </a>
+                
+                <div class="pt-4 mt-4 border-t border-slate-800">
+                    <p class="px-4 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Blog & Tin tức</p>
+                    <a href="{{ route('admin.blog.dashboard') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all {{ request()->routeIs('admin.blog.dashboard') ? 'bg-primary text-white shadow-lg' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                        <span class="material-symbols-outlined text-[20px]">dashboard</span>
+                        Tổng Quan Blog
+                    </a>
+                    <a href="{{ route('admin.blog.posts.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all {{ request()->routeIs('admin.blog.posts.*') ? 'bg-primary text-white shadow-lg' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                        <span class="material-symbols-outlined text-[20px]">article</span>
+                        Duyệt Bài Viết
+                    </a>
+                    <a href="{{ route('admin.blog.categories.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all {{ request()->routeIs('admin.blog.categories.*') ? 'bg-primary text-white shadow-lg' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                        <span class="material-symbols-outlined text-[20px]">category</span>
+                        Danh Mục Blog
+                    </a>
+                    <a href="{{ route('admin.blog.tags.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all {{ request()->routeIs('admin.blog.tags.*') ? 'bg-primary text-white shadow-lg' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                        <span class="material-symbols-outlined text-[20px]">tag</span>
+                        Thẻ (Tags)
+                    </a>
+                </div>
                 <a href="/" target="_blank" class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm text-slate-400 hover:bg-slate-800 hover:text-white transition-all">
                     <span class="material-symbols-outlined text-[20px]">open_in_new</span>
                     Xem Trang Chủ Quán Mới

@@ -13,16 +13,46 @@ class KhamPhaController extends Controller
      */
     public function index(Request $request)
     {
-        $danhMuc = $request->input('danh_muc');
+        // Xử lý an toàn để tránh cảnh báo "Array to string conversion" của PHP 8
+        $rawDanhMuc = $request->input('danh_muc', '');
+        $danhMuc = is_array($rawDanhMuc) ? '' : (string) $rawDanhMuc;
+        
         
         $query = Quan::query()->where('trang_thai', 'da_duyet');
 
-        if ($danhMuc) {
-            $query->where('loai_hinh_kinh_doanh', $danhMuc);
+        if (!empty($danhMuc)) {
+            $query->where('loai_hinh_kinh_doanh', strip_tags($danhMuc));
         }
 
         // Get paginated results, latest first
         $quans = $query->orderBy('created_at', 'desc')->paginate(12);
+
+        return view('nguoi-dung.kham-pha.index', [
+            'quans' => $quans,
+            'danhMuc' => $danhMuc,
+        ]);
+    }
+
+    public function danhMuc($slug)
+    {
+        $danhMucMap = [
+            'nha-hang' => 'Nhà hàng',
+            'ca-phe-tra' => 'Cà phê & Trà',
+            'billiards-giai-tri' => 'Billiards & Giải trí',
+            'do-an-vat' => 'Đồ ăn vặt',
+            'lau-nuong' => 'Lẩu & Nướng',
+            'quan-dem-24-7' => 'Quán Đêm 24/7'
+        ];
+
+        $danhMuc = $danhMucMap[$slug] ?? null;
+        if (!$danhMuc) {
+            abort(404);
+        }
+
+        $quans = Quan::query()->where('trang_thai', 'da_duyet')
+            ->where('loai_hinh_kinh_doanh', $danhMuc)
+            ->orderBy('created_at', 'desc')
+            ->paginate(12);
 
         return view('nguoi-dung.kham-pha.index', [
             'quans' => $quans,
