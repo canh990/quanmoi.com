@@ -8,6 +8,8 @@ use App\Models\BlogModerationLog;
 use App\Notifications\BlogStatusUpdatedNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class BlogController extends Controller
 {
@@ -51,6 +53,7 @@ class BlogController extends Controller
 
     public function show(Blog $blog)
     {
+        $this->authorize('view', $blog);
         $blog->load(['user', 'category', 'tags', 'moderationLogs.admin' => function($q) {
             $q->latest();
         }]);
@@ -60,6 +63,7 @@ class BlogController extends Controller
 
     public function updateStatus(Request $request, Blog $blog)
     {
+        $this->authorize('update', $blog);
         $request->validate([
             'status' => 'required|in:published,rejected,need_revision,hidden,scheduled',
             'note' => 'nullable|string'
@@ -81,47 +85,64 @@ class BlogController extends Controller
             }
         }
         
-        $blog->status = $status;
-        $blog->save();
-        
-        // Log Moderation
-        $actionMap = [
-            'published' => 'published',
-            'scheduled' => 'approved', // Conceptually approved but waiting
-            'rejected' => 'rejected',
-            'need_revision' => 'requested_revision',
-            'hidden' => 'hidden'
-        ];
-        
-        BlogModerationLog::create([
-            'blog_id' => $blog->id,
-            'admin_id' => Auth::id(),
-            'action' => $actionMap[$status] ?? 'updated',
-            'from_status' => $oldStatus,
-            'to_status' => $status,
-            'note' => $request->note
-        ]);
-        
-        if ($oldStatus !== $status && isset($actionMap[$status])) {
-            $blog->user->notify(new BlogStatusUpdatedNotification($blog, $actionMap[$status], $request->note));
-        }
+        DB::transaction(function () use ($blog, $status, $oldStatus, $request) {
+            $blog->status = $status;
+            $blog->save();
+            
+            // Log Moderation
+            $actionMap = [
+                'published' => 'published',
+                'scheduled' => 'approved', // Conceptually approved but waiting
+                'rejected' => 'rejected',
+                'need_revision' => 'requested_revision',
+                'hidden' => 'hidden'
+            ];
+            
+            BlogModerationLog::create([
+                'blog_id' => $blog->id,
+                'admin_id' => Auth::id(),
+                'action' => $actionMap[$status] ?? 'updated',
+                'from_status' => $oldStatus,
+                'to_status' => $status,
+                'note' => $request->note
+            ]);
+            
+            if ($oldStatus !== $status && isset($actionMap[$status])) {
+                $blog->user->notify(new BlogStatusUpdatedNotification($blog, $actionMap[$status], $request->note));
+            }
+        });
         
         return back()->with('success', 'Trạng thái bài viết đã được cập nhật.');
     }
     
     public function toggleHero(Blog $blog)
     {
-        Blog::where('is_hero', true)->update(['is_hero' => false]);
-        
-        $blog->is_hero = true;
-        $blog->save();
+        $this->authorize('update', $blog);
+        DB::transaction(function () use ($blog) {
+            // Unset any existing hero
+            Blog::where('is_hero', true)->update(['is_hero' => false]);
+            
+            $blog->is_hero = true;
+            $blog->save();
+        });
         
         return back()->with('success', 'Đã đặt bài viết thành Hero.');
     }
     
-    public function destroy(Blog $blog)
+    public function destroy(Request $request, Blog $blog)
     {
+        if ($request->has('force') && $request->force) {
+            $this->authorize('forceDelete', $blog);
+            if ($blog->cover_image) {
+                Storage::disk('r2')->delete($blog->cover_image);
+            }
+            $blog->forceDelete();
+            return redirect()->route('admin.blog.posts.index')->with('success', 'Bài viết đã bị xoá vĩnh viễn.');
+        }
+
+        $this->authorize('delete', $blog);
+        
         $blog->delete();
-        return redirect()->route('admin.blog.posts.index')->with('success', 'Bài viết đã bị xoá.');
+        return redirect()->route('admin.blog.posts.index')->with('success', 'Bài viết đã bị xoá tạm thời.');
     }
 }

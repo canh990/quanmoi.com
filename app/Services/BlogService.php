@@ -7,6 +7,7 @@ use App\Models\BlogView;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 
 class BlogService
 {
@@ -29,11 +30,14 @@ class BlogService
             ->first();
 
         if (!$recentView) {
-            BlogView::create([
-                'blog_id' => $blog->id,
-                'session_id' => $sessionId,
-                'ip_address' => $ipAddress,
-            ]);
+            DB::transaction(function () use ($blog, $sessionId, $ipAddress) {
+                BlogView::create([
+                    'blog_id' => $blog->id,
+                    'session_id' => $sessionId,
+                    'ip_address' => $ipAddress,
+                ]);
+                $blog->increment('view_count');
+            });
         }
     }
 

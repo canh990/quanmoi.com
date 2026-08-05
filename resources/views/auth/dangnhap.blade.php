@@ -136,7 +136,7 @@
                                     <input id="login-remember" name="remember" type="checkbox" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"/>
                                     <span class="text-[13px] text-on-surface-variant group-hover:text-on-surface transition-colors">Ghi nhớ đăng nhập</span>
                                 </label>
-                                <a href="#" class="text-primary font-bold text-[13px] hover:underline">Quên mật khẩu?</a>
+                                <a href="{{ route('password.request') }}" class="text-primary font-bold text-[13px] hover:underline">Quên mật khẩu?</a>
                             </div>
 
                             {{-- General error --}}

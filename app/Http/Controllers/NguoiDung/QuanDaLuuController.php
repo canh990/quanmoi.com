@@ -15,10 +15,10 @@ class QuanDaLuuController extends Controller
     public function index()
     {
         $user = Auth::user();
-        
+
         // Load saved places with necessary relationships (if any, e.g. location or images)
         // Adjust pagination or get as needed
-        $quanDaLuu = $user->savedQuan()->with(['hinhAnh' => function($q) {
+        $quanDaLuu = $user->savedQuan()->with(['hinhAnh' => function ($q) {
             $q->limit(1); // get primary image
         }])->get();
 
@@ -31,23 +31,27 @@ class QuanDaLuuController extends Controller
     public function toggle(Request $request, $quanId)
     {
         $user = Auth::user();
-        $quan = Quan::findOrFail($quanId);
+        $quan = Quan::whereKey($quanId)
+            ->where('trang_thai', 'da_duyet')
+            ->firstOrFail();
 
         if ($user->savedQuan()->where('quan_id', $quanId)->exists()) {
             // Unsave
             $user->savedQuan()->detach($quanId);
+
             return response()->json([
                 'success' => true,
-                'status'  => 'unsaved',
-                'message' => 'Đã bỏ lưu quán.'
+                'status' => 'unsaved',
+                'message' => 'Đã bỏ lưu quán.',
             ]);
         } else {
             // Save
             $user->savedQuan()->attach($quanId);
+
             return response()->json([
                 'success' => true,
-                'status'  => 'saved',
-                'message' => 'Đã lưu quán thành công!'
+                'status' => 'saved',
+                'message' => 'Đã lưu quán thành công!',
             ]);
         }
     }

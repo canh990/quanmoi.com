@@ -64,10 +64,20 @@ class BlogPolicy
             return true;
         }
 
-        if ($user->id === $blog->user_id && !in_array($blog->status, ['published', 'scheduled'])) {
+        if ($user->id === $blog->user_id && ! in_array($blog->status, ['published', 'scheduled'])) {
             return true;
         }
 
         return false;
+    }
+
+    public function restore(User $user, Blog $blog): bool
+    {
+        return $user->isAdmin();
+    }
+
+    public function forceDelete(User $user, Blog $blog): bool
+    {
+        return $user->isAdmin();
     }
 }

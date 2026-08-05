@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\BanDoController;
 use App\Http\Controllers\Api\DiaChiController;
 use App\Http\Controllers\Auth\DangKyController;
 use App\Http\Controllers\Auth\DangNhapController;
+use App\Http\Controllers\Auth\QuenMatKhauController;
 use App\Http\Controllers\ChuQuan\HinhAnhQuanController;
 use App\Http\Controllers\ChuQuan\QuanController;
 use App\Http\Controllers\NguoiDung\HomeController;
@@ -25,16 +26,21 @@ Route::get('/video-review', [\App\Http\Controllers\NguoiDung\VideoShortControlle
 Route::view('/gioi-thieu', 'pages.about')->name('about');
 
 Route::get('/dang-ky', [DangKyController::class, 'showRegistrationForm'])->name('register');
-Route::post('/dang-ky', [DangKyController::class, 'register'])->name('register.submit');
-Route::post('/dang-ky/xac-thuc', [DangKyController::class, 'verifyOtp'])->name('register.verify');
-Route::post('/dang-ky/gui-lai', [DangKyController::class, 'resendOtp'])->name('register.resend');
+Route::post('/dang-ky', [DangKyController::class, 'register'])->middleware('throttle:register')->name('register.submit');
+Route::post('/dang-ky/xac-thuc', [DangKyController::class, 'verifyOtp'])->middleware('throttle:otp-verify')->name('register.verify');
+Route::post('/dang-ky/gui-lai', [DangKyController::class, 'resendOtp'])->middleware('throttle:otp-send')->name('register.resend');
 
 Route::get('/dang-nhap', [DangNhapController::class, 'showLoginForm'])->name('login');
-Route::post('/dang-nhap', [DangNhapController::class, 'login'])->name('login.submit');
+Route::post('/dang-nhap', [DangNhapController::class, 'login'])->middleware('throttle:login')->name('login.submit');
 Route::post('/dang-xuat', [DangNhapController::class, 'logout'])->name('logout');
 
 Route::get('/dang-nhap/google', [App\Http\Controllers\Auth\GoogleController::class, 'redirectToGoogle'])->name('login.google');
 Route::get('/dang-nhap/google/callback', [App\Http\Controllers\Auth\GoogleController::class, 'handleGoogleCallback'])->name('login.google.callback');
+
+Route::get('/quen-mat-khau', [QuenMatKhauController::class, 'showForgotForm'])->name('password.request');
+Route::post('/quen-mat-khau', [QuenMatKhauController::class, 'sendResetLink'])->middleware('throttle:password-email')->name('password.email');
+Route::get('/dat-lai-mat-khau/{token}', [QuenMatKhauController::class, 'showResetForm'])->name('password.reset');
+Route::post('/dat-lai-mat-khau', [QuenMatKhauController::class, 'resetPassword'])->middleware('throttle:password-email')->name('password.update');
 
 Route::redirect('/dangnhap', '/dang-nhap', 301);
 Route::redirect('/dangky', '/dang-ky', 301);
@@ -43,7 +49,10 @@ Route::redirect('/dangxuat', '/dang-xuat', 301);
 Route::prefix('chu-quan')->group(function () {
     Route::middleware('auth')->group(function () {
         Route::get('/dang-quan', [QuanController::class, 'create'])->name('chu-quan.dang-quan');
-        Route::post('/dang-quan', [QuanController::class, 'store'])->name('chu-quan.quan.store');
+        Route::post('/dang-quan', [QuanController::class, 'store'])->middleware('throttle:venue-submission')->name('chu-quan.quan.store');
+    });
+
+    Route::middleware(['auth', 'KiemTraQuyenHan:chu_quan'])->group(function () {
         Route::get('/quan', [QuanController::class, 'ownerIndex'])->name('chu-quan.quan.index');
         Route::get('/quan/{slug}', [QuanController::class, 'show'])->name('chu-quan.quan.show');
         Route::post('/quan/{quanId}/hinh-anh', [HinhAnhQuanController::class, 'store'])->name('chu-quan.hinh-anh.store');

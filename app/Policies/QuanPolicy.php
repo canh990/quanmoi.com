@@ -14,6 +14,10 @@ class QuanPolicy
 
     public function view(?User $user, Quan $quan): bool
     {
+        if ($quan->trashed() || $quan->trang_thai !== 'da_duyet') {
+            return $user !== null && ($user->isAdmin() || $user->id === $quan->chu_quan_id);
+        }
+
         return true;
     }
 

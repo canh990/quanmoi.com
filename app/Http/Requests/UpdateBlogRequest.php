@@ -30,6 +30,9 @@ class UpdateBlogRequest extends FormRequest
             'cover_image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:5120'], // 5MB Max
             'tags' => ['nullable', 'array'],
             'tags.*' => ['exists:blog_tags,id'],
+            'seo_title' => ['nullable', 'string', 'max:255'],
+            'seo_description' => ['nullable', 'string', 'max:500'],
+            'meta_keywords' => ['nullable', 'string', 'max:255'],
             // Action can be 'draft' or 'pending' (submit for review)
             'action' => ['required', 'string', Rule::in(['draft', 'pending'])],
         ];

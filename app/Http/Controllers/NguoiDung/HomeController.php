@@ -4,8 +4,6 @@ namespace App\Http\Controllers\NguoiDung;
 
 use App\Http\Controllers\Controller;
 use App\Models\Quan;
-use Illuminate\Http\Request;
-
 use App\Models\VideoShort;
 
 class HomeController extends Controller
@@ -30,6 +28,7 @@ class HomeController extends Controller
         // Lấy video shorts
         $videoShorts = VideoShort::with('quan')
             ->where('trang_thai', 'da_duyet')
+            ->whereHas('quan', fn ($query) => $query->where('trang_thai', 'da_duyet'))
             ->orderBy('created_at', 'desc')
             ->take(4)
             ->get();
@@ -50,8 +49,8 @@ class HomeController extends Controller
             ->firstOrFail();
 
         // Chống Spam View: Lưu ID quán vào Session trong vòng 2 tiếng
-        $sessionKey = 'viewed_quan_' . $quan->id;
-        if (!session()->has($sessionKey)) {
+        $sessionKey = 'viewed_quan_'.$quan->id;
+        if (! session()->has($sessionKey)) {
             $quan->increment('luot_xem');
             session()->put($sessionKey, true);
         }
@@ -59,4 +58,3 @@ class HomeController extends Controller
         return view('nguoi-dung.chi-tiet', compact('quan'));
     }
 }
-

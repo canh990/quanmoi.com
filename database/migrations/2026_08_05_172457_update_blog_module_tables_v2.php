@@ -2,8 +2,8 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -16,10 +16,10 @@ return new class extends Migration
         Schema::table('blogs', function (Blueprint $table) {
             $table->string('approved_by', 36)->nullable();
             $table->foreign('approved_by')->references('id')->on('nguoi_dung')->nullOnDelete();
-            
+
             $table->string('published_by', 36)->nullable();
             $table->foreign('published_by')->references('id')->on('nguoi_dung')->nullOnDelete();
-            
+
             $table->integer('reading_time')->nullable();
             $table->boolean('allow_comments')->default(true);
             $table->boolean('is_featured')->default(false);
@@ -29,23 +29,25 @@ return new class extends Migration
             $table->string('og_image')->nullable();
             $table->timestamp('scheduled_at')->nullable();
             $table->timestamp('last_submitted_at')->nullable();
-            
+
             // Drop old enum status and recreate as string for better flexibility
         });
-        
-        // MySQL enum modification requires doctrine/dbal or raw SQL. We use raw SQL for simplicity.
-        DB::statement("ALTER TABLE blogs MODIFY COLUMN status VARCHAR(20) DEFAULT 'draft'");
-        
+
+        // SQLite already stores Laravel enum columns as strings; MODIFY is MySQL-only syntax.
+        if (in_array(DB::getDriverName(), ['mysql', 'mariadb'], true)) {
+            DB::statement("ALTER TABLE blogs MODIFY COLUMN status VARCHAR(20) DEFAULT 'draft'");
+        }
+
         // 2. Drop blog_revisions
         Schema::dropIfExists('blog_revisions');
-        
+
         // 3. Create blog_moderation_logs
         Schema::create('blog_moderation_logs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('blog_id')->constrained()->onDelete('cascade');
             $table->string('admin_id', 36)->nullable();
             $table->foreign('admin_id')->references('id')->on('nguoi_dung')->nullOnDelete();
-            
+
             $table->string('action'); // submitted, approved, published, requested_revision, rejected, hidden, restored
             $table->string('from_status')->nullable();
             $table->string('to_status')->nullable();
@@ -60,7 +62,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('blog_moderation_logs');
-        
+
         Schema::create('blog_revisions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('blog_id')->constrained()->onDelete('cascade');
@@ -70,11 +72,11 @@ return new class extends Migration
             $table->longText('content_after')->nullable();
             $table->timestamps();
         });
-        
+
         Schema::table('blogs', function (Blueprint $table) {
             $table->dropForeign(['approved_by']);
             $table->dropForeign(['published_by']);
-            
+
             $table->dropColumn([
                 'approved_by',
                 'published_by',
@@ -86,10 +88,12 @@ return new class extends Migration
                 'canonical_url',
                 'og_image',
                 'scheduled_at',
-                'last_submitted_at'
+                'last_submitted_at',
             ]);
         });
-        
-        DB::statement("ALTER TABLE blogs MODIFY COLUMN status ENUM('draft', 'pending', 'need_revision', 'approved', 'published', 'rejected', 'hidden') DEFAULT 'draft'");
+
+        if (in_array(DB::getDriverName(), ['mysql', 'mariadb'], true)) {
+            DB::statement("ALTER TABLE blogs MODIFY COLUMN status ENUM('draft', 'pending', 'need_revision', 'approved', 'published', 'rejected', 'hidden') DEFAULT 'draft'");
+        }
     }
 };

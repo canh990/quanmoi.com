@@ -2,7 +2,13 @@
 
 namespace App\Providers;
 
+use App\Models\User;
+use App\Policies\NguoiDungPolicy;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -22,6 +28,15 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Gate::policy(User::class, NguoiDungPolicy::class);
+
+        RateLimiter::for('login', fn (Request $request) => Limit::perMinute(5)->by($this->rateLimitKey($request)));
+        RateLimiter::for('register', fn (Request $request) => Limit::perMinutes(10, 3)->by($this->rateLimitKey($request)));
+        RateLimiter::for('otp-send', fn (Request $request) => Limit::perMinutes(10, 3)->by($this->rateLimitKey($request)));
+        RateLimiter::for('otp-verify', fn (Request $request) => Limit::perMinute(5)->by($this->rateLimitKey($request)));
+        RateLimiter::for('password-email', fn (Request $request) => Limit::perMinutes(10, 3)->by($this->rateLimitKey($request)));
+        RateLimiter::for('venue-submission', fn (Request $request) => Limit::perDay(3)->by($this->rateLimitKey($request)));
+
         View::composer('layouts.navigation', function ($view): void {
             $currentUser = Auth::user();
             $isOwnerNav = false;
@@ -38,14 +53,13 @@ class AppServiceProvider extends ServiceProvider
                         ? route('admin.quan.index')
                         : route('chu-quan.dang-quan');
                 } else {
-                    $hasOwnedQuan = $currentUser->quan()->exists();
                     $isOwnerRole = $currentUser->hasRole('chu_quan');
 
-                    if ($hasOwnedQuan || $isOwnerRole) {
+                    if ($isOwnerRole) {
                         $isOwnerNav = true;
                         $ownerNavLabel = 'Quản lý cửa hàng';
                         $ownerNavIcon = 'storefront';
-                        $ownerNavUrl = $hasOwnedQuan && Route::has('chu-quan.quan.index')
+                        $ownerNavUrl = Route::has('chu-quan.quan.index')
                             ? route('chu-quan.quan.index')
                             : route('chu-quan.dang-quan');
                     }
@@ -60,5 +74,13 @@ class AppServiceProvider extends ServiceProvider
                 'ownerNavUrl' => $ownerNavUrl,
             ]);
         });
+    }
+
+    private function rateLimitKey(Request $request): string
+    {
+        $email = mb_strtolower(trim((string) $request->input('email')));
+        $identifier = $email !== '' ? $email : (string) $request->user()?->getAuthIdentifier();
+
+        return sha1($request->ip().'|'.$identifier);
     }
 }

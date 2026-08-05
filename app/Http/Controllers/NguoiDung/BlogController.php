@@ -13,6 +13,7 @@ use App\Models\BlogModerationLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
 
 class BlogController extends Controller
 {
@@ -51,8 +52,8 @@ class BlogController extends Controller
         $blog->title = $data['title'];
         $blog->slug = $this->blogService->generateUniqueSlug($data['title']);
         $blog->category_id = $data['category_id'];
-        $blog->excerpt = $data['excerpt'];
-        $blog->content = $data['content'];
+        $blog->excerpt = $data['excerpt'] ?? null;
+        $blog->content = clean($data['content']);
         $blog->status = $data['action'] === 'pending' ? 'pending' : 'draft';
         
         if ($request->hasFile('cover_image')) {
@@ -101,11 +102,14 @@ class BlogController extends Controller
         // Optional: Do not change slug to prevent breaking links, or update it
         // $blog->slug = $this->blogService->generateUniqueSlug($data['title'], $blog->id);
         $blog->category_id = $data['category_id'];
-        $blog->excerpt = $data['excerpt'];
-        $blog->content = $data['content'];
+        $blog->excerpt = $data['excerpt'] ?? null;
+        $blog->content = clean($data['content']);
         $blog->status = $data['action'] === 'pending' ? 'pending' : 'draft';
         
         if ($request->hasFile('cover_image')) {
+            if ($blog->cover_image) {
+                Storage::disk('r2')->delete($blog->cover_image);
+            }
             $blog->cover_image = $this->blogService->uploadCoverImage($request->file('cover_image'));
         }
         
@@ -134,6 +138,10 @@ class BlogController extends Controller
     public function destroy(Blog $blog)
     {
         Gate::authorize('delete', $blog);
+        
+        // When user soft deletes, we don't necessarily delete the R2 image yet.
+        // It will be deleted if they forceDelete later.
+        
         $blog->delete();
         return back()->with('success', 'Đã xóa bài viết.');
     }

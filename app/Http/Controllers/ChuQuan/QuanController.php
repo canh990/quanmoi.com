@@ -4,18 +4,16 @@ namespace App\Http\Controllers\ChuQuan;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\DangKyQuanRequest;
-use App\Models\Quan;
-use App\Models\VaiTro;
-use App\Models\DanhMucMenu;
-use App\Models\MonTrongMenu;
 use App\Models\HinhAnhQuan;
+use App\Models\Quan;
+use App\Models\VideoShort;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\ImageManager;
 
 class QuanController extends Controller
 {
@@ -35,50 +33,42 @@ class QuanController extends Controller
         $validated = $request->validated();
         $user = $request->user();
 
-        if (!$user) {
+        if (! $user) {
             abort(403, 'Bạn chưa đăng nhập hoặc phiên làm việc đã hết hạn.');
         }
 
-        if (!$user->isAdmin() && !$user->hasRole('chu_quan')) {
-            $vaiTroChuQuan = VaiTro::where('ten', 'chu_quan')->first();
-
-            if ($vaiTroChuQuan) {
-                $user->update(['vai_tro_id' => $vaiTroChuQuan->id]);
-            }
-        }
-
         $anhBiaPath = null;
-        $anhBiaKey  = null;
+        $anhBiaKey = null;
         if ($request->hasFile('anh_bia')) {
             $file = $request->file('anh_bia');
-            $filename = Str::uuid() . '.webp';
-            
-            $manager = new ImageManager(new Driver());
-            $image   = $manager->decode($file->getRealPath());
+            $filename = Str::uuid().'.webp';
+
+            $manager = new ImageManager(new Driver);
+            $image = $manager->decode($file->getRealPath());
             $encoded = $image->encodeUsingFileExtension('webp', 80);
 
-            $objectKey = 'quan/anh-bia/' . $filename;
+            $objectKey = 'quan/anh-bia/'.$filename;
             Storage::disk('r2')->put($objectKey, (string) $encoded);
 
             $anhBiaPath = Storage::disk('r2')->url($objectKey);
-            $anhBiaKey  = $objectKey;
+            $anhBiaKey = $objectKey;
         }
 
         $galleryKeys = [];
         $galleryPaths = [];
         if ($request->hasFile('danh_sach_anh')) {
-            $manager = new ImageManager(new Driver());
+            $manager = new ImageManager(new Driver);
             foreach ($request->file('danh_sach_anh') as $file) {
-                $filename = Str::uuid() . '.webp';
-                
-                $image   = $manager->decode($file->getRealPath());
+                $filename = Str::uuid().'.webp';
+
+                $image = $manager->decode($file->getRealPath());
                 $encoded = $image->encodeUsingFileExtension('webp', 80);
 
-                $objectKey = 'quan/gallery/' . $filename;
+                $objectKey = 'quan/gallery/'.$filename;
                 Storage::disk('r2')->put($objectKey, (string) $encoded);
 
                 $galleryPaths[] = Storage::disk('r2')->url($objectKey);
-                $galleryKeys[]  = $objectKey;
+                $galleryKeys[] = $objectKey;
             }
         }
 
@@ -87,14 +77,14 @@ class QuanController extends Controller
         $counter = 1;
 
         while (Quan::where('slug', $slug)->exists()) {
-            $slug = $baseSlug . '-' . $counter;
+            $slug = $baseSlug.'-'.$counter;
             $counter++;
         }
 
         $chuQuanId = $user->id;
 
         try {
-            $quan = DB::transaction(function () use ($validated, $request, $chuQuanId, $slug, $anhBiaPath, $anhBiaKey, $galleryKeys, $galleryPaths) {
+            $quan = DB::transaction(function () use ($validated, $chuQuanId, $slug, $anhBiaPath, $anhBiaKey, $galleryKeys, $galleryPaths) {
                 $q = Quan::create([
                     'chu_quan_id' => $chuQuanId,
                     'ten_quan' => $validated['ten_quan'],
@@ -148,15 +138,15 @@ class QuanController extends Controller
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Dang quan thanh cong!',
-                'redirect_to' => route('chu-quan.quan.menu.edit', ['slug' => $quan->slug]),
+                'message' => 'Hồ sơ quán đã được gửi và đang chờ duyệt.',
+                'redirect_to' => route('home'),
                 'data' => $quan,
             ]);
         }
 
         return redirect()
-            ->route('chu-quan.quan.menu.edit', ['slug' => $quan->slug])
-            ->with('success', 'Dang quan moi thanh cong!');
+            ->route('home')
+            ->with('success', 'Hồ sơ quán đã được gửi và đang chờ duyệt.');
     }
 
     /**
@@ -166,6 +156,7 @@ class QuanController extends Controller
     {
         $quanList = $request->user()
             ->quan()
+            ->where('trang_thai', 'da_duyet')
             ->latest()
             ->get();
 
@@ -179,11 +170,13 @@ class QuanController extends Controller
     {
         $quan = Quan::where('slug', $slug)
             ->where('chu_quan_id', Auth::id())
+            ->where('trang_thai', 'da_duyet')
             ->with(['hinhAnh', 'danhMucMenu.monAn'])
             ->firstOrFail();
+        $this->authorize('update', $quan);
 
         $luotLuu = $quan->savedByUsers()->count();
-        $luotVideo = \App\Models\VideoShort::where('quan_id', $quan->id)->count();
+        $luotVideo = VideoShort::where('quan_id', $quan->id)->count();
 
         return view('chu-quan.chi-tiet-quan', compact('quan', 'luotLuu', 'luotVideo'));
     }
@@ -195,36 +188,38 @@ class QuanController extends Controller
     {
         $quan = Quan::where('slug', $slug)
             ->where('chu_quan_id', Auth::id())
+            ->where('trang_thai', 'da_duyet')
             ->firstOrFail();
+        $this->authorize('update', $quan);
 
         $validated = $request->validate([
-            'so_dien_thoai'   => 'required|string|max:20',
-            'mo_ta'           => 'nullable|string|max:2000',
-            'gio_mo_cua'      => 'required|string',
-            'gio_dong_cua'    => 'required|string',
-            'gia_nho_nhat'    => 'nullable|numeric|min:0',
-            'gia_lon_nhat'    => 'nullable|numeric|min:0',
-            'tiktok_url'      => 'nullable|url|max:255',
-            'anh_bia'         => 'nullable|image|max:5120',
+            'so_dien_thoai' => 'required|string|max:20',
+            'mo_ta' => 'nullable|string|max:2000',
+            'gio_mo_cua' => 'required|string',
+            'gio_dong_cua' => 'required|string',
+            'gia_nho_nhat' => 'nullable|numeric|min:0',
+            'gia_lon_nhat' => 'nullable|numeric|min:0',
+            'tiktok_url' => 'nullable|url|max:255',
+            'anh_bia' => 'nullable|image|max:5120',
         ]);
 
         // Upload ảnh bìa mới nếu có
         if ($request->hasFile('anh_bia')) {
             // Xóa ảnh cũ
-            if ($quan->anh_bia_key) {
+            if ($quan->anh_bia_key && Str::startsWith($quan->anh_bia_key, 'quan/anh-bia/')) {
                 Storage::disk('r2')->delete($quan->anh_bia_key);
             }
 
-            $file     = $request->file('anh_bia');
-            $filename = Str::uuid() . '.webp';
-            $manager  = new ImageManager(new Driver());
-            $image    = $manager->decode($file->getRealPath());
-            $encoded  = $image->encodeUsingFileExtension('webp', 85);
+            $file = $request->file('anh_bia');
+            $filename = Str::uuid().'.webp';
+            $manager = new ImageManager(new Driver);
+            $image = $manager->decode($file->getRealPath());
+            $encoded = $image->encodeUsingFileExtension('webp', 85);
 
-            $objectKey = 'quan/anh-bia/' . $filename;
+            $objectKey = 'quan/anh-bia/'.$filename;
             Storage::disk('r2')->put($objectKey, (string) $encoded);
 
-            $validated['anh_bia']     = Storage::disk('r2')->url($objectKey);
+            $validated['anh_bia'] = Storage::disk('r2')->url($objectKey);
             $validated['anh_bia_key'] = $objectKey;
         }
 

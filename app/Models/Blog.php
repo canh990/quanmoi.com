@@ -21,23 +21,13 @@ class Blog extends Model
         'excerpt',
         'content',
         'cover_image',
-        'status',
         'seo_title',
         'seo_description',
         'meta_keywords',
-        'is_hero',
-        'published_at',
-        'approved_by',
-        'published_by',
         'reading_time',
         'allow_comments',
-        'is_featured',
-        'view_count',
-        'comment_count',
         'canonical_url',
         'og_image',
-        'scheduled_at',
-        'last_submitted_at',
     ];
 
     protected $casts = [
