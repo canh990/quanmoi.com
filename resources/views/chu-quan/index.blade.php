@@ -3,7 +3,7 @@
 @section('title', 'Quản lý cửa hàng | Quán Mới')
 
 @section('content')
-<main class="pt-24 pb-20 max-w-7xl mx-auto px-4 md:px-8 flex-grow">
+<main class="pt-6 pb-20 max-w-7xl mx-auto px-4 md:px-8 flex-grow">
     <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8">
         <div>
             <span class="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-bold">Chủ quán workspace</span>

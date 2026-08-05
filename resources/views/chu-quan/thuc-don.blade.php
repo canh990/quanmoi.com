@@ -3,7 +3,7 @@
 @section('title', 'Quản lý thực đơn - ' . $quan->ten_quan)
 
 @section('content')
-<main class="bg-gray-50/50 min-h-screen py-10">
+<main class="bg-gray-50/50 min-h-screen pb-20 pt-24 md:pt-28">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <div class="mb-8">
@@ -67,11 +67,11 @@
                 
                 renderCategoryHtml(catId, catObj.name);
                 
-                if (cat.mon_trong_menu && cat.mon_trong_menu.length > 0) {
-                    cat.mon_trong_menu.forEach(item => {
+                if (cat.mon_an && cat.mon_an.length > 0) {
+                    cat.mon_an.forEach(item => {
                         const itemId = ++itemCounter;
-                        catObj.items.push({ id: itemId, db_id: item.id, name: item.ten_mon, price: item.gia, description: item.mo_ta || '' });
-                        renderItemHtml(catId, itemId, item.ten_mon, item.gia, item.mo_ta);
+                        catObj.items.push({ id: itemId, db_id: item.id, tmp_id: itemId, name: item.ten_mon, price: item.gia, description: item.mo_ta || '', image: item.hinh_anh || '' });
+                        renderItemHtml(catId, itemId, item.ten_mon, item.gia, item.mo_ta, item.hinh_anh);
                     });
                 }
                 menuCategories.push(catObj);
@@ -99,12 +99,24 @@
         container.insertAdjacentHTML('beforeend', html);
     }
 
-    function renderItemHtml(catId, itemId, name = '', price = '', desc = '') {
+    function renderItemHtml(catId, itemId, name = '', price = '', desc = '', image = '') {
         const container = document.getElementById(`category-items-${catId}`);
+        const imagePreview = image ? `{{ rtrim(Storage::disk('r2')->url(''), '/') }}/${image}` : '';
+        const imgDisplay = image ? `<img src="${imagePreview}" class="w-full h-full object-cover rounded" />` : `<span class="material-symbols-outlined text-gray-400">image</span>`;
         const html = `
             <div id="item-box-${itemId}" class="flex gap-3 items-start bg-white p-3 rounded-lg border border-gray-100 shadow-sm relative group">
                 <button type="button" onclick="removeMenuItem(${catId}, ${itemId})" class="absolute -right-2 -top-2 bg-red-100 text-red-600 rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"><span class="material-symbols-outlined text-[14px]">close</span></button>
                 
+                <div class="relative w-16 h-16 shrink-0 bg-gray-50 border border-gray-200 rounded cursor-pointer overflow-hidden flex items-center justify-center hover:bg-gray-100" onclick="document.getElementById('item_image_${itemId}').click()">
+                    <div id="preview_container_${itemId}" class="w-full h-full flex items-center justify-center">
+                        ${imgDisplay}
+                    </div>
+                    <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                        <span class="material-symbols-outlined text-white text-[20px]">edit</span>
+                    </div>
+                    <input type="file" id="item_image_${itemId}" name="item_image_${itemId}" accept="image/*" class="hidden" onchange="previewMenuImage(this, ${itemId})" />
+                </div>
+
                 <div class="flex-1 space-y-2">
                     <div class="flex gap-2">
                         <input type="text" placeholder="Tên món ăn..." value="${name.replace(/"/g, '&quot;')}" onchange="updateItem(${catId}, ${itemId}, 'name', this.value)" class="flex-1 border border-gray-200 rounded px-2 py-1.5 text-sm outline-none focus:border-primary" required />
@@ -147,8 +159,19 @@
         if (!cat) return;
         
         const itemId = ++itemCounter;
-        cat.items.push({ id: itemId, name: '', price: '', description: '' });
+        cat.items.push({ id: itemId, tmp_id: itemId, name: '', price: '', description: '', image: '' });
         renderItemHtml(catId, itemId);
+    }
+
+    function previewMenuImage(input, itemId) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const container = document.getElementById(`preview_container_${itemId}`);
+                container.innerHTML = `<img src="${e.target.result}" class="w-full h-full object-cover rounded" />`;
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
     }
 
     function removeMenuItem(catId, itemId) {

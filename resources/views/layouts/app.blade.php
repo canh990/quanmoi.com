@@ -7,13 +7,12 @@
     <title>@yield('title', 'Quán Mới - Khám phá tinh hoa ẩm thực địa phương')</title>
     <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&amp;family=Raleway:wght@500;600;700;800&amp;family=Space+Mono:wght@400;700&amp;display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
     @stack('styles')
     @stack('seo')
 </head>
-<body class="bg-background text-on-background min-h-screen flex flex-col relative antialiased selection:bg-primary-fixed selection:text-on-primary-fixed">
-
+<body class="bg-background text-on-background min-h-screen flex flex-col relative antialiased selection:bg-primary-fixed selection:text-on-primary-fixed pt-[72px]">
     <!-- Global Header -->
     @hasSection('header')
         @yield('header')
@@ -22,8 +21,7 @@
     @endif
 
     <!-- Main Dynamic Content -->
-   <!-- CÄƒn chá»‰nh láº¡i khoáº£ng cÃ¡ch trÃªn Ä‘á»ƒ ná»™i dung chÃ­nh khá»›p sÃ¡t mÃ©p thanh Ä‘iá»u hÆ°á»›ng má»›i -->
-
+   
     @yield('content')
 
 

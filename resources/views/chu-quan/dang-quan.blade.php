@@ -86,11 +86,17 @@
                                 <p class="text-xs text-red-600 hidden mt-1" id="err-so_dien_thoai"></p>
                             </div>
                             <div>
-                                <label class="text-[12px] font-bold text-gray-500 tracking-wider uppercase mb-2 block">GIỜ MỞ CỬA <span class="text-red-500">*</span></label>
-                                <div class="flex items-center gap-2">
-                                    <input id="gio_mo_cua" name="gio_mo_cua" required class="flex-1 px-3 py-3 rounded-lg border border-gray-200 outline-none input-focus-effect text-[16px] font-bold" type="time" value="08:00"/>
+                                <div class="flex items-center justify-between mb-2">
+                                    <label class="text-[12px] font-bold text-gray-500 tracking-wider uppercase block">GIỜ HOẠT ĐỘNG <span class="text-red-500">*</span></label>
+                                    <label class="flex items-center gap-1.5 cursor-pointer group">
+                                        <input type="checkbox" id="is_24h" class="w-4 h-4 rounded text-primary border-gray-300 focus:ring-primary cursor-pointer" onchange="toggle24h(this.checked)">
+                                        <span class="text-[12px] font-bold text-gray-500 group-hover:text-primary transition-colors select-none">MỞ 24/24</span>
+                                    </label>
+                                </div>
+                                <div class="flex items-center gap-2 transition-opacity" id="time-select-container">
+                                    <x-time-select name="gio_mo_cua" value="08:00" class="flex-1" />
                                     <span class="text-gray-400 font-bold">-</span>
-                                    <input id="gio_dong_cua" name="gio_dong_cua" required class="flex-1 px-3 py-3 rounded-lg border border-gray-200 outline-none input-focus-effect text-[16px] font-bold" type="time" value="22:00"/>
+                                    <x-time-select name="gio_dong_cua" value="22:00" class="flex-1" />
                                 </div>
                             </div>
                         </div>
@@ -98,17 +104,32 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label for="gia_nho_nhat" class="text-[12px] font-bold text-gray-500 tracking-wider uppercase mb-2 block">GIÁ THẤP NHẤT (VNĐ)</label>
-                                <input id="gia_nho_nhat" name="gia_nho_nhat" type="number" min="0" step="1000" class="w-full px-4 py-3 rounded-lg border border-gray-200 outline-none input-focus-effect text-[16px]" placeholder="30000"/>
+                                <input id="gia_nho_nhat" name="gia_nho_nhat" type="text" 
+                                       oninput="this.value = this.value.replace(/[^0-9]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.');"
+                                       class="w-full px-4 py-3 rounded-lg border border-gray-200 outline-none input-focus-effect text-[16px]" placeholder="30.000"/>
                             </div>
                             <div>
                                 <label for="gia_lon_nhat" class="text-[12px] font-bold text-gray-500 tracking-wider uppercase mb-2 block">GIÁ CAO NHẤT (VNĐ)</label>
-                                <input id="gia_lon_nhat" name="gia_lon_nhat" type="number" min="0" step="1000" class="w-full px-4 py-3 rounded-lg border border-gray-200 outline-none input-focus-effect text-[16px]" placeholder="150000"/>
+                                <input id="gia_lon_nhat" name="gia_lon_nhat" type="text" 
+                                       oninput="this.value = this.value.replace(/[^0-9]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.');"
+                                       class="w-full px-4 py-3 rounded-lg border border-gray-200 outline-none input-focus-effect text-[16px]" placeholder="150.000"/>
                             </div>
                         </div>
 
                         <div>
                             <label for="mo_ta" class="text-[12px] font-bold text-gray-500 tracking-wider uppercase mb-2 block">MÔ TẢ NGẮN</label>
                             <textarea id="mo_ta" name="mo_ta" class="w-full px-4 py-3 rounded-lg border border-gray-200 outline-none input-focus-effect text-[16px] resize-none" placeholder="Chia sẻ về không gian, món đặc trưng hoặc ưu đãi của bạn..." rows="4"></textarea>
+                        </div>
+                        
+                        <div>
+                            <label for="tiktok_url" class="text-[12px] font-bold text-gray-500 tracking-wider uppercase mb-2 block flex items-center gap-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-tiktok" viewBox="0 0 16 16">
+                                  <path d="M9 0h1.98c.144.715.54 1.617 1.235 2.512C12.895 3.389 13.797 4 15 4v2c-1.753 0-3.07-.814-4-1.829V11a5 5 0 1 1-5-5v2a3 3 0 1 0 3 3z"/>
+                                </svg>
+                                LINK TIKTOK REVIEW/QUÁN
+                            </label>
+                            <input id="tiktok_url" name="tiktok_url" class="w-full px-4 py-3 rounded-lg border border-gray-200 outline-none input-focus-effect text-[16px] font-normal" placeholder="https://www.tiktok.com/@username/video/123456789" type="url"/>
+                            <p class="text-xs text-red-600 hidden mt-1" id="err-tiktok_url"></p>
                         </div>
                     </div>
 
@@ -217,7 +238,7 @@
                     <div class="relative">
                         <label class="text-[11px] font-bold text-gray-500 uppercase mb-1 block">Số nhà & Tên đường <span class="text-red-500">*</span></label>
                         <div class="relative">
-                            <input id="dia_chi_chi_tiet" name="dia_chi_chi_tiet" required onkeyup="updateAddressPreview()" class="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-200 outline-none input-focus-effect font-medium text-[14px]" placeholder="Ví dụ: 123 Phố Huế..." type="text"/>
+                            <input id="dia_chi_chi_tiet" name="dia_chi_chi_tiet" required onkeyup="updateAddressPreview()" class="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-200 outline-none input-focus-effect font-medium text-[14px]" placeholder="Ví dụ: 123 CAT HUNG..." type="text"/>
                             <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">search</span>
                         </div>
                     </div>
@@ -259,7 +280,7 @@
 
 @push('scripts')
 <script>
-    function selectType(typeVal, element) {
+    function selectType(typeVal, element, sync24h = true) {
         document.getElementById('loai_hinh_kinh_doanh').value = typeVal;
 
         document.querySelectorAll('.business-type-card').forEach(card => {
@@ -267,6 +288,51 @@
         });
 
         element.classList.add('active');
+        
+        if (sync24h) {
+            const is24hCb = document.getElementById('is_24h');
+            if (typeVal === 'Quán Đêm 24/7') {
+                if (!is24hCb.checked) {
+                    is24hCb.checked = true;
+                    toggle24h(true, false);
+                }
+            }
+        }
+    }
+
+    function toggle24h(is24h, syncCategory = true) {
+        const moCua = document.querySelector('input[name="gio_mo_cua"]');
+        const dongCua = document.querySelector('input[name="gio_dong_cua"]');
+        const container = document.getElementById('time-select-container');
+
+        if (is24h) {
+            if (moCua) {
+                moCua.value = '00:00';
+                moCua.readOnly = true;
+            }
+            if (dongCua) {
+                dongCua.value = '23:59';
+                dongCua.readOnly = true;
+            }
+            container.classList.add('opacity-50', 'pointer-events-none');
+            
+            if (syncCategory) {
+                const btn247 = Array.from(document.querySelectorAll('.business-type-card')).find(b => b.textContent.includes('24/7'));
+                if (btn247 && !btn247.classList.contains('active')) {
+                    selectType('Quán Đêm 24/7', btn247, false);
+                }
+            }
+        } else {
+            if (moCua) {
+                moCua.value = '08:00';
+                moCua.readOnly = false;
+            }
+            if (dongCua) {
+                dongCua.value = '22:00';
+                dongCua.readOnly = false;
+            }
+            container.classList.remove('opacity-50', 'pointer-events-none');
+        }
     }
 
     async function loadTinhThanhList() {
@@ -453,6 +519,13 @@
         if (!form.reportValidity()) return;
 
         const formData = new FormData(form);
+        
+        // Format prices to remove dots before submitting
+        let giaNho = formData.get('gia_nho_nhat');
+        if (giaNho) formData.set('gia_nho_nhat', giaNho.replace(/\./g, ''));
+        let giaLon = formData.get('gia_lon_nhat');
+        if (giaLon) formData.set('gia_lon_nhat', giaLon.replace(/\./g, ''));
+
         const btn = document.getElementById('submit-btn');
         const errGen = document.getElementById('form-error-general');
 

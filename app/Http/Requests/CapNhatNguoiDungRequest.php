@@ -23,6 +23,7 @@ class CapNhatNguoiDungRequest extends FormRequest
             'vai_tro_id'   => 'nullable|string|exists:vai_tro,id',
             'trang_thai'   => 'required|in:hoat_dong,bi_khoa',
             'mat_khau'     => 'nullable|string|min:6',
+            'da_xac_thuc'  => 'nullable|boolean',
         ];
     }
 

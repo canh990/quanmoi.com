@@ -72,6 +72,11 @@ class User extends Authenticatable
         return $this->belongsToMany(Quan::class, 'quan_da_luu', 'nguoi_dung_id', 'quan_id')->withTimestamps();
     }
 
+    public function blogModerationLogs(): HasMany
+    {
+        return $this->hasMany(BlogModerationLog::class, 'admin_id');
+    }
+
     public function isAdmin(): bool
     {
         return $this->vaiTro?->ten === 'admin' || strtolower($this->email) === 'admin@quanmoi.com';
@@ -96,5 +101,25 @@ class User extends Authenticatable
             'nguoi_dung' => 'Thành viên',
             default => 'Thành viên',
         };
+    }
+
+    public function blogs(): HasMany
+    {
+        return $this->hasMany(Blog::class);
+    }
+
+    public function blogComments(): HasMany
+    {
+        return $this->hasMany(BlogComment::class);
+    }
+
+    public function blogReports(): HasMany
+    {
+        return $this->hasMany(BlogReport::class);
+    }
+
+    public function blogRevisions(): HasMany
+    {
+        return $this->hasMany(BlogRevision::class);
     }
 }

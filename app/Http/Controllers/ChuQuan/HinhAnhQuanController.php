@@ -27,7 +27,9 @@ class HinhAnhQuanController extends Controller
             'hinh_anh.*.max'   => 'Dung lượng ảnh tối đa 5MB.',
         ]);
 
-        $quan = Quan::findOrFail($quanId);
+        $quan = Quan::where('id', $quanId)
+            ->where('chu_quan_id', $request->user()->id)
+            ->firstOrFail();
         $uploaded = [];
 
         if ($request->hasFile('hinh_anh')) {
@@ -70,9 +72,13 @@ class HinhAnhQuanController extends Controller
      * Xóa hình ảnh khỏi thư viện quán.
      * Xóa file trên R2 trước, sau đó xóa bản ghi trong database.
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
-        $img = HinhAnhQuan::findOrFail($id);
+        $img = HinhAnhQuan::where('id', $id)
+            ->whereHas('quan', function ($query) use ($request) {
+                $query->where('chu_quan_id', $request->user()->id);
+            })
+            ->firstOrFail();
 
         // Xóa file trên R2 (nếu có object_key)
         if ($img->object_key) {

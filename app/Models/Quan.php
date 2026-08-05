@@ -70,4 +70,9 @@ class Quan extends Model
     {
         return $this->belongsToMany(User::class, 'quan_da_luu', 'quan_id', 'nguoi_dung_id')->withTimestamps();
     }
+
+    public function videos()
+    {
+        return $this->hasMany(VideoShort::class, 'quan_id');
+    }
 }

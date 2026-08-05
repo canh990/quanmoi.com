@@ -20,24 +20,43 @@
     <meta property="og:url" content="{{ url('/') }}">
 @endpush
 
+@push('seo')
+<script type="application/ld+json">
+{
+  "@@context": "https://schema.org",
+  "@@type": "WebSite",
+  "name": "Quán Mới",
+  "url": "{{ url('/') }}",
+  "potentialAction": {
+    "@@type": "SearchAction",
+    "target": {
+      "@@type": "EntryPoint",
+      "urlTemplate": "{{ url('/kham-pha?tu_khoa={search_term_string}') }}"
+    },
+    "query-input": "required name=search_term_string"
+  }
+}
+</script>
+@endpush
+
 @section('content')
     {{-- DESKTOP Main Content --}}
     <main class="hidden md:block flex-grow">
         {{-- Hero Section --}}
-        <section class="relative w-full h-[540px] flex items-center justify-center overflow-hidden">
+        <section class="relative w-full h-[480px] flex items-center justify-center overflow-hidden">
             {{-- Slider Track --}}
             <div id="hero-slider-track" class="absolute inset-0 flex w-[300%] transition-transform duration-1000 ease-in-out" style="transform: translateX(0%);">
-                {{-- Slide 1 --}}
-                <div class="w-1/3 h-full bg-cover bg-center relative" style="background-image: url('{{ asset('images/hero_banner.png') }}')">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/30"></div>
+                {{-- Slide 1: Bàn tiệc ẩm thực hấp dẫn --}}
+                <div class="w-1/3 h-full bg-cover bg-center relative" style="background-image: url('https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1920&q=80')">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/30"></div>
                 </div>
-                {{-- Slide 2 --}}
-                <div class="w-1/3 h-full bg-cover bg-center relative" style="background-image: url('{{ asset('images/hero_banner_2.png') }}')">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/30"></div>
+                {{-- Slide 2: Không gian nhà hàng sang trọng --}}
+                <div class="w-1/3 h-full bg-cover bg-center relative" style="background-image: url('https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1920&q=80')">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/30"></div>
                 </div>
-                {{-- Slide 3 --}}
-                <div class="w-1/3 h-full bg-cover bg-center relative" style="background-image: url('{{ asset('images/hero_banner_3.png') }}')">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/30"></div>
+                {{-- Slide 3: Ẩm thực nướng/lẩu sầm uất --}}
+                <div class="w-1/3 h-full bg-cover bg-center relative" style="background-image: url('https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=1920&q=80')">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/30"></div>
                 </div>
             </div>
             <div class="relative z-10 text-center px-4 max-w-4xl space-y-6">
@@ -73,7 +92,7 @@
             </div>
             <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-5">
                 {{-- Category 1 --}}
-                <a href="{{ route('kham-pha', ['danh_muc' => 'Nhà hàng']) }}" class="block bg-surface-card rounded-2xl shadow-sm border border-surface-container hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer p-6 flex flex-col items-center text-center group">
+                <a href="{{ route('danh-muc', 'nha-hang') }}" title="Nhà hàng - Bữa chính đậm đà" class="block bg-surface-card rounded-2xl shadow-sm border border-surface-container hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer p-6 flex flex-col items-center text-center group">
                     <div class="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-3 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
                         <span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">restaurant</span>
                     </div>
@@ -81,7 +100,7 @@
                     <p class="text-text-muted text-[13px] mt-1">Bữa chính đậm đà</p>
                 </a>
                 {{-- Category 2 --}}
-                <a href="{{ route('kham-pha', ['danh_muc' => 'Cà phê & Trà']) }}" class="block bg-surface-card rounded-2xl shadow-sm border border-surface-container hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer p-6 flex flex-col items-center text-center group">
+                <a href="{{ route('danh-muc', 'ca-phe-tra') }}" title="Cà phê & Trà - Tụ tập & Làm việc" class="block bg-surface-card rounded-2xl shadow-sm border border-surface-container hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer p-6 flex flex-col items-center text-center group">
                     <div class="w-16 h-16 rounded-2xl bg-secondary/10 flex items-center justify-center mb-3 text-secondary group-hover:bg-secondary group-hover:text-white transition-colors">
                         <span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">local_cafe</span>
                     </div>
@@ -89,7 +108,7 @@
                     <p class="text-text-muted text-[13px] mt-1">Tụ tập & Làm việc</p>
                 </a>
                 {{-- Category 3 --}}
-                <a href="{{ route('kham-pha', ['danh_muc' => 'Billiards & Giải trí']) }}" class="block bg-surface-card rounded-2xl shadow-sm border border-surface-container hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer p-6 flex flex-col items-center text-center group">
+                <a href="{{ route('danh-muc', 'billiards-giai-tri') }}" title="Billiards & Giải trí - Vui chơi cuối tuần" class="block bg-surface-card rounded-2xl shadow-sm border border-surface-container hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer p-6 flex flex-col items-center text-center group">
                     <div class="w-16 h-16 rounded-2xl bg-tertiary/10 flex items-center justify-center mb-3 text-tertiary group-hover:bg-tertiary group-hover:text-white transition-colors">
                         <span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">sports_esports</span>
                     </div>
@@ -97,7 +116,7 @@
                     <p class="text-text-muted text-[13px] mt-1">Vui chơi cuối tuần</p>
                 </a>
                 {{-- Category 4 --}}
-                <a href="{{ route('kham-pha', ['danh_muc' => 'Đồ ăn vặt']) }}" class="block bg-surface-card rounded-2xl shadow-sm border border-surface-container hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer p-6 flex flex-col items-center text-center group">
+                <a href="{{ route('danh-muc', 'do-an-vat') }}" title="Đồ ăn vặt - Ngon rẻ chuẩn gu" class="block bg-surface-card rounded-2xl shadow-sm border border-surface-container hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer p-6 flex flex-col items-center text-center group">
                     <div class="w-16 h-16 rounded-2xl bg-red-500/10 flex items-center justify-center mb-3 text-red-600 group-hover:bg-red-600 group-hover:text-white transition-colors">
                         <span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">fastfood</span>
                     </div>
@@ -105,7 +124,7 @@
                     <p class="text-text-muted text-[13px] mt-1">Ngon rẻ chuẩn gu</p>
                 </a>
                 {{-- Category 5 --}}
-                <a href="{{ route('kham-pha', ['danh_muc' => 'Lẩu & Nướng']) }}" class="block bg-surface-card rounded-2xl shadow-sm border border-surface-container hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer p-6 flex flex-col items-center text-center group">
+                <a href="{{ route('danh-muc', 'lau-nuong') }}" title="Lẩu & Nướng - Tiệc tùng nhóm" class="block bg-surface-card rounded-2xl shadow-sm border border-surface-container hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer p-6 flex flex-col items-center text-center group">
                     <div class="w-16 h-16 rounded-2xl bg-amber-500/10 flex items-center justify-center mb-3 text-amber-600 group-hover:bg-amber-600 group-hover:text-white transition-colors">
                         <span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">outdoor_grill</span>
                     </div>
@@ -113,7 +132,7 @@
                     <p class="text-text-muted text-[13px] mt-1">Tiệc tùng nhóm</p>
                 </a>
                 {{-- Category 6 --}}
-                <a href="{{ route('kham-pha', ['danh_muc' => 'Quán Đêm 24/7']) }}" class="block bg-surface-card rounded-2xl shadow-sm border border-surface-container hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer p-6 flex flex-col items-center text-center group">
+                <a href="{{ route('danh-muc', 'quan-dem-24-7') }}" title="Quán Đêm 24/7 - Ăn đêm & Xuyên đêm" class="block bg-surface-card rounded-2xl shadow-sm border border-surface-container hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer p-6 flex flex-col items-center text-center group">
                     <div class="w-16 h-16 rounded-2xl bg-purple-500/10 flex items-center justify-center mb-3 text-purple-600 group-hover:bg-purple-600 group-hover:text-white transition-colors">
                         <span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">nightlife</span>
                     </div>
@@ -139,7 +158,7 @@
                         Xem tất cả <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
                     </a>
                 </div>
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                     @forelse($quanNoiBat as $quan)
                     <a href="{{ route('quan.detail', $quan->slug) }}" class="block bg-white rounded-2xl shadow-sm overflow-hidden group cursor-pointer hover:shadow-xl transition-all border border-gray-100">
                         <div class="relative h-52 w-full overflow-hidden">
@@ -201,7 +220,7 @@
                         </a>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         @forelse($quanMoi as $quan)
                         <a href="{{ route('quan.detail', $quan->slug) }}" class="group rounded-2xl border border-gray-100 bg-white hover:shadow-lg hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col h-full">
                             <div class="relative w-full h-44 flex-shrink-0 overflow-hidden">
@@ -263,15 +282,15 @@
                     <h2 class="text-2xl font-black text-on-surface">Trải nghiệm thực tế qua Video Short</h2>
                     <p class="text-text-muted text-[15px] mt-1">Xem video đánh giá ngắn từ các Reviewer uy tín</p>
                 </div>
-                <a class="text-primary font-bold text-[14px] flex items-center hover:underline gap-1" href="#">
+                <a class="text-primary font-bold text-[14px] flex items-center hover:underline gap-1" href="{{ route('video-review.index') }}">
                     Xem tất cả video <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
                 </a>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                {{-- Video Card 1 --}}
-                <div class="relative h-96 rounded-2xl overflow-hidden group cursor-pointer shadow-md hover:shadow-xl transition-all">
-                    <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=500&q=80" alt="Review Phở" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                @forelse($videoShorts as $video)
+                <a href="{{ route('video-review.index') }}" class="relative h-96 rounded-2xl overflow-hidden group cursor-pointer shadow-md hover:shadow-xl transition-all block">
+                    <img src="{{ $video->thumbnail_url ?: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=500&q=80' }}" alt="{{ $video->tieu_de }}" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-black/20"></div>
                     <div class="absolute inset-0 flex items-center justify-center">
                         <div class="w-14 h-14 rounded-full bg-white/30 backdrop-blur-md flex items-center justify-center text-white group-hover:scale-110 group-hover:bg-primary transition-all">
@@ -279,71 +298,21 @@
                         </div>
                     </div>
                     <div class="absolute top-3 right-3 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full text-white text-[12px] font-bold flex items-center gap-1">
-                        <span class="material-symbols-outlined text-[14px]">visibility</span> 12.5k
+                        <span class="material-symbols-outlined text-[14px]">visibility</span> {{ number_format($video->luot_xem) }}
                     </div>
                     <div class="absolute bottom-4 inset-x-4 text-white space-y-1">
-                        <span class="bg-primary text-white text-[10px] font-bold px-2 py-0.5 rounded">Review Quán Ăn</span>
-                        <h4 class="font-bold text-[15px] leading-tight line-clamp-2">Thử ngay tô Phở Bò Tái Lăn 65k chuẩn vị Hà Thành tại Q1</h4>
-                        <p class="text-white/80 text-[12px]">bởi <span class="font-bold text-white">Sài Gòn Foodie</span></p>
+                        @if($video->quan)
+                            <span class="bg-primary text-white text-[10px] font-bold px-2 py-0.5 rounded">Review Quán Ăn</span>
+                        @else
+                            <span class="bg-secondary text-white text-[10px] font-bold px-2 py-0.5 rounded">Short Video</span>
+                        @endif
+                        <h4 class="font-bold text-[15px] leading-tight line-clamp-2">{{ $video->tieu_de }}</h4>
+                        <p class="text-white/80 text-[12px]">bởi <span class="font-bold text-white">{{ $video->nguoi_dang }}</span></p>
                     </div>
-                </div>
-
-                {{-- Video Card 2 --}}
-                <div class="relative h-96 rounded-2xl overflow-hidden group cursor-pointer shadow-md hover:shadow-xl transition-all">
-                    <img src="https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=500&q=80" alt="Review Cà Phê" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-black/20"></div>
-                    <div class="absolute inset-0 flex items-center justify-center">
-                        <div class="w-14 h-14 rounded-full bg-white/30 backdrop-blur-md flex items-center justify-center text-white group-hover:scale-110 group-hover:bg-primary transition-all">
-                            <span class="material-symbols-outlined text-3xl ml-1" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
-                        </div>
-                    </div>
-                    <div class="absolute top-3 right-3 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full text-white text-[12px] font-bold flex items-center gap-1">
-                        <span class="material-symbols-outlined text-[14px]">visibility</span> 28.3k
-                    </div>
-                    <div class="absolute bottom-4 inset-x-4 text-white space-y-1">
-                        <span class="bg-secondary text-white text-[10px] font-bold px-2 py-0.5 rounded">Cà Phê Sống Ảo</span>
-                        <h4 class="font-bold text-[15px] leading-tight line-clamp-2">Quán cafe sân vườn kính ngắm mưa cực chill ở Q3</h4>
-                        <p class="text-white/80 text-[12px]">bởi <span class="font-bold text-white">An An Review</span></p>
-                    </div>
-                </div>
-
-                {{-- Video Card 3 --}}
-                <div class="relative h-96 rounded-2xl overflow-hidden group cursor-pointer shadow-md hover:shadow-xl transition-all">
-                    <img src="https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=500&q=80" alt="Review Lẩu Nướng" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-black/20"></div>
-                    <div class="absolute inset-0 flex items-center justify-center">
-                        <div class="w-14 h-14 rounded-full bg-white/30 backdrop-blur-md flex items-center justify-center text-white group-hover:scale-110 group-hover:bg-primary transition-all">
-                            <span class="material-symbols-outlined text-3xl ml-1" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
-                        </div>
-                    </div>
-                    <div class="absolute top-3 right-3 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full text-white text-[12px] font-bold flex items-center gap-1">
-                        <span class="material-symbols-outlined text-[14px]">visibility</span> 45.1k
-                    </div>
-                    <div class="absolute bottom-4 inset-x-4 text-white space-y-1">
-                        <span class="bg-amber-600 text-white text-[10px] font-bold px-2 py-0.5 rounded">Quán Nhậu Đêm</span>
-                        <h4 class="font-bold text-[15px] leading-tight line-clamp-2">Đêm muộn ăn lẩu bò nướng ngói thơm lừng phố cổ</h4>
-                        <p class="text-white/80 text-[12px]">bởi <span class="font-bold text-white">Hà Nội Street Food</span></p>
-                    </div>
-                </div>
-
-                {{-- Video Card 4 --}}
-                <div class="relative h-96 rounded-2xl overflow-hidden group cursor-pointer shadow-md hover:shadow-xl transition-all">
-                    <img src="https://images.unsplash.com/photo-1511192336575-5a79af67a629?auto=format&fit=crop&w=500&q=80" alt="Review Bida" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-black/20"></div>
-                    <div class="absolute inset-0 flex items-center justify-center">
-                        <div class="w-14 h-14 rounded-full bg-white/30 backdrop-blur-md flex items-center justify-center text-white group-hover:scale-110 group-hover:bg-primary transition-all">
-                            <span class="material-symbols-outlined text-3xl ml-1" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
-                        </div>
-                    </div>
-                    <div class="absolute top-3 right-3 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full text-white text-[12px] font-bold flex items-center gap-1">
-                        <span class="material-symbols-outlined text-[14px]">visibility</span> 19.8k
-                    </div>
-                    <div class="absolute bottom-4 inset-x-4 text-white space-y-1">
-                        <span class="bg-tertiary text-white text-[10px] font-bold px-2 py-0.5 rounded">Giải Trí Bida</span>
-                        <h4 class="font-bold text-[15px] leading-tight line-clamp-2">Trải nghiệm CLB Bida chuẩn pro dàn bàn nhập khẩu cực mượt</h4>
-                        <p class="text-white/80 text-[12px]">bởi <span class="font-bold text-white">Billiards VN</span></p>
-                    </div>
-                </div>
+                </a>
+                @empty
+                    <div class="col-span-4 text-center text-gray-500 py-10">Đang cập nhật video review.</div>
+                @endforelse
             </div>
         </section>
 
@@ -524,12 +493,12 @@
                     </div>
                     <h2 class="font-bold text-[16px] text-on-surface">Video trải nghiệm thực tế</h2>
                 </div>
-                <a class="text-xs text-primary font-bold flex items-center gap-0.5" href="#">Tất cả <span class="material-symbols-outlined text-[14px]">chevron_right</span></a>
+                <a class="text-xs text-primary font-bold flex items-center gap-0.5" href="{{ route('video-review.index') }}">Tất cả <span class="material-symbols-outlined text-[14px]">chevron_right</span></a>
             </div>
             <div class="flex overflow-x-auto no-scrollbar gap-3 snap-x snap-mandatory -mx-4 px-4 pb-2">
-                {{-- Video Item 1 --}}
-                <div class="min-w-[200px] w-[55%] snap-center relative h-72 rounded-2xl overflow-hidden group cursor-pointer shadow-sm border border-gray-100 flex-shrink-0">
-                    <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=400&q=80" alt="Video Phở" class="absolute inset-0 w-full h-full object-cover" />
+                @forelse($videoShorts as $video)
+                <a href="{{ route('video-review.index') }}" class="min-w-[200px] w-[55%] snap-center relative h-72 rounded-2xl overflow-hidden group cursor-pointer shadow-sm border border-gray-100 flex-shrink-0 block">
+                    <img src="{{ $video->thumbnail_url ?: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=400&q=80' }}" alt="{{ $video->tieu_de }}" class="absolute inset-0 w-full h-full object-cover" />
                     <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-black/20"></div>
                     <div class="absolute inset-0 flex items-center justify-center">
                         <div class="w-11 h-11 rounded-full bg-white/30 backdrop-blur-md flex items-center justify-center text-white">
@@ -537,49 +506,16 @@
                         </div>
                     </div>
                     <div class="absolute top-2.5 right-2.5 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-full text-white text-[10px] font-bold flex items-center gap-0.5">
-                        <span class="material-symbols-outlined text-[12px]">visibility</span> 12.5k
+                        <span class="material-symbols-outlined text-[12px]">visibility</span> {{ number_format($video->luot_xem) }}
                     </div>
                     <div class="absolute bottom-3 inset-x-3 text-white space-y-1">
-                        <h4 class="font-bold text-[13px] leading-tight line-clamp-2">Phở Bò Tái Lăn 65k chuẩn vị Hà Thành</h4>
-                        <p class="text-white/80 text-[11px]">Sài Gòn Foodie</p>
+                        <h4 class="font-bold text-[13px] leading-tight line-clamp-2">{{ $video->tieu_de }}</h4>
+                        <p class="text-white/80 text-[11px]">{{ $video->nguoi_dang }}</p>
                     </div>
-                </div>
-
-                {{-- Video Item 2 --}}
-                <div class="min-w-[200px] w-[55%] snap-center relative h-72 rounded-2xl overflow-hidden group cursor-pointer shadow-sm border border-gray-100 flex-shrink-0">
-                    <img src="https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=400&q=80" alt="Video Cafe" class="absolute inset-0 w-full h-full object-cover" />
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-black/20"></div>
-                    <div class="absolute inset-0 flex items-center justify-center">
-                        <div class="w-11 h-11 rounded-full bg-white/30 backdrop-blur-md flex items-center justify-center text-white">
-                            <span class="material-symbols-outlined text-2xl ml-0.5" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
-                        </div>
-                    </div>
-                    <div class="absolute top-2.5 right-2.5 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-full text-white text-[10px] font-bold flex items-center gap-0.5">
-                        <span class="material-symbols-outlined text-[12px]">visibility</span> 28.3k
-                    </div>
-                    <div class="absolute bottom-3 inset-x-3 text-white space-y-1">
-                        <h4 class="font-bold text-[13px] leading-tight line-clamp-2">Quán cafe sân vườn kính ngắm mưa Q3</h4>
-                        <p class="text-white/80 text-[11px]">An An Review</p>
-                    </div>
-                </div>
-
-                {{-- Video Item 3 --}}
-                <div class="min-w-[200px] w-[55%] snap-center relative h-72 rounded-2xl overflow-hidden group cursor-pointer shadow-sm border border-gray-100 flex-shrink-0">
-                    <img src="https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=400&q=80" alt="Video Lẩu Nướng" class="absolute inset-0 w-full h-full object-cover" />
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-black/20"></div>
-                    <div class="absolute inset-0 flex items-center justify-center">
-                        <div class="w-11 h-11 rounded-full bg-white/30 backdrop-blur-md flex items-center justify-center text-white">
-                            <span class="material-symbols-outlined text-2xl ml-0.5" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
-                        </div>
-                    </div>
-                    <div class="absolute top-2.5 right-2.5 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-full text-white text-[10px] font-bold flex items-center gap-0.5">
-                        <span class="material-symbols-outlined text-[12px]">visibility</span> 45.1k
-                    </div>
-                    <div class="absolute bottom-3 inset-x-3 text-white space-y-1">
-                        <h4 class="font-bold text-[13px] leading-tight line-clamp-2">Lẩu bò nướng ngói thơm lừng phố cổ</h4>
-                        <p class="text-white/80 text-[11px]">Hà Nội Street Food</p>
-                    </div>
-                </div>
+                </a>
+                @empty
+                    <div class="text-center text-gray-500 py-4 w-full">Đang cập nhật video review.</div>
+                @endforelse
             </div>
         </section>
 

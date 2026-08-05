@@ -51,6 +51,20 @@ class DangNhapController extends Controller
                 ], 403);
             }
 
+            // Check if user is verified via OTP
+            if (!$user->da_xac_thuc) {
+                Auth::logout();
+                
+                // Gửi lại OTP tự động (nếu cần thiết, hoặc frontend có nút gửi lại)
+                // Ở đây ta trả về require_otp để frontend hiển thị modal nhập OTP
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tài khoản chưa được xác thực. Vui lòng kiểm tra email để nhập mã OTP.',
+                    'require_otp' => true,
+                    'email' => $user->email // Trả về email để frontend gọi API gửi lại OTP
+                ], 403);
+            }
+
             // Authentication passed
             $request->session()->regenerate();
 

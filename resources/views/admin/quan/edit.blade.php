@@ -77,11 +77,11 @@
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Giờ mở cửa</label>
-                    <input type="time" name="gio_mo_cua" value="{{ old('gio_mo_cua', $quan->gio_mo_cua) }}" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-primary">
+                    <x-time-select name="gio_mo_cua" value="{{ old('gio_mo_cua', $quan->gio_mo_cua) }}" />
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Giờ đóng cửa</label>
-                    <input type="time" name="gio_dong_cua" value="{{ old('gio_dong_cua', $quan->gio_dong_cua) }}" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-primary">
+                    <x-time-select name="gio_dong_cua" value="{{ old('gio_dong_cua', $quan->gio_dong_cua) }}" />
                 </div>
             </div>
 

@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Quan;
 use Illuminate\Http\Request;
 
+use App\Models\VideoShort;
+
 class HomeController extends Controller
 {
     public function index()
@@ -25,23 +27,34 @@ class HomeController extends Controller
         $totalQuanMoi = Quan::where('trang_thai', 'da_duyet')->count();
         $totalQuanNoiBat = Quan::where('trang_thai', 'da_duyet')->where('is_noi_bat', true)->count();
 
+        // Lấy video shorts
+        $videoShorts = VideoShort::with('quan')
+            ->where('trang_thai', 'da_duyet')
+            ->orderBy('created_at', 'desc')
+            ->take(4)
+            ->get();
+
         $savedQuanIds = [];
         if (auth()->check()) {
             $savedQuanIds = auth()->user()->savedQuan()->pluck('quan_id')->toArray();
         }
 
-        return view('welcome', compact('quanNoiBat', 'quanMoi', 'totalQuanMoi', 'totalQuanNoiBat', 'savedQuanIds'));
+        return view('welcome', compact('quanNoiBat', 'quanMoi', 'totalQuanMoi', 'totalQuanNoiBat', 'savedQuanIds', 'videoShorts'));
     }
 
     public function show($slug)
     {
-        $quan = Quan::with(['danhMucMenu.monAns', 'hinhAnh'])
+        $quan = Quan::with(['danhMucMenu.monAn', 'hinhAnh'])
             ->where('slug', $slug)
             ->where('trang_thai', 'da_duyet')
             ->firstOrFail();
 
-        // Tăng lượt xem
-        $quan->increment('luot_xem');
+        // Chống Spam View: Lưu ID quán vào Session trong vòng 2 tiếng
+        $sessionKey = 'viewed_quan_' . $quan->id;
+        if (!session()->has($sessionKey)) {
+            $quan->increment('luot_xem');
+            session()->put($sessionKey, true);
+        }
 
         return view('nguoi-dung.chi-tiet', compact('quan'));
     }

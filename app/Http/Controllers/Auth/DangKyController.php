@@ -69,7 +69,8 @@ class DangKyController extends Controller
             'trang_thai' => 'hoat_dong',
         ]);
 
-        Auth::login($user);
+        // KHÔNG log in người dùng tại đây vì họ chưa xác thực OTP!
+        // Auth::login($user); 
 
         // Generate and save OTP
         $otp = (string) rand(100000, 999999);

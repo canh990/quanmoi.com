@@ -41,7 +41,14 @@
 @endpush
 
 @section('content')
-    <main class="mt-20 max-w-7xl mx-auto px-4 md:px-8 pb-20 flex-grow">
+    <main class="mt-6 max-w-7xl mx-auto px-4 md:px-8 pb-20 flex-grow">
+        {{-- Breadcrumb --}}
+        <div class="mb-5 flex items-center gap-1.5 text-[13px] font-bold uppercase tracking-wide">
+            <a href="/" class="text-gray-600 hover:text-primary transition-colors">CỬA HÀNG</a>
+            <span class="text-gray-300 mx-1.5">•</span>
+            <span class="text-blue-600">{{ mb_strtoupper($quan->ten_quan, 'UTF-8') }}</span>
+        </div>
+
         <!-- Hero Gallery Section -->
         <section class="mb-8">
             <div class="bento-grid">
@@ -118,6 +125,17 @@
                     <div class="mt-4">
                         <h4 class="font-bold text-lg mb-2">Giới thiệu:</h4>
                         <p class="text-on-surface-variant leading-relaxed">{{ $quan->mo_ta ?: 'Chưa có thông tin giới thiệu.' }}</p>
+                        
+                        @if($quan->tiktok_url)
+                        <div class="mt-3">
+                            <a href="{{ $quan->tiktok_url }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 text-primary hover:underline font-bold">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-tiktok" viewBox="0 0 16 16">
+                                    <path d="M9 0h1.98c.144.715.54 1.617 1.235 2.512C12.895 3.389 13.797 4 15 4v2c-1.753 0-3.07-.814-4-1.829V11a5 5 0 1 1-5-5v2a3 3 0 1 0 3 3z"/>
+                                </svg>
+                                Xem Review trên TikTok
+                            </a>
+                        </div>
+                        @endif
                     </div>
                 </div>
 
@@ -139,10 +157,10 @@
                                         {{ $danhMuc->ten_danh_muc }}
                                     </h3>
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        @foreach($danhMuc->monAns as $monAn)
+                                        @foreach($danhMuc->monAn as $monAn)
                                         <div class="bg-surface-card rounded-xl p-4 shadow-[0px_4px_20px_rgba(0,0,0,0.05)] flex gap-4 hover:shadow-md transition-shadow cursor-pointer">
                                             <div class="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0">
-                                                <img class="w-full h-full object-cover" src="{{ $monAn->hinh_anh ? Storage::url($monAn->hinh_anh) : 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=300&q=80' }}"/>
+                                                <img class="w-full h-full object-cover" src="{{ $monAn->hinh_anh ? (Str::startsWith($monAn->hinh_anh, 'http') ? $monAn->hinh_anh : rtrim(Storage::disk('r2')->url(''), '/') . '/' . ltrim($monAn->hinh_anh, '/')) : 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=300&q=80' }}"/>
                                             </div>
                                             <div class="flex flex-col justify-between flex-1">
                                                 <div>
@@ -150,7 +168,7 @@
                                                     <p class="text-on-surface-variant text-sm line-clamp-2">{{ $monAn->mo_ta }}</p>
                                                 </div>
                                                 <div class="flex justify-between items-center">
-                                                    <span class="text-primary font-bold">{{ number_format($monAn->gia_ban, 0, ',', '.') }}đ</span>
+                                                    <span class="text-primary font-bold">{{ number_format($monAn->gia, 0, ',', '.') }}đ</span>
                                                     <button class="w-8 h-8 rounded-full bg-primary-fixed text-on-primary-fixed-variant flex items-center justify-center hover:bg-primary transition-colors hover:text-white">
                                                         <span class="material-symbols-outlined text-xl">add</span>
                                                     </button>

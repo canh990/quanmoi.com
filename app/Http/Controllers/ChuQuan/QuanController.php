@@ -35,7 +35,11 @@ class QuanController extends Controller
         $validated = $request->validated();
         $user = $request->user();
 
-        if ($user && !$user->isAdmin() && !$user->hasRole('chu_quan')) {
+        if (!$user) {
+            abort(403, 'Bạn chưa đăng nhập hoặc phiên làm việc đã hết hạn.');
+        }
+
+        if (!$user->isAdmin() && !$user->hasRole('chu_quan')) {
             $vaiTroChuQuan = VaiTro::where('ten', 'chu_quan')->first();
 
             if ($vaiTroChuQuan) {
@@ -87,7 +91,7 @@ class QuanController extends Controller
             $counter++;
         }
 
-        $chuQuanId = $user?->id ?? (Auth::check() ? Auth::id() : DB::table('nguoi_dung')->first()?->id);
+        $chuQuanId = $user->id;
 
         try {
             $quan = DB::transaction(function () use ($validated, $request, $chuQuanId, $slug, $anhBiaPath, $anhBiaKey, $galleryKeys, $galleryPaths) {
@@ -100,20 +104,21 @@ class QuanController extends Controller
                     'so_dien_thoai' => $validated['so_dien_thoai'],
                     'email' => $validated['email'] ?? null,
                     'dia_chi_chi_tiet' => $validated['dia_chi_chi_tiet'],
-                    'tinh_thanh_id' => $request->tinh_thanh_id ?? null,
+                    'tinh_thanh_id' => $validated['tinh_thanh_id'] ?? null,
                     'ten_tinh_thanh' => $validated['ten_tinh_thanh'],
-                    'quan_huyen_id' => $request->quan_huyen_id ?? null,
+                    'quan_huyen_id' => $validated['quan_huyen_id'] ?? null,
                     'ten_quan_huyen' => $validated['ten_quan_huyen'],
-                    'phuong_xa_id' => $request->phuong_xa_id ?? null,
+                    'phuong_xa_id' => $validated['phuong_xa_id'] ?? null,
                     'ten_phuong_xa' => $validated['ten_phuong_xa'] ?? null,
-                    'kinh_do' => $request->kinh_do ?? 10.7769,
-                    'vi_do' => $request->vi_do ?? 106.7009,
+                    'kinh_do' => $validated['kinh_do'] ?? 10.7769,
+                    'vi_do' => $validated['vi_do'] ?? 106.7009,
                     'gio_mo_cua' => $validated['gio_mo_cua'],
                     'gio_dong_cua' => $validated['gio_dong_cua'],
                     'gia_nho_nhat' => $validated['gia_nho_nhat'] ?? 0,
                     'gia_lon_nhat' => $validated['gia_lon_nhat'] ?? 0,
                     'anh_bia' => $anhBiaPath,
                     'anh_bia_key' => $anhBiaKey,
+                    'tiktok_url' => $validated['tiktok_url'] ?? null,
                     'trang_thai' => 'chua_duyet',
                 ]);
 
@@ -173,9 +178,65 @@ class QuanController extends Controller
     public function show($slug)
     {
         $quan = Quan::where('slug', $slug)
+            ->where('chu_quan_id', Auth::id())
             ->with(['hinhAnh', 'danhMucMenu.monAn'])
             ->firstOrFail();
 
-        return view('chu-quan.chi-tiet-quan', compact('quan'));
+        $luotLuu = $quan->savedByUsers()->count();
+        $luotVideo = \App\Models\VideoShort::where('quan_id', $quan->id)->count();
+
+        return view('chu-quan.chi-tiet-quan', compact('quan', 'luotLuu', 'luotVideo'));
+    }
+
+    /**
+     * Cap nhat thong tin quan (AJAX)
+     */
+    public function update(Request $request, $slug)
+    {
+        $quan = Quan::where('slug', $slug)
+            ->where('chu_quan_id', Auth::id())
+            ->firstOrFail();
+
+        $validated = $request->validate([
+            'so_dien_thoai'   => 'required|string|max:20',
+            'mo_ta'           => 'nullable|string|max:2000',
+            'gio_mo_cua'      => 'required|string',
+            'gio_dong_cua'    => 'required|string',
+            'gia_nho_nhat'    => 'nullable|numeric|min:0',
+            'gia_lon_nhat'    => 'nullable|numeric|min:0',
+            'tiktok_url'      => 'nullable|url|max:255',
+            'anh_bia'         => 'nullable|image|max:5120',
+        ]);
+
+        // Upload ảnh bìa mới nếu có
+        if ($request->hasFile('anh_bia')) {
+            // Xóa ảnh cũ
+            if ($quan->anh_bia_key) {
+                Storage::disk('r2')->delete($quan->anh_bia_key);
+            }
+
+            $file     = $request->file('anh_bia');
+            $filename = Str::uuid() . '.webp';
+            $manager  = new ImageManager(new Driver());
+            $image    = $manager->decode($file->getRealPath());
+            $encoded  = $image->encodeUsingFileExtension('webp', 85);
+
+            $objectKey = 'quan/anh-bia/' . $filename;
+            Storage::disk('r2')->put($objectKey, (string) $encoded);
+
+            $validated['anh_bia']     = Storage::disk('r2')->url($objectKey);
+            $validated['anh_bia_key'] = $objectKey;
+        }
+
+        $quan->update($validated);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Cập nhật thông tin quán thành công!',
+            ]);
+        }
+
+        return back()->with('success', 'Cập nhật thông tin quán thành công!');
     }
 }

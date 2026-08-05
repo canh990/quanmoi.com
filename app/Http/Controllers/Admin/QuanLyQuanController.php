@@ -14,8 +14,9 @@ class QuanLyQuanController extends Controller
         $query = Quan::with('chuQuan')->withTrashed();
 
         // Search keyword
-        if ($request->filled('q')) {
-            $q = $request->input('q');
+        $rawQ = $request->input('q');
+        if (!empty($rawQ) && !is_array($rawQ)) {
+            $q = (string) $rawQ;
             $query->where(function ($sub) use ($q) {
                 $sub->where('ten_quan', 'like', "%{$q}%")
                     ->orWhere('dia_chi_chi_tiet', 'like', "%{$q}%")
@@ -24,15 +25,24 @@ class QuanLyQuanController extends Controller
         }
 
         // Filter by status (chua_duyet, da_duyet, bi_khoa, soft_deleted)
-        if ($request->input('status') === 'soft_deleted') {
-            $query->onlyTrashed();
-        } elseif ($request->filled('status')) {
-            $query->whereNull('ngay_xoa')->where('trang_thai', $request->input('status'));
+        $rawStatus = $request->input('status');
+        if (!is_array($rawStatus)) {
+            if ($rawStatus === 'soft_deleted') {
+                $query->onlyTrashed();
+            } elseif (!empty($rawStatus)) {
+                $query->whereNull('ngay_xoa')->where('trang_thai', (string) $rawStatus);
+            }
         }
 
         // Filter by is_noi_bat
         if ($request->input('is_noi_bat') == 1) {
             $query->where('is_noi_bat', true);
+        }
+
+        // Filter by is_xac_thuc (Tick Xanh)
+        $rawXacThuc = $request->input('is_xac_thuc');
+        if (!is_array($rawXacThuc) && $rawXacThuc !== null && $rawXacThuc !== '') {
+            $query->where('is_xac_thuc', (bool)$rawXacThuc);
         }
 
         $quanList = $query->orderBy('created_at', 'desc')->paginate(15)->withQueryString();

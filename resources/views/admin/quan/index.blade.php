@@ -21,6 +21,12 @@
                 <option value="soft_deleted" {{ request('status') == 'soft_deleted' ? 'selected' : '' }}>Đã xóa (Soft-delete)</option>
             </select>
 
+            <select name="is_xac_thuc" class="px-3 py-2 rounded-xl border border-gray-200 text-sm outline-none focus:border-primary bg-white">
+                <option value="">-- Tick Xanh --</option>
+                <option value="1" {{ request('is_xac_thuc') == '1' ? 'selected' : '' }}>Có Tick Xanh</option>
+                <option value="0" {{ request('is_xac_thuc') == '0' ? 'selected' : '' }}>Chưa có Tick Xanh</option>
+            </select>
+
             <button type="submit" class="bg-primary text-white px-5 py-2 rounded-xl font-bold text-sm hover:bg-primary/90 transition-all flex items-center gap-1">
                 <span class="material-symbols-outlined text-lg">filter_alt</span> Lọc
             </button>
@@ -47,7 +53,12 @@
                                 <div class="flex items-center gap-3">
                                     <img src="{{ $quan->anh_bia ? $quan->anh_bia : 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=100&q=80' }}" class="w-12 h-12 rounded-xl object-cover border border-gray-200" alt="" />
                                     <div>
-                                        <p class="font-bold text-gray-900 leading-snug">{{ $quan->ten_quan }}</p>
+                                        <p class="font-bold text-gray-900 leading-snug flex items-center gap-1">
+                                            {{ $quan->ten_quan }}
+                                            @if($quan->is_xac_thuc)
+                                                <span class="material-symbols-outlined text-blue-500 text-[16px]" title="Có Tick Xanh" style="font-variation-settings: 'FILL' 1;">verified</span>
+                                            @endif
+                                        </p>
                                         <span class="inline-block bg-orange-100 text-primary px-2 py-0.5 rounded text-[11px] font-bold mt-0.5">
                                             {{ $quan->loai_hinh_kinh_doanh ?: 'Quán ăn' }}
                                         </span>

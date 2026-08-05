@@ -10,14 +10,18 @@ use App\Http\Controllers\NguoiDung\HomeController;
 use App\Http\Controllers\NguoiDung\TaiKhoanController;
 use Illuminate\Support\Facades\Route;
 
-use App\Http\Controllers\NguoiDung\BlogController;
+use App\Http\Controllers\Frontend\BlogController as FrontendBlogController;
+use App\Http\Controllers\NguoiDung\BlogController as UserBlogController;
 use App\Http\Controllers\NguoiDung\KhamPhaController;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/kham-pha', [KhamPhaController::class, 'index'])->name('kham-pha');
+Route::get('/danh-muc/{slug}', [KhamPhaController::class, 'danhMuc'])->name('danh-muc');
 Route::get('/quan-moi', [KhamPhaController::class, 'quanMoi'])->name('quan-moi');
 Route::get('/quan-noi-bat', [KhamPhaController::class, 'quanNoiBat'])->name('quan-noi-bat');
-Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
+Route::get('/blog', [FrontendBlogController::class, 'index'])->name('blog.index');
+Route::get('/blog/{slug}', [FrontendBlogController::class, 'show'])->name('blog.show');
+Route::get('/video-review', [\App\Http\Controllers\NguoiDung\VideoShortController::class, 'index'])->name('video-review.index');
 Route::view('/gioi-thieu', 'pages.about')->name('about');
 
 Route::get('/dang-ky', [DangKyController::class, 'showRegistrationForm'])->name('register');
@@ -43,8 +47,10 @@ Route::prefix('chu-quan')->group(function () {
         Route::get('/quan', [QuanController::class, 'ownerIndex'])->name('chu-quan.quan.index');
         Route::get('/quan/{slug}', [QuanController::class, 'show'])->name('chu-quan.quan.show');
         Route::post('/quan/{quanId}/hinh-anh', [HinhAnhQuanController::class, 'store'])->name('chu-quan.hinh-anh.store');
+        Route::delete('/hinh-anh/{id}', [HinhAnhQuanController::class, 'destroy'])->name('chu-quan.hinh-anh.destroy');
         Route::get('/quan/{slug}/thuc-don', [\App\Http\Controllers\ChuQuan\MenuController::class, 'edit'])->name('chu-quan.quan.menu.edit');
         Route::post('/quan/{slug}/thuc-don', [\App\Http\Controllers\ChuQuan\MenuController::class, 'update'])->name('chu-quan.quan.menu.update');
+        Route::put('/quan/{slug}', [QuanController::class, 'update'])->name('chu-quan.quan.update');
     });
 });
 
@@ -52,7 +58,9 @@ Route::prefix('api')->group(function () {
     Route::get('/dia-chi/tinh-thanh', [DiaChiController::class, 'getTinhThanh']);
     Route::get('/dia-chi/quan-huyen/{tinhCode}', [DiaChiController::class, 'getQuanHuyen']);
     Route::get('/dia-chi/phuong-xa/{huyenCode}', [DiaChiController::class, 'getPhuongXa']);
-    Route::get('/ban-do/geocode', [BanDoController::class, 'geocode']);
+    
+    // Giới hạn 20 request/phút để chống spam bào tiền API Google Maps
+    Route::get('/ban-do/geocode', [BanDoController::class, 'geocode'])->middleware('throttle:20,1');
 });
 
 Route::middleware('auth')->group(function () {
@@ -61,6 +69,14 @@ Route::middleware('auth')->group(function () {
     Route::post('/quan-da-luu/{quanId}/toggle', [\App\Http\Controllers\NguoiDung\QuanDaLuuController::class, 'toggle'])->name('quan-da-luu.toggle');
     Route::put('/tai-khoan', [TaiKhoanController::class, 'update'])->name('tai-khoan.update');
     Route::put('/tai-khoan/mat-khau', [TaiKhoanController::class, 'updatePassword'])->name('tai-khoan.update-password');
+
+    Route::prefix('thanh-vien/blog')->name('nguoi-dung.blog.')->group(function () {
+        Route::get('/', [UserBlogController::class, 'index'])->name('index');
+        Route::get('/tao-moi', [UserBlogController::class, 'create'])->name('create');
+        Route::post('/', [UserBlogController::class, 'store'])->name('store');
+        Route::get('/{blog}/sua', [UserBlogController::class, 'edit'])->name('edit');
+        Route::put('/{blog}', [UserBlogController::class, 'update'])->name('update');
+    });
 });
 
 Route::get('/quan/{slug}', [HomeController::class, 'show'])->name('quan.detail');

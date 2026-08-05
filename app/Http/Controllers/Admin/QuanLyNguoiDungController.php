@@ -37,6 +37,12 @@ class QuanLyNguoiDungController extends Controller
             $query->whereNull('ngay_xoa')->where('trang_thai', $request->input('status'));
         }
 
+        // Filter by tick xanh
+        $rawXacThuc = $request->input('da_xac_thuc');
+        if (!is_array($rawXacThuc) && $rawXacThuc !== null && $rawXacThuc !== '') {
+            $query->where('da_xac_thuc', (bool)$rawXacThuc);
+        }
+
         $users = $query->orderBy('created_at', 'desc')->paginate(15)->withQueryString();
         $roles = VaiTro::all();
 
@@ -62,7 +68,15 @@ class QuanLyNguoiDungController extends Controller
             'so_dien_thoai' => $validated['so_dien_thoai'] ?? null,
             'vai_tro_id'   => $validated['vai_tro_id'] ?? null,
             'trang_thai'   => $validated['trang_thai'],
+            'da_xac_thuc'  => $validated['da_xac_thuc'] ?? 0,
         ];
+
+        // Cập nhật ngày xác thực nếu thay đổi trạng thái tick xanh
+        if ($updateData['da_xac_thuc'] && !$user->da_xac_thuc) {
+            $updateData['ngay_xac_thuc'] = now();
+        } elseif (!$updateData['da_xac_thuc']) {
+            $updateData['ngay_xac_thuc'] = null;
+        }
 
         if (!empty($validated['mat_khau'])) {
             $updateData['mat_khau'] = Hash::make($validated['mat_khau']);
@@ -145,5 +159,16 @@ class QuanLyNguoiDungController extends Controller
         }
 
         return redirect()->route('admin.nguoi-dung.index')->with('success', 'Đã xóa vĩnh viễn người dùng!');
+    }
+
+    public function toggleXacThuc(string $id)
+    {
+        $user = User::withTrashed()->findOrFail($id);
+        $user->da_xac_thuc = !$user->da_xac_thuc;
+        $user->ngay_xac_thuc = $user->da_xac_thuc ? now() : null;
+        $user->save();
+
+        $statusStr = $user->da_xac_thuc ? 'Đã cấp Tick Xanh cho người dùng' : 'Đã gỡ Tick Xanh của người dùng';
+        return back()->with('success', $statusStr);
     }
 }
