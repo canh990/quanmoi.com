@@ -74,7 +74,7 @@
                             <div class="flex items-center gap-3">
                                 <div class="w-12 h-10 rounded overflow-hidden bg-gray-100 shrink-0">
                                     @if($blog->cover_image)
-                                        <img src="{{ Storage::disk('r2')->url($blog->cover_image) }}" class="w-full h-full object-cover">
+                                        <img src="{{ Str::startsWith($blog->cover_image, 'http') ? $blog->cover_image : Storage::disk('r2')->url($blog->cover_image) }}" class="w-full h-full object-cover">
                                     @endif
                                 </div>
                                 <div class="max-w-[200px] truncate">

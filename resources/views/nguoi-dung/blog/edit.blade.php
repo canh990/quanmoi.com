@@ -22,9 +22,12 @@
 @endpush
 
 @section('content')
-<main class="max-w-[900px] mx-auto px-container-margin py-stack-lg min-h-[819px] pt-6">
-    
-    <div class="mb-8">
+<main class="max-w-[1200px] mx-auto px-container-margin py-stack-lg min-h-[819px] pt-6">
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-stack-lg">
+        @include('nguoi-dung.partials.sidebar')
+        
+        <div class="md:col-span-9">
+            <div class="mb-8">
         <a href="{{ route('nguoi-dung.blog.index') }}" class="inline-flex items-center gap-1 text-sm font-medium text-on-surface-variant hover:text-primary transition-colors mb-4">
             <span class="material-symbols-outlined text-[18px]">arrow_back</span>
             Quay lại danh sách
@@ -68,7 +71,7 @@
                     <p class="text-xs text-on-surface-variant mt-1">Tỷ lệ 21:9 (Max 5MB)</p>
                 </div>
                 
-                <img id="cover-preview" src="{{ $blog->cover_image ? asset('storage/'.$blog->cover_image) : '' }}" class="absolute inset-0 w-full h-full object-cover {{ $blog->cover_image ? '' : 'hidden' }}">
+                <img id="cover-preview" src="{{ $blog->cover_image ? (Str::startsWith($blog->cover_image, 'http') ? $blog->cover_image : asset('storage/'.$blog->cover_image)) : '' }}" class="absolute inset-0 w-full h-full object-cover {{ $blog->cover_image ? '' : 'hidden' }}">
                 
                 <div class="absolute inset-0 bg-black/50 hidden group-hover:flex items-center justify-center z-20 pointer-events-none" id="cover-overlay">
                     <span class="text-white font-medium flex items-center gap-2"><span class="material-symbols-outlined">edit</span> Thay đổi ảnh</span>
@@ -135,8 +138,10 @@
             </button>
         </div>
         
-        <input type="hidden" name="action" id="action-input" value="draft">
+        <input type="hidden" name="action" id="action-input" value="{{ $blog->status }}">
     </form>
+        </div>
+    </div>
 </main>
 @endsection
 

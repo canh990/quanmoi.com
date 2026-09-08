@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Frontend;
 use App\Http\Controllers\Controller;
 use App\Models\Blog;
 use App\Models\BlogCategory;
+use App\Models\BlogTag;
 use App\Services\BlogService;
 use Illuminate\Http\Request;
 
@@ -34,6 +35,14 @@ class BlogController extends Controller
             });
         }
 
+        if ($request->has('search') && $request->search != '') {
+            $searchTerm = $request->search;
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('title', 'like', "%{$searchTerm}%")
+                  ->orWhere('excerpt', 'like', "%{$searchTerm}%");
+            });
+        }
+
         $heroBlog = Blog::with(['user', 'category'])
             ->where('status', 'published')
             ->where('is_hero', true)
@@ -48,8 +57,10 @@ class BlogController extends Controller
         $blogs = $query->latest('published_at')->paginate(12);
         
         $categories = BlogCategory::where('status', true)->get();
+        
+        $tags = BlogTag::has('blogs')->limit(15)->get();
 
-        return view('frontend.blog.index', compact('blogs', 'heroBlog', 'categories'));
+        return view('frontend.blog.index', compact('blogs', 'heroBlog', 'categories', 'tags'));
     }
 
     public function show(Request $request, string $slug)
@@ -78,7 +89,9 @@ class BlogController extends Controller
             ->latest('published_at')
             ->limit(3)
             ->get();
+            
+        $tags = BlogTag::has('blogs')->limit(15)->get();
 
-        return view('frontend.blog.show', compact('blog', 'relatedBlogs'));
+        return view('frontend.blog.show', compact('blog', 'relatedBlogs', 'tags'));
     }
 }

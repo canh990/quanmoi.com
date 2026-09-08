@@ -22,9 +22,12 @@
 @endpush
 
 @section('content')
-<main class="max-w-[900px] mx-auto px-container-margin py-stack-lg min-h-[819px] pt-6">
-    
-    <div class="mb-8">
+<main class="max-w-[1200px] mx-auto px-container-margin py-stack-lg min-h-[819px] pt-6">
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-stack-lg">
+        @include('nguoi-dung.partials.sidebar')
+        
+        <div class="md:col-span-9">
+            <div class="mb-8">
         <a href="{{ route('nguoi-dung.blog.index') }}" class="inline-flex items-center gap-1 text-sm font-medium text-on-surface-variant hover:text-primary transition-colors mb-4">
             <span class="material-symbols-outlined text-[18px]">arrow_back</span>
             Quay lại danh sách
@@ -123,6 +126,8 @@
         
         <input type="hidden" name="action" id="action-input" value="draft">
     </form>
+        </div>
+    </div>
 </main>
 @endsection
 

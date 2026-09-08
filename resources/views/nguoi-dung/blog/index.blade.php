@@ -18,7 +18,11 @@
     </div>
     @endif
 
-    <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-stack-lg">
+        @include('nguoi-dung.partials.sidebar')
+
+        <div class="md:col-span-9 space-y-stack-lg">
+            <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
         <div>
             <h1 class="text-3xl font-extrabold text-on-surface">Bài viết của tôi</h1>
             <p class="text-on-surface-variant mt-2">Quản lý và theo dõi các bài review, chia sẻ của bạn.</p>
@@ -30,83 +34,81 @@
     </div>
 
     @if($blogs->count() > 0)
-        <div class="bg-surface-container-lowest rounded-3xl border border-outline-variant overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="border-b border-outline-variant bg-surface-container/50">
-                            <th class="p-4 font-semibold text-on-surface-variant text-sm whitespace-nowrap">Bài viết</th>
-                            <th class="p-4 font-semibold text-on-surface-variant text-sm whitespace-nowrap">Trạng thái</th>
-                            <th class="p-4 font-semibold text-on-surface-variant text-sm whitespace-nowrap">Ngày tạo</th>
-                            <th class="p-4 font-semibold text-on-surface-variant text-sm whitespace-nowrap">Lượt xem</th>
-                            <th class="p-4 font-semibold text-on-surface-variant text-sm whitespace-nowrap text-right">Thao tác</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-outline-variant">
-                        @foreach($blogs as $blog)
-                        <tr class="hover:bg-surface-container/30 transition-colors">
-                            <td class="p-4">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-16 h-12 rounded-lg bg-surface-container overflow-hidden shrink-0">
-                                        @if($blog->cover_image)
-                                            <img src="{{ Storage::disk('r2')->url($blog->cover_image) }}" class="w-full h-full object-cover">
-                                        @else
-                                            <div class="w-full h-full flex items-center justify-center text-on-surface-variant">
-                                                <span class="material-symbols-outlined">image</span>
-                                            </div>
-                                        @endif
-                                    </div>
-                                    <div>
-                                        <p class="font-bold text-on-surface line-clamp-1 max-w-[300px]">{{ $blog->title }}</p>
-                                        <p class="text-xs text-on-surface-variant mt-1">{{ $blog->category->name ?? 'Không có' }}</p>
-                                    </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-stack-lg mb-8">
+            @foreach($blogs as $blog)
+                @php
+                    $statusConfig = [
+                        'draft' => ['bg' => 'bg-gray-100', 'text' => 'text-gray-700', 'label' => 'Bản nháp', 'icon' => 'edit_note'],
+                        'pending' => ['bg' => 'bg-amber-100', 'text' => 'text-amber-700', 'label' => 'Chờ duyệt', 'icon' => 'hourglass_empty'],
+                        'need_revision' => ['bg' => 'bg-orange-100', 'text' => 'text-orange-700', 'label' => 'Cần sửa', 'icon' => 'warning'],
+                        'published' => ['bg' => 'bg-green-100', 'text' => 'text-green-700', 'label' => 'Đã xuất bản', 'icon' => 'check_circle'],
+                        'rejected' => ['bg' => 'bg-red-100', 'text' => 'text-red-700', 'label' => 'Từ chối', 'icon' => 'cancel'],
+                        'hidden' => ['bg' => 'bg-gray-200', 'text' => 'text-gray-500', 'label' => 'Đã ẩn', 'icon' => 'visibility_off'],
+                    ];
+                    $config = $statusConfig[$blog->status] ?? $statusConfig['draft'];
+                @endphp
+                
+                <article class="bg-surface-card rounded-2xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.04)] border border-outline-variant/30 flex flex-col group hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-all duration-300">
+                    <!-- Image & Status -->
+                    <div class="relative aspect-[4/3] bg-surface-container overflow-hidden">
+                        @if($blog->cover_image)
+                            <img src="{{ Str::startsWith($blog->cover_image, 'http') ? $blog->cover_image : Storage::disk('r2')->url($blog->cover_image) }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        @else
+                            <div class="w-full h-full flex items-center justify-center text-on-surface-variant/50">
+                                <span class="material-symbols-outlined text-5xl">image</span>
+                            </div>
+                        @endif
+                        
+                        <!-- Status Badge -->
+                        <div class="absolute top-3 right-3 px-3 py-1.5 rounded-full flex items-center gap-1.5 text-xs font-bold shadow-sm backdrop-blur-md {{ $config['bg'] }} {{ $config['text'] }} bg-opacity-90">
+                            <span class="material-symbols-outlined text-[14px]">{{ $config['icon'] }}</span>
+                            {{ $config['label'] }}
+                        </div>
+                        
+                        <!-- Category Badge -->
+                        @if($blog->category)
+                            <div class="absolute bottom-3 left-3 px-3 py-1 rounded-lg bg-black/60 backdrop-blur-md text-white text-xs font-medium">
+                                {{ $blog->category->name }}
+                            </div>
+                        @endif
+                    </div>
+                    
+                    <!-- Content -->
+                    <div class="p-5 flex flex-col flex-1">
+                        <h3 class="font-title-md text-[16px] leading-[22px] text-on-surface mb-3 line-clamp-2 group-hover:text-primary transition-colors flex-1" title="{{ $blog->title }}">
+                            {{ $blog->title }}
+                        </h3>
+                        
+                        <div class="flex items-center justify-between text-xs text-on-surface-variant mb-4">
+                            <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">calendar_today</span> {{ $blog->created_at->format('d/m/Y') }}</span>
+                            <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">visibility</span> {{ number_format($blog->view_count ?? 0) }} view</span>
+                        </div>
+                        
+                        <!-- Actions -->
+                        <div class="pt-4 border-t border-surface-dim flex items-center justify-between">
+                            @if(in_array($blog->status, ['draft', 'need_revision', 'rejected']))
+                                <a href="{{ route('nguoi-dung.blog.edit', $blog) }}" class="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl bg-primary/10 text-primary hover:bg-primary hover:text-white font-label-md transition-colors">
+                                    <span class="material-symbols-outlined text-[18px]">edit</span> Sửa bài
+                                </a>
+                            @else
+                                <div class="flex-1 text-center py-2 text-xs text-text-muted font-medium bg-surface-container rounded-xl cursor-not-allowed">
+                                    Không thể sửa
                                 </div>
-                            </td>
-                            <td class="p-4">
-                                @php
-                                    $statusConfig = [
-                                        'draft' => ['bg' => 'bg-gray-100', 'text' => 'text-gray-700', 'label' => 'Bản nháp'],
-                                        'pending' => ['bg' => 'bg-amber-100', 'text' => 'text-amber-700', 'label' => 'Đang chờ duyệt'],
-                                        'need_revision' => ['bg' => 'bg-orange-100', 'text' => 'text-orange-700', 'label' => 'Cần chỉnh sửa'],
-                                        'published' => ['bg' => 'bg-green-100', 'text' => 'text-green-700', 'label' => 'Đã xuất bản'],
-                                        'rejected' => ['bg' => 'bg-red-100', 'text' => 'text-red-700', 'label' => 'Bị từ chối'],
-                                        'hidden' => ['bg' => 'bg-gray-200', 'text' => 'text-gray-500', 'label' => 'Đã ẩn'],
-                                    ];
-                                    $config = $statusConfig[$blog->status] ?? $statusConfig['draft'];
-                                @endphp
-                                <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold {{ $config['bg'] }} {{ $config['text'] }}">
-                                    {{ $config['label'] }}
-                                </span>
-                            </td>
-                            <td class="p-4 text-sm text-on-surface-variant">
-                                {{ $blog->created_at->format('d/m/Y') }}
-                            </td>
-                            <td class="p-4 text-sm text-on-surface-variant">
-                                {{ $blog->views_count ?? 0 }}
-                            </td>
-                            <td class="p-4 text-right">
-                                <div class="flex items-center justify-end gap-2">
-                                    @if(in_array($blog->status, ['draft', 'need_revision', 'rejected']))
-                                        <a href="{{ route('nguoi-dung.blog.edit', $blog) }}" class="w-8 h-8 rounded-full flex items-center justify-center bg-primary/10 text-primary hover:bg-primary hover:text-white transition-colors" title="Chỉnh sửa">
-                                            <span class="material-symbols-outlined text-[18px]">edit</span>
-                                        </a>
-                                    @endif
-                                    @if($blog->status === 'published')
-                                        <a href="{{ route('blog.show', $blog->slug) }}" target="_blank" class="w-8 h-8 rounded-full flex items-center justify-center bg-surface-container text-on-surface-variant hover:bg-surface-container-highest transition-colors" title="Xem bài viết">
-                                            <span class="material-symbols-outlined text-[18px]">open_in_new</span>
-                                        </a>
-                                    @endif
-                                </div>
-                            </td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-            
-            <div class="p-4 border-t border-outline-variant">
-                {{ $blogs->links() }}
-            </div>
+                            @endif
+                            
+                            @if($blog->status === 'published')
+                                <a href="{{ route('blog.show', $blog->slug) }}" target="_blank" class="w-10 h-10 ml-3 rounded-xl flex items-center justify-center bg-surface-container text-on-surface hover:bg-primary-fixed hover:text-primary-fixed-variant transition-colors" title="Xem bài viết">
+                                    <span class="material-symbols-outlined text-[20px]">open_in_new</span>
+                                </a>
+                            @endif
+                        </div>
+                    </div>
+                </article>
+            @endforeach
+        </div>
+        
+        <div class="flex justify-center">
+            {{ $blogs->links() }}
         </div>
     @else
         <div class="text-center py-20 bg-surface-container-lowest rounded-3xl border border-outline-variant">
@@ -117,6 +119,8 @@
                 <span class="material-symbols-outlined">edit</span> Viết bài ngay
             </a>
         </div>
-    @endif
+            @endif
+        </div>
+    </div>
 </main>
 @endsection
