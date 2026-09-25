@@ -5,10 +5,12 @@ on:
     branches:
       - master
       - main
+      - cicd
   pull_request:
     branches:
       - master
       - main
+      - cicd
 
 jobs:
   laravel-tests-and-build:
@@ -60,7 +62,7 @@ jobs:
     name: Deploy to Production Server
     needs: laravel-tests-and-build
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/cicd'
 
     steps:
       - name: Checkout Code
