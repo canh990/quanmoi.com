@@ -615,7 +615,7 @@
                     <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
                     <div class="absolute bottom-3 inset-x-3 space-y-0.5">
                         <span class="bg-tertiary/80 backdrop-blur-sm text-white text-[9px] font-bold px-2 py-0.5 rounded">18 Địa điểm</span>
-                        <h3 class="font-bold text-[14px] text-white leading-tight">Quán ăn đêm 24/7 ngon mịt</h3>
+                        <h3 class="font-bold text-[14px] text-white leading-tight">Quán ăn đêm 24/7</h3>
                     </div>
                 </div>
             </div>
