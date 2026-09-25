@@ -50,10 +50,11 @@ jobs:
           npm ci || npm install
           npm run build
 
-      - name: Prepare Environment File
+      - name: Prepare Environment File & Run Migrations
         run: |
           cp .env.example .env
           php artisan key:generate
+          php artisan migrate --env=testing --force
 
       - name: Execute Tests
         run: php artisan test --env=testing
