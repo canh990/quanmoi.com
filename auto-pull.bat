@@ -1,9 +1,9 @@
 @echo off
-title Git Auto-Pull Background Agent
-echo ===================================================
-echo   DANG CHAY CHE DO TU DONG PULL CODE TU GITHUB/GITLAB
-echo ===================================================
-echo Ngung chay bang cach dong cua so nay.
+title Git Auto-Sync Agent (Dong bo Code & CSDL Tu Dong)
+echo =======================================================
+echo   DANG CHAY CHE DO TU DONG PULL CODE & DU LIEU TEST
+echo =======================================================
+echo Guard Windows Terminal - Dang theo doi thay doi tu Git...
 echo.
 
 :loop
@@ -12,12 +12,14 @@ for /f "tokens=*" %%i in ('git rev-parse HEAD') do set LOCAL_HASH=%%i
 for /f "tokens=*" %%i in ('git rev-parse @{u}') do set REMOTE_HASH=%%i
 
 if not "%LOCAL_HASH%"=="%REMOTE_HASH%" (
-    echo [%time%] Phat hien code moi tren Server! Dang tien hanh pull...
-    git pull
-    echo [%time%] Da cap nhat code moi nhat thanh cong!
+    echo [%time%] Phat hien commit moi! Dang tien hanh force pull va cap nhat CSDL...
+    git reset --hard origin/main
+    git clean -fd
+    php artisan migrate --force
+    php artisan db:seed --force
+    echo [%time%] DA DONG BO HOAN TOAN CODE VA DU LIEU TEST THANH CONG!
     echo ---------------------------------------------------
 )
 
-:: Cho 10 giay roi kiem tra lai
 timeout /t 10 /nobreak >nul
 goto loop
