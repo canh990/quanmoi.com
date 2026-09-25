@@ -1,0 +1,75 @@
+name: GitHub Actions CI/CD Auto-Pipeline
+
+on:
+  push:
+    branches:
+      - 'TrongTin/*'
+      - master
+      - main
+  pull_request:
+    branches:
+      - master
+      - main
+
+jobs:
+  test-and-build:
+    name: 🧪 Automated Test & Asset Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 1. Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 2. Setup PHP 8.2 Environment
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, dom, fileinfo, mysql, pdo, pdo_mysql, bcmath, curl, zip, gd
+          coverage: none
+
+      - name: 3. Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: 4. Install PHP Dependencies (Composer)
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: 5. Compile Frontend Assets (Vite)
+        run: |
+          npm ci || npm install
+          npm run build
+
+      - name: 6. Setup Test Environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: 7. Run Unit & Feature Tests
+        run: php artisan test --env=testing
+
+  auto-deploy:
+    name: 🚀 Auto Deploy to Production Server
+    needs: test-and-build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Execute Remote SSH Deploy Script
+        uses: appleboy/ssh-action@v1.0.3
+        continue-on-error: true
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_PORT || 22 }}
+          script: |
+            cd ${{ secrets.SERVER_PROJECT_PATH || '/var/www/quanmoi.com' }}
+            git pull origin master
+            composer install --no-dev --optimize-autoloader
+            npm ci && npm run build
+            php artisan migrate --force
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache

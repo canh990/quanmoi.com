@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  # Container App (PHP 8.3 FPM)
+  app:
+    build:
+      context: ..
+      dockerfile: demo-cicd/docker/Dockerfile
+    container_name: quanmoi_app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ../storage:/var/www/html/storage
+      - ../.env:/var/www/html/.env
+    networks:
+      - quanmoi_network
+
+  # Container Web Server (Nginx)
+  web:
+    image: nginx:alpine
+    container_name: quanmoi_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./docker/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ../public:/var/www/html/public:ro
+      - ../storage:/var/www/html/storage:ro
+    depends_on:
+      - app
+    networks:
+      - quanmoi_network
+
+  # Container Database (MySQL 8.0)
+  db:
+    image: mysql:8.0
+    container_name: quanmoi_db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-quanmoi}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-root_password}
+      MYSQL_USER: ${DB_USERNAME:-quanmoi_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
+    volumes:
+      - quanmoi_mysql_data:/var/lib/mysql
+    networks:
+      - quanmoi_network
+
+networks:
+  quanmoi_network:
+    driver: bridge
+
+volumes:
+  quanmoi_mysql_data:
+    driver: local

@@ -1,0 +1,62 @@
+name: Docker CI/CD Deployment Pipeline
+
+on:
+  push:
+    branches:
+      - master
+      - main
+  pull_request:
+    branches:
+      - master
+      - main
+
+jobs:
+  # Giai đoạn 1: Chạy Test & Build Docker Image
+  test-and-build-docker:
+    name: 🧪 Run Tests & Build Docker Image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 1. Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 2. Setup PHP & Node
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, dom, fileinfo, mysql, pdo, pdo_mysql, bcmath, curl, zip, gd
+
+      - name: 3. Chạy Automated Tests
+        run: |
+          cp .env.example .env
+          composer install
+          php artisan key:generate
+          php artisan test --env=testing
+
+      - name: 4. Build Docker Image thử nghiệm
+        run: |
+          docker build -f demo-cicd/docker/Dockerfile -t quanmoi-app:latest .
+
+  # Giai đoạn 2: Tự động Deploy Docker lên Server
+  deploy-docker-server:
+    name: 🚀 Deploy Docker Containers to Server
+    needs: test-and-build-docker
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
+
+    steps:
+      - name: SSH vào Server & Chạy Docker Compose
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_PORT || 22 }}
+          script: |
+            cd ${{ secrets.SERVER_PROJECT_PATH || '/var/www/quanmoi.com' }}
+            git pull origin master
+            docker compose -f demo-cicd/docker-compose.yml up -d --build
+            docker exec quanmoi_app php artisan migrate --force
+            docker exec quanmoi_app php artisan config:cache
+            docker exec quanmoi_app php artisan route:cache
+            docker exec quanmoi_app php artisan view:cache
