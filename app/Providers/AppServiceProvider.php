@@ -28,6 +28,27 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Gate::before(function ($user, $ability) {
+            if (method_exists($user, 'hasPermissionTo')) {
+                // Check explicit user override
+                if (method_exists($user, 'quyenHanOverrides')) {
+                    $override = $user->quyenHanOverrides()
+                        ->where(function ($query) use ($ability) {
+                            $query->where('quyen_han.ten', $ability)->orWhere('quyen_han.id', $ability);
+                        })
+                        ->first();
+
+                    if ($override !== null) {
+                        return (bool) $override->pivot->cho_phep;
+                    }
+                }
+
+                if ($user->hasPermissionTo($ability)) {
+                    return true;
+                }
+            }
+        });
+
         Gate::policy(User::class, NguoiDungPolicy::class);
 
         RateLimiter::for('login', fn (Request $request) => Limit::perMinute(5)->by($this->rateLimitKey($request)));

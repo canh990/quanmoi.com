@@ -33,12 +33,18 @@ class HomeController extends Controller
             ->take(4)
             ->get();
 
+        // Lấy tin tức / bài viết mới nhất
+        $latestBlogs = \App\Models\Blog::where('status', 'published')
+            ->latest('published_at')
+            ->take(4)
+            ->get();
+
         $savedQuanIds = [];
         if (auth()->check()) {
             $savedQuanIds = auth()->user()->savedQuan()->pluck('quan_id')->toArray();
         }
 
-        return view('welcome', compact('quanNoiBat', 'quanMoi', 'totalQuanMoi', 'totalQuanNoiBat', 'savedQuanIds', 'videoShorts'));
+        return view('welcome', compact('quanNoiBat', 'quanMoi', 'totalQuanMoi', 'totalQuanNoiBat', 'savedQuanIds', 'videoShorts', 'latestBlogs'));
     }
 
     public function show($slug)
