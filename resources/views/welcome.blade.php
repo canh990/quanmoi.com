@@ -506,7 +506,7 @@
                     <div class="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center text-purple-700">
                         <span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">nightlife</span>
                     </div>
-                    <span class="text-[12px] font-bold text-center text-on-surface">Quán Đêm 24/7</span>
+                    <span class="text-[12px] font-bold text-center text-on-surface">Quán Đêm 24/7 ne may anh</span>
                 </a>
             </div>
         </section>
