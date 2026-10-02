@@ -41,10 +41,22 @@ class DangNhapController extends Controller
 
         $request->session()->regenerate();
 
+        // Xác định redirect URL theo vai trò
+        $intendedUrl = $request->session()->pull('url.intended');
+        if (! $intendedUrl) {
+            if ($user->hasRole('admin')) {
+                $intendedUrl = '/admin';
+            } elseif ($user->hasRole('chu_quan')) {
+                $intendedUrl = '/chu-quan/quan';
+            } else {
+                $intendedUrl = '/';
+            }
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Đăng nhập thành công!',
-            'redirect_to' => '/',
+            'redirect_to' => $intendedUrl,
         ]);
     }
 

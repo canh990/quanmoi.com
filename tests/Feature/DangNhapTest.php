@@ -19,7 +19,7 @@ class DangNhapTest extends TestCase
         ]);
 
         $response->assertStatus(422)
-            ->assertJsonStructure(['success', 'errors']);
+            ->assertJsonStructure(['message', 'errors']);
     }
 
     public function test_login_failure_with_wrong_credentials(): void
