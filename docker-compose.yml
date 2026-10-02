@@ -1,0 +1,128 @@
+services:
+
+  # =====================================
+  # Laravel Application
+  # =====================================
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: quanmoi_app
+
+    restart: unless-stopped
+
+    ports:
+      - "8002:80"
+
+    volumes:
+      - .:/var/www/html
+      - quanmoi_vendor:/var/www/html/vendor
+
+    depends_on:
+      db:
+        condition: service_healthy
+
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: quanmoi
+      DB_USERNAME: quanmoi
+      DB_PASSWORD: quanmoi_password
+
+    networks:
+      - quanmoi_network
+
+
+  # =====================================
+  # MySQL
+  # =====================================
+
+  db:
+    image: mysql:8.0
+
+    container_name: quanmoi_db
+
+    restart: unless-stopped
+
+    ports:
+      - "3307:3306"
+
+    environment:
+      MYSQL_DATABASE: quanmoi
+      MYSQL_USER: quanmoi
+      MYSQL_PASSWORD: quanmoi_password
+      MYSQL_ROOT_PASSWORD: root_password
+
+    volumes:
+      - quanmoi_db_data:/var/lib/mysql
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-uquanmoi",
+          "-pquanmoi_password"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+    networks:
+      - quanmoi_network
+
+
+  # =====================================
+  # phpMyAdmin
+  # =====================================
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+
+    container_name: quanmoi_phpmyadmin
+
+    restart: unless-stopped
+
+    ports:
+      - "8082:80"
+
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+
+    depends_on:
+      db:
+        condition: service_healthy
+
+    networks:
+      - quanmoi_network
+
+
+# =====================================
+# Volumes
+# =====================================
+
+volumes:
+
+  quanmoi_db_data:
+
+  quanmoi_vendor:
+
+
+# =====================================
+# Network
+# =====================================
+
+networks:
+
+  quanmoi_network:
+    driver: bridge
