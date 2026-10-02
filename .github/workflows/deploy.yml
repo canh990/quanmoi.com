@@ -1,0 +1,53 @@
+name: Deploy Production
+
+on:
+  push:
+    branches: [ "master", "main" ]
+  workflow_dispatch: # Cho phép bấm deploy thủ công từ giao diện GitHub Actions
+
+jobs:
+  deploy:
+    name: Deploy to Server via SSH
+    runs-on: ubuntu-latest
+    # Cần CI pass nếu muốn chặt chẽ:
+    # needs: [tests]
+
+    steps:
+      - name: Deploy to Server via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script_stop: true
+          script: |
+            echo "🚀 Bắt đầu quá trình Deploy..."
+            
+            # Di chuyển vào thư mục dự án trên VPS
+            cd ${{ secrets.DEPLOY_PATH || '/var/www/quanmoi.com' }}
+            
+            # 1. Kéo code mới nhất từ GitHub
+            echo "📥 Kéo mã nguồn mới nhất..."
+            git pull origin $(git branch --show-current)
+            
+            # 2. Build lại container Docker nếu có thay đổi
+            echo "🐳 Khởi động và cập nhật Docker containers..."
+            docker compose up -d --build
+            
+            # 3. Cập nhật PHP dependencies
+            echo "📦 Cài đặt Composer packages bên trong container..."
+            docker exec quanmoi_app composer install --no-dev --optimize-autoloader --no-interaction
+            
+            # 4. Chạy Migration database
+            echo "🗄️ Chạy Database Migration..."
+            docker exec quanmoi_app php artisan migrate --force
+            
+            # 5. Dọn dẹp và cache lại cấu hình để tăng tốc ứng dụng
+            echo "⚡ Tối ưu hóa Cache của Laravel..."
+            docker exec quanmoi_app php artisan optimize:clear
+            docker exec quanmoi_app php artisan config:cache
+            docker exec quanmoi_app php artisan route:cache
+            docker exec quanmoi_app php artisan view:cache
+            
+            echo "✅ Deploy hoàn tất thành công!"
