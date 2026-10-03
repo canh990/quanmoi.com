@@ -60,7 +60,7 @@
         <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">User mới trong kỳ</p>
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Người dùng mới trong kỳ</p>
                     <h3 class="text-2xl font-black text-indigo-600 mt-1">+{{ number_format($userStats['filtered']) }}</h3>
                     <p class="text-[11px] text-slate-500 mt-1">Tổng người dùng: <strong>{{ number_format($userStats['total']) }}</strong></p>
                 </div>

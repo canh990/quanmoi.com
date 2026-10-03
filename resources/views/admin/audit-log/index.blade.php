@@ -1,7 +1,7 @@
 @extends('admin.layout')
 
-@section('title', 'Audit Log Hệ Thống - Quán Mới Admin')
-@section('page-title', 'Nhật Ký Tác Vụ Admin (Audit Log)')
+@section('title', 'Nhật Ký Hệ Thống - Quán Mới Admin')
+@section('page-title', 'Nhật Ký Tác Vụ Quản Trị')
 
 @section('content')
 <div class="space-y-6">
@@ -17,9 +17,9 @@
                 <thead class="bg-slate-100 text-slate-700 font-bold uppercase border-b border-slate-200">
                     <tr>
                         <th class="p-3">Thời Gian</th>
-                        <th class="p-3">Admin Thực Hiện</th>
-                        <th class="p-3">Hành Động (Action)</th>
-                        <th class="p-3">Đối Tượng (Target)</th>
+                        <th class="p-3">Người Thực Hiện</th>
+                        <th class="p-3">Hành Động</th>
+                        <th class="p-3">Đối Tượng</th>
                         <th class="p-3">Địa Chỉ IP</th>
                     </tr>
                 </thead>
@@ -27,10 +27,10 @@
                     @forelse($logs as $log)
                         <tr class="hover:bg-slate-50">
                             <td class="p-3 font-mono text-[11px] text-slate-500">{{ $log->created_at ? $log->created_at->format('d/m/Y H:i:s') : 'N/A' }}</td>
-                            <td class="p-3 font-bold text-slate-900">{{ $log->admin->ho_ten ?? 'Admin System' }}</td>
+                            <td class="p-3 font-bold text-slate-900">{{ $log->admin->ho_ten ?? 'Hệ Thống Admin' }}</td>
                             <td class="p-3 font-medium">
                                 <span class="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
-                                    {{ $log->hanh_dong ?? 'system' }}
+                                    {{ $log->hanh_dong ?? 'Hệ thống' }}
                                 </span>
                             </td>
                             <td class="p-3 text-slate-600">{{ $log->doi_tuong_loai ?? '' }} #{{ Str::limit($log->doi_tuong_id ?? '', 8) }}</td>
@@ -38,7 +38,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="p-8 text-center text-xs text-slate-500">Chưa ghi nhận nhật ký tác vụ audit log nào.</td>
+                            <td colspan="5" class="p-8 text-center text-xs text-slate-500">Chưa ghi nhận nhật ký tác vụ nào.</td>
                         </tr>
                     @endforelse
                 </tbody>
