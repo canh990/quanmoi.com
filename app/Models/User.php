@@ -81,6 +81,49 @@ class User extends Authenticatable
         return $this->hasMany(BlogModerationLog::class, 'admin_id');
     }
 
+    public function quyenHanOverrides(): BelongsToMany
+    {
+        return $this->belongsToMany(QuyenHan::class, 'nguoi_dung_quyen_han', 'nguoi_dung_id', 'quyen_han_id')
+            ->withPivot('cho_phep')
+            ->withTimestamps();
+    }
+
+    public function hasPermissionTo(string $permissionName): bool
+    {
+        // 1. Check user-level override in nguoi_dung_quyen_han
+        $override = $this->quyenHanOverrides()
+            ->where(function ($query) use ($permissionName) {
+                $query->where('quyen_han.ten', $permissionName)
+                    ->orWhere('quyen_han.id', $permissionName);
+            })
+            ->first();
+
+        if ($override !== null) {
+            return (bool) $override->pivot->cho_phep;
+        }
+
+        // 2. Check role permissions via vai_tro_quyen_han
+        if ($this->vaiTro) {
+            $hasRolePerm = $this->vaiTro->quyenHan()
+                ->where(function ($query) use ($permissionName) {
+                    $query->where('quyen_han.ten', $permissionName)
+                        ->orWhere('quyen_han.id', $permissionName);
+                })
+                ->exists();
+
+            if ($hasRolePerm) {
+                return true;
+            }
+        }
+
+        // 3. Fallback for admin role if no explicit user-level override exists
+        if ($this->isAdmin()) {
+            return true;
+        }
+
+        return false;
+    }
+
     public function isAdmin(): bool
     {
         return $this->hasRole('admin');

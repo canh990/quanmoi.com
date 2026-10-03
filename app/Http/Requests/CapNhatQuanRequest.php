@@ -31,6 +31,19 @@ class CapNhatQuanRequest extends FormRequest
         ];
     }
 
+    public function messages(): array
+    {
+        return [
+            'ten_quan.required'             => 'Vui lòng không để trống tên cơ sở',
+            'loai_hinh_kinh_doanh.required' => 'Vui lòng chọn loại hình kinh doanh',
+            'so_dien_thoai.required'        => 'Số điện thoại không hợp lệ',
+            'email.email'                   => 'Email không hợp lệ, vui lòng kiểm tra lại',
+            'dia_chi_chi_tiet.required'     => 'Vui lòng nhập địa chỉ chi tiết',
+            'gia_nho_nhat.numeric'          => 'Giá bán phải là con số hợp lệ',
+            'gia_lon_nhat.numeric'          => 'Giá bán phải là con số hợp lệ',
+        ];
+    }
+
     protected function prepareForValidation(): void
     {
         if ($this->has('ten_quan')) {
