@@ -35,7 +35,7 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('otp-send', fn (Request $request) => Limit::perMinutes(10, 3)->by($this->rateLimitKey($request)));
         RateLimiter::for('otp-verify', fn (Request $request) => Limit::perMinute(5)->by($this->rateLimitKey($request)));
         RateLimiter::for('password-email', fn (Request $request) => Limit::perMinutes(10, 3)->by($this->rateLimitKey($request)));
-        RateLimiter::for('venue-submission', fn (Request $request) => Limit::perDay(3)->by($this->rateLimitKey($request)));
+        RateLimiter::for('venue-submission', fn (Request $request) => Limit::perDay(10)->by($this->rateLimitKey($request)));
 
         View::composer('layouts.navigation', function ($view): void {
             $currentUser = Auth::user();
