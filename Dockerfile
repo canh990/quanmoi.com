@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y \
     libpng-dev \
     libjpeg-dev \
     libfreetype6-dev \
+    libwebp-dev \
     libzip-dev \
     libicu-dev \
     libonig-dev \
@@ -26,6 +27,7 @@ RUN apt-get update && apt-get install -y \
 RUN docker-php-ext-configure gd \
         --with-freetype \
         --with-jpeg \
+        --with-webp \
     && docker-php-ext-install \
         pdo_mysql \
         mbstring \
