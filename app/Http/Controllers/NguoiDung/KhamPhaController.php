@@ -14,29 +14,51 @@ class KhamPhaController extends Controller
      */
     public function index(Request $request)
     {
-        // Xử lý an toàn để tránh cảnh báo "Array to string conversion" của PHP 8
-        $rawDanhMuc = $request->input('danh_muc', '');
-        $danhMuc = is_array($rawDanhMuc) ? '' : (string) $rawDanhMuc;
-        
-        $rawTuKhoa = $request->input('tu_khoa', '');
-        $tuKhoa = is_array($rawTuKhoa) ? '' : strip_tags($rawTuKhoa);
+        $tuKhoa      = trim(strip_tags(is_array($request->input('tu_khoa')) ? '' : (string) $request->input('tu_khoa')));
+        $danhMuc     = trim(strip_tags(is_array($request->input('danh_muc')) ? '' : (string) $request->input('danh_muc')));
+        $tinhThanhId = trim(strip_tags(is_array($request->input('tinh_thanh_id')) ? '' : (string) $request->input('tinh_thanh_id')));
+        $quanHuyenId = trim(strip_tags(is_array($request->input('quan_huyen_id')) ? '' : (string) $request->input('quan_huyen_id')));
+        $mucGia      = trim(strip_tags(is_array($request->input('muc_gia')) ? '' : (string) $request->input('muc_gia')));
+        $sapXep      = trim(strip_tags(is_array($request->input('sap_xep')) ? '' : (string) $request->input('sap_xep')));
         
         $query = Quan::search($tuKhoa)->whereIn('trang_thai', ['da_duyet']);
 
         if (!empty($danhMuc)) {
-            $query->whereIn('loai_hinh_kinh_doanh.keyword', [strip_tags($danhMuc)]);
+            $query->whereIn('loai_hinh_kinh_doanh.keyword', [$danhMuc]);
         }
 
-        // Lấy kết quả phân trang theo mới nhất
-        $quans = $query->orderBy('created_at', 'desc')->paginate(12);
+        if (!empty($tinhThanhId)) {
+            $query->whereIn('tinh_thanh_id', [$tinhThanhId]);
+        }
 
-        // Giữ lại query string khi phân trang
+        if (!empty($quanHuyenId)) {
+            $query->whereIn('quan_huyen_id', [$quanHuyenId]);
+        }
+
+        // Xử lý sắp xếp
+        if ($sapXep === 'view_desc') {
+            $query->orderBy('luot_xem', 'desc');
+        } elseif ($sapXep === 'created_desc') {
+            $query->orderBy('created_at', 'desc');
+        } else {
+            // Nếu không có từ khóa thì ưu tiên quán mới nhất
+            if (empty($tuKhoa)) {
+                $query->orderBy('created_at', 'desc');
+            }
+            // Nếu có từ khóa, Elasticsearch sẽ tự sắp xếp theo relevance (_score)
+        }
+
+        $quans = $query->paginate(12);
         $quans->appends($request->all());
 
         return view('nguoi-dung.kham-pha.index', [
-            'quans' => $quans,
-            'danhMuc' => $danhMuc,
-            'tuKhoa' => $tuKhoa,
+            'quans'       => $quans,
+            'danhMuc'     => $danhMuc,
+            'tuKhoa'      => $tuKhoa,
+            'tinhThanhId' => $tinhThanhId,
+            'quanHuyenId' => $quanHuyenId,
+            'mucGia'      => $mucGia,
+            'sapXep'      => $sapXep,
         ]);
     }
 
@@ -56,8 +78,8 @@ class KhamPhaController extends Controller
             abort(404);
         }
 
-        $quans = Quan::query()->where('trang_thai', 'da_duyet')
-            ->where('loai_hinh_kinh_doanh', $danhMuc)
+        $quans = Quan::search('')->whereIn('trang_thai', ['da_duyet'])
+            ->whereIn('loai_hinh_kinh_doanh.keyword', [$danhMuc])
             ->orderBy('created_at', 'desc')
             ->paginate(12);
 
@@ -69,7 +91,7 @@ class KhamPhaController extends Controller
 
     public function quanMoi()
     {
-        $quans = Quan::query()->where('trang_thai', 'da_duyet')
+        $quans = Quan::search('')->whereIn('trang_thai', ['da_duyet'])
             ->orderBy('created_at', 'desc')
             ->paginate(12);
 
@@ -81,10 +103,10 @@ class KhamPhaController extends Controller
 
     public function quanNoiBat()
     {
-        $query = Quan::query()->where('trang_thai', 'da_duyet');
+        $query = Quan::search('')->whereIn('trang_thai', ['da_duyet']);
 
         if (Schema::hasColumn('quan', 'is_noi_bat')) {
-            $query->where('is_noi_bat', true);
+            $query->whereIn('is_noi_bat', [true]);
         }
 
         $quans = $query->orderBy('updated_at', 'desc')->paginate(12);

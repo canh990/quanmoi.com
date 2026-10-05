@@ -9,14 +9,21 @@
     <div class="relative bg-white rounded-2xl md:rounded-3xl w-full max-w-[560px] shadow-[0_20px_60px_rgba(0,0,0,0.2)] border border-gray-100 transform transition-all duration-300 scale-95 opacity-0 overflow-hidden flex flex-col max-h-[90vh]" id="location-modal-content">
 
         {{-- Top Input Header Bar --}}
-        <div class="p-4 border-b border-gray-100 flex items-center gap-3 bg-white sticky top-0 z-10">
-            <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
-                <span class="material-symbols-outlined text-[22px]">search</span>
+        <div class="p-4 border-b border-gray-100 bg-white sticky top-0 z-20">
+            <div class="flex items-center gap-3 relative">
+                <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
+                    <span class="material-symbols-outlined text-[22px]">search</span>
+                </div>
+                <input id="location-search-keyword" type="text" autocomplete="off" class="flex-grow h-11 px-2 text-[15px] font-medium text-gray-800 bg-transparent outline-none placeholder:text-gray-400" placeholder="Nhập tên quán, món ăn..." />
+                <button onclick="closeLocationModal()" class="w-9 h-9 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 flex items-center justify-center transition-all flex-shrink-0">
+                    <span class="material-symbols-outlined text-[20px]">close</span>
+                </button>
+
+                {{-- Autocomplete Dropdown --}}
+                <div id="autocomplete-results" class="absolute top-12 left-0 right-0 bg-white shadow-xl border border-gray-100 rounded-xl overflow-hidden hidden z-30 max-h-[300px] overflow-y-auto">
+                    {{-- JS injected --}}
+                </div>
             </div>
-            <input id="location-search-keyword" type="text" class="flex-grow h-11 px-2 text-[15px] font-medium text-gray-800 bg-transparent outline-none placeholder:text-gray-400" placeholder="Bạn muốn tìm ở đâu?" />
-            <button onclick="closeLocationModal()" class="w-9 h-9 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 flex items-center justify-center transition-all flex-shrink-0">
-                <span class="material-symbols-outlined text-[20px]">close</span>
-            </button>
         </div>
 
         {{-- Tabs Bar --}}
@@ -311,7 +318,10 @@
                 statusText.textContent = 'Đang xác định vị trí...';
                 navigator.geolocation.getCurrentPosition(
                     (pos) => {
-                        statusText.textContent = `Đã tìm thấy vị trí (${pos.coords.latitude.toFixed(3)}, ${pos.coords.longitude.toFixed(3)})`;
+                        const lat = pos.coords.latitude;
+                        const lng = pos.coords.longitude;
+                        statusText.textContent = `Đã tìm thấy vị trí. Đang chuyển hướng...`;
+                        window.location.href = `/kham-pha?lat=${lat}&lng=${lng}&sap_xep=near_me`;
                     },
                     (err) => {
                         statusText.textContent = 'Không thể định vị. Vui lòng cho phép truy cập vị trí.';
@@ -323,25 +333,104 @@
         }
 
         function submitLocationFilter() {
-            const keyword = document.getElementById('location-search-keyword').value;
-            const provinceSelect = document.getElementById('select-province');
-            const provinceText = provinceSelect.options[provinceSelect.selectedIndex]?.text || '';
-            const district = document.getElementById('select-district').value;
-            const ward = document.getElementById('select-ward').value;
+            const keyword = document.getElementById('location-search-keyword').value.trim();
+            const provinceId = document.getElementById('select-province').value;
+            const districtId = document.getElementById('select-district').value;
 
-            let query = [];
-            if (keyword) query.push(keyword);
-            if (ward) query.push(ward);
-            if (district) query.push(district);
-            if (provinceText && provinceSelect.value) query.push(provinceText);
+            const params = new URLSearchParams();
+            if (keyword) params.set('tu_khoa', keyword);
+            if (provinceId) params.set('tinh_thanh_id', provinceId);
+            if (districtId) params.set('quan_huyen_id', districtId);
 
-            const searchStr = query.join(', ');
             closeLocationModal();
 
-            if (searchStr) {
-                window.location.href = '/kham-pha?tu_khoa=' + encodeURIComponent(searchStr);
+            if (params.toString()) {
+                window.location.href = '/kham-pha?' + params.toString();
+            } else {
+                window.location.href = '/kham-pha';
             }
         }
+
+        // Live Autocomplete logic
+        let searchTimeout = null;
+        const searchInput = document.getElementById('location-search-keyword');
+        const resultsContainer = document.getElementById('autocomplete-results');
+
+        searchInput.addEventListener('input', function(e) {
+            clearTimeout(searchTimeout);
+            const q = e.target.value.trim();
+            
+            if (!q) {
+                resultsContainer.classList.add('hidden');
+                return;
+            }
+
+            searchTimeout = setTimeout(() => {
+                fetch(`/api/search/suggest?q=${encodeURIComponent(q)}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            renderAutocomplete(data.data, q);
+                        }
+                    });
+            }, 300); // 300ms debounce
+        });
+
+        function renderAutocomplete(data, keyword) {
+            resultsContainer.innerHTML = '';
+            let html = '';
+
+            if (data.mons && data.mons.length > 0) {
+                html += `<div class="px-3 py-2 bg-gray-50 text-xs font-bold text-gray-500 uppercase tracking-wider">Món ăn gợi ý</div>`;
+                data.mons.forEach(mon => {
+                    html += `
+                        <a href="/quan/${mon.quan_slug}" class="block px-4 py-2.5 hover:bg-primary/5 border-b border-gray-50">
+                            <div class="flex items-center gap-3">
+                                <span class="material-symbols-outlined text-gray-400 text-[18px]">restaurant_menu</span>
+                                <div>
+                                    <div class="text-[14px] font-semibold text-gray-800">${mon.ten_mon}</div>
+                                    <div class="text-[12px] text-gray-500">${mon.ten_quan}</div>
+                                </div>
+                            </div>
+                        </a>
+                    `;
+                });
+            }
+
+            if (data.quans && data.quans.length > 0) {
+                html += `<div class="px-3 py-2 bg-gray-50 text-xs font-bold text-gray-500 uppercase tracking-wider">Quán ăn</div>`;
+                data.quans.forEach(quan => {
+                    const img = quan.anh_bia || 'https://placehold.co/100x100?text=No+Image';
+                    html += `
+                        <a href="/quan/${quan.slug}" class="block px-4 py-2.5 hover:bg-primary/5 border-b border-gray-50">
+                            <div class="flex items-center gap-3">
+                                <img src="${img}" class="w-10 h-10 rounded-lg object-cover bg-gray-100 flex-shrink-0" />
+                                <div class="overflow-hidden">
+                                    <div class="text-[14px] font-semibold text-gray-800 truncate">${quan.ten_quan}</div>
+                                    <div class="text-[12px] text-gray-500 truncate">${quan.dia_chi || quan.loai_hinh_kinh_doanh}</div>
+                                </div>
+                            </div>
+                        </a>
+                    `;
+                });
+            }
+
+            if (!html) {
+                html = `<div class="px-4 py-3 text-[14px] text-gray-500 text-center">Không tìm thấy "${keyword}"</div>`;
+            } else {
+                html += `<a href="/kham-pha?tu_khoa=${encodeURIComponent(keyword)}" class="block px-4 py-3 text-[14px] text-primary font-semibold text-center hover:bg-primary/5">Xem tất cả kết quả</a>`;
+            }
+
+            resultsContainer.innerHTML = html;
+            resultsContainer.classList.remove('hidden');
+        }
+
+        // Ẩn dropdown khi click ngoài
+        document.addEventListener('click', (e) => {
+            if (!searchInput.contains(e.target) && !resultsContainer.contains(e.target)) {
+                resultsContainer.classList.add('hidden');
+            }
+        });
 
         // Attach click triggers to search inputs
         document.addEventListener('DOMContentLoaded', () => {
