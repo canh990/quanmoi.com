@@ -23,7 +23,7 @@ class DatLaiMatKhauRequest extends FormRequest
         return [
             'email' => ['required', 'email', 'max:255'],
             'token' => ['required', 'string', 'size:64'],
-            'mat_khau' => ['required', 'string', 'min:8'],
+            'mat_khau' => ['required', 'string', 'min:6'],
             'mat_khau_xac_nhan' => ['required', 'same:mat_khau'],
         ];
     }
