@@ -9,4 +9,7 @@ Route::get('/user', function (Request $request) {
     return new CurrentUserResource($request->user());
 })->middleware(['web', 'auth']);
 
+use App\Http\Controllers\Api\SearchSuggestionController;
+
 Route::get('/videos', [VideoShortController::class, 'apiGetVideos']);
+Route::get('/search/suggest', [SearchSuggestionController::class, 'suggestions']);
