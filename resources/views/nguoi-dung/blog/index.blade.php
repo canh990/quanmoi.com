@@ -1,6 +1,11 @@
 @extends('layouts.app')
 @section('title', 'Bài viết của tôi - Quán Mới')
 
+@php
+    /** @var \Illuminate\Filesystem\FilesystemAdapter $r2Disk */
+    $r2Disk = Storage::disk('r2');
+@endphp
+
 @section('content')
 <main class="max-w-[1200px] mx-auto px-container-margin py-stack-lg min-h-[819px] pt-6">
     @if(session('success'))
@@ -52,7 +57,7 @@
                     <!-- Image & Status -->
                     <div class="relative aspect-[4/3] bg-surface-container overflow-hidden">
                         @if($blog->cover_image)
-                            <img src="{{ Str::startsWith($blog->cover_image, 'http') ? $blog->cover_image : Storage::disk('r2')->url($blog->cover_image) }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                            <img src="{{ Str::startsWith($blog->cover_image, 'http') ? $blog->cover_image : $r2Disk->url($blog->cover_image) }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                         @else
                             <div class="w-full h-full flex items-center justify-center text-on-surface-variant/50">
                                 <span class="material-symbols-outlined text-5xl">image</span>

@@ -131,6 +131,12 @@
                             <input id="tiktok_url" name="tiktok_url" class="w-full px-4 py-3 rounded-lg border border-gray-200 outline-none input-focus-effect text-[16px] font-normal" placeholder="https://www.tiktok.com/@username/video/123456789" type="url"/>
                             <p class="text-xs text-red-600 hidden mt-1" id="err-tiktok_url"></p>
                         </div>
+
+                        <div>
+                            <label for="shopeefood_url" class="text-[12px] font-bold text-gray-500 tracking-wider uppercase mb-2 block">LINK SHOPEEFOOD</label>
+                            <input id="shopeefood_url" name="shopeefood_url" maxlength="500" class="w-full px-4 py-3 rounded-lg border border-gray-200 outline-none input-focus-effect text-[16px] font-normal" placeholder="https://shopeefood.vn/..." type="url"/>
+                            <p class="text-xs text-red-600 hidden mt-1" id="err-shopeefood_url"></p>
+                        </div>
                     </div>
 
                     {{-- CTA Desktop --}}
@@ -156,13 +162,13 @@
 
                     <div class="grid grid-cols-3 gap-3">
                         {{-- Main Cover Photo Slot --}}
-                        <div class="col-span-2 row-span-2 aspect-[4/3] rounded-lg overflow-hidden relative group border border-gray-200 bg-gray-50 cursor-pointer" onclick="document.getElementById('anh_bia').click()">
-                            <input type="file" id="anh_bia" name="anh_bia" accept="image/*" class="hidden" onchange="previewCoverPhoto(this)" onclick="event.stopPropagation()" />
+                        <div class="col-span-2 row-span-2 aspect-[4/3] rounded-lg overflow-hidden relative group border border-gray-200 bg-gray-50 cursor-pointer" data-cover-trigger="true">
+                            <input type="file" id="anh_bia" name="anh_bia" accept="image/*" class="hidden" onchange="previewCoverPhoto(this)" data-cover-input="true" />
                             
                             <div id="cover-preview-container" class="hidden w-full h-full relative">
                                 <img id="cover-preview-img" class="w-full h-full object-cover" src="" alt="Ảnh chính" />
                                 <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                    <button type="button" onclick="event.stopPropagation(); removeCoverPhoto();" class="p-2 bg-white rounded-full text-red-600 shadow-md"><span class="material-symbols-outlined">delete</span></button>
+                                    <button type="button" data-cover-remove="true" class="p-2 bg-white rounded-full text-red-600 shadow-md"><span class="material-symbols-outlined">delete</span></button>
                                 </div>
                             </div>
 
@@ -177,13 +183,13 @@
 
                         {{-- Gallery Thumbnails --}}
                         @for($i = 1; $i <= 5; $i++)
-                        <div class="aspect-[4/3] rounded-lg border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-1 text-gray-400 hover:border-primary hover:text-primary transition-all cursor-pointer relative group bg-gray-50" onclick="document.getElementById('gallery_{{ $i }}').click()">
-                            <input type="file" id="gallery_{{ $i }}" name="danh_sach_anh[]" accept="image/*" multiple class="hidden" onchange="previewSingleGalleryPhoto(this, {{ $i }})" onclick="event.stopPropagation()" />
+                        <div class="aspect-[4/3] rounded-lg border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-1 text-gray-400 hover:border-primary hover:text-primary transition-all cursor-pointer relative group bg-gray-50" data-gallery-trigger="{{ $i }}">
+                            <input type="file" id="gallery_{{ $i }}" name="danh_sach_anh[]" accept="image/*" multiple class="hidden" onchange="previewSingleGalleryPhoto(this, {{ $i }})" data-gallery-input="{{ $i }}" />
                             
                             <div id="gallery-preview-container-{{ $i }}" class="hidden absolute inset-0 w-full h-full">
                                 <img id="gallery-preview-img-{{ $i }}" class="w-full h-full object-cover rounded-lg" src="" />
                                 <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button type="button" onclick="event.stopPropagation(); removeGalleryPhoto({{ $i }});" class="p-2 bg-white rounded-full text-red-600 shadow-md hover:bg-gray-100 flex items-center justify-center"><span class="material-symbols-outlined text-[18px]">delete</span></button>
+                                    <button type="button" data-remove-gallery="{{ $i }}" class="p-2 bg-white rounded-full text-red-600 shadow-md hover:bg-gray-100 flex items-center justify-center"><span class="material-symbols-outlined text-[18px]">delete</span></button>
                                 </div>
                             </div>
 
@@ -210,18 +216,20 @@
                     <div class="grid grid-cols-1 gap-2.5">
                         <div>
                             <label class="text-[11px] font-bold text-gray-500 uppercase mb-1 block">Tỉnh / Thành phố <span class="text-red-500">*</span></label>
-                            <select id="select-tinh" onchange="onTinhChange(this.value)" class="w-full h-11 px-3 rounded-lg border border-gray-200 outline-none input-focus-effect font-medium text-[14px]">
+                            <select id="select-tinh" required onchange="onTinhChange(this.value)" class="w-full h-11 px-3 rounded-lg border border-gray-200 outline-none input-focus-effect font-medium text-[14px]">
                                 <option value="">-- Chọn Tỉnh / Thành phố --</option>
                             </select>
+                            <input type="hidden" id="tinh_thanh_id" name="tinh_thanh_id" />
                             <input type="hidden" id="ten_tinh_thanh" name="ten_tinh_thanh" />
                         </div>
 
                         <div class="grid grid-cols-2 gap-2">
                             <div>
                                 <label class="text-[11px] font-bold text-gray-500 uppercase mb-1 block">Quận / Huyện <span class="text-red-500">*</span></label>
-                                <select id="select-huyen" onchange="onHuyenChange(this.value)" disabled class="w-full h-11 px-3 rounded-lg border border-gray-200 outline-none input-focus-effect font-medium text-[14px] disabled:opacity-50">
+                                <select id="select-huyen" required onchange="onHuyenChange(this.value)" disabled class="w-full h-11 px-3 rounded-lg border border-gray-200 outline-none input-focus-effect font-medium text-[14px] disabled:opacity-50">
                                     <option value="">-- Quận/Huyện --</option>
                                 </select>
+                                <input type="hidden" id="quan_huyen_id" name="quan_huyen_id" />
                                 <input type="hidden" id="ten_quan_huyen" name="ten_quan_huyen" />
                             </div>
                             <div>
@@ -229,6 +237,7 @@
                                 <select id="select-xa" onchange="onXaChange(this.value)" disabled class="w-full h-11 px-3 rounded-lg border border-gray-200 outline-none input-focus-effect font-medium text-[14px] disabled:opacity-50">
                                     <option value="">-- Phường/Xã --</option>
                                 </select>
+                                <input type="hidden" id="phuong_xa_id" name="phuong_xa_id" />
                                 <input type="hidden" id="ten_phuong_xa" name="ten_phuong_xa" />
                             </div>
                         </div>
@@ -359,7 +368,12 @@
         const selectXa = document.getElementById('select-xa');
         const selectTinh = document.getElementById('select-tinh');
 
+        document.getElementById('tinh_thanh_id').value = tinhCode || '';
         document.getElementById('ten_tinh_thanh').value = selectTinh.options[selectTinh.selectedIndex]?.text || '';
+        document.getElementById('quan_huyen_id').value = '';
+        document.getElementById('ten_quan_huyen').value = '';
+        document.getElementById('phuong_xa_id').value = '';
+        document.getElementById('ten_phuong_xa').value = '';
         selectHuyen.innerHTML = '<option value="">Đang tải...</option>';
         selectHuyen.disabled = true;
         selectXa.innerHTML = '<option value="">Phường/Xã..</option>';
@@ -391,7 +405,10 @@
         const selectXa = document.getElementById('select-xa');
         const selectHuyen = document.getElementById('select-huyen');
 
+        document.getElementById('quan_huyen_id').value = huyenCode || '';
         document.getElementById('ten_quan_huyen').value = selectHuyen.options[selectHuyen.selectedIndex]?.text || '';
+        document.getElementById('phuong_xa_id').value = '';
+        document.getElementById('ten_phuong_xa').value = '';
         selectXa.innerHTML = '<option value="">Đang tải...</option>';
         selectXa.disabled = true;
 
@@ -419,6 +436,7 @@
 
     function onXaChange() {
         const selectXa = document.getElementById('select-xa');
+        document.getElementById('phuong_xa_id').value = selectXa.value || '';
         document.getElementById('ten_phuong_xa').value = selectXa.options[selectXa.selectedIndex]?.text || '';
         updateAddressPreview();
     }
@@ -571,6 +589,40 @@
             btn.innerHTML = originalBtnText;
         }
     }
+
+    document.addEventListener('click', (event) => {
+        const removeGallery = event.target.closest('[data-remove-gallery]');
+        if (removeGallery) {
+            event.stopPropagation();
+            removeGalleryPhoto(Number(removeGallery.dataset.removeGallery));
+            return;
+        }
+
+        const coverRemove = event.target.closest('[data-cover-remove]');
+        if (coverRemove) {
+            event.stopPropagation();
+            removeCoverPhoto();
+            return;
+        }
+
+        if (event.target.matches('input[type="file"]')) return;
+
+        const coverTrigger = event.target.closest('[data-cover-trigger]');
+        if (coverTrigger) {
+            event.stopPropagation();
+            const coverInput = document.getElementById('anh_bia');
+            if (coverInput) coverInput.click();
+        }
+
+        const galleryTrigger = event.target.closest('[data-gallery-trigger]');
+        if (galleryTrigger) {
+            event.stopPropagation();
+            const index = Number(galleryTrigger.dataset.galleryTrigger);
+            const input = document.getElementById(`gallery_${index}`);
+            if (input) input.click();
+        }
+
+    });
 
     document.addEventListener('DOMContentLoaded', () => {
         loadTinhThanhList();

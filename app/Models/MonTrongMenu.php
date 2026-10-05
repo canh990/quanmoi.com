@@ -21,6 +21,7 @@ class MonTrongMenu extends Model
         'mo_ta',
         'gia',
         'hinh_anh',
+        'shopeefood_url',
         'con_hang',
     ];
 

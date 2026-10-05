@@ -189,6 +189,14 @@
                     </a>
                 </div>
                 @endif
+                @if($quan->shopeefood_url)
+                <div class="mt-3">
+                    <a href="{{ $quan->shopeefood_url }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 text-green-700 hover:underline font-bold">
+                        <span class="material-symbols-outlined text-[18px]">shopping_bag</span>
+                        Đặt món trên ShopeeFood
+                    </a>
+                </div>
+                @endif
             </div>
         </div>
 
@@ -305,7 +313,7 @@
             </div>
 
             {{-- Form --}}
-            <form id="edit-form" class="px-7 py-6 space-y-5" onsubmit="submitEditForm(event)" enctype="multipart/form-data">
+            <form id="edit-form" data-update-url="{{ route('chu-quan.quan.update', $quan->slug) }}" class="px-7 py-6 space-y-5" onsubmit="submitEditForm(event)" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
 
@@ -360,6 +368,14 @@
                     <input type="url" name="tiktok_url" id="edit-tiktok"
                            value="{{ $quan->tiktok_url }}"
                            placeholder="https://www.tiktok.com/@quan-cua-ban"
+                           class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm transition">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Link ShopeeFood</label>
+                    <input type="url" name="shopeefood_url" id="edit-shopeefood"
+                           value="{{ $quan->shopeefood_url }}"
+                           placeholder="https://shopeefood.vn/..."
                            class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm transition">
                 </div>
 
@@ -655,7 +671,7 @@
         if (giaLon) formData.set('gia_lon_nhat', giaLon.replace(/\./g, ''));
 
         try {
-            const res = await fetch('{{ route('chu-quan.quan.update', $quan->slug) }}', {
+            const res = await fetch(form.dataset.updateUrl, {
                 method: 'POST', // Laravel cần POST + _method=PUT
                 headers: {
                     'Accept': 'application/json',

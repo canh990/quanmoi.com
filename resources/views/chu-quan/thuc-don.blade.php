@@ -50,13 +50,27 @@
 @endsection
 
 @push('scripts')
+@php
+    $r2MenuImageBase = config('filesystems.disks.r2.url') ?: (
+        config('filesystems.disks.r2.endpoint') && config('filesystems.disks.r2.bucket')
+            ? config('filesystems.disks.r2.endpoint').'/'.config('filesystems.disks.r2.bucket')
+            : ''
+    );
+    $menuInitialData = [
+        'imageBase' => rtrim($r2MenuImageBase, '/'),
+        'categories' => $quan->danhMucMenu,
+    ];
+@endphp
+<script type="application/json" id="menu-initial-data">@json($menuInitialData)</script>
 <script>
     let menuCategories = [];
     let categoryCounter = 0;
     let itemCounter = 0;
+    const menuInitialData = JSON.parse(document.getElementById('menu-initial-data').textContent);
+    const r2MenuImageBase = menuInitialData.imageBase;
 
     // Load existing data
-    const initialData = @json($quan->danhMucMenu);
+    const initialData = menuInitialData.categories;
     
     document.addEventListener('DOMContentLoaded', () => {
         if (initialData && initialData.length > 0) {
@@ -70,8 +84,8 @@
                 if (cat.mon_an && cat.mon_an.length > 0) {
                     cat.mon_an.forEach(item => {
                         const itemId = ++itemCounter;
-                        catObj.items.push({ id: itemId, db_id: item.id, tmp_id: itemId, name: item.ten_mon, price: item.gia, description: item.mo_ta || '', image: item.hinh_anh || '' });
-                        renderItemHtml(catId, itemId, item.ten_mon, item.gia, item.mo_ta, item.hinh_anh);
+                        catObj.items.push({ id: itemId, db_id: item.id, tmp_id: itemId, name: item.ten_mon, price: item.gia, description: item.mo_ta || '', shopeefood_url: item.shopeefood_url || '', image: item.hinh_anh || '' });
+                        renderItemHtml(catId, itemId, item.ten_mon, item.gia, item.mo_ta || '', item.hinh_anh, item.shopeefood_url || '');
                     });
                 }
                 menuCategories.push(catObj);
@@ -79,12 +93,20 @@
         }
     });
 
+    function escapeAttribute(value) {
+        return String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/"/g, '&quot;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+    }
+
     function renderCategoryHtml(catId, name = '') {
         const container = document.getElementById('menu-categories-container');
         const html = `
             <div id="category-box-${catId}" class="border border-gray-200 rounded-xl overflow-hidden bg-gray-50/30">
                 <div class="bg-gray-50 px-4 py-3 border-b border-gray-200 flex items-center justify-between">
-                    <input type="text" placeholder="Tên danh mục (vd: Khai vị, Món chính)..." value="${name.replace(/"/g, '&quot;')}" onchange="updateCategoryName(${catId}, this.value)" class="bg-transparent font-bold text-gray-800 outline-none w-2/3" required />
+                    <input type="text" placeholder="Tên danh mục (vd: Khai vị, Món chính)..." value="${escapeAttribute(name)}" oninput="updateCategoryName(${catId}, this.value)" class="bg-transparent font-bold text-gray-800 outline-none w-2/3" required />
                     <button type="button" onclick="removeCategory(${catId})" class="text-red-500 hover:text-red-600"><span class="material-symbols-outlined">delete</span></button>
                 </div>
                 <div class="p-4 space-y-3" id="category-items-${catId}">
@@ -99,9 +121,9 @@
         container.insertAdjacentHTML('beforeend', html);
     }
 
-    function renderItemHtml(catId, itemId, name = '', price = '', desc = '', image = '') {
+    function renderItemHtml(catId, itemId, name = '', price = '', desc = '', image = '', shopeefoodUrl = '') {
         const container = document.getElementById(`category-items-${catId}`);
-        const imagePreview = image ? `{{ rtrim(Storage::disk('r2')->url(''), '/') }}/${image}` : '';
+        const imagePreview = image ? (image.startsWith('http') ? image : `${r2MenuImageBase}/${image.replace(/^\/+/, '')}`) : '';
         const imgDisplay = image ? `<img src="${imagePreview}" class="w-full h-full object-cover rounded" />` : `<span class="material-symbols-outlined text-gray-400">image</span>`;
         const html = `
             <div id="item-box-${itemId}" class="flex gap-3 items-start bg-white p-3 rounded-lg border border-gray-100 shadow-sm relative group">
@@ -119,10 +141,11 @@
 
                 <div class="flex-1 space-y-2">
                     <div class="flex gap-2">
-                        <input type="text" placeholder="Tên món ăn..." value="${name.replace(/"/g, '&quot;')}" onchange="updateItem(${catId}, ${itemId}, 'name', this.value)" class="flex-1 border border-gray-200 rounded px-2 py-1.5 text-sm outline-none focus:border-primary" required />
-                        <input type="number" placeholder="Giá (VNĐ)" value="${price}" onchange="updateItem(${catId}, ${itemId}, 'price', this.value)" class="w-28 border border-gray-200 rounded px-2 py-1.5 text-sm outline-none focus:border-primary" />
+                        <input type="text" placeholder="Tên món ăn..." value="${escapeAttribute(name)}" oninput="updateItem(${catId}, ${itemId}, 'name', this.value)" class="flex-1 border border-gray-200 rounded px-2 py-1.5 text-sm outline-none focus:border-primary" required />
+                        <input type="number" placeholder="Giá (VNĐ)" value="${escapeAttribute(price)}" oninput="updateItem(${catId}, ${itemId}, 'price', this.value)" class="w-28 border border-gray-200 rounded px-2 py-1.5 text-sm outline-none focus:border-primary" />
                     </div>
-                    <input type="text" placeholder="Mô tả ngắn (tùy chọn)..." value="${desc.replace(/"/g, '&quot;')}" onchange="updateItem(${catId}, ${itemId}, 'description', this.value)" class="w-full border border-gray-200 rounded px-2 py-1.5 text-sm outline-none focus:border-primary text-gray-500" />
+                    <input type="text" placeholder="Mô tả ngắn (tùy chọn)..." value="${escapeAttribute(desc)}" oninput="updateItem(${catId}, ${itemId}, 'description', this.value)" class="w-full border border-gray-200 rounded px-2 py-1.5 text-sm outline-none focus:border-primary text-gray-500" />
+                    <input type="url" placeholder="Link ShopeeFood của món (tùy chọn)..." value="${escapeAttribute(shopeefoodUrl)}" oninput="updateItem(${catId}, ${itemId}, 'shopeefood_url', this.value)" class="w-full border border-gray-200 rounded px-2 py-1.5 text-sm outline-none focus:border-primary text-gray-500" />
                 </div>
             </div>
         `;
@@ -159,7 +182,7 @@
         if (!cat) return;
         
         const itemId = ++itemCounter;
-        cat.items.push({ id: itemId, tmp_id: itemId, name: '', price: '', description: '', image: '' });
+        cat.items.push({ id: itemId, tmp_id: itemId, name: '', price: '', description: '', shopeefood_url: '', image: '' });
         renderItemHtml(catId, itemId);
     }
 

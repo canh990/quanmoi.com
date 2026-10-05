@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -23,9 +24,9 @@ class RedirectIfAuthenticated
                 $user = Auth::guard($guard)->user();
 
                 $redirectTo = '/';
-                if ($user?->hasRole('admin')) {
+                if ($user instanceof User && $user->hasRole('admin')) {
                     $redirectTo = '/admin';
-                } elseif ($user?->hasRole('chu_quan')) {
+                } elseif ($user instanceof User && $user->hasRole('chu_quan')) {
                     $redirectTo = '/chu-quan/quan';
                 }
 

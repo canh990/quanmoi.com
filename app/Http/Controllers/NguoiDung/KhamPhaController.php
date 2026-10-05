@@ -5,6 +5,7 @@ namespace App\Http\Controllers\NguoiDung;
 use App\Http\Controllers\Controller;
 use App\Models\Quan;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 
 class KhamPhaController extends Controller
 {
@@ -80,10 +81,13 @@ class KhamPhaController extends Controller
 
     public function quanNoiBat()
     {
-        $quans = Quan::query()->where('trang_thai', 'da_duyet')
-            ->where('is_noi_bat', true)
-            ->orderBy('updated_at', 'desc')
-            ->paginate(12);
+        $query = Quan::query()->where('trang_thai', 'da_duyet');
+
+        if (Schema::hasColumn('quan', 'is_noi_bat')) {
+            $query->where('is_noi_bat', true);
+        }
+
+        $quans = $query->orderBy('updated_at', 'desc')->paginate(12);
 
         return view('nguoi-dung.kham-pha.index', [
             'quans' => $quans,

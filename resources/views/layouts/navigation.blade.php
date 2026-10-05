@@ -3,6 +3,11 @@
     $ownerNavLabel = $ownerNavLabel ?? 'Đăng quán';
     $isOwnerNav = $isOwnerNav ?? false;
 @endphp
+@push('styles')
+<style>
+    .material-symbols-filled { font-variation-settings: 'FILL' 1; }
+</style>
+@endpush
 
 {{-- Desktop Header --}}
 <header class="hidden md:block fixed top-0 left-0 right-0 w-full z-50 bg-white border-b border-gray-100 shadow-sm transition-all duration-300">
@@ -119,7 +124,7 @@
     <div class="bg-white border-t border-gray-100 pb-safe h-[64px] flex justify-around items-center px-1 shadow-lg">
         <a href="/" class="flex flex-col items-center justify-center flex-1 h-full py-1 text-center group min-w-0">
             <div class="px-4 py-1 rounded-full transition-all duration-300 {{ request()->is('/') ? 'bg-primary-fixed text-on-primary-fixed' : 'text-on-surface-variant hover:bg-surface-container-high/50' }}">
-                <span class="material-symbols-outlined text-[22px] block" style="font-variation-settings: 'FILL' {{ request()->is('/') ? '1' : '0' }};">explore</span>
+                <span class="material-symbols-outlined text-[22px] block {{ request()->is('/') ? 'material-symbols-filled' : '' }}">explore</span>
             </div>
             <span class="text-[10px] font-bold mt-1 tracking-wide {{ request()->is('/') ? 'text-primary' : 'text-on-surface-variant' }} truncate w-full px-1">Khám phá</span>
         </a>
@@ -133,7 +138,7 @@
 
         <a href="{{ route('quan-da-luu.index') }}" class="flex flex-col items-center justify-center flex-1 h-full py-1 text-center group min-w-0">
             <div class="px-4 py-1 rounded-full transition-all duration-300 {{ request()->routeIs('quan-da-luu.index') ? 'bg-primary-fixed text-on-primary-fixed' : 'text-on-surface-variant hover:bg-surface-container-high/50' }}">
-                <span class="material-symbols-outlined text-[22px] block" style="font-variation-settings: 'FILL' {{ request()->routeIs('quan-da-luu.index') ? '1' : '0' }};">favorite</span>
+                <span class="material-symbols-outlined text-[22px] block {{ request()->routeIs('quan-da-luu.index') ? 'material-symbols-filled' : '' }}">favorite</span>
             </div>
             <span class="text-[10px] font-bold mt-1 tracking-wide {{ request()->routeIs('quan-da-luu.index') ? 'text-primary' : 'text-on-surface-variant' }} truncate w-full px-1">Đã lưu</span>
         </a>
@@ -157,7 +162,7 @@
         @else
             <a href="{{ route('login') }}" class="flex flex-col items-center justify-center flex-1 h-full py-1 text-center group min-w-0">
                 <div class="px-4 py-1 rounded-full transition-all duration-300 {{ (request()->is('dang-nhap') || request()->is('dang-ky') || request()->is('dangnhap') || request()->is('dangky')) ? 'bg-primary-fixed text-on-primary-fixed' : 'text-on-surface-variant hover:bg-surface-container-high/50' }}">
-                    <span class="material-symbols-outlined text-[22px] block" style="font-variation-settings: 'FILL' {{ (request()->is('dang-nhap') || request()->is('dang-ky') || request()->is('dangnhap') || request()->is('dangky')) ? '1' : '0' }};">person</span>
+                    <span class="material-symbols-outlined text-[22px] block {{ (request()->is('dang-nhap') || request()->is('dang-ky') || request()->is('dangnhap') || request()->is('dangky')) ? 'material-symbols-filled' : '' }}">person</span>
                 </div>
                 <span class="text-[10px] font-bold mt-1 tracking-wide {{ (request()->is('dang-nhap') || request()->is('dang-ky') || request()->is('dangnhap') || request()->is('dangky')) ? 'text-primary' : 'text-on-surface-variant' }} truncate w-full px-1">Tài khoản</span>
             </a>

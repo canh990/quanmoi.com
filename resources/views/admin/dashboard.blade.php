@@ -276,12 +276,11 @@
 
 @stack('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script type="application/json" id="admin-dashboard-chart-data">@json($chartData)</script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const labels = @json($chartData['labels']);
-        const quanData = @json($chartData['quan']);
-        const userData = @json($chartData['users']);
-        const revenueData = @json($chartData['revenue']);
+        const { labels, quan: quanData, users: userData, revenue: revenueData } =
+            JSON.parse(document.getElementById('admin-dashboard-chart-data').textContent);
 
         // 1. Chart: Registration Growth
         const ctxReg = document.getElementById('registrationChart').getContext('2d');
