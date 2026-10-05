@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Laravel\Scout\Searchable;
 
@@ -48,23 +49,77 @@ class Quan extends Model
     ];
 
     /**
+     * Tùy biến truy vấn khi import toàn bộ dữ liệu vào Scout.
+     */
+    protected function makeAllSearchableUsing(Builder $query): Builder
+    {
+        return $query->with([
+            'danhMucMenu.monAn:id,danh_muc_id,ten_mon,gia'
+        ]);
+    }
+
+    /**
      * Get the indexable data array for the model.
      *
      * @return array
      */
-    public function toSearchableArray()
+    public function toSearchableArray(): array
     {
-        return [
-            'id' => $this->id,
-            'ten_quan' => $this->ten_quan,
+        // Lấy danh sách tên món ăn từ thực đơn của quán
+        $danhSachMon = [];
+        if ($this->relationLoaded('danhMucMenu')) {
+            $danhSachMon = $this->danhMucMenu
+                ->pluck('monAn')
+                ->flatten()
+                ->pluck('ten_mon')
+                ->filter()
+                ->unique()
+                ->values()
+                ->all();
+        } else {
+            $danhSachMon = $this->danhMucMenu()
+                ->with('monAn:id,danh_muc_id,ten_mon')
+                ->get()
+                ->pluck('monAn')
+                ->flatten()
+                ->pluck('ten_mon')
+                ->filter()
+                ->unique()
+                ->values()
+                ->all();
+        }
+
+        $document = [
+            'id'                   => (string) $this->id,
+            'ten_quan'             => $this->ten_quan,
             'loai_hinh_kinh_doanh' => $this->loai_hinh_kinh_doanh,
-            'mo_ta' => $this->mo_ta,
-            'dia_chi' => $this->dia_chi_chi_tiet . ', ' . $this->ten_phuong_xa . ', ' . $this->ten_quan_huyen . ', ' . $this->ten_tinh_thanh,
-            'trang_thai' => $this->trang_thai,
-            'is_noi_bat' => (bool) $this->is_noi_bat,
-            'created_at' => $this->created_at ? $this->created_at->timestamp : null,
-            'updated_at' => $this->updated_at ? $this->updated_at->timestamp : null,
+            'mo_ta'                => $this->mo_ta,
+            'dia_chi'              => trim($this->dia_chi_chi_tiet . ', ' . $this->ten_phuong_xa . ', ' . $this->ten_quan_huyen . ', ' . $this->ten_tinh_thanh),
+            'tinh_thanh_id'        => (string) $this->tinh_thanh_id,
+            'quan_huyen_id'        => (string) $this->quan_huyen_id,
+            'phuong_xa_id'         => (string) $this->phuong_xa_id,
+            'gia_nho_nhat'         => (float) $this->gia_nho_nhat,
+            'gia_lon_nhat'         => (float) $this->gia_lon_nhat,
+            'gio_mo_cua'           => $this->gio_mo_cua,
+            'gio_dong_cua'         => $this->gio_dong_cua,
+            'luot_xem'             => (int) $this->luot_xem,
+            'trang_thai'           => $this->trang_thai,
+            'is_noi_bat'           => (bool) $this->is_noi_bat,
+            'is_xac_thuc'          => (bool) $this->is_xac_thuc,
+            'mon_an'               => $danhSachMon,
+            'created_at'           => $this->created_at ? $this->created_at->timestamp : null,
+            'updated_at'           => $this->updated_at ? $this->updated_at->timestamp : null,
         ];
+
+        // Chỉ index location nếu quán có đủ tọa độ GPS hợp lệ
+        if (!empty($this->vi_do) && !empty($this->kinh_do) && is_numeric($this->vi_do) && is_numeric($this->kinh_do)) {
+            $document['location'] = [
+                'lat' => (float) $this->vi_do,
+                'lon' => (float) $this->kinh_do,
+            ];
+        }
+
+        return $document;
     }
 
     protected $casts = [

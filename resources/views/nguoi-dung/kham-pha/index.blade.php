@@ -49,6 +49,20 @@
     {{-- Main Content --}}
     <div class="max-w-7xl mx-auto px-4 md:px-6 lg:px-10 mt-10">
         
+        {{-- Sort Bar --}}
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <p class="text-on-surface-variant font-medium text-[15px]">Tìm thấy <span class="font-bold text-on-surface">{{ $quans->total() }}</span> kết quả</p>
+            <div class="flex items-center gap-3">
+                <label for="sap_xep" class="text-[14px] text-gray-500 font-medium whitespace-nowrap">Sắp xếp:</label>
+                <select id="sap_xep" class="border border-gray-200 rounded-xl px-3 py-2 text-[14px] bg-white outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 text-gray-700 font-medium cursor-pointer transition-all" onchange="const url = new URL(window.location.href); url.searchParams.set('sap_xep', this.value); window.location.href = url.toString();">
+                    <option value="" {{ empty($sapXep) ? 'selected' : '' }}>Độ liên quan / Mặc định</option>
+                    <option value="near_me" {{ ($sapXep ?? '') === 'near_me' ? 'selected' : '' }}>Gần tôi nhất</option>
+                    <option value="view_desc" {{ ($sapXep ?? '') === 'view_desc' ? 'selected' : '' }}>Xem nhiều nhất</option>
+                    <option value="created_desc" {{ ($sapXep ?? '') === 'created_desc' ? 'selected' : '' }}>Mới đăng gần đây</option>
+                </select>
+            </div>
+        </div>
+
         @if($quans->isEmpty())
             <div class="text-center py-20 bg-white rounded-3xl border border-gray-100 shadow-sm">
                 <span class="material-symbols-outlined text-6xl text-gray-300 mb-4">search_off</span>
