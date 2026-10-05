@@ -25,21 +25,23 @@ Route::get('/blog/{slug}', [FrontendBlogController::class, 'show'])->name('blog.
 Route::get('/video-review', [\App\Http\Controllers\NguoiDung\VideoShortController::class, 'index'])->name('video-review.index');
 Route::view('/gioi-thieu', 'pages.about')->name('about');
 
-Route::get('/dang-ky', [DangKyController::class, 'showRegistrationForm'])->name('register');
+// ─── Auth routes (chỉ dành cho khách chưa đăng nhập) ──────────────────────────
+Route::middleware('guest')->group(function () {
+    Route::get('/dang-ky', [DangKyController::class, 'showRegistrationForm'])->name('register');
+    Route::get('/dang-nhap', [DangNhapController::class, 'showLoginForm'])->name('login');
+    Route::get('/dang-nhap/google', [App\Http\Controllers\Auth\GoogleController::class, 'redirectToGoogle'])->name('login.google');
+    Route::get('/quen-mat-khau', [QuenMatKhauController::class, 'showForgotForm'])->name('password.request');
+    Route::get('/dat-lai-mat-khau/{token}', [QuenMatKhauController::class, 'showResetForm'])->name('password.reset');
+});
+
+// POST routes không cần middleware guest (AJAX / form submit)
 Route::post('/dang-ky', [DangKyController::class, 'register'])->middleware('throttle:register')->name('register.submit');
 Route::post('/dang-ky/xac-thuc', [DangKyController::class, 'verifyOtp'])->middleware('throttle:otp-verify')->name('register.verify');
 Route::post('/dang-ky/gui-lai', [DangKyController::class, 'resendOtp'])->middleware('throttle:otp-send')->name('register.resend');
-
-Route::get('/dang-nhap', [DangNhapController::class, 'showLoginForm'])->name('login');
 Route::post('/dang-nhap', [DangNhapController::class, 'login'])->middleware('throttle:login')->name('login.submit');
 Route::post('/dang-xuat', [DangNhapController::class, 'logout'])->name('logout');
-
-Route::get('/dang-nhap/google', [App\Http\Controllers\Auth\GoogleController::class, 'redirectToGoogle'])->name('login.google');
 Route::get('/dang-nhap/google/callback', [App\Http\Controllers\Auth\GoogleController::class, 'handleGoogleCallback'])->name('login.google.callback');
-
-Route::get('/quen-mat-khau', [QuenMatKhauController::class, 'showForgotForm'])->name('password.request');
 Route::post('/quen-mat-khau', [QuenMatKhauController::class, 'sendResetLink'])->middleware('throttle:password-email')->name('password.email');
-Route::get('/dat-lai-mat-khau/{token}', [QuenMatKhauController::class, 'showResetForm'])->name('password.reset');
 Route::post('/dat-lai-mat-khau', [QuenMatKhauController::class, 'resetPassword'])->middleware('throttle:password-email')->name('password.update');
 
 Route::redirect('/dangnhap', '/dang-nhap', 301);

@@ -7,8 +7,11 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
+        "babenkoivan/elastic-client": "^3.0",
+        "babenkoivan/elastic-scout-driver": "^4.0",
         "intervention/image": "^4.2",
         "laravel/framework": "^13.8",
+        "laravel/scout": "^11.8",
         "laravel/socialite": "^5.30",
         "laravel/tinker": "^3.0",
         "league/flysystem-aws-s3-v3": "3.0",

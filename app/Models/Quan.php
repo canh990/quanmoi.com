@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Laravel\Scout\Searchable;
 
 class Quan extends Model
 {
-    use HasFactory, HasUuids, SoftDeletes;
+    use HasFactory, HasUuids, SoftDeletes, Searchable;
 
     protected $table = 'quan';
     const DELETED_AT = 'ngay_xoa';
@@ -45,6 +46,26 @@ class Quan extends Model
         'is_xac_thuc',
         'luot_xem',
     ];
+
+    /**
+     * Get the indexable data array for the model.
+     *
+     * @return array
+     */
+    public function toSearchableArray()
+    {
+        return [
+            'id' => $this->id,
+            'ten_quan' => $this->ten_quan,
+            'loai_hinh_kinh_doanh' => $this->loai_hinh_kinh_doanh,
+            'mo_ta' => $this->mo_ta,
+            'dia_chi' => $this->dia_chi_chi_tiet . ', ' . $this->ten_phuong_xa . ', ' . $this->ten_quan_huyen . ', ' . $this->ten_tinh_thanh,
+            'trang_thai' => $this->trang_thai,
+            'is_noi_bat' => (bool) $this->is_noi_bat,
+            'created_at' => $this->created_at ? $this->created_at->timestamp : null,
+            'updated_at' => $this->updated_at ? $this->updated_at->timestamp : null,
+        ];
+    }
 
     protected $casts = [
         'is_noi_bat' => 'boolean',

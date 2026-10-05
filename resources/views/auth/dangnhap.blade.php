@@ -226,7 +226,7 @@
                                 <label for="register-password" class="text-[12px] font-bold text-on-surface-variant uppercase tracking-wider">Mật khẩu</label>
                                 <div class="relative group">
                                     <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-[18px] text-on-surface-variant/50 group-focus-within:text-primary transition-colors">lock</span>
-                                    <input id="register-password" name="mat_khau" class="w-full h-12 pl-11 pr-12 rounded-xl border border-gray-200 bg-gray-50/50 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition-all text-[15px] placeholder:text-gray-400" placeholder="Tối thiểu 8 ký tự" required type="password" minlength="8"/>
+                                    <input id="register-password" name="mat_khau" class="w-full h-12 pl-11 pr-12 rounded-xl border border-gray-200 bg-gray-50/50 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition-all text-[15px] placeholder:text-gray-400" placeholder="Tối thiểu 6 ký tự" required type="password" minlength="6"/>
                                     <button type="button" onclick="togglePassword('register-password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-all">
                                         <span class="material-symbols-outlined text-[20px]">visibility</span>
                                     </button>
@@ -425,6 +425,15 @@
                     body: JSON.stringify({ email, mat_khau, remember })
                 });
 
+                // Xử lý riêng 429 Too Many Requests (rate limit)
+                if (response.status === 429) {
+                    const retryAfter = response.headers.get('Retry-After') || 60;
+                    showLoginError('general', `Bạn đã thử đăng nhập quá nhiều lần. Vui lòng thử lại sau ${retryAfter} giây.`);
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalBtnHtml;
+                    return;
+                }
+
                 const data = await response.json();
 
                 if (!response.ok) {
@@ -451,7 +460,7 @@
                     window.location.href = data.redirect_to || '/';
                 }, 500);
             } catch (error) {
-                showLoginError('general', 'Không thể kết nối máy chủ.');
+                showLoginError('general', 'Không thể kết nối máy chủ. Vui lòng thử lại.');
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = originalBtnHtml;
             }

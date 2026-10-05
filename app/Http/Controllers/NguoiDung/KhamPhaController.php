@@ -17,19 +17,25 @@ class KhamPhaController extends Controller
         $rawDanhMuc = $request->input('danh_muc', '');
         $danhMuc = is_array($rawDanhMuc) ? '' : (string) $rawDanhMuc;
         
+        $rawTuKhoa = $request->input('tu_khoa', '');
+        $tuKhoa = is_array($rawTuKhoa) ? '' : strip_tags($rawTuKhoa);
         
-        $query = Quan::query()->where('trang_thai', 'da_duyet');
+        $query = Quan::search($tuKhoa)->whereIn('trang_thai', ['da_duyet']);
 
         if (!empty($danhMuc)) {
-            $query->where('loai_hinh_kinh_doanh', strip_tags($danhMuc));
+            $query->whereIn('loai_hinh_kinh_doanh.keyword', [strip_tags($danhMuc)]);
         }
 
-        // Get paginated results, latest first
+        // Lấy kết quả phân trang theo mới nhất
         $quans = $query->orderBy('created_at', 'desc')->paginate(12);
+
+        // Giữ lại query string khi phân trang
+        $quans->appends($request->all());
 
         return view('nguoi-dung.kham-pha.index', [
             'quans' => $quans,
             'danhMuc' => $danhMuc,
+            'tuKhoa' => $tuKhoa,
         ]);
     }
 

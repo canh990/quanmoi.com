@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\DangNhapRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class DangNhapController extends Controller
 {
@@ -40,6 +41,15 @@ class DangNhapController extends Controller
         }
 
         $request->session()->regenerate();
+
+        // Xóa các session cũ của user này trong database (chống session fixation nâng cao)
+        if (config('session.driver') === 'database') {
+            $currentSessionId = $request->session()->getId();
+            DB::table(config('session.table', 'sessions'))
+                ->where('user_id', $user->getAuthIdentifier())
+                ->where('id', '!=', $currentSessionId)
+                ->delete();
+        }
 
         // Xác định redirect URL theo vai trò
         $intendedUrl = $request->session()->pull('url.intended');

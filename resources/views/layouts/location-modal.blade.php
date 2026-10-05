@@ -339,12 +339,7 @@
             closeLocationModal();
 
             if (searchStr) {
-                // Update main search inputs if present
-                const heroInput = document.querySelector('input[placeholder*="Bạn muốn ăn gì"]');
-                if (heroInput) heroInput.value = searchStr;
-                
-                const headerInput = document.querySelector('input[placeholder*="Tìm kiếm địa điểm"]');
-                if (headerInput) headerInput.value = searchStr;
+                window.location.href = '/kham-pha?tu_khoa=' + encodeURIComponent(searchStr);
             }
         }
 

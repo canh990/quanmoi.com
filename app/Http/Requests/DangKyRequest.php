@@ -24,7 +24,7 @@ class DangKyRequest extends FormRequest
         return [
             'ho_ten' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255'],
-            'mat_khau' => ['required', 'string', 'min:8'],
+            'mat_khau' => ['required', 'string', 'min:6'],
         ];
     }
 }

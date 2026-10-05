@@ -34,7 +34,11 @@
         <div class="max-w-7xl mx-auto px-4 md:px-6 lg:px-10 py-10 md:py-16">
             <h1 class="text-3xl md:text-4xl font-black text-on-surface mb-3 flex items-center gap-3">
                 <span class="material-symbols-outlined text-primary text-4xl">travel_explore</span>
-                {{ $danhMuc ? 'Khám phá: ' . $danhMuc : 'Khám phá tất cả quán ngon' }}
+                @if(isset($tuKhoa) && $tuKhoa !== '')
+                    Kết quả tìm kiếm: "{{ $tuKhoa }}"
+                @else
+                    {{ $danhMuc ? 'Khám phá: ' . $danhMuc : 'Khám phá tất cả quán ngon' }}
+                @endif
             </h1>
             <p class="text-on-surface-variant text-lg">
                 Tìm kiếm những địa điểm ẩm thực và giải trí tuyệt vời nhất.

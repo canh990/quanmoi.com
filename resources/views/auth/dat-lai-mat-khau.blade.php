@@ -119,8 +119,8 @@
 
         [errorNew, errorConfirm, errorGeneral].forEach(el => { el.classList.add('hidden'); el.textContent = ''; });
 
-        if (!newPw || newPw.length < 8) {
-            errorNew.textContent = 'Mật khẩu phải có ít nhất 8 ký tự.';
+        if (!newPw || newPw.length < 6) {
+            errorNew.textContent = 'Mật khẩu phải có ít nhất 6 ký tự.';
             errorNew.classList.remove('hidden');
             return;
         }

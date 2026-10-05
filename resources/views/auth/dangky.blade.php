@@ -66,7 +66,7 @@
                                 <label class="text-[12px] font-bold text-on-surface-variant uppercase tracking-wider">Mật khẩu</label>
                                 <div class="relative group">
                                     <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-[18px] text-on-surface-variant/50 group-focus-within:text-primary transition-colors">lock</span>
-                                    <input id="mat_khau" name="mat_khau" class="w-full h-12 pl-11 pr-12 rounded-xl border border-outline-variant/60 bg-surface-container-lowest focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition-all text-[15px] placeholder:text-on-surface-variant/40" placeholder="Tối thiểu 8 ký tự" required type="password" minlength="8"/>
+                                    <input id="mat_khau" name="mat_khau" class="w-full h-12 pl-11 pr-12 rounded-xl border border-outline-variant/60 bg-surface-container-lowest focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition-all text-[15px] placeholder:text-on-surface-variant/40" placeholder="Tối thiểu 6 ký tự" required type="password" minlength="6"/>
                                     <button type="button" onclick="togglePw()" class="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-surface-container text-on-surface-variant/50 hover:text-on-surface-variant transition-all">
                                         <span class="material-symbols-outlined text-[20px]" id="pw-toggle-icon">visibility</span>
                                     </button>
