@@ -40,9 +40,14 @@
                     {{ $danhMuc ? 'Khám phá: ' . $danhMuc : 'Khám phá tất cả quán ngon' }}
                 @endif
             </h1>
-            <p class="text-on-surface-variant text-lg">
+            <p class="text-on-surface-variant text-lg mb-6">
                 Tìm kiếm những địa điểm ẩm thực và giải trí tuyệt vời nhất.
             </p>
+
+            {{-- Search Bar --}}
+            <div class="max-w-2xl">
+                <x-search-bar prefix="kp" />
+            </div>
         </div>
     </div>
 

@@ -78,7 +78,7 @@
                         <div class="w-20 h-20 bg-tick-xanh/15 rounded-full flex items-center justify-center animate-success">
                             <span class="material-symbols-outlined text-tick-xanh text-5xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
                         </div>
-                        <h2 class="text-xl font-black text-on-surface">Thành công! 🎉</h2>
+                        <h2 class="text-xl font-black text-on-surface">Thành công!</h2>
                         <p class="text-[14px] text-on-surface-variant leading-relaxed max-w-xs">
                             Mật khẩu của bạn đã được đặt lại thành công. Đang chuyển bạn đến trang đăng nhập...
                         </p>

@@ -14,7 +14,7 @@
                 <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
                     <span class="material-symbols-outlined text-[22px]">search</span>
                 </div>
-                <input id="location-search-keyword" type="text" autocomplete="off" class="flex-grow h-11 px-2 text-[15px] font-medium text-gray-800 bg-transparent outline-none placeholder:text-gray-400" placeholder="Nhập tên quán, món ăn..." />
+                <input id="location-search-keyword" type="text" autocomplete="off" class="flex-grow h-11 px-2 text-[15px] font-medium text-gray-800 bg-transparent outline-none placeholder:text-gray-400" placeholder="Tìm món ăn..." />
                 <button onclick="closeLocationModal()" class="w-9 h-9 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 flex items-center justify-center transition-all flex-shrink-0">
                     <span class="material-symbols-outlined text-[20px]">close</span>
                 </button>
