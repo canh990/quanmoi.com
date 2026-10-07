@@ -92,8 +92,8 @@ class CrudNguoiDungTest extends TestCase
         $response->assertRedirect(route('admin.nguoi-dung.index'));
 
         // Assert soft delete
-        $this->assertSoftDeleted('nguoi_dung', ['id' => $owner->id]);
-        $this->assertSoftDeleted('quan', ['id' => $quan->id]);
+        $this->assertSoftDeleted('nguoi_dung', ['id' => $owner->id], null, 'ngay_xoa');
+        $this->assertSoftDeleted('quan', ['id' => $quan->id], null, 'ngay_xoa');
     }
 
     public function test_admin_can_restore_soft_deleted_user(): void
@@ -107,11 +107,11 @@ class CrudNguoiDungTest extends TestCase
         $user = User::factory()->create();
         $user->delete();
 
-        $this->assertSoftDeleted('nguoi_dung', ['id' => $user->id]);
+        $this->assertSoftDeleted('nguoi_dung', ['id' => $user->id], null, 'ngay_xoa');
 
         $response = $this->actingAs($admin)->post('/admin/nguoi-dung/' . $user->id . '/restore');
         $response->assertRedirect(route('admin.nguoi-dung.index'));
 
-        $this->assertNotSoftDeleted('nguoi_dung', ['id' => $user->id]);
+        $this->assertNotSoftDeleted('nguoi_dung', ['id' => $user->id], null, 'ngay_xoa');
     }
 }

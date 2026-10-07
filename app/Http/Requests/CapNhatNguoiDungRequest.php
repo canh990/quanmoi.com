@@ -35,4 +35,20 @@ class CapNhatNguoiDungRequest extends FormRequest
             ]);
         }
     }
+
+    public function messages(): array
+    {
+        return [
+            'ho_ten.required' => 'Họ và tên người dùng không được để trống.',
+            'ho_ten.max' => 'Họ và tên không được vượt quá 255 ký tự.',
+            'email.required' => 'Địa chỉ email không được để trống.',
+            'email.email' => 'Địa chỉ email không đúng định dạng.',
+            'email.unique' => 'Địa chỉ email này đã được sử dụng.',
+            'so_dien_thoai.max' => 'Số điện thoại không được vượt quá 20 ký tự.',
+            'vai_tro_id.exists' => 'Vai trò được chọn không tồn tại trong hệ thống.',
+            'trang_thai.required' => 'Trạng thái tài khoản không được để trống.',
+            'trang_thai.in' => 'Trạng thái tài khoản được chọn không hợp lệ.',
+            'mat_khau.min' => 'Mật khẩu phải có ít nhất 6 ký tự.',
+        ];
+    }
 }
