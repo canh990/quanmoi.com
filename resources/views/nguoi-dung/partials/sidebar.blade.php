@@ -9,7 +9,7 @@
                 @method('PUT')
                 <input type="hidden" name="ho_ten" value="{{ $user->ho_ten }}">
                 <div class="w-20 h-20 rounded-full overflow-hidden border-2 border-primary-container p-0.5">
-                    <img class="w-full h-full object-cover rounded-full" src="{{ $user->anh_dai_dien ?? 'https://ui-avatars.com/api/?name=' . urlencode($user->ho_ten) . '&background=ffdbcc&color=a04100&bold=true&size=256' }}" />
+                    <img class="w-full h-full object-cover rounded-full" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name={{ urlencode($user->ho_ten) }}&background=ffdbcc&color=a04100&bold=true&size=256';" src="{{ $user->anh_dai_dien ?? 'https://ui-avatars.com/api/?name=' . urlencode($user->ho_ten) . '&background=ffdbcc&color=a04100&bold=true&size=256' }}" />
                 </div>
                 <label for="anh_dai_dien" class="absolute bottom-0 right-0 bg-primary p-1.5 rounded-full text-white shadow-md hover:scale-110 transition-transform cursor-pointer">
                     <span class="material-symbols-outlined text-[18px]">edit</span>

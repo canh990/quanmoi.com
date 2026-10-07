@@ -58,7 +58,7 @@
 
                 <div class="flex items-center gap-2">
                     <a href="{{ route('tai-khoan.index') }}" class="flex items-center gap-2.5 px-3 py-1.5 rounded-full hover:bg-primary/5 transition-all cursor-pointer">
-                        <img alt="Ảnh đại diện" class="w-8 h-8 rounded-full object-cover ring-2 ring-primary-fixed" src="{{ Auth::user()->anh_dai_dien ?? 'https://ui-avatars.com/api/?name=' . urlencode(Auth::user()->ho_ten) . '&background=ffdbcc&color=a04100&bold=true&size=128' }}"/>
+                        <img alt="Ảnh đại diện" class="w-8 h-8 rounded-full object-cover ring-2 ring-primary-fixed" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->ho_ten) }}&background=ffdbcc&color=a04100&bold=true&size=128';" src="{{ Auth::user()->anh_dai_dien ?? 'https://ui-avatars.com/api/?name=' . urlencode(Auth::user()->ho_ten) . '&background=ffdbcc&color=a04100&bold=true&size=128' }}"/>
                         <div class="flex flex-col text-left">
                             <div class="flex items-center gap-1">
                                 <span class="font-bold text-[12px] text-on-surface leading-tight max-w-[100px] truncate">{{ Auth::user()->ho_ten }}</span>
@@ -148,7 +148,7 @@
             <a href="{{ route('tai-khoan.index') }}" class="flex flex-col items-center justify-center flex-1 h-full py-1 text-center group min-w-0">
                 <div class="px-4 py-1 rounded-full transition-all duration-300 {{ request()->is('tai-khoan*') ? 'bg-primary-fixed text-on-primary-fixed' : 'hover:bg-surface-container-high/50' }} inline-block">
                     <div class="relative inline-flex">
-                        <img alt="Ảnh đại diện" class="w-[22px] h-[22px] rounded-full object-cover ring-2 ring-primary-fixed" src="{{ Auth::user()->anh_dai_dien ?? 'https://ui-avatars.com/api/?name=' . urlencode(Auth::user()->ho_ten) . '&background=ffdbcc&color=a04100&bold=true&size=64' }}"/>
+                        <img alt="Ảnh đại diện" class="w-[22px] h-[22px] rounded-full object-cover ring-2 ring-primary-fixed" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->ho_ten) }}&background=ffdbcc&color=a04100&bold=true&size=64';" src="{{ Auth::user()->anh_dai_dien ?? 'https://ui-avatars.com/api/?name=' . urlencode(Auth::user()->ho_ten) . '&background=ffdbcc&color=a04100&bold=true&size=64' }}"/>
                         @if(Auth::user()->da_xac_thuc)
                             <span class="absolute -top-1 -right-1.5 w-2.5 h-2.5 bg-tick-xanh rounded-full border border-white flex items-center justify-center">
                                 <span class="material-symbols-outlined text-white text-[8px]" style="font-variation-settings: 'FILL' 1;">check</span>
