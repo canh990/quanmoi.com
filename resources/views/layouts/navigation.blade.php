@@ -109,8 +109,9 @@
             <path d="M99 48.6H106.8V56.4" stroke="#1a1a1a" stroke-width="5.4" stroke-linecap="round" stroke-linejoin="round" />
         </svg>
         <span class="text-[22px] tracking-tight font-extrabold" style="font-family: 'Raleway', sans-serif; color: #1a1a1a; line-height: 0.88; letter-spacing: -0.05em;">QuanMoi</span>
+    <a href="{{ route('kham-pha') }}" class="p-2 rounded-full hover:bg-surface-container active:scale-90 transition-all text-on-surface-variant hover:text-primary" title="Tìm món ăn">
+        <span class="material-symbols-outlined text-[22px]">search</span>
     </a>
-    <div class="w-8"></div>
 </header>
 
 {{-- Mobile Bottom Navigation --}}
