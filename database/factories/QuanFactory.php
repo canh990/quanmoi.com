@@ -48,10 +48,13 @@ class QuanFactory extends Factory
                 'https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?auto=format&fit=crop&w=600&q=80',
                 'https://images.unsplash.com/photo-1521017432531-fbd92d768814?auto=format&fit=crop&w=600&q=80',
                 'https://images.unsplash.com/photo-1551632436-cbf8dd35adfa?auto=format&fit=crop&w=600&q=80',
-                'https://images.unsplash.com/photo-1549488344-c4b9f0460c38?auto=format&fit=crop&w=600&q=80'
+                'https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&w=600&q=80'
             ]),
             'anh_bia_key' => null,
             'trang_thai' => 'da_duyet',
+            'is_noi_bat' => $this->faker->boolean(40),
+            'is_xac_thuc' => $this->faker->boolean(70),
+            'luot_xem' => $this->faker->numberBetween(150, 15000),
         ];
     }
 }

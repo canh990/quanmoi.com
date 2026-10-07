@@ -17,12 +17,19 @@ class QuanSeeder extends Seeder
         $users = User::all();
         
         if ($users->count() > 0) {
-            Quan::factory()->count(50)->make()->each(function ($quan) use ($users) {
+            Quan::factory()->count(50)->make()->each(function ($quan, $index) use ($users) {
                 $quan->chu_quan_id = $users->random()->id;
+                if ($index < 20) {
+                    $quan->is_noi_bat = true;
+                }
                 $quan->save();
             });
         } else {
-            Quan::factory()->count(50)->create();
+            Quan::factory()->count(50)->create()->each(function ($quan, $index) {
+                if ($index < 20) {
+                    $quan->update(['is_noi_bat' => true]);
+                }
+            });
         }
     }
 }

@@ -40,12 +40,12 @@ class MonAnSeeder extends Seeder
         ];
 
         $foodImages = [
-            'https://images.unsplash.com/photo-1582878826629-29b7ad1cb43f?auto=format&fit=crop&w=600&q=80',
-            'https://images.unsplash.com/photo-1626804475297-41609ea064eb?auto=format&fit=crop&w=600&q=80',
+            'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=600&q=80',
+            'https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?auto=format&fit=crop&w=600&q=80',
             'https://images.unsplash.com/photo-1564834724105-918b73d1b9e0?auto=format&fit=crop&w=600&q=80',
-            'https://images.unsplash.com/photo-1544025162-811114215438?auto=format&fit=crop&w=600&q=80',
+            'https://images.unsplash.com/photo-1529042410759-befb1204b468?auto=format&fit=crop&w=600&q=80',
             'https://images.unsplash.com/photo-1509722747041-616f39b57569?auto=format&fit=crop&w=600&q=80',
-            'https://images.unsplash.com/photo-1518013431119-2d4f2603893c?auto=format&fit=crop&w=600&q=80',
+            'https://images.unsplash.com/photo-1473093295043-cdd812d0e601?auto=format&fit=crop&w=600&q=80',
             'https://images.unsplash.com/photo-1615141982883-c7ad0e69fd62?auto=format&fit=crop&w=600&q=80',
             'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80',
             'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=600&q=80',
@@ -56,7 +56,7 @@ class MonAnSeeder extends Seeder
 
         $drinkImages = [
             'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=600&q=80',
-            'https://images.unsplash.com/photo-1558855567-1a4365318db5?auto=format&fit=crop&w=600&q=80',
+            'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?auto=format&fit=crop&w=600&q=80',
             'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=600&q=80',
             'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=600&q=80',
             'https://images.unsplash.com/photo-1544145945-f90425340c7e?auto=format&fit=crop&w=600&q=80',
