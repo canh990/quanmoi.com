@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Quan;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
@@ -17,7 +18,7 @@ class QuanFactory extends Factory
         
         return [
             'id' => Str::uuid()->toString(),
-            'chu_quan_id' => null, // Leave null or assign a random user later if needed
+            'chu_quan_id' => User::factory(),
             'ten_quan' => $tenQuan,
             'loai_hinh_kinh_doanh' => $loaiHinh,
             'slug' => Str::slug($tenQuan . '-' . uniqid()),

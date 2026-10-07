@@ -27,9 +27,9 @@
     <!-- Featured Post Hero -->
     @if(!request()->has('category') && !request()->has('tag') && $heroBlog)
     <section class="relative w-full h-[480px] rounded-xl overflow-hidden mb-stack-lg group">
-        <div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105" 
-             style="background-image: url('{{ $heroBlog->cover_image ? (Str::startsWith($heroBlog->cover_image, 'http') ? $heroBlog->cover_image : asset('storage/'.$heroBlog->cover_image)) : 'https://placehold.co/1200x500/png' }}')">
-        </div>
+        <img class="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
+             src="{{ $heroBlog->cover_image ? (Str::startsWith($heroBlog->cover_image, 'http') ? $heroBlog->cover_image : asset('storage/'.$heroBlog->cover_image)) : 'https://placehold.co/1200x500/png' }}"
+             alt="{{ $heroBlog->title }}">
         <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
         <div class="absolute bottom-0 left-0 p-8 md:p-12 max-w-3xl">
             @if($heroBlog->category)

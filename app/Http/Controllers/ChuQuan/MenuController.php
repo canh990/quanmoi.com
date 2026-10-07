@@ -22,7 +22,7 @@ class MenuController extends Controller
     {
         $quan = Quan::where('slug', $slug)
             ->where('chu_quan_id', $request->user()->id)
-            ->where('trang_thai', 'da_duyet')
+            ->whereIn('trang_thai', ['chua_duyet', 'da_duyet'])
             ->firstOrFail();
         $this->authorize('update', $quan);
 
@@ -41,7 +41,7 @@ class MenuController extends Controller
     {
         $quan = Quan::where('slug', $slug)
             ->where('chu_quan_id', $request->user()->id)
-            ->where('trang_thai', 'da_duyet')
+            ->whereIn('trang_thai', ['chua_duyet', 'da_duyet'])
             ->firstOrFail();
         $this->authorize('update', $quan);
 
@@ -65,6 +65,7 @@ class MenuController extends Controller
             'menu_categories_array.*.items.*.tmp_id' => 'nullable|integer',
             'menu_categories_array.*.items.*.price' => 'nullable|numeric|min:0|max:999999999',
             'menu_categories_array.*.items.*.description' => 'nullable|string|max:2000',
+            'menu_categories_array.*.items.*.shopeefood_url' => 'nullable|url:http,https|max:2048',
         ]);
 
         $safeMenuCategories = $validatedData['menu_categories_array'];
@@ -111,6 +112,7 @@ class MenuController extends Controller
                             // Ép kiểu float và chống XSS cho description
                             $price = isset($itemData['price']) ? (float) $itemData['price'] : 0;
                             $description = isset($itemData['description']) ? strip_tags(trim($itemData['description'])) : null;
+                            $shopeefoodUrl = isset($itemData['shopeefood_url']) ? trim($itemData['shopeefood_url']) : null;
 
                             $itemId = $itemData['db_id'] ?? null;
                             $tmpId = $itemData['tmp_id'] ?? null;
@@ -124,8 +126,30 @@ class MenuController extends Controller
                                 $image->scaleDown(width: 800);
                                 $encoded = $image->encodeUsingFileExtension('webp', 80);
                                 $fileName = 'menu/'.uniqid('mon_').'.webp';
-                                Storage::disk('r2')->put($fileName, $encoded->toString(), 'public');
-                                $imagePath = $fileName;
+                                $imageContents = $encoded->toString();
+                                $r2Configured = config('filesystems.disks.r2.key')
+                                    && config('filesystems.disks.r2.secret')
+                                    && config('filesystems.disks.r2.bucket')
+                                    && config('filesystems.disks.r2.endpoint');
+
+                                if ($r2Configured) {
+                                    try {
+                                        Storage::disk('r2')->put($fileName, $imageContents, 'public');
+                                        $imagePath = $fileName;
+                                    } catch (\Throwable $e) {
+                                        Log::warning('Menu image upload to R2 failed; using local storage.', [
+                                            'key' => $fileName,
+                                            'error' => $e->getMessage(),
+                                        ]);
+                                    }
+                                }
+
+                                if (! $imagePath) {
+                                    if (! Storage::disk('public')->put($fileName, $imageContents)) {
+                                        throw new \RuntimeException('Không thể lưu ảnh món ăn vào bộ nhớ cục bộ.');
+                                    }
+                                    $imagePath = Storage::disk('public')->url($fileName);
+                                }
                             }
 
                             if ($itemId && MonTrongMenu::where('id', $itemId)->where('danh_muc_id', $danhMuc->id)->exists()) {
@@ -134,6 +158,7 @@ class MenuController extends Controller
                                     'ten_mon' => $itemName,
                                     'gia' => $price,
                                     'mo_ta' => $description,
+                                    'shopeefood_url' => $shopeefoodUrl ?: null,
                                 ];
                                 if ($imagePath) {
                                     $updateData['hinh_anh'] = $imagePath;
@@ -145,6 +170,7 @@ class MenuController extends Controller
                                     'ten_mon' => $itemName,
                                     'gia' => $price,
                                     'mo_ta' => $description,
+                                    'shopeefood_url' => $shopeefoodUrl ?: null,
                                     'hinh_anh' => $imagePath,
                                 ]);
                             }

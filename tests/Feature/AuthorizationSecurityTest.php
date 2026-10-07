@@ -122,14 +122,14 @@ class AuthorizationSecurityTest extends TestCase
             ->assertNotFound();
     }
 
-    public function test_owner_cannot_manage_a_venue_before_admin_approval(): void
+    public function test_owner_can_manage_a_venue_before_admin_approval(): void
     {
         $owner = $this->userWithRole('chu_quan');
         $pendingVenue = $this->quanFor($owner, 'chua_duyet');
 
         $this->actingAs($owner)
             ->get(route('chu-quan.quan.show', $pendingVenue->slug))
-            ->assertNotFound();
+            ->assertOk();
     }
 
     public function test_public_video_api_and_saved_venues_exclude_unapproved_venues(): void

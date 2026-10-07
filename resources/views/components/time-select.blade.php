@@ -79,7 +79,7 @@
                         $h = str_pad($i, 2, '0', STR_PAD_LEFT); 
                         $pos = getClockPos($h, false);
                     @endphp
-                    <button type="button" style="{{ $pos }}" onclick="pickHour('{{ $id }}', '{{ $h }}')" class="absolute w-[34px] h-[34px] p-0 m-0 leading-none rounded-full flex items-center justify-center font-bold text-sm transition-colors {{ $currentHour === $h ? 'bg-primary text-white' : 'text-gray-700 hover:bg-orange-100' }}">
+                    <button type="button" data-clock-position="{{ $pos }}" onclick="pickHour('{{ $id }}', '{{ $h }}')" class="absolute w-[34px] h-[34px] p-0 m-0 leading-none rounded-full flex items-center justify-center font-bold text-sm transition-colors {{ $currentHour === $h ? 'bg-primary text-white' : 'text-gray-700 hover:bg-orange-100' }}">
                         {{ $h }}
                     </button>
                 @endfor
@@ -90,7 +90,7 @@
                 <div class="absolute w-2 h-2 rounded-full bg-primary" style="left: 101px; top: 101px;"></div>
                 @foreach(['00', '05', '10', '15', '20', '25', '30', '35', '40', '45', '50', '55'] as $m)
                     @php $pos = getClockPos($m, true); @endphp
-                    <button type="button" style="{{ $pos }}" onclick="pickMinute('{{ $id }}', '{{ $m }}')" class="absolute w-[34px] h-[34px] p-0 m-0 leading-none rounded-full flex items-center justify-center font-bold text-sm transition-colors {{ $currentMinute === $m ? 'bg-primary text-white' : 'text-gray-700 hover:bg-orange-100' }}">
+                    <button type="button" data-clock-position="{{ $pos }}" onclick="pickMinute('{{ $id }}', '{{ $m }}')" class="absolute w-[34px] h-[34px] p-0 m-0 leading-none rounded-full flex items-center justify-center font-bold text-sm transition-colors {{ $currentMinute === $m ? 'bg-primary text-white' : 'text-gray-700 hover:bg-orange-100' }}">
                         {{ $m }}
                     </button>
                 @endforeach
@@ -105,6 +105,12 @@
 
 @once
 <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('[data-clock-position]').forEach((button) => {
+            button.style.cssText = button.dataset.clockPosition;
+        });
+    });
+
     function openClockPopup(id) {
         // Reset z-index for all time-select wrappers
         document.querySelectorAll('.time-select-wrapper').forEach(el => {

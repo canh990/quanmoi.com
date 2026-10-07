@@ -80,6 +80,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/quan-da-luu/{quanId}/toggle', [\App\Http\Controllers\NguoiDung\QuanDaLuuController::class, 'toggle'])->name('quan-da-luu.toggle');
     Route::put('/tai-khoan', [TaiKhoanController::class, 'update'])->name('tai-khoan.update');
     Route::put('/tai-khoan/mat-khau', [TaiKhoanController::class, 'updatePassword'])->name('tai-khoan.update-password');
+    Route::post('/quan/{slug}/danh-gia', [\App\Http\Controllers\NguoiDung\QuanDanhGiaController::class, 'store'])
+        ->middleware('throttle:10,1')
+        ->name('quan.danh-gia.store');
 
     Route::prefix('thanh-vien/blog')->name('nguoi-dung.blog.')->group(function () {
         Route::get('/', [UserBlogController::class, 'index'])->name('index');

@@ -40,22 +40,26 @@ class DangKyController extends Controller
                 'ho_ten' => $data['ho_ten'],
                 'email' => $data['email'],
                 'mat_khau' => Hash::make($data['mat_khau']),
-                'da_xac_thuc' => false,
-                'ngay_xac_thuc' => null,
+                'da_xac_thuc' => true,
+                'ngay_xac_thuc' => now(),
                 'vai_tro_id' => $roleId,
                 'trang_thai' => 'hoat_dong',
             ]);
+        } else {
+            $user->update([
+                'ho_ten' => $data['ho_ten'],
+                'mat_khau' => Hash::make($data['mat_khau']),
+                'da_xac_thuc' => true,
+                'ngay_xac_thuc' => $user->ngay_xac_thuc ?? now(),
+            ]);
         }
 
-        // Keep the response uniform so this endpoint does not enumerate accounts.
-        if (! $user->trashed() && ! $user->da_xac_thuc && $user->trang_thai === 'hoat_dong') {
-            $this->sendOtp($user);
-        }
+        Auth::login($user);
+        $request->session()->regenerate();
 
         return response()->json([
             'success' => true,
-            'message' => 'Nếu email đủ điều kiện, mã xác thực đã được gửi. Vui lòng kiểm tra hộp thư.',
-            'require_otp' => true,
+            'message' => 'Đăng ký tài khoản thành công!',
         ]);
     }
 

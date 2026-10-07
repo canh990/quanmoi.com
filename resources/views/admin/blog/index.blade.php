@@ -3,6 +3,11 @@
 @section('title', 'Quản Lý Blog - Quán Mới Admin')
 @section('page-title', 'Quản Lý Bài Viết')
 
+@php
+    /** @var \Illuminate\Filesystem\FilesystemAdapter $r2Disk */
+    $r2Disk = Storage::disk('r2');
+@endphp
+
 @section('content')
 <div class="space-y-6">
     <!-- Thống kê -->
@@ -74,7 +79,7 @@
                             <div class="flex items-center gap-3">
                                 <div class="w-12 h-10 rounded overflow-hidden bg-gray-100 shrink-0">
                                     @if($blog->cover_image)
-                                        <img src="{{ Str::startsWith($blog->cover_image, 'http') ? $blog->cover_image : Storage::disk('r2')->url($blog->cover_image) }}" class="w-full h-full object-cover">
+                                        <img src="{{ Str::startsWith($blog->cover_image, 'http') ? $blog->cover_image : $r2Disk->url($blog->cover_image) }}" class="w-full h-full object-cover">
                                     @endif
                                 </div>
                                 <div class="max-w-[200px] truncate">

@@ -41,6 +41,15 @@ php artisan boost:install
 
 Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
 
+## IDE Support
+
+Laravel PHPDocs are generated into `_ide_helper.php` and `_ide_helper_models.php` to improve editor type checking and autocomplete. After changing facades or database models, regenerate them with:
+
+```bash
+php artisan ide-helper:generate
+php artisan ide-helper:models --nowrite
+```
+
 ## Contributing
 
 Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
