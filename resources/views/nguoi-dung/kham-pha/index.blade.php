@@ -40,17 +40,22 @@
                     {{ $danhMuc ? 'Khám phá: ' . $danhMuc : 'Khám phá tất cả quán ngon' }}
                 @endif
             </h1>
-            <p class="text-on-surface-variant text-lg">
+            <p class="text-on-surface-variant text-lg mb-6">
                 Tìm kiếm những địa điểm ẩm thực và giải trí tuyệt vời nhất.
             </p>
+
+            {{-- Search Bar --}}
+            <div class="max-w-2xl">
+                <x-search-bar prefix="kp" />
+            </div>
         </div>
     </div>
 
     {{-- Main Content --}}
     <div class="max-w-7xl mx-auto px-4 md:px-6 lg:px-10 mt-10">
-        
+
         {{-- Sort Bar --}}
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
             <p class="text-on-surface-variant font-medium text-[15px]">Tìm thấy <span class="font-bold text-on-surface">{{ $quans->total() }}</span> kết quả</p>
             <div class="flex items-center gap-3">
                 <label for="sap_xep" class="text-[14px] text-gray-500 font-medium whitespace-nowrap">Sắp xếp:</label>
@@ -62,6 +67,60 @@
                 </select>
             </div>
         </div>
+
+        {{-- Món ăn được tìm thấy --}}
+        @if(isset($monAns) && $monAns->isNotEmpty())
+            <section class="mb-12" id="ket-qua-mon-an">
+                <div class="flex items-end justify-between mb-5">
+                    <div>
+                        <h2 class="text-xl md:text-2xl font-black text-on-surface flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary text-[26px]">restaurant_menu</span>
+                            Món ăn được tìm thấy
+                        </h2>
+                        <p class="text-text-muted text-[14px] mt-1">
+                            {{ $monAns->count() }} món khớp với "<span class="font-semibold text-on-surface">{{ $tuKhoa }}</span>"
+                        </p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+                    @foreach($monAns as $mon)
+                        @php $quanCuaMon = $mon->danhMuc?->quan; @endphp
+                        @continue(!$quanCuaMon)
+                        <a href="{{ route('quan.detail', $quanCuaMon->slug) }}" class="group bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col">
+                            <div class="relative h-32 w-full overflow-hidden bg-gray-100">
+                                <img
+                                    src="{{ $mon->hinh_anh ?: ($quanCuaMon->anh_bia ?: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=400&q=80') }}"
+                                    alt="{{ $mon->ten_mon }}"
+                                    loading="lazy"
+                                    class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                />
+                                @if(!$mon->con_hang)
+                                    <span class="absolute top-2 left-2 bg-black/70 text-white text-[10px] font-bold px-2 py-0.5 rounded-md">Hết món</span>
+                                @endif
+                                @if($mon->gia)
+                                    <span class="absolute bottom-2 right-2 bg-primary text-white text-[12px] font-bold px-2 py-0.5 rounded-lg shadow-sm">
+                                        {{ number_format($mon->gia, 0, ',', '.') }}đ
+                                    </span>
+                                @endif
+                            </div>
+                            <div class="p-3 flex flex-col flex-grow">
+                                <h3 class="font-bold text-[14px] text-on-surface line-clamp-2 group-hover:text-primary transition-colors">{{ $mon->ten_mon }}</h3>
+                                <p class="mt-auto pt-2 text-[12px] text-text-muted flex items-center gap-1 truncate">
+                                    <span class="material-symbols-outlined text-[14px] text-primary">storefront</span>
+                                    <span class="truncate">{{ $quanCuaMon->ten_quan }}</span>
+                                </p>
+                            </div>
+                        </a>
+                    @endforeach
+                </div>
+            </section>
+
+            <h2 class="text-xl md:text-2xl font-black text-on-surface flex items-center gap-2 border-t border-gray-200" style="margin-top: 48px; padding-top: 32px; margin-bottom: 20px;">
+                <span class="material-symbols-outlined text-primary text-[26px]">storefront</span>
+                Quán ăn liên quan
+            </h2>
+        @endif
 
         @if($quans->isEmpty())
             <div class="text-center py-20 bg-white rounded-3xl border border-gray-100 shadow-sm">
