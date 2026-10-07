@@ -57,8 +57,28 @@ class ThongKeController extends Controller
         } else {
             $tuNgayStr = $tuNgayStr ?? now()->subDays(29)->format('Y-m-d');
             $denNgayStr = $denNgayStr ?? now()->format('Y-m-d');
-            $tuNgay = Carbon::parse($tuNgayStr)->startOfDay();
-            $denNgay = Carbon::parse($denNgayStr)->endOfDay();
+
+            try {
+                $tuNgay = Carbon::parse($tuNgayStr)->startOfDay();
+            } catch (\Throwable $e) {
+                $tuNgayStr = now()->subDays(29)->format('Y-m-d');
+                $tuNgay = now()->subDays(29)->startOfDay();
+            }
+
+            try {
+                $denNgay = Carbon::parse($denNgayStr)->endOfDay();
+            } catch (\Throwable $e) {
+                $denNgayStr = now()->format('Y-m-d');
+                $denNgay = now()->endOfDay();
+            }
+
+            if ($tuNgay > $denNgay) {
+                $temp = $tuNgay;
+                $tuNgay = $denNgay->copy()->startOfDay();
+                $denNgay = $temp->copy()->endOfDay();
+                $tuNgayStr = $tuNgay->format('Y-m-d');
+                $denNgayStr = $denNgay->format('Y-m-d');
+            }
         }
 
         // 1. Overview KPIs
@@ -259,8 +279,28 @@ class ThongKeController extends Controller
         } else {
             $tuNgayStr = $tuNgayStr ?? now()->subDays(29)->format('Y-m-d');
             $denNgayStr = $denNgayStr ?? now()->format('Y-m-d');
-            $tuNgay = Carbon::parse($tuNgayStr)->startOfDay();
-            $denNgay = Carbon::parse($denNgayStr)->endOfDay();
+
+            try {
+                $tuNgay = Carbon::parse($tuNgayStr)->startOfDay();
+            } catch (\Throwable $e) {
+                $tuNgayStr = now()->subDays(29)->format('Y-m-d');
+                $tuNgay = now()->subDays(29)->startOfDay();
+            }
+
+            try {
+                $denNgay = Carbon::parse($denNgayStr)->endOfDay();
+            } catch (\Throwable $e) {
+                $denNgayStr = now()->format('Y-m-d');
+                $denNgay = now()->endOfDay();
+            }
+
+            if ($tuNgay > $denNgay) {
+                $temp = $tuNgay;
+                $tuNgay = $denNgay->copy()->startOfDay();
+                $denNgay = $temp->copy()->endOfDay();
+                $tuNgayStr = $tuNgay->format('Y-m-d');
+                $denNgayStr = $denNgay->format('Y-m-d');
+            }
         }
 
         $fileName = 'baocao_thongke_quanmoi_' . $tuNgayStr . '_den_' . $denNgayStr . '.csv';
