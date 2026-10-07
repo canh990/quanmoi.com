@@ -41,7 +41,8 @@
                 <button 
                     type="button" 
                     id="{{ $prefix }}-location-btn" 
-                    class="w-full md:w-auto flex items-center justify-between md:justify-center gap-1.5 px-3.5 md:px-4 py-2 rounded-xl hover:bg-gray-50 text-gray-800 font-bold text-[14px] transition-all cursor-pointer border border-gray-200/90 shadow-2xs"
+                    style="border: 1px solid #e5e7eb;"
+                    class="w-full md:w-auto flex items-center justify-between md:justify-center gap-1.5 px-3.5 md:px-4 py-2 rounded-xl bg-white hover:bg-gray-50 text-gray-800 font-bold text-[14px] transition-all cursor-pointer border border-gray-200 outline-none focus:outline-none"
                 >
                     <span class="material-symbols-outlined text-primary text-[20px] flex-shrink-0" style="color: #a04100; font-variation-settings: 'FILL' 1;">location_on</span>
                     <span id="{{ $prefix }}-location-label" class="truncate max-w-[130px] md:max-w-[140px]">
@@ -89,7 +90,9 @@
                 <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                     {{-- 1. Phở bò (Có badge Đã xem gần đây) --}}
                     <div data-dish="Phở bò" class="suggestion-item flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-[#a04100]/5 border border-gray-100 hover:border-[#a04100]/30 transition-all cursor-pointer group bg-white shadow-2xs">
-                        <div class="w-10 h-10 rounded-xl bg-orange-100/80 text-orange-600 flex items-center justify-center text-xl flex-shrink-0 group-hover:scale-105 transition-transform">🍜</div>
+                        <div class="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 group-hover:scale-105 transition-transform bg-gray-100">
+                            <img src="https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=120&q=80" alt="Phở bò" class="w-full h-full object-cover">
+                        </div>
                         <div class="overflow-hidden min-w-0">
                             <div class="font-bold text-[13px] md:text-[13.5px] text-gray-800 group-hover:text-primary truncate" style="--tw-text-opacity: 1;">Phở bò</div>
                             <div class="text-[10px] text-red-500 font-bold flex items-center gap-1 truncate"><span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>Đã xem gần đây</div>
@@ -98,7 +101,9 @@
 
                     {{-- 2. Cơm tấm --}}
                     <div data-dish="Cơm tấm" class="suggestion-item flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-[#a04100]/5 border border-gray-100 hover:border-[#a04100]/30 transition-all cursor-pointer group bg-white shadow-2xs">
-                        <div class="w-10 h-10 rounded-xl bg-amber-100/80 text-amber-700 flex items-center justify-center text-xl flex-shrink-0 group-hover:scale-105 transition-transform">🍱</div>
+                        <div class="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 group-hover:scale-105 transition-transform bg-gray-100">
+                            <img src="https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?auto=format&fit=crop&w=120&q=80" alt="Cơm tấm" class="w-full h-full object-cover">
+                        </div>
                         <div class="overflow-hidden min-w-0">
                             <div class="font-bold text-[13px] md:text-[13.5px] text-gray-800 group-hover:text-primary truncate">Cơm tấm</div>
                             <div class="text-[11px] text-gray-400 truncate">Bữa chính đậm đà</div>
@@ -107,7 +112,9 @@
 
                     {{-- 3. Trà sữa --}}
                     <div data-dish="Trà sữa" class="suggestion-item flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-[#a04100]/5 border border-gray-100 hover:border-[#a04100]/30 transition-all cursor-pointer group bg-white shadow-2xs">
-                        <div class="w-10 h-10 rounded-xl bg-pink-100/80 text-pink-600 flex items-center justify-center text-xl flex-shrink-0 group-hover:scale-105 transition-transform">🧋</div>
+                        <div class="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 group-hover:scale-105 transition-transform bg-gray-100">
+                            <img src="https://images.unsplash.com/photo-1556679343-c7306c1976bc?auto=format&fit=crop&w=120&q=80" alt="Trà sữa" class="w-full h-full object-cover">
+                        </div>
                         <div class="overflow-hidden min-w-0">
                             <div class="font-bold text-[13px] md:text-[13.5px] text-gray-800 group-hover:text-primary truncate">Trà sữa</div>
                             <div class="text-[11px] text-gray-400 truncate">Giải nhiệt cực đã</div>
@@ -116,7 +123,9 @@
 
                     {{-- 4. Bún đậu mắm tôm --}}
                     <div data-dish="Bún đậu mắm tôm" class="suggestion-item flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-[#a04100]/5 border border-gray-100 hover:border-[#a04100]/30 transition-all cursor-pointer group bg-white shadow-2xs">
-                        <div class="w-10 h-10 rounded-xl bg-emerald-100/80 text-emerald-700 flex items-center justify-center text-xl flex-shrink-0 group-hover:scale-105 transition-transform">🍲</div>
+                        <div class="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 group-hover:scale-105 transition-transform bg-gray-100">
+                            <img src="https://images.unsplash.com/photo-1564834724105-918b73d1b9e0?auto=format&fit=crop&w=80&q=80" alt="Bún đậu mắm tôm" class="w-full h-full object-cover">
+                        </div>
                         <div class="overflow-hidden min-w-0">
                             <div class="font-bold text-[13px] md:text-[13.5px] text-gray-800 group-hover:text-primary truncate">Bún đậu mắm tôm</div>
                             <div class="text-[11px] text-gray-400 truncate">Đậm đà giòn rụm</div>
@@ -125,7 +134,9 @@
 
                     {{-- 5. Cà phê --}}
                     <div data-dish="Cà phê" class="suggestion-item flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-[#a04100]/5 border border-gray-100 hover:border-[#a04100]/30 transition-all cursor-pointer group bg-white shadow-2xs">
-                        <div class="w-10 h-10 rounded-xl bg-yellow-100/80 text-yellow-800 flex items-center justify-center text-xl flex-shrink-0 group-hover:scale-105 transition-transform">☕</div>
+                        <div class="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 group-hover:scale-105 transition-transform bg-gray-100">
+                            <img src="https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=80&q=80" alt="Cà phê" class="w-full h-full object-cover">
+                        </div>
                         <div class="overflow-hidden min-w-0">
                             <div class="font-bold text-[13px] md:text-[13.5px] text-gray-800 group-hover:text-primary truncate">Cà phê</div>
                             <div class="text-[11px] text-gray-400 truncate">Hẹn hò, trò chuyện</div>
@@ -134,7 +145,9 @@
 
                     {{-- 6. Lẩu & Nướng --}}
                     <div data-dish="Lẩu nướng" class="suggestion-item flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-[#a04100]/5 border border-gray-100 hover:border-[#a04100]/30 transition-all cursor-pointer group bg-white shadow-2xs">
-                        <div class="w-10 h-10 rounded-xl bg-red-100/80 text-red-600 flex items-center justify-center text-xl flex-shrink-0 group-hover:scale-105 transition-transform">🥩</div>
+                        <div class="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 group-hover:scale-105 transition-transform bg-gray-100">
+                            <img src="https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=120&q=80" alt="Lẩu & Nướng" class="w-full h-full object-cover">
+                        </div>
                         <div class="overflow-hidden min-w-0">
                             <div class="font-bold text-[13px] md:text-[13.5px] text-gray-800 group-hover:text-primary truncate">Lẩu & Nướng</div>
                             <div class="text-[11px] text-gray-400 truncate">Tiệc tùng tụ tập</div>
@@ -143,7 +156,9 @@
 
                     {{-- 7. Bánh mì --}}
                     <div data-dish="Bánh mì" class="suggestion-item flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-[#a04100]/5 border border-gray-100 hover:border-[#a04100]/30 transition-all cursor-pointer group bg-white shadow-2xs">
-                        <div class="w-10 h-10 rounded-xl bg-amber-100/80 text-amber-800 flex items-center justify-center text-xl flex-shrink-0 group-hover:scale-105 transition-transform">🥖</div>
+                        <div class="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 group-hover:scale-105 transition-transform bg-gray-100">
+                            <img src="https://images.unsplash.com/photo-1509722747041-616f39b57569?auto=format&fit=crop&w=80&q=80" alt="Bánh mì" class="w-full h-full object-cover">
+                        </div>
                         <div class="overflow-hidden min-w-0">
                             <div class="font-bold text-[13px] md:text-[13.5px] text-gray-800 group-hover:text-primary truncate">Bánh mì</div>
                             <div class="text-[11px] text-gray-400 truncate">Nhanh gọn nóng hổi</div>
@@ -152,7 +167,9 @@
 
                     {{-- 8. Đồ ăn vặt --}}
                     <div data-dish="Đồ ăn vặt" class="suggestion-item flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-[#a04100]/5 border border-gray-100 hover:border-[#a04100]/30 transition-all cursor-pointer group bg-white shadow-2xs">
-                        <div class="w-10 h-10 rounded-xl bg-purple-100/80 text-purple-700 flex items-center justify-center text-xl flex-shrink-0 group-hover:scale-105 transition-transform">🍟</div>
+                        <div class="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 group-hover:scale-105 transition-transform bg-gray-100">
+                            <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=120&q=80" alt="Đồ ăn vặt" class="w-full h-full object-cover">
+                        </div>
                         <div class="overflow-hidden min-w-0">
                             <div class="font-bold text-[13px] md:text-[13.5px] text-gray-800 group-hover:text-primary truncate">Đồ ăn vặt</div>
                             <div class="text-[11px] text-gray-400 truncate">Ngon rẻ mê ly</div>
@@ -161,7 +178,9 @@
 
                     {{-- 9. Hải sản --}}
                     <div data-dish="Hải sản" class="suggestion-item flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-[#a04100]/5 border border-gray-100 hover:border-[#a04100]/30 transition-all cursor-pointer group bg-white shadow-2xs">
-                        <div class="w-10 h-10 rounded-xl bg-blue-100/80 text-blue-700 flex items-center justify-center text-xl flex-shrink-0 group-hover:scale-105 transition-transform">🦀</div>
+                        <div class="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 group-hover:scale-105 transition-transform bg-gray-100">
+                            <img src="https://images.unsplash.com/photo-1615141982883-c7ad0e69fd62?auto=format&fit=crop&w=80&q=80" alt="Hải sản" class="w-full h-full object-cover">
+                        </div>
                         <div class="overflow-hidden min-w-0">
                             <div class="font-bold text-[13px] md:text-[13.5px] text-gray-800 group-hover:text-primary truncate">Hải sản</div>
                             <div class="text-[11px] text-gray-400 truncate">Tươi sống thả ga</div>
@@ -454,7 +473,9 @@
                     html += `
                         <a href="/quan/${mon.quan_slug}" class="flex items-center justify-between p-2.5 rounded-xl hover:bg-[#a04100]/5 border border-transparent hover:border-[#a04100]/20 transition-all group">
                             <div class="flex items-center gap-2.5 min-w-0">
-                                <div class="w-8 h-8 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center flex-shrink-0 text-sm">🍲</div>
+                                <div class="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
+                                    <img src="${mon.hinh_anh || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=80&q=80'}" alt="${mon.ten_mon}" class="w-full h-full object-cover">
+                                </div>
                                 <div class="truncate">
                                     <div class="text-[13.5px] font-bold text-gray-800 group-hover:text-primary truncate" style="--tw-text-opacity: 1;">${mon.ten_mon}</div>
                                     <div class="text-[11.5px] text-gray-400 truncate">${mon.ten_quan}</div>
