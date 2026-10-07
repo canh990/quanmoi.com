@@ -14,7 +14,7 @@ services:
     restart: unless-stopped
 
     ports:
-      - "8002:80"
+      - "8000:80"
 
     volumes:
       - .:/var/www/html

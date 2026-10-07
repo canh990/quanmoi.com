@@ -31,12 +31,16 @@ Route::middleware(['auth', 'KiemTraQuyenHan:admin'])->group(function () {
 
     // 3. Quản lý Người dùng
     Route::get('/nguoi-dung', [QuanLyNguoiDungController::class, 'index'])->name('nguoi-dung.index');
+    Route::get('/nguoi-dung/create', [QuanLyNguoiDungController::class, 'create'])->name('nguoi-dung.create');
+    Route::post('/nguoi-dung', [QuanLyNguoiDungController::class, 'store'])->name('nguoi-dung.store');
+    Route::get('/nguoi-dung/{id}', [QuanLyNguoiDungController::class, 'show'])->name('nguoi-dung.show');
     Route::get('/nguoi-dung/{id}/edit', [QuanLyNguoiDungController::class, 'edit'])->name('nguoi-dung.edit');
     Route::put('/nguoi-dung/{id}', [QuanLyNguoiDungController::class, 'update'])->name('nguoi-dung.update');
     Route::delete('/nguoi-dung/{id}', [QuanLyNguoiDungController::class, 'destroy'])->name('nguoi-dung.destroy');
     Route::post('/nguoi-dung/{id}/restore', [QuanLyNguoiDungController::class, 'restore'])->name('nguoi-dung.restore');
     Route::delete('/nguoi-dung/{id}/force', [QuanLyNguoiDungController::class, 'forceDestroy'])->name('nguoi-dung.force-destroy');
     Route::put('/nguoi-dung/{id}/toggle-xac-thuc', [QuanLyNguoiDungController::class, 'toggleXacThuc'])->name('nguoi-dung.toggle-xac-thuc');
+    Route::put('/nguoi-dung/{id}/toggle-trang-thai', [QuanLyNguoiDungController::class, 'toggleTrangThai'])->name('nguoi-dung.toggle-trang-thai');
 
     // 4. Quản lý Vai trò
     Route::get('/vai-tro', [VaiTroController::class, 'index'])->name('vai-tro.index');

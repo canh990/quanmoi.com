@@ -5,6 +5,61 @@
 
 @section('content')
 <div class="space-y-6">
+    {{-- Summary Quick Stats --}}
+    @if(isset($stats))
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+        <div class="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm flex items-center justify-between">
+            <div>
+                <p class="text-xs font-semibold text-gray-500 uppercase">Tổng Người Dùng</p>
+                <p class="text-xl font-bold text-gray-900 mt-1">{{ number_format($stats['total'] ?? 0) }}</p>
+            </div>
+            <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                <span class="material-symbols-outlined text-lg">group</span>
+            </div>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm flex items-center justify-between">
+            <div>
+                <p class="text-xs font-semibold text-gray-500 uppercase">Hoạt Động</p>
+                <p class="text-xl font-bold text-emerald-600 mt-1">{{ number_format($stats['active'] ?? 0) }}</p>
+            </div>
+            <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                <span class="material-symbols-outlined text-lg">check_circle</span>
+            </div>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm flex items-center justify-between">
+            <div>
+                <p class="text-xs font-semibold text-gray-500 uppercase">Bị Khóa</p>
+                <p class="text-xl font-bold text-amber-600 mt-1">{{ number_format($stats['locked'] ?? 0) }}</p>
+            </div>
+            <div class="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                <span class="material-symbols-outlined text-lg">lock</span>
+            </div>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm flex items-center justify-between">
+            <div>
+                <p class="text-xs font-semibold text-gray-500 uppercase">Có Tick Xanh</p>
+                <p class="text-xl font-bold text-blue-600 mt-1">{{ number_format($stats['verified'] ?? 0) }}</p>
+            </div>
+            <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                <span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">verified</span>
+            </div>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm flex items-center justify-between col-span-2 sm:col-span-1">
+            <div>
+                <p class="text-xs font-semibold text-gray-500 uppercase">Đã Xóa (Soft)</p>
+                <p class="text-xl font-bold text-red-600 mt-1">{{ number_format($stats['deleted'] ?? 0) }}</p>
+            </div>
+            <div class="w-9 h-9 rounded-xl bg-red-50 text-red-600 flex items-center justify-center">
+                <span class="material-symbols-outlined text-lg">delete</span>
+            </div>
+        </div>
+    </div>
+    @endif
+
     {{-- Search & Filters --}}
     <div class="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
         <form method="GET" action="{{ route('admin.nguoi-dung.index') }}" class="flex flex-wrap items-center gap-3 w-full md:w-auto">
@@ -37,6 +92,10 @@
                 <span class="material-symbols-outlined text-lg">filter_alt</span> Lọc
             </button>
         </form>
+
+        <a href="{{ route('admin.nguoi-dung.create') }}" class="bg-emerald-600 text-white px-4 py-2 rounded-xl font-bold text-sm hover:bg-emerald-700 transition-all flex items-center gap-1 shrink-0">
+            <span class="material-symbols-outlined text-lg">add</span> Thêm Người Dùng
+        </a>
     </div>
 
     {{-- Users Table --}}
@@ -58,9 +117,11 @@
                         <tr class="hover:bg-gray-50/80 transition-colors {{ $user->trashed() ? 'bg-red-50/30' : '' }}">
                             <td class="py-3.5 px-4">
                                 <div class="flex items-center gap-3">
-                                    <img src="{{ $user->anh_dai_dien ?: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80' }}" class="w-10 h-10 rounded-full object-cover border border-gray-200" alt="" />
+                                    <a href="{{ route('admin.nguoi-dung.show', $user->id) }}" class="shrink-0">
+                                        <img src="{{ $user->anh_dai_dien ?: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80' }}" class="w-10 h-10 rounded-full object-cover border border-gray-200 hover:ring-2 hover:ring-primary transition-all" alt="" />
+                                    </a>
                                     <div>
-                                        <p class="font-bold text-gray-900 flex items-center gap-1">
+                                        <a href="{{ route('admin.nguoi-dung.show', $user->id) }}" class="font-bold text-gray-900 hover:text-primary transition-colors flex items-center gap-1">
                                             {{ $user->ho_ten }}
                                             @if($user->isAdmin())
                                                 <span class="material-symbols-outlined text-amber-500 text-sm" title="Admin">shield</span>
@@ -68,7 +129,7 @@
                                             @if($user->da_xac_thuc)
                                                 <span class="material-symbols-outlined text-blue-500 text-[16px]" title="Có Tick Xanh" style="font-variation-settings: 'FILL' 1;">verified</span>
                                             @endif
-                                        </p>
+                                        </a>
                                         <span class="text-xs text-gray-400">ID: {{ substr($user->id, 0, 8) }}...</span>
                                     </div>
                                 </div>
@@ -79,12 +140,12 @@
                             </td>
                             <td class="py-3.5 px-4">
                                 <span class="px-2.5 py-1 rounded-full text-xs font-bold {{ $user->isAdmin() ? 'bg-amber-100 text-amber-800' : ($user->vaiTro?->ten === 'chu_quan' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-700') }}">
-                                    {{ $user->vaiTro?->ten ?: ($user->isAdmin() ? 'admin' : 'nguoi_dung') }}
+                                    {{ $user->ten_vai_tro_hien_thi }}
                                 </span>
                             </td>
                             <td class="py-3.5 px-4">
                                 @if($user->trashed())
-                                    <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700">Đã xóa (Soft Deleted)</span>
+                                    <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700">Đã xóa (Soft)</span>
                                 @elseif($user->trang_thai === 'bi_khoa')
                                     <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-gray-200 text-gray-700">Bị khóa</span>
                                 @else
@@ -95,8 +156,23 @@
                                 <span class="font-bold text-gray-700">{{ $user->quan->count() }}</span>
                             </td>
                             <td class="py-3.5 px-4 text-right">
-                                <div class="flex items-center justify-end gap-2">
+                                <div class="flex items-center justify-end gap-1.5">
+                                    {{-- View detail --}}
+                                    <a href="{{ route('admin.nguoi-dung.show', $user->id) }}" class="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title="Xem chi tiết">
+                                        <span class="material-symbols-outlined text-lg">visibility</span>
+                                    </a>
+
                                     @if(!$user->trashed())
+                                        {{-- Toggle Status (Lock/Unlock) --}}
+                                        <form action="{{ route('admin.nguoi-dung.toggle-trang-thai', $user->id) }}" method="POST" class="inline">
+                                            @csrf
+                                            @method('PUT')
+                                            <button type="submit" class="p-2 rounded-lg transition-all {{ $user->trang_thai === 'hoat_dong' ? 'text-amber-600 hover:bg-amber-50' : 'text-emerald-600 hover:bg-emerald-50' }}" title="{{ $user->trang_thai === 'hoat_dong' ? 'Khóa tài khoản' : 'Mở khóa tài khoản' }}">
+                                                <span class="material-symbols-outlined text-lg">{{ $user->trang_thai === 'hoat_dong' ? 'lock' : 'lock_open' }}</span>
+                                            </button>
+                                        </form>
+
+                                        {{-- Toggle Verified (Tick Xanh) --}}
                                         <form action="{{ route('admin.nguoi-dung.toggle-xac-thuc', $user->id) }}" method="POST" class="inline">
                                             @csrf
                                             @method('PUT')

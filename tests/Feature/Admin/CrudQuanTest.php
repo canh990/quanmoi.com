@@ -97,7 +97,7 @@ class CrudQuanTest extends TestCase
         $response = $this->actingAs($admin)->delete('/admin/quan/' . $quan->id);
         $response->assertRedirect(route('admin.quan.index'));
 
-        $this->assertSoftDeleted('quan', ['id' => $quan->id]);
+        $this->assertSoftDeleted('quan', ['id' => $quan->id], null, 'ngay_xoa');
     }
 
     public function test_admin_can_restore_soft_deleted_quan(): void
@@ -120,11 +120,11 @@ class CrudQuanTest extends TestCase
         ]);
         $quan->delete();
 
-        $this->assertSoftDeleted('quan', ['id' => $quan->id]);
+        $this->assertSoftDeleted('quan', ['id' => $quan->id], null, 'ngay_xoa');
 
         $response = $this->actingAs($admin)->post('/admin/quan/' . $quan->id . '/restore');
         $response->assertRedirect(route('admin.quan.index'));
 
-        $this->assertNotSoftDeleted('quan', ['id' => $quan->id]);
+        $this->assertNotSoftDeleted('quan', ['id' => $quan->id], null, 'ngay_xoa');
     }
 }

@@ -1,14 +1,8 @@
 FROM php:8.4-apache
 
-# =====================================
-# 1. Install system dependencies
-# =====================================
-
 RUN apt-get update && apt-get install -y \
     git \
     unzip \
-    curl \
-    default-mysql-client \
     libpng-dev \
     libjpeg-dev \
     libfreetype6-dev \
@@ -16,13 +10,9 @@ RUN apt-get update && apt-get install -y \
     libzip-dev \
     libicu-dev \
     libonig-dev \
-    libxml2-dev \
+    libsqlite3-dev \
+    default-mysql-client \
     && rm -rf /var/lib/apt/lists/*
-
-
-# =====================================
-# 2. Configure PHP extensions
-# =====================================
 
 RUN docker-php-ext-configure gd \
         --with-freetype \
@@ -30,6 +20,7 @@ RUN docker-php-ext-configure gd \
         --with-webp \
     && docker-php-ext-install \
         pdo_mysql \
+        pdo_sqlite \
         mbstring \
         exif \
         pcntl \
@@ -39,33 +30,9 @@ RUN docker-php-ext-configure gd \
         intl \
         opcache
 
-
-# =====================================
-# 3. Disable MySQL client SSL
-#    Laravel schema loader cần mysql client
-# =====================================
-
-RUN printf '[client]\nssl=0\n' > /etc/mysql/my.cnf
-
-
-# =====================================
-# 4. Enable Apache mod_rewrite
-# =====================================
-
 RUN a2enmod rewrite
 
-
-# =====================================
-# 5. Install Composer
-# =====================================
-
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
-
-
-# =====================================
-# 6. Configure Apache Document Root
-#    Laravel public/
-# =====================================
 
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
 
@@ -75,48 +42,21 @@ RUN sed -ri \
     /etc/apache2/apache2.conf \
     /etc/apache2/conf-available/*.conf
 
-
-# =====================================
-# 7. Set working directory
-# =====================================
-
 WORKDIR /var/www/html
 
-
-# =====================================
-# 8. Copy Laravel project
-# =====================================
-
-COPY . .
-
-
-# =====================================
-# 9. Install PHP dependencies
-# =====================================
+COPY composer.json composer.lock ./
 
 RUN composer install \
     --no-interaction \
     --prefer-dist \
-    --optimize-autoloader
+    --optimize-autoloader \
+    --no-scripts
 
-
-# =====================================
-# 10. Set permissions
-# =====================================
+COPY . .
 
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 775 storage bootstrap/cache
 
-
-# =====================================
-# 11. Expose Apache
-# =====================================
-
 EXPOSE 80
-
-
-# =====================================
-# 12. Start Apache
-# =====================================
 
 CMD ["apache2-foreground"]

@@ -92,8 +92,8 @@ class CrudNguoiDungTest extends TestCase
         $response->assertRedirect(route('admin.nguoi-dung.index'));
 
         // Assert soft delete
-        $this->assertSoftDeleted('nguoi_dung', ['id' => $owner->id]);
-        $this->assertSoftDeleted('quan', ['id' => $quan->id]);
+        $this->assertSoftDeleted('nguoi_dung', ['id' => $owner->id], null, 'ngay_xoa');
+        $this->assertSoftDeleted('quan', ['id' => $quan->id], null, 'ngay_xoa');
     }
 
     public function test_admin_can_restore_soft_deleted_user(): void
@@ -107,11 +107,51 @@ class CrudNguoiDungTest extends TestCase
         $user = User::factory()->create();
         $user->delete();
 
-        $this->assertSoftDeleted('nguoi_dung', ['id' => $user->id]);
+        $this->assertSoftDeleted('nguoi_dung', ['id' => $user->id], null, 'ngay_xoa');
 
         $response = $this->actingAs($admin)->post('/admin/nguoi-dung/' . $user->id . '/restore');
         $response->assertRedirect(route('admin.nguoi-dung.index'));
 
-        $this->assertNotSoftDeleted('nguoi_dung', ['id' => $user->id]);
+        $this->assertNotSoftDeleted('nguoi_dung', ['id' => $user->id], null, 'ngay_xoa');
+    }
+
+    public function test_admin_can_view_user_details_page(): void
+    {
+        $adminRole = VaiTro::where('ten', 'admin')->first();
+        $admin = User::factory()->create([
+            'email' => 'admin@quanmoi.com',
+            'vai_tro_id' => $adminRole?->id,
+        ]);
+
+        $targetUser = User::factory()->create([
+            'ho_ten' => 'Target User Test',
+            'email' => 'target@example.com',
+        ]);
+
+        $response = $this->actingAs($admin)->get('/admin/nguoi-dung/' . $targetUser->id);
+        $response->assertStatus(200);
+        $response->assertSee('Target User Test');
+        $response->assertSee('target@example.com');
+    }
+
+    public function test_admin_can_toggle_user_status(): void
+    {
+        $adminRole = VaiTro::where('ten', 'admin')->first();
+        $admin = User::factory()->create([
+            'email' => 'admin@quanmoi.com',
+            'vai_tro_id' => $adminRole?->id,
+        ]);
+
+        $targetUser = User::factory()->create([
+            'trang_thai' => 'hoat_dong',
+        ]);
+
+        $response = $this->actingAs($admin)->put('/admin/nguoi-dung/' . $targetUser->id . '/toggle-trang-thai');
+        $response->assertSessionHas('success');
+
+        $this->assertDatabaseHas('nguoi_dung', [
+            'id' => $targetUser->id,
+            'trang_thai' => 'bi_khoa',
+        ]);
     }
 }
