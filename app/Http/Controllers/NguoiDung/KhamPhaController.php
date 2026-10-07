@@ -51,8 +51,29 @@ class KhamPhaController extends Controller
         $quans = $query->paginate(12);
         $quans->appends($request->all());
 
+        // Tìm các món ăn khớp với từ khóa (chỉ hiển thị ở trang đầu)
+        $monAns = collect();
+        if ($tuKhoa !== '' && $quans->currentPage() === 1) {
+            $monAns = \App\Models\MonTrongMenu::query()
+                ->where('ten_mon', 'like', '%' . $tuKhoa . '%')
+                ->whereHas('danhMuc.quan', function ($q) use ($tinhThanhId, $quanHuyenId) {
+                    $q->where('trang_thai', 'da_duyet');
+                    if (!empty($tinhThanhId)) {
+                        $q->where('tinh_thanh_id', $tinhThanhId);
+                    }
+                    if (!empty($quanHuyenId)) {
+                        $q->where('quan_huyen_id', $quanHuyenId);
+                    }
+                })
+                ->with(['danhMuc.quan:id,slug,ten_quan,ten_quan_huyen,ten_tinh_thanh,anh_bia'])
+                ->orderByDesc('con_hang')
+                ->take(12)
+                ->get();
+        }
+
         return view('nguoi-dung.kham-pha.index', [
             'quans'       => $quans,
+            'monAns'      => $monAns,
             'danhMuc'     => $danhMuc,
             'tuKhoa'      => $tuKhoa,
             'tinhThanhId' => $tinhThanhId,

@@ -38,7 +38,18 @@ class QuanFactory extends Factory
             'gio_dong_cua' => '22:00',
             'gia_nho_nhat' => $this->faker->numberBetween(20000, 50000),
             'gia_lon_nhat' => $this->faker->numberBetween(100000, 500000),
-            'anh_bia' => 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=600&q=80',
+            'anh_bia' => $this->faker->randomElement([
+                'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=600&q=80',
+                'https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=600&q=80',
+                'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80',
+                'https://images.unsplash.com/photo-1525610553991-2bede1a236e2?auto=format&fit=crop&w=600&q=80',
+                'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=600&q=80',
+                'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=600&q=80',
+                'https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?auto=format&fit=crop&w=600&q=80',
+                'https://images.unsplash.com/photo-1521017432531-fbd92d768814?auto=format&fit=crop&w=600&q=80',
+                'https://images.unsplash.com/photo-1551632436-cbf8dd35adfa?auto=format&fit=crop&w=600&q=80',
+                'https://images.unsplash.com/photo-1549488344-c4b9f0460c38?auto=format&fit=crop&w=600&q=80'
+            ]),
             'anh_bia_key' => null,
             'trang_thai' => 'da_duyet',
         ];
