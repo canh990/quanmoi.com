@@ -150,7 +150,7 @@ class HinhAnhQuanController extends Controller
     private function storeLocally(string $path, string $contents): string
     {
         if (! Storage::disk('public')->put($path, $contents)) {
-            throw new \RuntimeException('Unable to save venue gallery image to local storage.');
+            throw new \RuntimeException('Không thể lưu ảnh bộ sưu tập quán vào bộ lưu trữ cục bộ.');
         }
 
         return '/media/venue/'.$path;

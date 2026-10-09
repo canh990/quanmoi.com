@@ -66,6 +66,12 @@ class MenuController extends Controller
             'menu_categories_array.*.items.*.price' => 'nullable|numeric|min:0|max:999999999',
             'menu_categories_array.*.items.*.description' => 'nullable|string|max:2000',
             'menu_categories_array.*.items.*.shopeefood_url' => 'nullable|url:http,https|max:2048',
+        ], [
+            'menu_categories_array.*.name.required' => 'Tên danh mục thực đơn không được để trống.',
+            'menu_categories_array.*.items.*.name.required' => 'Tên món ăn không được để trống.',
+            'menu_categories_array.*.items.*.price.numeric' => 'Giá món ăn phải là định dạng số.',
+            'menu_categories_array.*.items.*.price.min' => 'Giá món ăn phải lớn hơn hoặc bằng 0.',
+            'menu_categories_array.*.items.*.shopeefood_url.url' => 'Đường dẫn ShopeeFood của món ăn không hợp lệ.',
         ]);
 
         $safeMenuCategories = $validatedData['menu_categories_array'];

@@ -225,6 +225,17 @@ class QuanController extends Controller
             'tiktok_url' => 'nullable|url|max:255',
             'shopeefood_url' => 'nullable|url:http,https|max:500',
             'anh_bia' => 'nullable|image|max:5120',
+        ], [
+            'so_dien_thoai.required' => 'Số điện thoại không được để trống.',
+            'so_dien_thoai.max' => 'Số điện thoại không được vượt quá 20 ký tự.',
+            'gio_mo_cua.required' => 'Vui lòng chọn giờ mở cửa.',
+            'gio_dong_cua.required' => 'Vui lòng chọn giờ đóng cửa.',
+            'gia_nho_nhat.numeric' => 'Giá nhỏ nhất phải là định dạng số.',
+            'gia_lon_nhat.numeric' => 'Giá lớn nhất phải là định dạng số.',
+            'tiktok_url.url' => 'Đường dẫn TikTok không hợp lệ.',
+            'shopeefood_url.url' => 'Đường dẫn ShopeeFood không hợp lệ.',
+            'anh_bia.image' => 'Ảnh bìa phải là định dạng hình ảnh.',
+            'anh_bia.max' => 'Dung lượng ảnh bìa không được vượt quá 5MB.',
         ]);
 
         // Upload ảnh bìa mới nếu có
