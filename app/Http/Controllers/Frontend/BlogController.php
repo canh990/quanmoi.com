@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Blog;
 use App\Models\BlogCategory;
 use App\Models\BlogTag;
+use App\Models\User;
 use App\Services\BlogService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class BlogController extends Controller
 {
@@ -71,7 +73,8 @@ class BlogController extends Controller
 
         // If not published, only owner or admin can view
         if ($blog->status !== 'published') {
-            if (!auth()->check() || (!auth()->user()->isAdmin() && auth()->id() !== $blog->user_id)) {
+            $user = Auth::user();
+            if (! $user instanceof User || (! $user->isAdmin() && Auth::id() !== $blog->user_id)) {
                 abort(404);
             }
         } else {

@@ -49,7 +49,7 @@
                         @forelse($quanDaLuu as $quan)
                         <article id="quan-card-desktop-{{ $quan->id }}" class="bg-surface-card rounded-xl overflow-hidden tonal-elevation group cursor-pointer transition-transform hover:-translate-y-1">
                             <div class="relative aspect-[4/3] overflow-hidden">
-                                <img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="{{ $quan->hinhAnh->first()->url ?? ($quan->anh_bia ?? 'https://placehold.co/600x400?text=No+Image') }}"/>
+                                <img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="{{ $quan->hinhAnh->first()->url ?? ($quan->anh_bia_url ?? 'https://placehold.co/600x400?text=No+Image') }}"/>
                                 <button type="button" onclick="toggleSave(this, '{{ $quan->id }}')" class="absolute top-3 right-3 w-10 h-10 bg-white/80 backdrop-blur-md rounded-full flex items-center justify-center text-red-500 haptic-button z-10 transition-colors">
                                     <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
                                 </button>
@@ -92,7 +92,7 @@
                         @forelse($quanDaLuu as $quan)
                         <div id="quan-card-mobile-{{ $quan->id }}" class="bg-surface-card rounded-xl shadow-[0px_4px_20px_rgba(0,0,0,0.05)] flex p-stack-sm gap-stack-md active:scale-95 transition-transform duration-200 cursor-pointer overflow-hidden border border-transparent hover:border-primary/10">
                             <div class="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 relative">
-                                <img class="w-full h-full object-cover" src="{{ $quan->hinhAnh->first()->url ?? ($quan->anh_bia ?? 'https://placehold.co/600x400?text=No+Image') }}"/>
+                                <img class="w-full h-full object-cover" src="{{ $quan->hinhAnh->first()->url ?? ($quan->anh_bia_url ?? 'https://placehold.co/600x400?text=No+Image') }}"/>
                                 <a href="{{ route('quan.detail', $quan->slug) }}" class="absolute inset-0 z-10"></a>
                             </div>
                             <div class="flex-grow py-1 flex flex-col justify-between relative">

@@ -261,7 +261,7 @@
                                 <span class="font-extrabold text-indigo-600">{{ number_format($reg->total_quan) }} quán</span>
                             </div>
                             <div class="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
-                                <div class="h-full rounded-full bg-indigo-600 transition-all duration-500" style="width: {{ $percent }}%"></div>
+                                <div class="h-full rounded-full bg-indigo-600 transition-all duration-500" data-width-percent="{{ $percent }}"></div>
                             </div>
                         </div>
                     @empty
@@ -383,12 +383,14 @@
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script type="application/json" id="admin-statistics-chart-data">@json($chartData)</script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const labels = @json($chartData['labels']);
-        const revenueData = @json($chartData['revenue']);
-        const quanData = @json($chartData['quan']);
-        const userData = @json($chartData['users']);
+        document.querySelectorAll('[data-width-percent]').forEach((bar) => {
+            bar.style.width = `${bar.dataset.widthPercent}%`;
+        });
+        const { labels, revenue: revenueData, quan: quanData, users: userData } =
+            JSON.parse(document.getElementById('admin-statistics-chart-data').textContent);
 
         // 1. Chart: Revenue Trend
         const ctxRev = document.getElementById('revenueTrendChart')?.getContext('2d');
@@ -494,4 +496,3 @@
     });
 </script>
 @endpush
-

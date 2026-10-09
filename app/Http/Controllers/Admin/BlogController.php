@@ -7,6 +7,7 @@ use App\Models\Blog;
 use App\Models\BlogModerationLog;
 use App\Notifications\BlogStatusUpdatedNotification;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -78,7 +79,7 @@ class BlogController extends Controller
                 $status = 'scheduled';
             } else {
                 if (!$blog->published_at) {
-                    $blog->published_at = now();
+                    $blog->published_at = Carbon::now();
                 }
                 $blog->published_by = Auth::id();
                 $blog->approved_by = Auth::id();

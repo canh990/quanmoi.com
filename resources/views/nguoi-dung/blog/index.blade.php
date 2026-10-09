@@ -1,6 +1,11 @@
 @extends('layouts.app')
 @section('title', 'Bài viết của tôi - Quán Mới')
 
+@php
+    /** @var \Illuminate\Filesystem\FilesystemAdapter $r2Disk */
+    $r2Disk = Storage::disk('r2');
+@endphp
+
 @section('content')
 <main class="max-w-[1200px] mx-auto px-container-margin py-stack-lg min-h-[819px] pt-6">
     @if(session('success'))

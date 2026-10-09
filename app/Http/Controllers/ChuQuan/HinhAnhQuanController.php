@@ -14,6 +14,21 @@ use Intervention\Image\ImageManager;
 
 class HinhAnhQuanController extends Controller
 {
+    /** Serve locally stored public venue images without relying on a cross-platform storage symlink. */
+    public function localImage(string $path)
+    {
+        abort_unless(
+            Str::startsWith($path, ['quan/gallery/', 'quan/anh-bia/']) && ! str_contains($path, '..'),
+            404
+        );
+
+        abort_unless(Storage::disk('public')->exists($path), 404);
+
+        return Storage::disk('public')->response($path, basename($path), [
+            'Cache-Control' => 'public, max-age=86400',
+        ]);
+    }
+
     /**
      * Upload bộ sưu tập hình ảnh quán lên Cloudflare R2.
      * Lưu CDN URL vào MySQL (duong_dan) và object key để xóa sau này (object_key).
@@ -46,12 +61,33 @@ class HinhAnhQuanController extends Controller
                 $encoded = $image->encodeUsingFileExtension('webp', 80);
 
                 $objectKey = 'quan/gallery/'.$quan->id.'/'.$filename;
-                Storage::disk('r2')->put($objectKey, (string) $encoded);
+                $storedKey = $objectKey;
+                $r2Configured = config('filesystems.disks.r2.key')
+                    && config('filesystems.disks.r2.secret')
+                    && config('filesystems.disks.r2.bucket')
+                    && config('filesystems.disks.r2.endpoint');
+
+                if ($r2Configured) {
+                    try {
+                        Storage::disk('r2')->put($objectKey, (string) $encoded);
+                        $imageUrl = Storage::disk('r2')->url($objectKey);
+                    } catch (\Throwable $e) {
+                        Log::warning('Venue gallery upload to R2 failed; using local storage.', [
+                            'key' => $objectKey,
+                            'error' => $e->getMessage(),
+                        ]);
+                        $imageUrl = $this->storeLocally($objectKey, (string) $encoded);
+                        $storedKey = 'local:'.$objectKey;
+                    }
+                } else {
+                    $imageUrl = $this->storeLocally($objectKey, (string) $encoded);
+                    $storedKey = 'local:'.$objectKey;
+                }
 
                 $img = HinhAnhQuan::create([
                     'quan_id' => $quan->id,
-                    'duong_dan' => Storage::disk('r2')->url($objectKey), // CDN URL
-                    'object_key' => $objectKey,                           // R2 key để xóa
+                    'duong_dan' => $imageUrl,
+                    'object_key' => $storedKey,
                     'tieu_de' => $file->getClientOriginalName(),
                 ]);
 
@@ -85,7 +121,9 @@ class HinhAnhQuanController extends Controller
         $this->authorize('update', $img->quan);
 
         // Xóa file trên R2 (nếu có object_key)
-        if ($img->object_key && Str::startsWith($img->object_key, 'quan/gallery/')) {
+        if ($img->object_key && Str::startsWith($img->object_key, 'local:quan/gallery/')) {
+            Storage::disk('public')->delete(Str::after($img->object_key, 'local:'));
+        } elseif ($img->object_key && Str::startsWith($img->object_key, 'quan/gallery/')) {
             try {
                 Storage::disk('r2')->delete($img->object_key);
             } catch (\Exception $e) {
@@ -107,5 +145,14 @@ class HinhAnhQuanController extends Controller
             'success' => true,
             'message' => 'Đã xóa ảnh thành công.',
         ]);
+    }
+
+    private function storeLocally(string $path, string $contents): string
+    {
+        if (! Storage::disk('public')->put($path, $contents)) {
+            throw new \RuntimeException('Unable to save venue gallery image to local storage.');
+        }
+
+        return '/media/venue/'.$path;
     }
 }

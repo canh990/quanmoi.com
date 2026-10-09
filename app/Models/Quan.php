@@ -40,6 +40,8 @@ class Quan extends Model
         'gio_dong_cua',
         'gia_nho_nhat',
         'gia_lon_nhat',
+        'tiktok_url',
+        'shopeefood_url',
         'anh_bia',
         'anh_bia_key',
         'trang_thai',
@@ -127,6 +129,78 @@ class Quan extends Model
         'is_xac_thuc' => 'boolean',
     ];
 
+    protected $appends = ['anh_bia_url'];
+
+    /** Resolve old storage URLs to project-local copies usable in Docker. */
+    public function getAnhBiaUrlAttribute(): ?string
+    {
+        $value = $this->attributes['anh_bia'] ?? null;
+        if (! is_string($value) || trim($value) === '') {
+            return null;
+        }
+
+        $path = parse_url($value, PHP_URL_PATH) ?: $value;
+        $path = ltrim(str_replace('\\', '/', $path), '/');
+        $path = preg_replace('#^(?:storage|public)/#', '', $path);
+
+        if (str_starts_with($value, 'http://') || str_starts_with($value, 'https://')) {
+            $urlPath = ltrim(parse_url($value, PHP_URL_PATH) ?: '', '/');
+            $localPath = preg_replace('#^storage/#', '', $urlPath);
+            if ($localPath && is_file(public_path('uploads/'.$localPath))) {
+                return asset('uploads/'.$localPath);
+            }
+
+            return $value;
+        }
+
+        if (is_file(public_path('uploads/'.$path))) {
+            return asset('uploads/'.$path);
+        }
+
+        return asset('storage/'.$path);
+    }
+
+    public function delete()
+    {
+        if ($this->trashed()) {
+            return false;
+        }
+
+        $deletedAt = now();
+        $result = parent::delete();
+
+        if ($result) {
+            $this->newQuery()->withoutGlobalScopes()->whereKey($this->getKey())->update([
+                'ngay_xoa' => $deletedAt,
+                'deleted_at' => $deletedAt,
+            ]);
+            $this->ngay_xoa = $deletedAt;
+            $this->deleted_at = $deletedAt;
+        }
+
+        return $result;
+    }
+
+    public function restore()
+    {
+        if (! $this->trashed()) {
+            return false;
+        }
+
+        $restored = parent::restore();
+
+        if ($restored) {
+            $this->newQuery()->withoutGlobalScopes()->whereKey($this->getKey())->update([
+                'ngay_xoa' => null,
+                'deleted_at' => null,
+            ]);
+            $this->ngay_xoa = null;
+            $this->deleted_at = null;
+        }
+
+        return $restored;
+    }
+
     public function chuQuan()
     {
         return $this->belongsTo(User::class, 'chu_quan_id');
@@ -150,5 +224,10 @@ class Quan extends Model
     public function videos()
     {
         return $this->hasMany(VideoShort::class, 'quan_id');
+    }
+
+    public function danhGia()
+    {
+        return $this->hasMany(QuanDanhGia::class, 'quan_id');
     }
 }

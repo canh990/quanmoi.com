@@ -11,6 +11,7 @@ use App\Http\Requests\UpdateBlogRequest;
 use App\Services\BlogService;
 use App\Models\BlogModerationLog;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
@@ -233,7 +234,7 @@ class BlogController extends Controller
         }
         
         if ($blog->status === 'pending' && $oldStatus !== 'pending') {
-            $blog->last_submitted_at = now();
+            $blog->last_submitted_at = Carbon::now();
             $blog->save();
             BlogModerationLog::create([
                 'blog_id' => $blog->id,

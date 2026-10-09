@@ -39,6 +39,31 @@ class MonAnSeeder extends Seeder
             ]
         ];
 
+        $foodImages = [
+            'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=600&q=80',
+            'https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?auto=format&fit=crop&w=600&q=80',
+            'https://images.unsplash.com/photo-1564834724105-918b73d1b9e0?auto=format&fit=crop&w=600&q=80',
+            'https://images.unsplash.com/photo-1529042410759-befb1204b468?auto=format&fit=crop&w=600&q=80',
+            'https://images.unsplash.com/photo-1509722747041-616f39b57569?auto=format&fit=crop&w=600&q=80',
+            'https://images.unsplash.com/photo-1473093295043-cdd812d0e601?auto=format&fit=crop&w=600&q=80',
+            'https://images.unsplash.com/photo-1615141982883-c7ad0e69fd62?auto=format&fit=crop&w=600&q=80',
+            'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80',
+            'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=600&q=80',
+            'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=600&q=80',
+            'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?auto=format&fit=crop&w=600&q=80',
+            'https://images.unsplash.com/photo-1565958011703-44f9829ba187?auto=format&fit=crop&w=600&q=80',
+        ];
+
+        $drinkImages = [
+            'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=600&q=80',
+            'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?auto=format&fit=crop&w=600&q=80',
+            'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=600&q=80',
+            'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=600&q=80',
+            'https://images.unsplash.com/photo-1544145945-f90425340c7e?auto=format&fit=crop&w=600&q=80',
+            'https://images.unsplash.com/photo-1497935586351-b67a49e012bf?auto=format&fit=crop&w=600&q=80',
+            'https://images.unsplash.com/photo-1600271886742-f049cd451bba?auto=format&fit=crop&w=600&q=80',
+        ];
+
         foreach ($quans as $quan) {
             $loaiHinh = $quan->loai_hinh_kinh_doanh ?? 'Nhà hàng';
             
@@ -64,7 +89,7 @@ class MonAnSeeder extends Seeder
                     'ten_mon' => $tenMon,
                     'mo_ta' => 'Hương vị thơm ngon, chuẩn vị truyền thống.',
                     'gia' => rand(15, 150) * 1000, // Giá từ 15k đến 150k
-                    'hinh_anh' => 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80',
+                    'hinh_anh' => collect($foodImages)->random(),
                     'con_hang' => true,
                 ]);
             }
@@ -88,7 +113,7 @@ class MonAnSeeder extends Seeder
                         'ten_mon' => $tenMon,
                         'mo_ta' => 'Nước uống mát lạnh.',
                         'gia' => rand(10, 30) * 1000,
-                        'hinh_anh' => 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=600&q=80',
+                        'hinh_anh' => collect($drinkImages)->random(),
                         'con_hang' => true,
                     ]);
                 }

@@ -116,7 +116,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="video-container">
             @foreach($videos as $video)
             @php
-                $thumbnail = $video->thumbnail_url ?: ($video->quan?->anh_bia ?: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80');
+                $thumbnail = $video->thumbnail_url ?: ($video->quan?->anh_bia_url ?: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80');
             @endphp
 
             <div class="video-item bg-white rounded-2xl shadow-sm hover:shadow-lg border border-gray-200 overflow-hidden cursor-pointer group flex flex-col h-[480px] transition-all duration-300 hover:-translate-y-1"

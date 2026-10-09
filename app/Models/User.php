@@ -56,6 +56,47 @@ class User extends Authenticatable
         ];
     }
 
+    public function delete()
+    {
+        if ($this->trashed()) {
+            return false;
+        }
+
+        $deletedAt = now();
+        $result = parent::delete();
+
+        if ($result) {
+            $this->newQuery()->withoutGlobalScopes()->whereKey($this->getKey())->update([
+                'ngay_xoa' => $deletedAt,
+                'deleted_at' => $deletedAt,
+            ]);
+            $this->ngay_xoa = $deletedAt;
+            $this->deleted_at = $deletedAt;
+        }
+
+        return $result;
+    }
+
+    public function restore()
+    {
+        if (! $this->trashed()) {
+            return false;
+        }
+
+        $restored = parent::restore();
+
+        if ($restored) {
+            $this->newQuery()->withoutGlobalScopes()->whereKey($this->getKey())->update([
+                'ngay_xoa' => null,
+                'deleted_at' => null,
+            ]);
+            $this->ngay_xoa = null;
+            $this->deleted_at = null;
+        }
+
+        return $restored;
+    }
+
     public function getAuthPassword(): string
     {
         return $this->mat_khau;
