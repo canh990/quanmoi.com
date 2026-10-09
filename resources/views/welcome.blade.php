@@ -390,69 +390,6 @@
             </div>
         </section>
 
-        {{-- SECTION 5: Latest News & Announcements (Date Badge Style) --}}
-        <section class="max-w-[1240px] mx-auto py-12 px-container-margin">
-            <div class="flex justify-between items-end mb-6">
-                <div>
-                    <div class="inline-flex items-center gap-1.5 text-blue-700 text-xs font-bold uppercase tracking-wider mb-1">
-                        <span class="material-symbols-outlined text-[16px]">newspaper</span>
-                        Tin tức & Thông báo
-                    </div>
-                    <h2 class="text-2xl font-black text-on-surface">Cập nhật thông tin mới nhất</h2>
-                </div>
-                <a class="text-[#1b55a6] font-bold text-[14px] flex items-center hover:underline gap-1" href="{{ route('blog.index') }}">
-                    Xem tất cả tin tức <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
-                </a>
-            </div>
-
-            <div class="space-y-4">
-                @forelse($latestBlogs as $blog)
-                    @php
-                        $pubDate = $blog->published_at ?? $blog->created_at;
-                        $dayStr = $pubDate ? $pubDate->format('d') : '01';
-                        $monthStr = $pubDate ? $pubDate->format('m') : '01';
-                        $excerptText = $blog->excerpt ?? strip_tags($blog->content ?? '');
-                    @endphp
-                    <article class="bg-white border border-gray-200 shadow-sm rounded-sm p-4 sm:p-5 hover:border-blue-400 hover:shadow-md transition-all">
-                        <div class="flex items-start">
-                            <div class="flex flex-col items-center justify-center min-w-[70px] sm:min-w-[85px] pr-4 sm:pr-5 border-r border-gray-300 select-none flex-shrink-0 pt-0.5">
-                                <span class="text-3xl sm:text-4xl font-serif font-bold text-gray-800 leading-none tracking-tight">
-                                    {{ $dayStr }}
-                                </span>
-                                <span class="text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider mt-1.5 whitespace-nowrap">
-                                    THÁNG {{ $monthStr }}
-                                </span>
-                            </div>
-                            <div class="flex-1 pl-4 sm:pl-5">
-                                <a href="{{ route('blog.show', $blog->slug) }}" class="group block mb-1.5">
-                                    <h3 class="font-bold text-[#1b55a6] group-hover:text-blue-800 text-sm sm:text-base md:text-[17px] uppercase leading-snug tracking-tight">
-                                        {{ $blog->title }}
-                                    </h3>
-                                </a>
-                                <p class="text-gray-600 text-xs sm:text-sm font-normal leading-relaxed">
-                                    {{ Str::limit($excerptText, 140, '') }}[...]
-                                </p>
-                            </div>
-                        </div>
-                    </article>
-                @empty
-                    <article class="bg-white border border-gray-200 shadow-sm rounded-sm p-4 sm:p-5 hover:border-blue-400 hover:shadow-md transition-all">
-                        <div class="flex items-start">
-                            <div class="flex flex-col items-center justify-center min-w-[70px] sm:min-w-[85px] pr-4 sm:pr-5 border-r border-gray-300 select-none flex-shrink-0 pt-0.5">
-                                <span class="text-3xl sm:text-4xl font-serif font-bold text-gray-800 leading-none tracking-tight">07</span>
-                                <span class="text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider mt-1.5 whitespace-nowrap">THÁNG 10</span>
-                            </div>
-                            <div class="flex-1 pl-4 sm:pl-5">
-                                <a href="#" class="group block mb-1.5">
-                                    <h3 class="font-bold text-[#1b55a6] group-hover:text-blue-800 text-sm sm:text-base md:text-[17px] uppercase leading-snug tracking-tight">LỊCH PHỎNG VẤN CHƯƠNG TRÌNH CNTT NHẬT BẢN 2021</h3>
-                                </a>
-                                <p class="text-gray-600 text-xs sm:text-sm font-normal leading-relaxed">Các sinh viên có tên trong danh sách vui lòng có mặt theo lịch để tham dự phỏng vấn.[...]</p>
-                            </div>
-                        </div>
-                    </article>
-                @endforelse
-            </div>
-        </section>
     </main>
 
     {{-- MOBILE Main Content --}}

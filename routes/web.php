@@ -93,6 +93,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/', [UserBlogController::class, 'store'])->name('store');
         Route::get('/{blog}/sua', [UserBlogController::class, 'edit'])->name('edit');
         Route::put('/{blog}', [UserBlogController::class, 'update'])->name('update');
+        Route::delete('/{blog}', [UserBlogController::class, 'destroy'])->name('destroy');
     });
 });
 
