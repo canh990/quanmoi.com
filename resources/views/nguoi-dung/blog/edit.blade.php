@@ -61,20 +61,36 @@
         
         <!-- Cover Image -->
         <div class="bg-surface-container-lowest p-6 rounded-3xl border border-outline-variant">
-            <label class="block text-sm font-bold text-on-surface mb-2">Ảnh bìa</label>
+            <div class="flex items-center justify-between mb-3">
+                <label class="block text-sm font-bold text-on-surface">Ảnh bìa bài viết</label>
+                @if($blog->cover_image_url)
+                    <span class="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full flex items-center gap-1 shadow-2xs">
+                        <span class="material-symbols-outlined text-sm">image</span> Ảnh bìa ban đầu đã đăng
+                    </span>
+                @else
+                    <span class="text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1 rounded-full flex items-center gap-1">
+                        <span class="material-symbols-outlined text-sm">info</span> Chưa chọn ảnh bìa
+                    </span>
+                @endif
+            </div>
+
             <div class="relative w-full aspect-[21/9] bg-surface-container rounded-2xl overflow-hidden border-2 border-dashed border-outline-variant flex items-center justify-center group cursor-pointer" id="cover-preview-container">
-                <input type="file" name="cover_image" id="cover_image" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onchange="previewImage(this)">
+                <input type="file" name="cover_image" id="cover_image" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" onchange="previewImage(this)">
                 
-                <div class="text-center {{ $blog->cover_image ? 'hidden' : '' }}" id="cover-placeholder">
-                    <span class="material-symbols-outlined text-4xl text-on-surface-variant mb-2">add_photo_alternate</span>
-                    <p class="text-sm font-medium text-on-surface-variant">Nhấn để tải ảnh bìa lên</p>
-                    <p class="text-xs text-on-surface-variant mt-1">Tỷ lệ 21:9 (Max 5MB)</p>
+                <div class="text-center p-4 {{ $blog->cover_image_url ? 'hidden' : '' }}" id="cover-placeholder">
+                    <span class="material-symbols-outlined text-4xl text-primary mb-2">add_photo_alternate</span>
+                    <p class="text-sm font-bold text-on-surface">Nhấn để tải ảnh bìa lên</p>
+                    <p class="text-xs text-on-surface-variant mt-1">Hỗ trợ JPG, PNG, WEBP (Tỷ lệ 21:9, tối đa 5MB)</p>
                 </div>
                 
-                <img id="cover-preview" src="{{ $blog->cover_image ? (Str::startsWith($blog->cover_image, 'http') ? $blog->cover_image : asset('storage/'.$blog->cover_image)) : '' }}" class="absolute inset-0 w-full h-full object-cover {{ $blog->cover_image ? '' : 'hidden' }}">
+                <img id="cover-preview" 
+                     src="{{ $blog->cover_image_url ?? '' }}" 
+                     class="absolute inset-0 w-full h-full object-cover {{ $blog->cover_image_url ? '' : 'hidden' }}">
                 
-                <div class="absolute inset-0 bg-black/50 hidden group-hover:flex items-center justify-center z-20 pointer-events-none" id="cover-overlay">
-                    <span class="text-white font-medium flex items-center gap-2"><span class="material-symbols-outlined">edit</span> Thay đổi ảnh</span>
+                <div class="absolute inset-0 bg-black/40 flex items-center justify-center z-10 transition-opacity opacity-0 group-hover:opacity-100 pointer-events-none" id="cover-overlay">
+                    <span class="text-white font-bold text-sm bg-black/60 px-4 py-2.5 rounded-xl backdrop-blur-md flex items-center gap-2 shadow-lg">
+                        <span class="material-symbols-outlined">edit_square</span> Tải ảnh mới để thay đổi ảnh bìa
+                    </span>
                 </div>
             </div>
         </div>
@@ -87,29 +103,83 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Category -->
+                <!-- Category with Live Autocomplete Suggestions -->
                 <div>
-                    <label for="category_id" class="block text-sm font-bold text-on-surface mb-2">Danh mục <span class="text-red-500">*</span></label>
-                    <select id="category_id" name="category_id" required class="w-full rounded-xl border-outline-variant bg-surface-container-lowest focus:ring-primary focus:border-primary">
-                        <option value="">-- Chọn danh mục --</option>
-                        @foreach($categories as $category)
-                            <option value="{{ $category->id }}" {{ old('category_id', $blog->category_id) == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
-                        @endforeach
-                    </select>
+                    <label for="edit_category_name" class="block text-sm font-bold text-on-surface mb-2">Danh mục bài viết <span class="text-red-500">*</span></label>
+                    <div class="relative autocomplete-wrapper">
+                        <input type="text" 
+                               id="edit_category_name" 
+                               name="category_name" 
+                               value="{{ old('category_name', old('new_category', $blog->category->name ?? '')) }}" 
+                               placeholder="Gõ hoặc chọn danh mục (VD: Review Quán, Mon Ngon)..." 
+                               autocomplete="off"
+                               required
+                               class="w-full rounded-xl border border-outline-variant bg-surface-container-lowest focus:ring-2 focus:ring-primary font-bold text-sm py-3 px-4 pr-10 shadow-sm"
+                               onfocus="showCategorySuggestions('edit_cat_dropdown')"
+                               oninput="filterCategorySuggestions(this, 'edit_cat_dropdown')">
+                        <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none text-xl">expand_more</span>
+                        
+                        <!-- Suggestions Dropdown list attached right below input -->
+                        <div id="edit_cat_dropdown" class="absolute left-0 right-0 top-full mt-1 bg-white border border-amber-300 rounded-2xl shadow-xl z-50 max-h-48 overflow-y-auto hidden divide-y divide-slate-100">
+                            @foreach($categories as $category)
+                                <div class="cat-suggestion-item px-4 py-2.5 hover:bg-amber-50 cursor-pointer text-xs font-bold text-on-surface flex items-center justify-between transition-colors"
+                                     data-name="{{ strtolower($category->name) }}"
+                                     onclick="selectCategoryItem('edit_category_name', '{{ addslashes($category->name) }}', 'edit_cat_dropdown')">
+                                    <span class="flex items-center gap-2">
+                                        <span class="material-symbols-outlined text-amber-600 text-sm">folder</span>
+                                        <span>{{ $category->name }}</span>
+                                    </span>
+                                    <span class="text-[10px] text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full font-bold">Gợi ý</span>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
                 </div>
                 
-                <!-- Tags -->
+                <!-- Tags with Live Autocomplete Suggestions & Quick Badges -->
                 <div>
-                    <label for="tags" class="block text-sm font-bold text-on-surface mb-2">Thẻ (Tags)</label>
-                    <select id="tags" name="tags[]" multiple class="w-full rounded-xl border-outline-variant bg-surface-container-lowest focus:ring-primary focus:border-primary h-[42px]">
-                        @php
-                            $selectedTags = old('tags', $blog->tags->pluck('id')->toArray());
-                        @endphp
+                    <div class="flex items-center justify-between mb-2">
+                        <label for="edit_custom_tags" class="block text-sm font-bold text-on-surface">Thẻ bài viết (Tags)</label>
+                        <span class="text-xs font-bold text-primary">Gõ trực tiếp hoặc chọn bên dưới</span>
+                    </div>
+                    <div class="relative autocomplete-wrapper">
+                        <input type="text" 
+                               id="edit_custom_tags" 
+                               name="custom_tags" 
+                               value="{{ old('custom_tags', $blog->tags->pluck('name')->implode(', ')) }}" 
+                               placeholder="Gõ tên thẻ (VD: Lẩu thái, Ăn đêm, Monngon)..." 
+                               autocomplete="off"
+                               class="w-full rounded-xl border border-outline-variant bg-surface-container-lowest focus:ring-2 focus:ring-primary text-xs font-semibold py-3 px-4 pr-10 shadow-sm"
+                               onfocus="showTagSuggestions('edit_tag_dropdown')"
+                               oninput="filterTagSuggestions(this, 'edit_tag_dropdown')">
+                        <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none text-lg">local_offer</span>
+                        
+                        <!-- Tag Suggestions Dropdown List attached right below input -->
+                        <div id="edit_tag_dropdown" class="absolute left-0 right-0 top-full mt-1 bg-white border border-amber-300 rounded-2xl shadow-xl z-50 max-h-44 overflow-y-auto hidden divide-y divide-slate-100">
+                            @foreach($tags as $tag)
+                                <div class="tag-suggestion-item px-4 py-2 hover:bg-amber-50 cursor-pointer text-xs font-bold text-on-surface flex items-center justify-between transition-colors"
+                                     data-name="{{ strtolower($tag->name) }}"
+                                     onclick="selectTagItem('edit_custom_tags', '{{ addslashes($tag->name) }}', 'edit_tag_dropdown')">
+                                    <span class="flex items-center gap-1.5">
+                                        <span class="text-primary font-bold">#</span>
+                                        <span>{{ $tag->name }}</span>
+                                    </span>
+                                    <span class="text-[10px] text-text-muted">Gợi ý thẻ</span>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Tag Badges -->
+                    <div class="flex flex-wrap gap-1.5 mt-2 max-h-20 overflow-y-auto p-2 bg-surface-container/50 rounded-xl border border-outline-variant/50">
                         @foreach($tags as $tag)
-                            <option value="{{ $tag->id }}" {{ in_array($tag->id, $selectedTags) ? 'selected' : '' }}>{{ $tag->name }}</option>
+                            <button type="button" 
+                                    onclick="addQuickTag('edit_custom_tags', '{{ addslashes($tag->name) }}')"
+                                    class="px-2.5 py-1 text-[11px] rounded-full border border-outline-variant bg-white text-on-surface-variant font-bold hover:border-primary hover:text-primary transition-all flex items-center gap-1 cursor-pointer select-none">
+                                <span>+#{{ $tag->name }}</span>
+                            </button>
                         @endforeach
-                    </select>
-                    <p class="text-xs text-on-surface-variant mt-1">Giữ Ctrl (Windows) hoặc Cmd (Mac) để chọn nhiều thẻ.</p>
+                    </div>
                 </div>
             </div>
 
@@ -161,6 +231,95 @@
                 ['link', 'image', 'video'],
                 ['clean']
             ]
+        }
+    });
+
+    function showCategorySuggestions(dropdownId) {
+        const dropdown = document.getElementById(dropdownId);
+        if (dropdown) dropdown.classList.remove('hidden');
+    }
+
+    function filterCategorySuggestions(input, dropdownId) {
+        const dropdown = document.getElementById(dropdownId);
+        if (!dropdown) return;
+        const query = input.value.trim().toLowerCase();
+        dropdown.classList.remove('hidden');
+        const items = dropdown.querySelectorAll('.cat-suggestion-item');
+        items.forEach(item => {
+            const name = item.getAttribute('data-name') || '';
+            if (!query || name.includes(query)) {
+                item.classList.remove('hidden');
+            } else {
+                item.classList.add('hidden');
+            }
+        });
+    }
+
+    function selectCategoryItem(inputId, value, dropdownId) {
+        const input = document.getElementById(inputId);
+        if (input) input.value = value;
+        const dropdown = document.getElementById(dropdownId);
+        if (dropdown) dropdown.classList.add('hidden');
+    }
+
+    function showTagSuggestions(dropdownId) {
+        const dropdown = document.getElementById(dropdownId);
+        if (dropdown) dropdown.classList.remove('hidden');
+    }
+
+    function filterTagSuggestions(input, dropdownId) {
+        const dropdown = document.getElementById(dropdownId);
+        if (!dropdown) return;
+        const terms = input.value.split(',');
+        const currentTerm = terms[terms.length - 1].trim().toLowerCase();
+        dropdown.classList.remove('hidden');
+        const items = dropdown.querySelectorAll('.tag-suggestion-item');
+        items.forEach(item => {
+            const name = item.getAttribute('data-name') || '';
+            if (!currentTerm || name.includes(currentTerm)) {
+                item.classList.remove('hidden');
+            } else {
+                item.classList.add('hidden');
+            }
+        });
+    }
+
+    function selectTagItem(inputId, tagName, dropdownId) {
+        const input = document.getElementById(inputId);
+        if (!input) return;
+        let terms = input.value.split(',').map(t => t.trim()).filter(t => t.length > 0);
+        if (!terms.includes(tagName)) {
+            if (terms.length > 0) terms.pop();
+            terms.push(tagName);
+        }
+        input.value = terms.join(', ') + ', ';
+        const dropdown = document.getElementById(dropdownId);
+        if (dropdown) dropdown.classList.add('hidden');
+    }
+
+    function addQuickTag(inputId, tagName) {
+        const input = document.getElementById(inputId);
+        if (!input) return;
+        let terms = input.value.split(',').map(t => t.trim()).filter(t => t.length > 0);
+        if (!terms.includes(tagName)) {
+            terms.push(tagName);
+        }
+        input.value = terms.join(', ') + ', ';
+        document.querySelectorAll('#modal_tag_dropdown, #create_tag_dropdown, #edit_tag_dropdown').forEach(d => d.classList.add('hidden'));
+    }
+
+    document.addEventListener('click', function(e) {
+        document.querySelectorAll('#modal_cat_dropdown, #modal_tag_dropdown, #create_cat_dropdown, #create_tag_dropdown, #edit_cat_dropdown, #edit_tag_dropdown').forEach(dropdown => {
+            const wrapper = dropdown.closest('.autocomplete-wrapper');
+            if (wrapper && !wrapper.contains(e.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('#modal_cat_dropdown, #modal_tag_dropdown, #create_cat_dropdown, #create_tag_dropdown, #edit_cat_dropdown, #edit_tag_dropdown').forEach(d => d.classList.add('hidden'));
         }
     });
 
