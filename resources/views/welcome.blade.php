@@ -172,7 +172,7 @@
                         <div class="p-4 sm:p-5 flex flex-col flex-1 justify-between gap-2.5">
                             <div class="space-y-1.5">
                                 <div class="flex items-center justify-between gap-1.5">
-                                    <h3 class="font-bold text-[16px] sm:text-[17px] text-on-surface truncate group-hover:text-primary transition-colors">{{ $quan->ten_quan }}</h3>
+                                    <h3 class="min-w-0 flex-1 font-bold text-[16px] sm:text-[17px] text-on-surface break-words [overflow-wrap:anywhere] group-hover:text-primary transition-colors">{{ $quan->ten_quan }}</h3>
                                     @if($quan->is_xac_thuc)
                                         <span class="material-symbols-outlined text-tick-xanh text-[19px] flex-shrink-0" style="font-variation-settings: 'FILL' 1;" title="Đã xác thực">verified</span>
                                     @endif

@@ -27,7 +27,7 @@ class QuanResource extends JsonResource
             'gio_dong_cua'     => $this->gio_dong_cua,
             'gia_nho_nhat'     => number_format((float)$this->gia_nho_nhat, 0, ',', '.') . 'đ',
             'gia_lon_nhat'     => number_format((float)$this->gia_lon_nhat, 0, ',', '.') . 'đ',
-            'anh_bia'          => $this->anh_bia ? asset('storage/' . $this->anh_bia) : null,
+            'anh_bia'          => $this->anh_bia_url,
             'trang_thai'       => $this->trang_thai,
             'created_at'       => $this->created_at?->format('d/m/Y H:i'),
         ];
