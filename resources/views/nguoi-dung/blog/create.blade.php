@@ -22,11 +22,11 @@
 @endpush
 
 @section('content')
-<main class="max-w-[1200px] mx-auto px-container-margin py-stack-lg min-h-[819px] pt-6">
-    <div class="grid grid-cols-1 md:grid-cols-12 gap-stack-lg">
+<main class="max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-screen">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         @include('nguoi-dung.partials.sidebar')
         
-        <div class="md:col-span-9">
+        <div class="lg:col-span-9 space-y-6">
             <div class="mb-8">
         <a href="{{ route('nguoi-dung.blog.index') }}" class="inline-flex items-center gap-1 text-sm font-medium text-on-surface-variant hover:text-primary transition-colors mb-4">
             <span class="material-symbols-outlined text-[18px]">arrow_back</span>
