@@ -156,10 +156,10 @@
                         Xem tất cả <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
                     </a>
                 </div>
-                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 xl:gap-8">
                     @forelse($quanNoiBat as $quan)
-                    <a href="{{ route('quan.detail', $quan->slug) }}" class="block bg-white rounded-2xl shadow-sm overflow-hidden group cursor-pointer hover:shadow-xl transition-all border border-gray-100">
-                        <div class="relative h-52 w-full overflow-hidden">
+                    <a href="{{ route('quan.detail', $quan->slug) }}" class="block bg-white rounded-2xl shadow-sm overflow-hidden group cursor-pointer hover:shadow-xl transition-all border border-gray-100 flex flex-col h-full">
+                        <div class="relative h-52 w-full overflow-hidden flex-shrink-0">
                             <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="{{ $quan->anh_bia ? $quan->anh_bia : 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=600&q=80' }}"/>
                             <div class="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-xl text-primary font-bold text-xs flex items-center gap-1 shadow-sm">
                                 <span class="material-symbols-outlined text-[15px]" style="font-variation-settings: 'FILL' 1;">star</span> 4.9 (520+)
@@ -169,23 +169,31 @@
                                 <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' {{ in_array($quan->id, $savedQuanIds) ? '1' : '0' }};">favorite</span>
                             </button>
                         </div>
-                        <div class="p-5 space-y-2">
-                            <div class="flex items-center justify-between">
-                                <h3 class="font-bold text-[17px] text-on-surface truncate group-hover:text-primary transition-colors">{{ $quan->ten_quan }}</h3>
-                                @if($quan->is_xac_thuc)
-                                    <span class="material-symbols-outlined text-tick-xanh text-[20px] flex-shrink-0" style="font-variation-settings: 'FILL' 1;" title="Đã xác thực">verified</span>
-                                @endif
-                            </div>
-                            <p class="text-text-muted text-[13px] flex items-center gap-1">
-                                <span class="material-symbols-outlined text-[16px] text-gray-400">location_on</span>
-                                <span class="truncate">{{ $quan->dia_chi_chi_tiet }}, {{ $quan->ten_phuong_xa }}, {{ $quan->ten_quan_huyen }}</span>
-                            </p>
-                            <div class="flex items-center justify-between pt-2 border-t border-gray-100">
-                                <div class="flex gap-1.5 items-center">
-                                    <span class="bg-gray-100 px-2 py-0.5 rounded-md text-gray-600 text-[12px] font-medium">{{ str_replace('_', ' ', \Illuminate\Support\Str::title($quan->loai_hinh_kinh_doanh ?? 'Quán ăn')) }}</span>
-                                    <span class="flex items-center gap-1 text-gray-500 text-[12px] ml-1"><span class="material-symbols-outlined text-[14px]">visibility</span>{{ number_format($quan->luot_xem) }}</span>
+                        <div class="p-4 sm:p-5 flex flex-col flex-1 justify-between gap-2.5">
+                            <div class="space-y-1.5">
+                                <div class="flex items-center justify-between gap-1.5">
+                                    <h3 class="font-bold text-[16px] sm:text-[17px] text-on-surface truncate group-hover:text-primary transition-colors">{{ $quan->ten_quan }}</h3>
+                                    @if($quan->is_xac_thuc)
+                                        <span class="material-symbols-outlined text-tick-xanh text-[19px] flex-shrink-0" style="font-variation-settings: 'FILL' 1;" title="Đã xác thực">verified</span>
+                                    @endif
                                 </div>
-                                <span class="text-primary font-bold text-[14px]">{{ number_format($quan->gia_nho_nhat, 0, ',', '.') }}đ - {{ number_format($quan->gia_lon_nhat, 0, ',', '.') }}đ</span>
+                                <p class="text-text-muted text-[13px] flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-[16px] text-gray-400 flex-shrink-0">location_on</span>
+                                    <span class="truncate">{{ $quan->dia_chi_chi_tiet }}, {{ $quan->ten_phuong_xa }}, {{ $quan->ten_quan_huyen }}</span>
+                                </p>
+                            </div>
+                            <div class="flex items-center justify-between pt-2.5 border-t border-gray-100 gap-2 min-w-0">
+                                <div class="flex items-center gap-1.5 min-w-0 flex-shrink">
+                                    <span class="bg-gray-100 px-2 py-0.5 rounded-md text-gray-600 text-[11px] font-medium whitespace-nowrap truncate max-w-[95px] xl:max-w-[120px]" title="{{ str_replace('_', ' ', \Illuminate\Support\Str::title($quan->loai_hinh_kinh_doanh ?? 'Quán ăn')) }}">
+                                        {{ str_replace('_', ' ', \Illuminate\Support\Str::title($quan->loai_hinh_kinh_doanh ?? 'Quán ăn')) }}
+                                    </span>
+                                    <span class="flex items-center gap-0.5 text-gray-500 text-[11px] whitespace-nowrap flex-shrink-0">
+                                        <span class="material-symbols-outlined text-[13px]">visibility</span>{{ number_format($quan->luot_xem) }}
+                                    </span>
+                                </div>
+                                <span class="text-primary font-bold text-[12.5px] xl:text-[13.5px] whitespace-nowrap flex-shrink-0 ml-auto">
+                                    {{ number_format($quan->gia_nho_nhat, 0, ',', '.') }}đ - {{ number_format($quan->gia_lon_nhat, 0, ',', '.') }}đ
+                                </span>
                             </div>
                         </div>
                     </a>
@@ -243,12 +251,12 @@
                                     <span class="material-symbols-outlined text-[14px]">location_on</span>
                                     {{ $quan->ten_quan_huyen }}, {{ $quan->ten_tinh_thanh }}
                                 </p>
-                                <div class="mt-3 pt-3 flex items-center justify-between border-t border-gray-100">
-                                    <div class="flex gap-1.5 items-center">
-                                        <span class="bg-gray-50 text-gray-600 px-2 py-1 rounded-md text-[11px] font-medium">{{ str_replace('_', ' ', \Illuminate\Support\Str::title($quan->loai_hinh_kinh_doanh ?? 'Quán ăn')) }}</span>
-                                        <span class="flex items-center gap-1 text-gray-500 text-[11px] ml-1"><span class="material-symbols-outlined text-[13px]">visibility</span>{{ number_format($quan->luot_xem) }}</span>
+                                <div class="mt-3 pt-3 flex items-center justify-between border-t border-gray-100 gap-2 min-w-0">
+                                    <div class="flex gap-1.5 items-center min-w-0 flex-shrink">
+                                        <span class="bg-gray-50 text-gray-600 px-2 py-0.5 rounded-md text-[11px] font-medium whitespace-nowrap truncate max-w-[95px]" title="{{ str_replace('_', ' ', \Illuminate\Support\Str::title($quan->loai_hinh_kinh_doanh ?? 'Quán ăn')) }}">{{ str_replace('_', ' ', \Illuminate\Support\Str::title($quan->loai_hinh_kinh_doanh ?? 'Quán ăn')) }}</span>
+                                        <span class="flex items-center gap-0.5 text-gray-500 text-[11px] whitespace-nowrap flex-shrink-0"><span class="material-symbols-outlined text-[13px]">visibility</span>{{ number_format($quan->luot_xem) }}</span>
                                     </div>
-                                    <span class="font-bold text-primary text-[13px]">{{ number_format($quan->gia_nho_nhat, 0, ',', '.') }}đ</span>
+                                    <span class="font-bold text-primary text-[13px] whitespace-nowrap flex-shrink-0 ml-auto">{{ number_format($quan->gia_nho_nhat, 0, ',', '.') }}đ</span>
                                 </div>
                             </div>
                         </a>

@@ -141,8 +141,85 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css" />
 @endpush
 
+@push('seo')
+    @php
+        $breadcrumbItems = [
+            [
+                '@type' => 'ListItem',
+                'position' => 1,
+                'name' => 'Trang chủ',
+                'item' => route('home'),
+            ],
+            [
+                '@type' => 'ListItem',
+                'position' => 2,
+                'name' => 'Khám phá',
+                'item' => route('kham-pha'),
+            ],
+        ];
+        $pos = 3;
+        if (!empty($quan->ten_tinh_thanh)) {
+            $breadcrumbItems[] = [
+                '@type' => 'ListItem',
+                'position' => $pos++,
+                'name' => $quan->ten_tinh_thanh,
+                'item' => route('kham-pha', ['tinh_thanh_id' => $quan->tinh_thanh_id]),
+            ];
+        }
+        if (!empty($quan->loai_hinh_kinh_doanh)) {
+            $breadcrumbItems[] = [
+                '@type' => 'ListItem',
+                'position' => $pos++,
+                'name' => str_replace('_', ' ', \Illuminate\Support\Str::title($quan->loai_hinh_kinh_doanh)),
+                'item' => route('kham-pha', ['danh_muc' => $quan->loai_hinh_kinh_doanh]),
+            ];
+        }
+        $breadcrumbItems[] = [
+            '@type' => 'ListItem',
+            'position' => $pos,
+            'name' => $quan->ten_quan,
+            'item' => url()->current(),
+        ];
+    @endphp
+    <script type="application/ld+json">
+    {!! json_encode([
+        '@context' => 'https://schema.org',
+        '@type' => 'BreadcrumbList',
+        'itemListElement' => $breadcrumbItems,
+    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
+    </script>
+@endpush
+
 @section('content')
-    <main class="venue-page-layout mt-4 max-w-7xl mx-auto px-3 sm:px-4 md:px-8 pb-20 flex-grow">
+    <main class="venue-page-layout mt-3 sm:mt-4 max-w-7xl mx-auto px-3 sm:px-4 md:px-8 pb-20 flex-grow">
+
+        {{-- Breadcrumb Navigation --}}
+        <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-on-surface-variant text-[13.5px] sm:text-[14px] overflow-x-auto no-scrollbar whitespace-nowrap -mb-1">
+            <a class="hover:text-primary transition-colors flex items-center text-gray-500 hover:text-primary" href="{{ route('home') }}" title="Trang chủ">
+                <span class="material-symbols-outlined text-[19px]">home</span>
+            </a>
+            <span class="material-symbols-outlined text-[16px] text-gray-400 select-none">chevron_right</span>
+            <a class="hover:text-primary transition-colors text-gray-600 hover:text-primary font-medium" href="{{ route('kham-pha') }}">Khám phá</a>
+
+            @if(!empty($quan->ten_tinh_thanh))
+                <span class="material-symbols-outlined text-[16px] text-gray-400 select-none">chevron_right</span>
+                <a class="hover:text-primary transition-colors text-gray-600 hover:text-primary font-medium" href="{{ route('kham-pha', ['tinh_thanh_id' => $quan->tinh_thanh_id]) }}">
+                    {{ $quan->ten_tinh_thanh }}
+                </a>
+            @endif
+
+            @if(!empty($quan->loai_hinh_kinh_doanh))
+                <span class="material-symbols-outlined text-[16px] text-gray-400 select-none">chevron_right</span>
+                <a class="hover:text-primary transition-colors text-gray-600 hover:text-primary font-medium" href="{{ route('kham-pha', ['danh_muc' => $quan->loai_hinh_kinh_doanh]) }}">
+                    {{ str_replace('_', ' ', \Illuminate\Support\Str::title($quan->loai_hinh_kinh_doanh)) }}
+                </a>
+            @endif
+
+            <span class="material-symbols-outlined text-[16px] text-gray-400 select-none">chevron_right</span>
+            <span class="text-on-surface font-bold text-gray-900 truncate max-w-[200px] sm:max-w-[320px] md:max-w-[450px]" title="{{ $quan->ten_quan }}">
+                {{ $quan->ten_quan }}
+            </span>
+        </nav>
 
         <!-- Hero Gallery Section -->
         <section id="gallery-section" class="venue-section-anchor mb-5">
