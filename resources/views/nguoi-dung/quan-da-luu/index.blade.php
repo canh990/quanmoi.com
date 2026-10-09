@@ -62,7 +62,7 @@
                             <div class="p-4 relative">
                                 <a href="{{ route('quan.detail', $quan->slug) }}" class="absolute inset-0 z-0"></a>
                                 <div class="flex items-center gap-1 mb-1 relative z-10 pointer-events-none">
-                                    <h3 class="font-title-md text-title-md text-on-surface truncate">{{ $quan->ten_quan }}</h3>
+                                    <h3 class="min-w-0 font-title-md text-title-md text-on-surface break-words [overflow-wrap:anywhere]">{{ $quan->ten_quan }}</h3>
                                     @if($quan->is_noi_bat)
                                     <span class="material-symbols-outlined text-tick-xanh text-[18px]" style="font-variation-settings: 'FILL' 1;">verified</span>
                                     @endif

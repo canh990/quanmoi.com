@@ -173,7 +173,7 @@
                         </div>
                         <div class="p-5 space-y-2">
                             <div class="flex items-center justify-between">
-                                <h3 class="font-bold text-[17px] text-on-surface truncate group-hover:text-primary transition-colors">{{ $quan->ten_quan }}</h3>
+                                <h3 class="min-w-0 flex-1 font-bold text-[17px] text-on-surface break-words [overflow-wrap:anywhere] group-hover:text-primary transition-colors">{{ $quan->ten_quan }}</h3>
                                 @if($quan->is_xac_thuc)
                                     <span class="material-symbols-outlined text-tick-xanh text-[20px] flex-shrink-0" style="font-variation-settings: 'FILL' 1;" title="Đã xác thực">verified</span>
                                 @endif
@@ -236,7 +236,7 @@
                                     <span class="text-[11px] text-primary font-bold">{{ $quan->created_at->diffForHumans() }}</span>
                                 </div>
                                 <div class="flex items-center justify-between gap-2">
-                                    <h4 class="font-bold text-[15px] text-on-surface group-hover:text-primary transition-colors truncate">{{ $quan->ten_quan }}</h4>
+                                    <h4 class="min-w-0 flex-1 font-bold text-[15px] text-on-surface group-hover:text-primary transition-colors break-words [overflow-wrap:anywhere]">{{ $quan->ten_quan }}</h4>
                                     @if($quan->is_xac_thuc)
                                         <span class="material-symbols-outlined text-tick-xanh text-[16px] flex-shrink-0" style="font-variation-settings: 'FILL' 1;" title="Đã xác thực">verified</span>
                                     @endif
@@ -531,7 +531,7 @@
                     </div>
                     <div class="flex flex-col justify-between flex-1 py-0.5">
                         <div>
-                            <h3 class="font-bold text-[15px] text-on-surface leading-tight flex items-center gap-1">{{ $quan->ten_quan }} <span class="material-symbols-outlined text-tick-xanh text-[15px]" style="font-variation-settings: 'FILL' 1;">verified</span></h3>
+                            <h3 class="min-w-0 font-bold text-[15px] text-on-surface leading-tight flex items-start gap-1 break-words [overflow-wrap:anywhere]">{{ $quan->ten_quan }} <span class="material-symbols-outlined shrink-0 text-tick-xanh text-[15px]" style="font-variation-settings: 'FILL' 1;">verified</span></h3>
                             <p class="text-[12px] text-text-muted mt-1 truncate">{{ $quan->dia_chi_chi_tiet }}, {{ $quan->ten_quan_huyen }}</p>
                         </div>
                         <div class="flex items-center justify-between">

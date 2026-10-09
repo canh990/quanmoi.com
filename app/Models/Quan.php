@@ -134,6 +134,14 @@ class Quan extends Model
     /** Resolve old storage URLs to project-local copies usable in Docker. */
     public function getAnhBiaUrlAttribute(): ?string
     {
+        $key = $this->attributes['anh_bia_key'] ?? null;
+        if (is_string($key) && str_starts_with($key, 'local:quan/anh-bia/')) {
+            $localPath = substr($key, strlen('local:'));
+            if (is_file(public_path('uploads/'.$localPath))) {
+                return '/uploads/'.$localPath;
+            }
+        }
+
         $value = $this->attributes['anh_bia'] ?? null;
         if (! is_string($value) || trim($value) === '') {
             return null;
@@ -143,21 +151,26 @@ class Quan extends Model
         $path = ltrim(str_replace('\\', '/', $path), '/');
         $path = preg_replace('#^(?:storage|public)/#', '', $path);
 
+        // New local uploads are stored under public/uploads, not storage/app/public.
+        // Normalize /uploads/foo, uploads/foo, and absolute localhost URLs consistently.
+        $isUploadsPath = str_starts_with($path, 'uploads/');
+        if ($isUploadsPath) {
+            $path = substr($path, strlen('uploads/'));
+        }
+        if (is_file(public_path('uploads/'.$path))) {
+            return '/uploads/'.$path;
+        }
+
         if (str_starts_with($value, 'http://') || str_starts_with($value, 'https://')) {
-            $urlPath = ltrim(parse_url($value, PHP_URL_PATH) ?: '', '/');
-            $localPath = preg_replace('#^storage/#', '', $urlPath);
-            if ($localPath && is_file(public_path('uploads/'.$localPath))) {
-                return asset('uploads/'.$localPath);
+            $host = strtolower((string) parse_url($value, PHP_URL_HOST));
+            if (in_array($host, ['localhost', '127.0.0.1', '::1'], true)) {
+                return ($isUploadsPath ? '/uploads/' : '/storage/').$path;
             }
 
             return $value;
         }
 
-        if (is_file(public_path('uploads/'.$path))) {
-            return asset('uploads/'.$path);
-        }
-
-        return asset('storage/'.$path);
+        return '/storage/'.$path;
     }
 
     public function delete()

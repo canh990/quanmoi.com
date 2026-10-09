@@ -86,7 +86,7 @@
                         </div>
                         <div class="p-5 flex flex-col flex-grow">
                             <div class="flex items-center justify-between mb-2">
-                                <h3 class="font-bold text-[17px] text-on-surface truncate group-hover:text-primary transition-colors pr-2">{{ $quan->ten_quan }}</h3>
+                                <h3 class="min-w-0 flex-1 font-bold text-[17px] text-on-surface break-words [overflow-wrap:anywhere] group-hover:text-primary transition-colors pr-2">{{ $quan->ten_quan }}</h3>
                                 <span class="material-symbols-outlined text-tick-xanh text-[18px] flex-shrink-0" style="font-variation-settings: 'FILL' 1;" title="Đã xác thực">verified</span>
                             </div>
                             <p class="text-text-muted text-[13px] flex items-start gap-1.5 mb-4 flex-grow">

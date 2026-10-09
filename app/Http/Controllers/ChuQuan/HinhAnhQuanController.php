@@ -22,9 +22,10 @@ class HinhAnhQuanController extends Controller
             404
         );
 
-        abort_unless(Storage::disk('public')->exists($path), 404);
+        $disk = Storage::disk('uploads')->exists($path) ? 'uploads' : 'public';
+        abort_unless(Storage::disk($disk)->exists($path), 404);
 
-        return Storage::disk('public')->response($path, basename($path), [
+        return Storage::disk($disk)->response($path, basename($path), [
             'Cache-Control' => 'public, max-age=86400',
         ]);
     }
@@ -122,7 +123,9 @@ class HinhAnhQuanController extends Controller
 
         // Xóa file trên R2 (nếu có object_key)
         if ($img->object_key && Str::startsWith($img->object_key, 'local:quan/gallery/')) {
-            Storage::disk('public')->delete(Str::after($img->object_key, 'local:'));
+            $path = Str::after($img->object_key, 'local:');
+            $disk = Storage::disk('uploads')->exists($path) ? 'uploads' : 'public';
+            Storage::disk($disk)->delete($path);
         } elseif ($img->object_key && Str::startsWith($img->object_key, 'quan/gallery/')) {
             try {
                 Storage::disk('r2')->delete($img->object_key);
@@ -149,7 +152,7 @@ class HinhAnhQuanController extends Controller
 
     private function storeLocally(string $path, string $contents): string
     {
-        if (! Storage::disk('public')->put($path, $contents)) {
+        if (! Storage::disk('uploads')->put($path, $contents)) {
             throw new \RuntimeException('Unable to save venue gallery image to local storage.');
         }
 
