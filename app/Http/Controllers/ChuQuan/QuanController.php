@@ -186,28 +186,11 @@ class QuanController extends Controller
     /** Store venue images on R2 when available, otherwise on the public local disk. */
     private function storeVenueImage(string $objectKey, string $contents): array
     {
-        $r2Configured = config('filesystems.disks.r2.key')
-            && config('filesystems.disks.r2.secret')
-            && config('filesystems.disks.r2.bucket')
-            && config('filesystems.disks.r2.endpoint');
-
-        if ($r2Configured) {
-            try {
-                Storage::disk('r2')->put($objectKey, $contents);
-                return [Storage::disk('r2')->url($objectKey), $objectKey];
-            } catch (\Throwable $e) {
-                Log::warning('Venue image upload to R2 failed; using local storage.', [
-                    'key' => $objectKey,
-                    'error' => $e->getMessage(),
-                ]);
-            }
-        }
-
-        if (! Storage::disk('public')->put($objectKey, $contents)) {
+        if (! Storage::disk('uploads')->put($objectKey, $contents)) {
             throw new \RuntimeException('Không thể lưu ảnh quán vào bộ nhớ cục bộ.');
         }
 
-        return [Storage::disk('public')->url($objectKey), 'local:'.$objectKey];
+        return ['/uploads/'.$objectKey, 'local:'.$objectKey];
     }
 
     private function deleteVenueImage(?string $key): void
@@ -217,7 +200,7 @@ class QuanController extends Controller
         }
 
         if (Str::startsWith($key, 'local:')) {
-            Storage::disk('public')->delete(Str::after($key, 'local:'));
+            Storage::disk('uploads')->delete(Str::after($key, 'local:'));
             return;
         }
 

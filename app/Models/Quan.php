@@ -129,6 +129,37 @@ class Quan extends Model
         'is_xac_thuc' => 'boolean',
     ];
 
+    protected $appends = ['anh_bia_url'];
+
+    /** Resolve old storage URLs to project-local copies usable in Docker. */
+    public function getAnhBiaUrlAttribute(): ?string
+    {
+        $value = $this->attributes['anh_bia'] ?? null;
+        if (! is_string($value) || trim($value) === '') {
+            return null;
+        }
+
+        $path = parse_url($value, PHP_URL_PATH) ?: $value;
+        $path = ltrim(str_replace('\\', '/', $path), '/');
+        $path = preg_replace('#^(?:storage|public)/#', '', $path);
+
+        if (str_starts_with($value, 'http://') || str_starts_with($value, 'https://')) {
+            $urlPath = ltrim(parse_url($value, PHP_URL_PATH) ?: '', '/');
+            $localPath = preg_replace('#^storage/#', '', $urlPath);
+            if ($localPath && is_file(public_path('uploads/'.$localPath))) {
+                return asset('uploads/'.$localPath);
+            }
+
+            return $value;
+        }
+
+        if (is_file(public_path('uploads/'.$path))) {
+            return asset('uploads/'.$path);
+        }
+
+        return asset('storage/'.$path);
+    }
+
     public function delete()
     {
         if ($this->trashed()) {

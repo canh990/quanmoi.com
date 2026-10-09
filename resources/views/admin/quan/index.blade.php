@@ -52,7 +52,7 @@
                         <tr class="hover:bg-slate-50/80 transition-colors {{ $quan->trashed() ? 'bg-rose-50/30' : '' }}">
                             <td class="py-3.5 px-4">
                                 <div class="flex items-center gap-3">
-                                    <img src="{{ $quan->anh_bia ? $quan->anh_bia : 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=100&q=80' }}" class="w-10 h-10 rounded-lg object-cover border border-slate-200 flex-shrink-0" alt="" />
+                                    <img src="{{ $quan->anh_bia_url ?: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=100&q=80' }}" class="w-10 h-10 rounded-lg object-cover border border-slate-200 flex-shrink-0" alt="" />
                                     <div>
                                         <p class="font-bold text-slate-900 leading-tight flex items-center gap-1">
                                             {{ $quan->ten_quan }}

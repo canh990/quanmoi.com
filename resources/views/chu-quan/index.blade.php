@@ -19,7 +19,7 @@
     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         @forelse ($quanList as $quan)
             <article class="bg-white rounded-[28px] border border-gray-100 shadow-sm overflow-hidden flex flex-col h-full">
-                <img src="{{ $quan->anh_bia ? $quan->anh_bia : 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=900&q=80' }}" alt="{{ $quan->ten_quan }}" class="w-full h-52 object-cover">
+                <img src="{{ $quan->anh_bia_url ?: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=900&q=80' }}" alt="{{ $quan->ten_quan }}" class="w-full h-52 object-cover">
                 <div class="p-5 flex-1 flex flex-col">
                     <div class="flex items-start justify-between gap-3">
                         <div>

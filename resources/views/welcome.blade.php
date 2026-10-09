@@ -162,7 +162,7 @@
                     @forelse($quanNoiBat as $quan)
                     <a href="{{ route('quan.detail', $quan->slug) }}" class="block bg-white rounded-2xl shadow-sm overflow-hidden group cursor-pointer hover:shadow-xl transition-all border border-gray-100">
                         <div class="relative h-52 w-full overflow-hidden">
-                            <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="{{ $quan->anh_bia ? $quan->anh_bia : 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=600&q=80' }}"/>
+                            <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="{{ $quan->anh_bia_url ?: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=600&q=80' }}"/>
                             <div class="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-xl text-primary font-bold text-xs flex items-center gap-1 shadow-sm">
                                 <span class="material-symbols-outlined text-[15px]" style="font-variation-settings: 'FILL' 1;">star</span> 4.9 (520+)
                             </div>
@@ -224,7 +224,7 @@
                         @forelse($quanMoi as $quan)
                         <a href="{{ route('quan.detail', $quan->slug) }}" class="group rounded-2xl border border-gray-100 bg-white hover:shadow-lg hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col h-full">
                             <div class="relative w-full h-44 flex-shrink-0 overflow-hidden">
-                                <img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" src="{{ $quan->anh_bia ? $quan->anh_bia : 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=600&q=80' }}" alt="{{ $quan->ten_quan }}" />
+                                <img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" src="{{ $quan->anh_bia_url ?: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=600&q=80' }}" alt="{{ $quan->ten_quan }}" />
                                 <div class="absolute top-2 left-2 bg-secondary text-white px-2 py-1 rounded-lg text-[10px] font-bold shadow-sm">Mới Mở</div>
                                 <button type="button" onclick="event.preventDefault(); toggleSave(this, '{{ $quan->id }}')" class="absolute top-2 right-2 w-8 h-8 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center text-red-500 shadow-sm hover:scale-110 transition-transform z-10" title="Lưu quán">
                                     <span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' {{ in_array($quan->id, $savedQuanIds) ? '1' : '0' }};">favorite</span>
@@ -524,7 +524,7 @@
                 @forelse($quanNoiBat as $quan)
                 <a href="{{ route('quan.detail', $quan->slug) }}" class="bg-white rounded-2xl p-3 flex gap-3 shadow-sm border border-gray-100 active:bg-gray-50 transition-colors">
                     <div class="w-24 h-24 rounded-xl overflow-hidden flex-shrink-0 relative">
-                        <img class="w-full h-full object-cover" src="{{ $quan->anh_bia ? $quan->anh_bia : 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=300&q=80' }}"/>
+                        <img class="w-full h-full object-cover" src="{{ $quan->anh_bia_url ?: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=300&q=80' }}"/>
                         <div class="absolute bottom-1 right-1 bg-black/70 text-white px-1.5 py-0.5 rounded-md text-[10px] font-bold flex items-center gap-0.5">
                             <span class="material-symbols-outlined text-[10px] text-amber-400" style="font-variation-settings: 'FILL' 1;">star</span> 4.9
                         </div>

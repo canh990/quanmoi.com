@@ -47,6 +47,17 @@ return [
             'report' => false,
         ],
 
+        // Uploaded menu images live in public/uploads so they survive Docker
+        // restarts and can be committed with the project when desired.
+        'uploads' => [
+            'driver' => 'local',
+            'root' => public_path('uploads'),
+            'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/uploads',
+            'visibility' => 'public',
+            'throw' => true,
+            'report' => false,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),
