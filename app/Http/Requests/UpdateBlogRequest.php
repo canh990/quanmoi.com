@@ -24,12 +24,14 @@ class UpdateBlogRequest extends FormRequest
     {
         return [
             'title' => ['required', 'string', 'max:255'],
-            'category_id' => ['required', 'exists:blog_categories,id'],
+            'category_id' => ['nullable'],
+            'category_name' => ['nullable', 'string', 'max:100'],
+            'new_category' => ['nullable', 'string', 'max:100'],
             'excerpt' => ['nullable', 'string', 'max:500'],
             'content' => ['required', 'string'],
             'cover_image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:5120'], // 5MB Max
             'tags' => ['nullable', 'array'],
-            'tags.*' => ['exists:blog_tags,id'],
+            'custom_tags' => ['nullable', 'string', 'max:255'],
             'seo_title' => ['nullable', 'string', 'max:255'],
             'seo_description' => ['nullable', 'string', 'max:500'],
             'meta_keywords' => ['nullable', 'string', 'max:255'],

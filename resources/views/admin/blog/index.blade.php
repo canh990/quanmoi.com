@@ -3,11 +3,6 @@
 @section('title', 'Quản Lý Blog - Quán Mới Admin')
 @section('page-title', 'Quản Lý Bài Viết')
 
-@php
-    /** @var \Illuminate\Filesystem\FilesystemAdapter $r2Disk */
-    $r2Disk = Storage::disk('r2');
-@endphp
-
 @section('content')
 <div class="space-y-6">
     <!-- Thống kê -->

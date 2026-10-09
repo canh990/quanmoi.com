@@ -63,8 +63,11 @@ class BlogService
      */
     public function uploadCoverImage(UploadedFile $file): string
     {
-        // Upload lên Cloudflare R2 thông qua disk 'r2'
-        return $file->store('blogs/covers', 'r2');
+        try {
+            return $file->store('blogs/covers', 'r2');
+        } catch (\Throwable $e) {
+            return $file->store('blogs/covers', 'public');
+        }
     }
 
     /**

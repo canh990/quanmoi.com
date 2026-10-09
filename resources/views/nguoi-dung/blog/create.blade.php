@@ -76,26 +76,83 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Category -->
+                <!-- Category with Live Autocomplete Suggestions -->
                 <div>
-                    <label for="category_id" class="block text-sm font-bold text-on-surface mb-2">Danh mục <span class="text-red-500">*</span></label>
-                    <select id="category_id" name="category_id" required class="w-full rounded-xl border-outline-variant bg-surface-container-lowest focus:ring-primary focus:border-primary">
-                        <option value="">-- Chọn danh mục --</option>
-                        @foreach($categories as $category)
-                            <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
-                        @endforeach
-                    </select>
+                    <label for="create_category_name" class="block text-sm font-bold text-on-surface mb-2">Danh mục bài viết <span class="text-red-500">*</span></label>
+                    <div class="relative autocomplete-wrapper">
+                        <input type="text" 
+                               id="create_category_name" 
+                               name="category_name" 
+                               value="{{ old('category_name', old('new_category')) }}" 
+                               placeholder="Gõ hoặc chọn danh mục (VD: Review Quán, Mon Ngon)..." 
+                               autocomplete="off"
+                               required
+                               class="w-full rounded-xl border border-outline-variant bg-surface-container-lowest focus:ring-2 focus:ring-primary font-bold text-sm py-3 px-4 pr-10 shadow-sm"
+                               onfocus="showCategorySuggestions('create_cat_dropdown')"
+                               oninput="filterCategorySuggestions(this, 'create_cat_dropdown')">
+                        <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none text-xl">expand_more</span>
+                        
+                        <!-- Suggestions Dropdown list attached right below input -->
+                        <div id="create_cat_dropdown" class="absolute left-0 right-0 top-full mt-1 bg-white border border-amber-300 rounded-2xl shadow-xl z-50 max-h-48 overflow-y-auto hidden divide-y divide-slate-100">
+                            @foreach($categories as $category)
+                                <div class="cat-suggestion-item px-4 py-2.5 hover:bg-amber-50 cursor-pointer text-xs font-bold text-on-surface flex items-center justify-between transition-colors"
+                                     data-name="{{ strtolower($category->name) }}"
+                                     onclick="selectCategoryItem('create_category_name', '{{ addslashes($category->name) }}', 'create_cat_dropdown')">
+                                    <span class="flex items-center gap-2">
+                                        <span class="material-symbols-outlined text-amber-600 text-sm">folder</span>
+                                        <span>{{ $category->name }}</span>
+                                    </span>
+                                    <span class="text-[10px] text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full font-bold">Gợi ý</span>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
                 </div>
                 
-                <!-- Tags (Simple multi-select for now) -->
+                <!-- Tags with Live Autocomplete Suggestions & Quick Badges -->
                 <div>
-                    <label for="tags" class="block text-sm font-bold text-on-surface mb-2">Thẻ (Tags)</label>
-                    <select id="tags" name="tags[]" multiple class="w-full rounded-xl border-outline-variant bg-surface-container-lowest focus:ring-primary focus:border-primary h-[42px]">
+                    <div class="flex items-center justify-between mb-2">
+                        <label for="create_custom_tags" class="block text-sm font-bold text-on-surface">Thẻ bài viết (Tags)</label>
+                        <span class="text-xs font-bold text-primary">Gõ trực tiếp hoặc chọn bên dưới</span>
+                    </div>
+                    <div class="relative autocomplete-wrapper">
+                        <input type="text" 
+                               id="create_custom_tags" 
+                               name="custom_tags" 
+                               value="{{ old('custom_tags') }}" 
+                               placeholder="Gõ tên thẻ (VD: Lẩu thái, Ăn đêm, Monngon)..." 
+                               autocomplete="off"
+                               class="w-full rounded-xl border border-outline-variant bg-surface-container-lowest focus:ring-2 focus:ring-primary text-xs font-semibold py-3 px-4 pr-10 shadow-sm"
+                               onfocus="showTagSuggestions('create_tag_dropdown')"
+                               oninput="filterTagSuggestions(this, 'create_tag_dropdown')">
+                        <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none text-lg">local_offer</span>
+                        
+                        <!-- Tag Suggestions Dropdown List attached right below input -->
+                        <div id="create_tag_dropdown" class="absolute left-0 right-0 top-full mt-1 bg-white border border-amber-300 rounded-2xl shadow-xl z-50 max-h-44 overflow-y-auto hidden divide-y divide-slate-100">
+                            @foreach($tags as $tag)
+                                <div class="tag-suggestion-item px-4 py-2 hover:bg-amber-50 cursor-pointer text-xs font-bold text-on-surface flex items-center justify-between transition-colors"
+                                     data-name="{{ strtolower($tag->name) }}"
+                                     onclick="selectTagItem('create_custom_tags', '{{ addslashes($tag->name) }}', 'create_tag_dropdown')">
+                                    <span class="flex items-center gap-1.5">
+                                        <span class="text-primary font-bold">#</span>
+                                        <span>{{ $tag->name }}</span>
+                                    </span>
+                                    <span class="text-[10px] text-text-muted">Gợi ý thẻ</span>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Tag Badges -->
+                    <div class="flex flex-wrap gap-1.5 mt-2 max-h-20 overflow-y-auto p-2 bg-surface-container/50 rounded-xl border border-outline-variant/50">
                         @foreach($tags as $tag)
-                            <option value="{{ $tag->id }}" {{ in_array($tag->id, old('tags', [])) ? 'selected' : '' }}>{{ $tag->name }}</option>
+                            <button type="button" 
+                                    onclick="addQuickTag('create_custom_tags', '{{ addslashes($tag->name) }}')"
+                                    class="px-2.5 py-1 text-[11px] rounded-full border border-outline-variant bg-white text-on-surface-variant font-bold hover:border-primary hover:text-primary transition-all flex items-center gap-1 cursor-pointer select-none">
+                                <span>+#{{ $tag->name }}</span>
+                            </button>
                         @endforeach
-                    </select>
-                    <p class="text-xs text-on-surface-variant mt-1">Giữ Ctrl (Windows) hoặc Cmd (Mac) để chọn nhiều thẻ.</p>
+                    </div>
                 </div>
             </div>
 
@@ -147,6 +204,93 @@
                 ['link', 'image', 'video'],
                 ['clean']
             ]
+        }
+    });
+
+    function showCategorySuggestions(dropdownId) {
+        const dropdown = document.getElementById(dropdownId);
+        if (dropdown) dropdown.classList.remove('hidden');
+    }
+
+    function filterCategorySuggestions(input, dropdownId) {
+        const dropdown = document.getElementById(dropdownId);
+        if (!dropdown) return;
+        const query = input.value.trim().toLowerCase();
+        dropdown.classList.remove('hidden');
+        const items = dropdown.querySelectorAll('.cat-suggestion-item');
+        items.forEach(item => {
+            const name = item.getAttribute('data-name') || '';
+            if (!query || name.includes(query)) {
+                item.classList.remove('hidden');
+            } else {
+                item.classList.add('hidden');
+            }
+        });
+    }
+
+    function selectCategoryItem(inputId, value, dropdownId) {
+        const input = document.getElementById(inputId);
+        if (input) input.value = value;
+        const dropdown = document.getElementById(dropdownId);
+        if (dropdown) dropdown.classList.add('hidden');
+    }
+
+    function showTagSuggestions(dropdownId) {
+        const dropdown = document.getElementById(dropdownId);
+        if (dropdown) dropdown.classList.remove('hidden');
+    }
+
+    function filterTagSuggestions(input, dropdownId) {
+        const dropdown = document.getElementById(dropdownId);
+        if (!dropdown) return;
+        const terms = input.value.split(',');
+        const currentTerm = terms[terms.length - 1].trim().toLowerCase();
+        dropdown.classList.remove('hidden');
+        const items = dropdown.querySelectorAll('.tag-suggestion-item');
+        items.forEach(item => {
+            const name = item.getAttribute('data-name') || '';
+            if (!currentTerm || name.includes(currentTerm)) {
+                item.classList.remove('hidden');
+            } else {
+                item.classList.add('hidden');
+            }
+        });
+    }
+
+    function selectTagItem(inputId, tagName, dropdownId) {
+        const input = document.getElementById(inputId);
+        if (!input) return;
+        let terms = input.value.split(',').map(t => t.trim()).filter(t => t.length > 0);
+        if (!terms.includes(tagName)) {
+            if (terms.length > 0) terms.pop();
+            terms.push(tagName);
+        }
+        input.value = terms.join(', ') + ', ';
+        const dropdown = document.getElementById(dropdownId);
+        if (dropdown) dropdown.classList.add('hidden');
+    }
+
+    function addQuickTag(inputId, tagName) {
+        const input = document.getElementById(inputId);
+        if (!input) return;
+        let terms = input.value.split(',').map(t => t.trim()).filter(t => t.length > 0);
+        if (!terms.includes(tagName)) {
+            terms.push(tagName);
+        }
+        input.value = terms.join(', ') + ', ';
+        const dropdown = document.getElementById('create_tag_dropdown');
+        if (dropdown) dropdown.classList.add('hidden');
+    }
+
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.autocomplete-wrapper')) {
+            document.querySelectorAll('#create_cat_dropdown, #create_tag_dropdown').forEach(d => d.classList.add('hidden'));
+        }
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('#create_cat_dropdown, #create_tag_dropdown').forEach(d => d.classList.add('hidden'));
         }
     });
 

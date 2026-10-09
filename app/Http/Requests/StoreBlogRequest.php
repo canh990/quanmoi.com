@@ -24,12 +24,14 @@ class StoreBlogRequest extends FormRequest
     {
         return [
             'title' => ['required', 'string', 'max:255'],
-            'category_id' => ['required', 'exists:blog_categories,id'],
+            'category_id' => ['nullable'],
+            'category_name' => ['nullable', 'string', 'max:100'],
+            'new_category' => ['nullable', 'string', 'max:100'],
             'excerpt' => ['nullable', 'string', 'max:500'],
             'content' => ['required', 'string'],
             'cover_image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:5120'], // 5MB Max
             'tags' => ['nullable', 'array'],
-            'tags.*' => ['exists:blog_tags,id'],
+            'custom_tags' => ['nullable', 'string', 'max:255'],
             'seo_title' => ['nullable', 'string', 'max:255'],
             'seo_description' => ['nullable', 'string', 'max:500'],
             'meta_keywords' => ['nullable', 'string', 'max:255'],
@@ -41,11 +43,16 @@ class StoreBlogRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'title.required' => 'Tiêu đề không được để trống.',
-            'category_id.required' => 'Vui lòng chọn danh mục.',
+            'title.required' => 'Vui lòng nhập tiêu đề bài viết.',
+            'title.max' => 'Tiêu đề bài viết không được vượt quá 255 ký tự.',
+            'category_id.required' => 'Vui lòng chọn danh mục bài viết.',
+            'category_id.exists' => 'Danh mục bài viết được chọn không hợp lệ.',
             'content.required' => 'Nội dung bài viết không được để trống.',
-            'cover_image.image' => 'Ảnh bìa phải là định dạng hình ảnh.',
+            'cover_image.image' => 'Ảnh bìa phải là định dạng hình ảnh hợp lệ (jpg, png, webp).',
+            'cover_image.mimes' => 'Ảnh bìa phải thuộc định dạng: jpeg, png, jpg, gif hoặc webp.',
             'cover_image.max' => 'Dung lượng ảnh bìa không được vượt quá 5MB.',
+            'action.required' => 'Thao tác đăng bài không hợp lệ.',
+            'action.in' => 'Hành động gửi bài không hợp lệ.',
         ];
     }
 }
