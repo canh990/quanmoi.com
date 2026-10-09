@@ -1,6 +1,7 @@
 @props([
     'prefix' => 'sb',
-    'compact' => false
+    'compact' => false,
+    'placeholder' => 'Tìm món ăn, tìm quán...'
 ])
 
 {{-- ╔══════════════════════════════════════════════════════════════════╗ --}}
@@ -29,7 +30,7 @@
                     value="{{ request('tu_khoa') }}" 
                     autocomplete="off" 
                     class="w-full bg-transparent border-none focus:ring-0 text-gray-800 text-[15px] md:text-[16px] font-medium outline-none placeholder:text-gray-400 py-2.5" 
-                    placeholder="Tìm món ăn..." 
+                    placeholder="{{ $placeholder }}" 
                 />
                 <button type="button" id="{{ $prefix }}-clear-btn" class="hidden text-gray-300 hover:text-gray-500 mr-2 flex-shrink-0 cursor-pointer">
                     <span class="material-symbols-outlined text-[18px]">cancel</span>

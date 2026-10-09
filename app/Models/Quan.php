@@ -108,6 +108,9 @@ class Quan extends Model
             'trang_thai'           => $this->trang_thai,
             'is_noi_bat'           => (bool) $this->is_noi_bat,
             'is_xac_thuc'          => (bool) $this->is_xac_thuc,
+            'co_shopeefood'        => !empty($this->shopeefood_url),
+            'duoi_50k'             => ($this->gia_nho_nhat !== null && (float) $this->gia_nho_nhat <= 50000),
+            'dang_mo_cua'          => $this->isDangMoCua(),
             'mon_an'               => $danhSachMon,
             'created_at'           => $this->created_at ? $this->created_at->timestamp : null,
             'updated_at'           => $this->updated_at ? $this->updated_at->timestamp : null,
@@ -122,6 +125,31 @@ class Quan extends Model
         }
 
         return $document;
+    }
+
+    /**
+     * Kiểm tra quán hiện tại có đang mở cửa hay không dựa theo giờ hệ thống.
+     */
+    public function isDangMoCua(): bool
+    {
+        if (str_contains(strtolower($this->loai_hinh_kinh_doanh ?? ''), '24/7')) {
+            return true;
+        }
+
+        if (empty($this->gio_mo_cua) || empty($this->gio_dong_cua)) {
+            return true;
+        }
+
+        $now = now('Asia/Ho_Chi_Minh')->format('H:i');
+        $open = substr((string)$this->gio_mo_cua, 0, 5);
+        $close = substr((string)$this->gio_dong_cua, 0, 5);
+
+        if ($open <= $close) {
+            return $now >= $open && $now <= $close;
+        }
+
+        // Trường hợp mở xuyên đêm (ví dụ: 18:00 đến 03:00)
+        return $now >= $open || $now <= $close;
     }
 
     protected $casts = [

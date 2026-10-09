@@ -20,11 +20,19 @@ class KhamPhaController extends Controller
         $quanHuyenId = trim(strip_tags(is_array($request->input('quan_huyen_id')) ? '' : (string) $request->input('quan_huyen_id')));
         $mucGia      = trim(strip_tags(is_array($request->input('muc_gia')) ? '' : (string) $request->input('muc_gia')));
         $sapXep      = trim(strip_tags(is_array($request->input('sap_xep')) ? '' : (string) $request->input('sap_xep')));
+        $isXacThuc   = $request->boolean('is_xac_thuc');
+        $isNoiBat    = $request->boolean('is_noi_bat');
+        $dangMoCua   = $request->boolean('dang_mo_cua');
+        $coShopee    = $request->boolean('co_shopeefood');
         
         $query = Quan::search($tuKhoa)->whereIn('trang_thai', ['da_duyet']);
 
         if (!empty($danhMuc)) {
-            $query->whereIn('loai_hinh_kinh_doanh.keyword', [$danhMuc]);
+            if ($danhMuc === 'Cà phê') {
+                $query->whereIn('loai_hinh_kinh_doanh.keyword', ['Cà phê & Trà']);
+            } else {
+                $query->whereIn('loai_hinh_kinh_doanh.keyword', [$danhMuc]);
+            }
         }
 
         if (!empty($tinhThanhId)) {
@@ -33,6 +41,26 @@ class KhamPhaController extends Controller
 
         if (!empty($quanHuyenId)) {
             $query->whereIn('quan_huyen_id', [$quanHuyenId]);
+        }
+
+        if ($isXacThuc) {
+            $query->whereIn('is_xac_thuc', [true]);
+        }
+
+        if ($isNoiBat) {
+            $query->whereIn('is_noi_bat', [true]);
+        }
+
+        if ($coShopee) {
+            $query->whereIn('co_shopeefood', [true]);
+        }
+
+        if ($mucGia === 'duoi_50k') {
+            $query->whereIn('duoi_50k', [true]);
+        }
+
+        if ($dangMoCua) {
+            $query->whereIn('dang_mo_cua', [true]);
         }
 
         // Xử lý sắp xếp
@@ -50,6 +78,26 @@ class KhamPhaController extends Controller
 
         $quans = $query->paginate(12);
         $quans->appends($request->all());
+
+        // Gợi ý quán nổi bật khi kết quả rỗng (Smart Empty State)
+        $quansGoiY = collect();
+        if ($quans->isEmpty()) {
+            $quansGoiY = Quan::where('trang_thai', 'da_duyet')
+                ->where('is_noi_bat', true)
+                ->inRandomOrder()
+                ->take(4)
+                ->get();
+
+            if ($quansGoiY->isEmpty()) {
+                $quansGoiY = Quan::where('trang_thai', 'da_duyet')
+                    ->inRandomOrder()
+                    ->take(4)
+                    ->get();
+            }
+        }
+
+        $tinhThanhMap = $this->getTinhThanhMap();
+        $tenTinhThanh = $tinhThanhMap[$tinhThanhId] ?? $tinhThanhId;
 
         // Tìm các món ăn khớp với từ khóa (chỉ hiển thị ở trang đầu)
         $monAns = collect();
@@ -72,18 +120,24 @@ class KhamPhaController extends Controller
         }
 
         return view('nguoi-dung.kham-pha.index', [
-            'quans'       => $quans,
-            'monAns'      => $monAns,
-            'danhMuc'     => $danhMuc,
-            'tuKhoa'      => $tuKhoa,
-            'tinhThanhId' => $tinhThanhId,
-            'quanHuyenId' => $quanHuyenId,
-            'mucGia'      => $mucGia,
-            'sapXep'      => $sapXep,
+            'quans'        => $quans,
+            'quansGoiY'    => $quansGoiY,
+            'monAns'       => $monAns,
+            'danhMuc'      => $danhMuc,
+            'tuKhoa'       => $tuKhoa,
+            'tinhThanhId'  => $tinhThanhId,
+            'tenTinhThanh' => $tenTinhThanh,
+            'quanHuyenId'  => $quanHuyenId,
+            'mucGia'       => $mucGia,
+            'sapXep'       => $sapXep,
+            'isXacThuc'    => $isXacThuc,
+            'isNoiBat'     => $isNoiBat,
+            'dangMoCua'    => $dangMoCua,
+            'coShopee'     => $coShopee,
         ]);
     }
 
-    public function danhMuc($slug)
+    public function danhMuc($slug, Request $request)
     {
         $danhMucMap = [
             'nha-hang' => 'Nhà hàng',
@@ -99,42 +153,186 @@ class KhamPhaController extends Controller
             abort(404);
         }
 
-        $quans = Quan::search('')->whereIn('trang_thai', ['da_duyet'])
-            ->whereIn('loai_hinh_kinh_doanh.keyword', [$danhMuc])
-            ->orderBy('created_at', 'desc')
-            ->paginate(12);
-
-        return view('nguoi-dung.kham-pha.index', [
-            'quans' => $quans,
-            'danhMuc' => $danhMuc,
-        ]);
+        $request->merge(['danh_muc' => $danhMuc]);
+        return $this->index($request);
     }
 
-    public function quanMoi()
+    public function quanMoi(Request $request)
     {
-        $quans = Quan::search('')->whereIn('trang_thai', ['da_duyet'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(12);
+        $tuKhoa      = trim(strip_tags(is_array($request->input('tu_khoa')) ? '' : (string) $request->input('tu_khoa')));
+        $tinhThanhId = trim(strip_tags(is_array($request->input('tinh_thanh_id')) ? '' : (string) $request->input('tinh_thanh_id')));
+        $quanHuyenId = trim(strip_tags(is_array($request->input('quan_huyen_id')) ? '' : (string) $request->input('quan_huyen_id')));
+        $mucGia      = trim(strip_tags(is_array($request->input('muc_gia')) ? '' : (string) $request->input('muc_gia')));
+        $sapXep      = trim(strip_tags(is_array($request->input('sap_xep')) ? '' : (string) $request->input('sap_xep')));
+        $isXacThuc   = $request->boolean('is_xac_thuc');
+        $isNoiBat    = $request->boolean('is_noi_bat');
+        $dangMoCua   = $request->boolean('dang_mo_cua');
+        $coShopee    = $request->boolean('co_shopeefood');
 
-        return view('nguoi-dung.kham-pha.index', [
-            'quans' => $quans,
-            'danhMuc' => 'Quán Mới',
-        ]);
-    }
+        $query = Quan::search($tuKhoa)->whereIn('trang_thai', ['da_duyet']);
 
-    public function quanNoiBat()
-    {
-        $query = Quan::search('')->whereIn('trang_thai', ['da_duyet']);
-
-        if (Schema::hasColumn('quan', 'is_noi_bat')) {
+        if (!empty($tinhThanhId)) {
+            $query->whereIn('tinh_thanh_id', [$tinhThanhId]);
+        }
+        if (!empty($quanHuyenId)) {
+            $query->whereIn('quan_huyen_id', [$quanHuyenId]);
+        }
+        if ($isXacThuc) {
+            $query->whereIn('is_xac_thuc', [true]);
+        }
+        if ($isNoiBat) {
             $query->whereIn('is_noi_bat', [true]);
         }
+        if ($coShopee) {
+            $query->whereIn('co_shopeefood', [true]);
+        }
+        if ($mucGia === 'duoi_50k') {
+            $query->whereIn('duoi_50k', [true]);
+        }
+        if ($dangMoCua) {
+            $query->whereIn('dang_mo_cua', [true]);
+        }
 
-        $quans = $query->orderBy('updated_at', 'desc')->paginate(12);
+        if ($sapXep === 'view_desc') {
+            $query->orderBy('luot_xem', 'desc');
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
+
+        $quans = $query->paginate(12);
+        $quans->appends($request->all());
+
+        $quansGoiY = collect();
+        if ($quans->isEmpty()) {
+            $quansGoiY = Quan::where('trang_thai', 'da_duyet')
+                ->where('is_noi_bat', true)
+                ->inRandomOrder()
+                ->take(4)
+                ->get();
+
+            if ($quansGoiY->isEmpty()) {
+                $quansGoiY = Quan::where('trang_thai', 'da_duyet')
+                    ->inRandomOrder()
+                    ->take(4)
+                    ->get();
+            }
+        }
+
+        $tinhThanhMap = $this->getTinhThanhMap();
+        $tenTinhThanh = $tinhThanhMap[$tinhThanhId] ?? $tinhThanhId;
 
         return view('nguoi-dung.kham-pha.index', [
-            'quans' => $quans,
-            'danhMuc' => 'Quán Nổi Bật',
+            'quans'        => $quans,
+            'quansGoiY'    => $quansGoiY,
+            'monAns'       => collect(),
+            'danhMuc'      => 'Quán Mới',
+            'tuKhoa'       => $tuKhoa,
+            'tinhThanhId'  => $tinhThanhId,
+            'tenTinhThanh' => $tenTinhThanh,
+            'quanHuyenId'  => $quanHuyenId,
+            'mucGia'       => $mucGia,
+            'sapXep'       => $sapXep ?: 'created_desc',
+            'isXacThuc'    => $isXacThuc,
+            'isNoiBat'     => $isNoiBat,
+            'dangMoCua'    => $dangMoCua,
+            'coShopee'     => $coShopee,
         ]);
+    }
+
+    public function quanNoiBat(Request $request)
+    {
+        $tuKhoa      = trim(strip_tags(is_array($request->input('tu_khoa')) ? '' : (string) $request->input('tu_khoa')));
+        $tinhThanhId = trim(strip_tags(is_array($request->input('tinh_thanh_id')) ? '' : (string) $request->input('tinh_thanh_id')));
+        $quanHuyenId = trim(strip_tags(is_array($request->input('quan_huyen_id')) ? '' : (string) $request->input('quan_huyen_id')));
+        $mucGia      = trim(strip_tags(is_array($request->input('muc_gia')) ? '' : (string) $request->input('muc_gia')));
+        $sapXep      = trim(strip_tags(is_array($request->input('sap_xep')) ? '' : (string) $request->input('sap_xep')));
+        $isXacThuc   = $request->boolean('is_xac_thuc');
+        $dangMoCua   = $request->boolean('dang_mo_cua');
+        $coShopee    = $request->boolean('co_shopeefood');
+
+        $query = Quan::search($tuKhoa)->whereIn('trang_thai', ['da_duyet'])->whereIn('is_noi_bat', [true]);
+
+        if (!empty($tinhThanhId)) {
+            $query->whereIn('tinh_thanh_id', [$tinhThanhId]);
+        }
+        if (!empty($quanHuyenId)) {
+            $query->whereIn('quan_huyen_id', [$quanHuyenId]);
+        }
+        if ($isXacThuc) {
+            $query->whereIn('is_xac_thuc', [true]);
+        }
+        if ($coShopee) {
+            $query->whereIn('co_shopeefood', [true]);
+        }
+        if ($mucGia === 'duoi_50k') {
+            $query->whereIn('duoi_50k', [true]);
+        }
+        if ($dangMoCua) {
+            $query->whereIn('dang_mo_cua', [true]);
+        }
+
+        if ($sapXep === 'view_desc') {
+            $query->orderBy('luot_xem', 'desc');
+        } elseif ($sapXep === 'created_desc') {
+            $query->orderBy('created_at', 'desc');
+        } else {
+            $query->orderBy('updated_at', 'desc');
+        }
+
+        $quans = $query->paginate(12);
+        $quans->appends($request->all());
+
+        $quansGoiY = collect();
+        if ($quans->isEmpty()) {
+            $quansGoiY = Quan::where('trang_thai', 'da_duyet')
+                ->where('is_noi_bat', true)
+                ->inRandomOrder()
+                ->take(4)
+                ->get();
+
+            if ($quansGoiY->isEmpty()) {
+                $quansGoiY = Quan::where('trang_thai', 'da_duyet')
+                    ->inRandomOrder()
+                    ->take(4)
+                    ->get();
+            }
+        }
+
+        $tinhThanhMap = $this->getTinhThanhMap();
+        $tenTinhThanh = $tinhThanhMap[$tinhThanhId] ?? $tinhThanhId;
+
+        return view('nguoi-dung.kham-pha.index', [
+            'quans'        => $quans,
+            'quansGoiY'    => $quansGoiY,
+            'monAns'       => collect(),
+            'danhMuc'      => 'Quán Nổi Bật',
+            'tuKhoa'       => $tuKhoa,
+            'tinhThanhId'  => $tinhThanhId,
+            'tenTinhThanh' => $tenTinhThanh,
+            'quanHuyenId'  => $quanHuyenId,
+            'mucGia'       => $mucGia,
+            'sapXep'       => $sapXep,
+            'isXacThuc'    => $isXacThuc,
+            'isNoiBat'     => true,
+            'dangMoCua'    => $dangMoCua,
+            'coShopee'     => $coShopee,
+        ]);
+    }
+
+    protected function getTinhThanhMap(): array
+    {
+        return [
+            'HCM'  => 'Hồ Chí Minh',
+            'HN'   => 'Hà Nội',
+            'DN'   => 'Đà Nẵng',
+            'CT'   => 'Cần Thơ',
+            'BD'   => 'Bình Dương',
+            'DNai' => 'Đồng Nai',
+            'VT'   => 'Bà Rịa - Vũng Tàu',
+            'HUE'  => 'Thừa Thiên Huế',
+            'HP'   => 'Hải Phòng',
+            'KH'   => 'Khánh Hòa',
+            'LD'   => 'Lâm Đồng',
+        ];
     }
 }
