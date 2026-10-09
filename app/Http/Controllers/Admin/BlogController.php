@@ -109,7 +109,13 @@ class BlogController extends Controller
             ]);
             
             if ($oldStatus !== $status && isset($actionMap[$status])) {
-                $blog->user->notify(new BlogStatusUpdatedNotification($blog, $actionMap[$status], $request->note));
+                try {
+                    if ($blog->user) {
+                        $blog->user->notify(new BlogStatusUpdatedNotification($blog, $actionMap[$status], $request->note));
+                    }
+                } catch (\Throwable $notiEx) {
+                    \Illuminate\Support\Facades\Log::warning('BlogStatusUpdatedNotification error: ' . $notiEx->getMessage());
+                }
             }
         });
         
