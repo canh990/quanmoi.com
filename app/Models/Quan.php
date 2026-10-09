@@ -111,6 +111,7 @@ class Quan extends Model
             'co_shopeefood'        => !empty($this->shopeefood_url),
             'duoi_50k'             => ($this->gia_nho_nhat !== null && (float) $this->gia_nho_nhat <= 50000),
             'dang_mo_cua'          => $this->isDangMoCua(),
+            'co_video_review'      => $this->relationLoaded('videos') ? $this->videos->isNotEmpty() : $this->videos()->exists(),
             'mon_an'               => $danhSachMon,
             'created_at'           => $this->created_at ? $this->created_at->timestamp : null,
             'updated_at'           => $this->updated_at ? $this->updated_at->timestamp : null,

@@ -21,7 +21,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(
+            \Elastic\ScoutDriver\Factories\SearchParametersFactoryInterface::class,
+            \App\Search\CustomSearchParametersFactory::class
+        );
     }
 
     /**
