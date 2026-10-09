@@ -183,14 +183,22 @@ class QuanController extends Controller
         return view('chu-quan.chi-tiet-quan', compact('quan', 'luotLuu', 'luotVideo'));
     }
 
-    /** Store venue images on R2 when available, otherwise on the public local disk. */
     private function storeVenueImage(string $objectKey, string $contents): array
     {
-        if (! Storage::disk('uploads')->put($objectKey, $contents)) {
-            throw new \RuntimeException('Không thể lưu ảnh quán vào bộ nhớ cục bộ.');
+        $uploadDisk = config('filesystems.upload_disk', 'r2');
+        try {
+            Storage::disk($uploadDisk)->put($objectKey, $contents);
+            $url = Storage::disk($uploadDisk)->url($objectKey);
+            $storedKey = ($uploadDisk === 'uploads' || $uploadDisk === 'public' || $uploadDisk === 'local') ? 'local:'.$objectKey : $objectKey;
+            return [$url, $storedKey];
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Venue image upload failed.', [
+                'disk' => $uploadDisk,
+                'key' => $objectKey,
+                'error' => $e->getMessage(),
+            ]);
+            throw new \RuntimeException('Lỗi lưu ảnh lên Cloud Storage. Vui lòng thử lại sau.');
         }
-
-        return ['/uploads/'.$objectKey, 'local:'.$objectKey];
     }
 
     private function deleteVenueImage(?string $key): void
@@ -204,7 +212,14 @@ class QuanController extends Controller
             return;
         }
 
-        Storage::disk('r2')->delete($key);
+        try {
+            Storage::disk('r2')->delete($key);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Venue image deletion on R2 failed.', [
+                'key' => $key,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /** Cap nhat thong tin quan (AJAX). */
