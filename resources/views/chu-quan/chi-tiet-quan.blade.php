@@ -28,10 +28,10 @@
     <div class="bg-white rounded-[28px] border border-gray-100 shadow-sm overflow-hidden mb-8">
         {{-- Cover Image --}}
         <div class="h-64 md:h-80 w-full bg-gray-100 relative group">
-            <a href="{{ $quan->anh_bia ? $quan->anh_bia : 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80' }}"
+            <a href="{{ $quan->anh_bia_url ?: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80' }}"
                data-fancybox="gallery"
                class="absolute inset-0 z-0 cursor-pointer">
-                <img src="{{ $quan->anh_bia ? $quan->anh_bia : 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80' }}" class="w-full h-full object-cover" alt="{{ $quan->ten_quan }}" />
+                <img src="{{ $quan->anh_bia_url ?: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80' }}" class="w-full h-full object-cover" alt="{{ $quan->ten_quan }}" />
                 <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none"></div>
             </a>
 
@@ -128,7 +128,7 @@
                 <div id="gallery-grid" class="grid grid-cols-2 md:grid-cols-4 gap-3">
                     @forelse($quan->hinhAnh as $img)
                         @php
-                            $imgSrc = Str::startsWith($img->duong_dan, 'http') ? $img->duong_dan : asset('storage/' . $img->duong_dan);
+                            $imgSrc = $img->duong_dan;
                         @endphp
                         {{-- Wrapper có nút xóa --}}
                         <div class="relative group rounded-xl overflow-hidden h-32 bg-gray-100 border border-gray-100"

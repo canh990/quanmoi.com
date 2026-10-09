@@ -24,6 +24,9 @@ Route::get('/blog', [FrontendBlogController::class, 'index'])->name('blog.index'
 Route::get('/blog/{slug}', [FrontendBlogController::class, 'show'])->name('blog.show');
 Route::get('/video-review', [\App\Http\Controllers\NguoiDung\VideoShortController::class, 'index'])->name('video-review.index');
 Route::view('/gioi-thieu', 'pages.about')->name('about');
+Route::get('/media/venue/{path}', [HinhAnhQuanController::class, 'localImage'])
+    ->where('path', '.*')
+    ->name('media.venue.local');
 
 // ─── Auth routes (chỉ dành cho khách chưa đăng nhập) ──────────────────────────
 Route::middleware('guest')->group(function () {

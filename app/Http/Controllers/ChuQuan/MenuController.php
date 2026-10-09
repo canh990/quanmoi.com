@@ -118,37 +118,20 @@ class MenuController extends Controller
                             $tmpId = $itemData['tmp_id'] ?? null;
                             $imagePath = null;
 
-                            // Handle Image Upload
+                            // Keep dish photos inside the project so they persist with Docker and can be shared with the code.
                             if ($tmpId && $request->hasFile("item_image_{$tmpId}")) {
                                 $file = $request->file("item_image_{$tmpId}");
                                 $manager = new ImageManager(new Driver);
                                 $image = $manager->decode($file->getRealPath());
                                 $image->scaleDown(width: 800);
                                 $encoded = $image->encodeUsingFileExtension('webp', 80);
-                                $fileName = 'menu/'.uniqid('mon_').'.webp';
+                                $fileName = 'menu/'.bin2hex(random_bytes(16)).'.webp';
                                 $imageContents = $encoded->toString();
-                                $r2Configured = config('filesystems.disks.r2.key')
-                                    && config('filesystems.disks.r2.secret')
-                                    && config('filesystems.disks.r2.bucket')
-                                    && config('filesystems.disks.r2.endpoint');
-
-                                if ($r2Configured) {
-                                    try {
-                                        Storage::disk('r2')->put($fileName, $imageContents, 'public');
-                                        $imagePath = $fileName;
-                                    } catch (\Throwable $e) {
-                                        Log::warning('Menu image upload to R2 failed; using local storage.', [
-                                            'key' => $fileName,
-                                            'error' => $e->getMessage(),
-                                        ]);
-                                    }
-                                }
-
                                 if (! $imagePath) {
-                                    if (! Storage::disk('public')->put($fileName, $imageContents)) {
+                                    if (! Storage::disk('uploads')->put($fileName, $imageContents)) {
                                         throw new \RuntimeException('Không thể lưu ảnh món ăn vào bộ nhớ cục bộ.');
                                     }
-                                    $imagePath = Storage::disk('public')->url($fileName);
+                                    $imagePath = '/uploads/'.$fileName;
                                 }
                             }
 

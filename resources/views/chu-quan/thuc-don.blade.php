@@ -69,6 +69,12 @@
     const menuInitialData = JSON.parse(document.getElementById('menu-initial-data').textContent);
     const r2MenuImageBase = menuInitialData.imageBase;
 
+    function resolveMenuImageUrl(image) {
+        if (!image) return '';
+        if (image.startsWith('http://') || image.startsWith('https://') || image.startsWith('/')) return image;
+        return r2MenuImageBase ? `${r2MenuImageBase}/${image.replace(/^\/+/, '')}` : '';
+    }
+
     // Load existing data
     const initialData = menuInitialData.categories;
     
@@ -85,7 +91,7 @@
                     cat.mon_an.forEach(item => {
                         const itemId = ++itemCounter;
                         catObj.items.push({ id: itemId, db_id: item.id, tmp_id: itemId, name: item.ten_mon, price: item.gia, description: item.mo_ta || '', shopeefood_url: item.shopeefood_url || '', image: item.hinh_anh || '' });
-                        renderItemHtml(catId, itemId, item.ten_mon, item.gia, item.mo_ta || '', item.hinh_anh, item.shopeefood_url || '');
+                        renderItemHtml(catId, itemId, item.ten_mon, item.gia, item.mo_ta || '', item.hinh_anh_url || item.hinh_anh, item.shopeefood_url || '');
                     });
                 }
                 menuCategories.push(catObj);
@@ -123,7 +129,7 @@
 
     function renderItemHtml(catId, itemId, name = '', price = '', desc = '', image = '', shopeefoodUrl = '') {
         const container = document.getElementById(`category-items-${catId}`);
-        const imagePreview = image ? (image.startsWith('http') ? image : `${r2MenuImageBase}/${image.replace(/^\/+/, '')}`) : '';
+        const imagePreview = resolveMenuImageUrl(image);
         const imgDisplay = image ? `<img src="${imagePreview}" class="w-full h-full object-cover rounded" />` : `<span class="material-symbols-outlined text-gray-400">image</span>`;
         const html = `
             <div id="item-box-${itemId}" class="flex gap-3 items-start bg-white p-3 rounded-lg border border-gray-100 shadow-sm relative group">

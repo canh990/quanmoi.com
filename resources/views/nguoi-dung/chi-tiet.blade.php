@@ -13,7 +13,7 @@
     <meta property="og:description" content="{{ $quan->mo_ta }}" />
     <meta property="og:type" content="restaurant" />
     <meta property="og:url" content="{{ url()->current() }}" />
-    <meta property="og:image" content="{{ $quan->anh_bia ? $quan->anh_bia : 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=600&q=80' }}" />
+    <meta property="og:image" content="{{ $quan->anh_bia_url ?: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=600&q=80' }}" />
 
     <style>
         .bento-grid {
@@ -149,7 +149,7 @@
             <div class="bento-grid">
                 @php
                     $hinhAnhs = $quan->hinhAnh ?? collect();
-                    $biaUrl = $quan->anh_bia ? $quan->anh_bia : 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=600&q=80';
+                    $biaUrl = $quan->anh_bia_url ?: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=600&q=80';
                     $img2 = $hinhAnhs->count() > 0 ? $hinhAnhs[0]->duong_dan : 'https://lh3.googleusercontent.com/aida-public/AB6AXuD2Ck5qL2_TpbcOo7YGVfL4jIzyWsaWPJOLKDfi0oZ7KRgPjfwEjx3LlprQ1c5zoWBwwq3BNDE8s8h_IBpNRJY5PVvyTDdhgy-7Q5HRK1_o0rHP3G5iRdWrMB0YVFQBGQn4KE7XA_nBiEW3soOPvbhB8fOkpV9CxFQT6Bbm8ZlArhLdCx4a10froFQaLxTZatgH_PH2DzxuUOfaVEhgmpPhVtBYqD9HVRQNvXi9n9k5rXIhenIx5tmk';
                     $img3 = $hinhAnhs->count() > 1 ? $hinhAnhs[1]->duong_dan : 'https://lh3.googleusercontent.com/aida-public/AB6AXuC3bzrIzaqyG4B_yvZnS4Po8P9iifDNOlmkoZW-CkCRe3OtnGLgU0uzl0qdjB4FDgI1TgyNX21O1P9hfh3SsUrzHSFJW4pWjH3ibrjomvnY5wtcYKOrNP-OruwGf5REKaxsF1IdXYH6kO1PzwhIycGIT8QbgiUZ-skSvJkioA7BbMyMZqIuDVBAebFYczNCNAJM0VKixfDVfLnhdo0plxXmad2kEjdIk01MEUN64cbsrgVlWJQOwaDd';
                     $img4 = $hinhAnhs->count() > 2 ? $hinhAnhs[2]->duong_dan : 'https://lh3.googleusercontent.com/aida-public/AB6AXuCfnTVIpmnxpE0pdetcfCZ2GMfN5F0yivGeSsRcxiD7rBqLQE74yWLzaFDYm5kFq82e1RHUwK-PhICSALqS2DYMANoWXy_P0OwtlwoShLH7Qph3_oohL6bWg1e45CE6ysjbUE6jUdCAk9Pp7pz33obm5JKvdkL_yhOKl0dhugz0OpJ4SBiZ7eBY7AsUdiEk02wTOhXwHQPlCd48tbnR8l8iVyyeaJyVg4tX1Mg0eRC-N2o5akKrHUpI';
@@ -240,11 +240,11 @@
                                         <div class="venue-menu-card bg-surface-card rounded-lg shadow-[0px_3px_12px_rgba(0,0,0,0.06)] hover:shadow-md transition-shadow">
                                         @endif
                                             <div class="venue-menu-image">
-                                                <img class="w-full h-full object-cover" loading="lazy" alt="{{ $monAn->ten_mon }}" src="{{ $monAn->hinh_anh ? (Str::startsWith($monAn->hinh_anh, 'http') ? $monAn->hinh_anh : rtrim((config('filesystems.disks.r2.url') ?: (config('filesystems.disks.r2.endpoint') && config('filesystems.disks.r2.bucket') ? config('filesystems.disks.r2.endpoint').'/'.config('filesystems.disks.r2.bucket') : '')), '/') . '/' . ltrim($monAn->hinh_anh, '/')) : 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=300&q=80' }}"/>
+                                                <img class="w-full h-full object-cover" loading="lazy" alt="{{ $monAn->ten_mon }}" src="{{ $monAn->hinh_anh_url ?: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=300&q=80' }}"/>
                                             </div>
                                             <div class="flex flex-col justify-between flex-1 min-w-0">
                                                 <div>
-                                                    <h4 class="text-xs sm:text-sm font-bold leading-tight line-clamp-1">{{ $monAn->ten_mon }}</h4>
+                                                    <h4 class="text-xs sm:text-sm font-bold leading-snug whitespace-normal break-words">{{ $monAn->ten_mon }}</h4>
                                                     <p class="text-on-surface-variant text-[10px] sm:text-xs line-clamp-2 leading-snug mt-1">{{ $monAn->mo_ta }}</p>
                                                 </div>
                                                 <div class="flex justify-between items-center gap-1 mt-1">

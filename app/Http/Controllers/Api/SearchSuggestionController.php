@@ -36,9 +36,7 @@ class SearchSuggestionController extends Controller
                 'id' => $quan->id,
                 'ten_quan' => $quan->ten_quan,
                 'dia_chi' => $quan->dia_chi_chi_tiet, // Địa chỉ rút gọn
-                'anh_bia' => $quan->anh_bia 
-                    ? (str_starts_with($quan->anh_bia, 'http') ? $quan->anh_bia : asset('storage/' . $quan->anh_bia)) 
-                    : null,
+                'anh_bia' => $quan->anh_bia_url,
                 'slug' => $quan->slug,
                 'loai_hinh_kinh_doanh' => $quan->loai_hinh_kinh_doanh,
             ];
