@@ -63,10 +63,15 @@ class BlogService
      */
     public function uploadCoverImage(UploadedFile $file): string
     {
+        $uploadDisk = config('filesystems.upload_disk', 'r2');
         try {
-            return $file->store('blogs/covers', 'r2');
+            return $file->store('blogs/covers', $uploadDisk);
         } catch (\Throwable $e) {
-            return $file->store('blogs/covers', 'public');
+            \Illuminate\Support\Facades\Log::error('Blog cover image upload failed.', [
+                'disk' => $uploadDisk,
+                'error' => $e->getMessage(),
+            ]);
+            throw new \RuntimeException('Lỗi lưu ảnh bìa bài viết. Vui lòng thử lại sau.');
         }
     }
 

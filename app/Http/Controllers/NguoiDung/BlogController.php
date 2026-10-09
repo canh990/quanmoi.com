@@ -199,7 +199,7 @@ class BlogController extends Controller
         if ($request->hasFile('cover_image')) {
             try {
                 if ($blog->cover_image) {
-                    Storage::disk('r2')->delete($blog->cover_image);
+                    Storage::disk(config('filesystems.upload_disk', 'r2'))->delete($blog->cover_image);
                 }
             } catch (\Throwable $th) {
                 // Ignore storage deletion errors
