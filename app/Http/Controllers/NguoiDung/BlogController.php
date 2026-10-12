@@ -34,7 +34,22 @@ class BlogController extends Controller
             $query->where('status', $request->status);
         }
 
-        $blogs = $query->latest()->paginate(10);
+        if ($request->filled('search')) {
+            $searchTerm = trim($request->search);
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('title', 'like', "%{$searchTerm}%")
+                  ->orWhere('excerpt', 'like', "%{$searchTerm}%")
+                  ->orWhere('content', 'like', "%{$searchTerm}%")
+                  ->orWhereHas('category', function ($catQ) use ($searchTerm) {
+                      $catQ->where('name', 'like', "%{$searchTerm}%");
+                  })
+                  ->orWhereHas('tags', function ($tagQ) use ($searchTerm) {
+                      $tagQ->where('name', 'like', "%{$searchTerm}%");
+                  });
+            });
+        }
+
+        $blogs = $query->latest()->paginate(10)->withQueryString();
 
         $statusCounts = Blog::where('user_id', Auth::id())
             ->selectRaw('status, count(*) as count')

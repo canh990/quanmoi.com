@@ -37,11 +37,56 @@ class BlogController extends Controller
             });
         }
 
-        if ($request->has('search') && $request->search != '') {
-            $searchTerm = $request->search;
+        if ($request->has('suggest') || ($request->ajax() && $request->has('search'))) {
+            $searchTerm = trim($request->input('search', ''));
+            if ($searchTerm === '') {
+                return response()->json([]);
+            }
+            $suggestions = Blog::with(['category'])
+                ->where('status', 'published')
+                ->where(function($q) use ($searchTerm) {
+                    $q->where('title', 'like', "%{$searchTerm}%")
+                      ->orWhere('excerpt', 'like', "%{$searchTerm}%")
+                      ->orWhereHas('category', function ($catQ) use ($searchTerm) {
+                          $catQ->where('name', 'like', "%{$searchTerm}%");
+                      })
+                      ->orWhereHas('tags', function ($tagQ) use ($searchTerm) {
+                          $tagQ->where('name', 'like', "%{$searchTerm}%");
+                      });
+                })
+                ->latest('published_at')
+                ->limit(5)
+                ->get()
+                ->map(function ($b) {
+                    return [
+                        'id' => $b->id,
+                        'title' => $b->title,
+                        'slug' => $b->slug,
+                        'url' => route('blog.show', $b->slug),
+                        'category' => $b->category ? $b->category->name : null,
+                        'cover_url' => $b->cover_image_url ?? 'https://placehold.co/100x70/png',
+                        'published_date' => $b->published_at ? $b->published_at->format('d/m/Y') : '',
+                    ];
+                });
+
+            return response()->json($suggestions);
+        }
+
+        if ($request->filled('search')) {
+            $searchTerm = trim($request->search);
             $query->where(function($q) use ($searchTerm) {
                 $q->where('title', 'like', "%{$searchTerm}%")
-                  ->orWhere('excerpt', 'like', "%{$searchTerm}%");
+                  ->orWhere('excerpt', 'like', "%{$searchTerm}%")
+                  ->orWhere('content', 'like', "%{$searchTerm}%")
+                  ->orWhereHas('category', function ($catQ) use ($searchTerm) {
+                      $catQ->where('name', 'like', "%{$searchTerm}%");
+                  })
+                  ->orWhereHas('tags', function ($tagQ) use ($searchTerm) {
+                      $tagQ->where('name', 'like', "%{$searchTerm}%");
+                  })
+                  ->orWhereHas('user', function ($userQ) use ($searchTerm) {
+                      $userQ->where('ho_ten', 'like', "%{$searchTerm}%");
+                  });
             });
         }
 
@@ -56,7 +101,7 @@ class BlogController extends Controller
             $query->where('id', '!=', $heroBlog->id);
         }
 
-        $blogs = $query->latest('published_at')->paginate(12);
+        $blogs = $query->latest('published_at')->paginate(12)->withQueryString();
         
         $categories = BlogCategory::where('status', true)->get();
         
