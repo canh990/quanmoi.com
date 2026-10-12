@@ -114,4 +114,62 @@ class CrudNguoiDungTest extends TestCase
 
         $this->assertNotSoftDeleted('nguoi_dung', ['id' => $user->id], null, 'ngay_xoa');
     }
+
+    public function test_user_update_validation_messages_are_in_vietnamese(): void
+    {
+        $adminRole = VaiTro::where('ten', 'admin')->first();
+        $admin = User::factory()->create([
+            'email' => 'admin@quanmoi.com',
+            'vai_tro_id' => $adminRole?->id,
+        ]);
+
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($admin)->put('/admin/nguoi-dung/' . $user->id, [
+            'ho_ten' => '',
+            'email' => 'not-an-email',
+            'trang_thai' => '',
+        ]);
+
+        $response->assertSessionHasErrors([
+            'ho_ten' => 'Họ và tên người dùng không được để trống.',
+            'email' => 'Địa chỉ email không đúng định dạng.',
+            'trang_thai' => 'Trạng thái tài khoản không được để trống.',
+        ]);
+    }
+
+    public function test_admin_cannot_self_lock_or_demote_themselves(): void
+    {
+        $adminRole = VaiTro::where('ten', 'admin')->first();
+        $admin = User::factory()->create([
+            'email' => 'admin@quanmoi.com',
+            'vai_tro_id' => $adminRole?->id,
+        ]);
+
+        $response = $this->actingAs($admin)->put('/admin/nguoi-dung/' . $admin->id, [
+            'ho_ten' => 'Admin Self',
+            'email' => 'admin@quanmoi.com',
+            'trang_thai' => 'bi_khoa',
+        ]);
+
+        $response->assertSessionHasErrors([
+            'trang_thai' => 'Không thể tự hạ quyền, khóa hoặc xóa tài khoản quản trị đang đăng nhập.',
+        ]);
+    }
+
+    public function test_admin_can_toggle_tick_xanh(): void
+    {
+        $adminRole = VaiTro::where('ten', 'admin')->first();
+        $admin = User::factory()->create([
+            'email' => 'admin@quanmoi.com',
+            'vai_tro_id' => $adminRole?->id,
+        ]);
+
+        $user = User::factory()->create(['da_xac_thuc' => false]);
+
+        $response = $this->actingAs($admin)->put('/admin/nguoi-dung/' . $user->id . '/toggle-xac-thuc');
+        $response->assertRedirect();
+
+        $this->assertTrue($user->fresh()->da_xac_thuc);
+    }
 }

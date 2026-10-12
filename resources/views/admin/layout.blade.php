@@ -172,10 +172,35 @@
                     <span>Phân quyền</span>
                 </a>
 
-                <a href="/" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 transition-colors shadow-xs">
-                    <span class="material-symbols-outlined text-[16px] text-slate-500">open_in_new</span>
-                    <span class="hidden sm:inline">Trang chủ web</span>
+                <a href="{{ route('home') }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-slate-700 bg-white border border-slate-200/90 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-300 transition-all shadow-2xs group" title="Quay về trang chủ website">
+                    <span class="material-symbols-outlined text-[18px] text-amber-500 group-hover:scale-110 transition-transform">home</span>
+                    <span class="font-bold">Quay về trang chủ</span>
                 </a>
+
+                {{-- Real-time Admin Notification Bell --}}
+                <div class="relative">
+                    <button id="admin-notif-bell" onclick="toggleNotifDropdown()" class="relative p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors flex items-center justify-center">
+                        <span class="material-symbols-outlined text-[22px]">notifications</span>
+                        <span id="realtime-badge-count" class="hidden absolute -top-1 -right-1 min-w-[20px] h-[20px] px-1 bg-rose-500 text-white text-[11px] font-bold rounded-full flex items-center justify-center border-2 border-white shadow-xs">0</span>
+                    </button>
+
+                    {{-- Notification Dropdown Menu --}}
+                    <div id="admin-notif-dropdown" class="hidden absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-slate-200 z-50 overflow-hidden transform transition-all">
+                        <div class="px-4 py-3 bg-slate-900 text-white flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-[18px] text-amber-400">notifications_active</span>
+                                <h3 class="text-xs font-bold uppercase tracking-wider">Thông báo duyệt tức thời</h3>
+                            </div>
+                            <span id="realtime-badge-dropdown" class="px-2 py-0.5 text-[10px] font-bold bg-amber-500 text-slate-950 rounded-full">0 mới</span>
+                        </div>
+                        <div id="realtime-notif-list" class="max-h-80 overflow-y-auto divide-y divide-slate-100 p-2 text-xs">
+                            <div class="p-4 text-center text-slate-400 font-medium">Đang kiểm tra thông báo tức thời...</div>
+                        </div>
+                        <div class="p-2.5 bg-slate-50 border-t border-slate-100 text-center">
+                            <a href="{{ route('admin.duyet-xac-thuc.index') }}" class="text-[11px] font-bold text-amber-700 hover:text-amber-800 transition-colors">Xem tất cả yêu cầu chờ duyệt →</a>
+                        </div>
+                    </div>
+                </div>
 
                 <div class="h-5 w-px bg-slate-200"></div>
 
@@ -219,6 +244,10 @@
             </div>
             <div id="command-palette-list" class="p-2 max-h-80 overflow-y-auto space-y-1 text-xs">
                 <div class="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Lối Tắt Truy Cập Nhanh</div>
+                <a href="{{ route('home') }}" class="cmd-item flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-amber-50 hover:text-amber-700 text-slate-700 font-medium transition-colors">
+                    <span class="material-symbols-outlined text-[18px] text-amber-500">home</span>
+                    <span>Quay Về Trang Chủ Website</span>
+                </a>
                 <a href="{{ route('admin.dashboard') }}" class="cmd-item flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 text-slate-700 font-medium transition-colors">
                     <span class="material-symbols-outlined text-[18px]">space_dashboard</span>
                     <span>Bảng Điều Khiển Trung Tâm</span>
@@ -255,7 +284,308 @@
         </div>
     </div>
 
+    {{-- Floating Toast Notification Container --}}
+    <div id="realtime-toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-3 max-w-sm pointer-events-auto"></div>
+
     <script>
+        // Real-time Notification Engine
+        let lastSeenQuanKey = null;
+        let lastSeenBlogKey = null;
+        let isNotifInit = false;
+
+        function toggleNotifDropdown() {
+            const dropdown = document.getElementById('admin-notif-dropdown');
+            if (dropdown) {
+                dropdown.classList.toggle('hidden');
+            }
+        }
+
+        document.addEventListener('click', function(e) {
+            const bell = document.getElementById('admin-notif-bell');
+            const dropdown = document.getElementById('admin-notif-dropdown');
+            if (bell && dropdown && !bell.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+
+        // Web Audio Synthesizer Chime
+        function playChimeSound() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.15);
+                gain.gain.setValueAtTime(0.15, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.35);
+            } catch (e) {
+                // Audio context not allowed until interaction
+            }
+        }
+
+        function showRealtimeToast(title, body, url, iconName = 'notifications_active', badgeBg = 'bg-amber-500') {
+            const container = document.getElementById('realtime-toast-container');
+            if (!container) return;
+
+            playChimeSound();
+
+            const toast = document.createElement('div');
+            toast.className = 'bg-slate-900 text-white rounded-2xl p-4 shadow-2xl border border-slate-700/80 flex items-start gap-3 transform translate-x-full transition-all duration-300 ease-out cursor-pointer hover:border-amber-400';
+            toast.onclick = () => window.location.href = url;
+            toast.innerHTML = `
+                <div class="w-9 h-9 rounded-xl ${badgeBg} text-slate-950 flex items-center justify-center flex-shrink-0 font-bold">
+                    <span class="material-symbols-outlined text-[20px]">${iconName}</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-amber-400">🔔 Thông Báo Tức Thời</span>
+                        <span class="text-[10px] text-slate-400">Vừa xong</span>
+                    </div>
+                    <h4 class="text-xs font-bold text-white truncate mt-0.5">${title}</h4>
+                    <p class="text-[11px] text-slate-300 mt-0.5 line-clamp-2 leading-tight">${body}</p>
+                </div>
+                <button onclick="event.stopPropagation(); this.parentElement.remove()" class="text-slate-400 hover:text-white p-1">
+                    <span class="material-symbols-outlined text-[16px]">close</span>
+                </button>
+            `;
+
+            container.appendChild(toast);
+            setTimeout(() => toast.classList.remove('translate-x-full'), 50);
+
+            setTimeout(() => {
+                toast.classList.add('translate-x-full');
+                setTimeout(() => toast.remove(), 300);
+            }, 8000);
+        }
+
+        function checkRealtimeAdminNotifications() {
+            fetch('{{ route("admin.realtime-check") }}', {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (!data || !data.success) return;
+
+                const badgeCount = document.getElementById('realtime-badge-count');
+                const badgeDropdown = document.getElementById('realtime-badge-dropdown');
+                const list = document.getElementById('realtime-notif-list');
+
+                if (badgeCount) {
+                    if (data.total_pending > 0) {
+                        badgeCount.textContent = data.total_pending;
+                        badgeCount.classList.remove('hidden');
+                    } else {
+                        badgeCount.classList.add('hidden');
+                    }
+                }
+
+                if (badgeDropdown) {
+                    badgeDropdown.textContent = data.total_pending + ' mới';
+                }
+
+                if (list) {
+                    let itemsHtml = '';
+
+                    if (data.latest_quan) {
+                        const ownerInfo = data.latest_quan.nguoi_dang 
+                            ? `${data.latest_quan.nguoi_dang.ho_ten} (${data.latest_quan.nguoi_dang.email})` 
+                            : 'Chưa xác định';
+
+                        itemsHtml += `
+                            <a href="${data.latest_quan.url}" class="flex items-start gap-3 p-2.5 hover:bg-slate-50 rounded-xl transition-colors">
+                                <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center flex-shrink-0 font-bold">
+                                    <span class="material-symbols-outlined text-[18px]">storefront</span>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center justify-between">
+                                        <p class="font-bold text-slate-800 truncate text-xs">Cơ sở quán mới chờ duyệt</p>
+                                        <span class="text-[10px] text-slate-400">${data.latest_quan.time_ago}</span>
+                                    </div>
+                                    <p class="text-[11px] font-semibold text-amber-700 truncate">${data.latest_quan.ten_quan}</p>
+                                    <p class="text-[10px] text-slate-500 truncate">Chủ quán: ${ownerInfo}</p>
+                                </div>
+                            </a>
+                        `;
+                    }
+
+                    if (data.latest_blog) {
+                        itemsHtml += `
+                            <a href="${data.latest_blog.url}" class="flex items-start gap-3 p-2.5 hover:bg-slate-50 rounded-xl transition-colors">
+                                <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center flex-shrink-0 font-bold">
+                                    <span class="material-symbols-outlined text-[18px]">article</span>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center justify-between">
+                                        <p class="font-bold text-slate-800 truncate text-xs">Bài viết Blog mới gửi duyệt</p>
+                                        <span class="text-[10px] text-slate-400">${data.latest_blog.time_ago}</span>
+                                    </div>
+                                    <p class="text-[11px] text-slate-600 truncate">${data.latest_blog.title}</p>
+                                </div>
+                            </a>
+                        `;
+                    }
+
+                    if (data.latest_user) {
+                        itemsHtml += `
+                            <a href="${data.latest_user.url}" class="flex items-start gap-3 p-2.5 hover:bg-slate-50 rounded-xl transition-colors">
+                                <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center flex-shrink-0 font-bold">
+                                    <span class="material-symbols-outlined text-[18px]">person_add</span>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center justify-between">
+                                        <p class="font-bold text-slate-800 truncate text-xs">Thành viên mới đăng ký</p>
+                                    </div>
+                                    <p class="text-[11px] text-slate-600 truncate">${data.latest_user.ho_ten} (${data.latest_user.email})</p>
+                                </div>
+                            </a>
+                        `;
+                    }
+
+                    if (!itemsHtml) {
+                        itemsHtml = `<div class="p-4 text-center text-slate-400 font-medium text-xs">Không có thông báo chờ duyệt nào.</div>`;
+                    }
+
+                    list.innerHTML = itemsHtml;
+                }
+
+                if (data.latest_quan) {
+                    const currentQuanKey = data.latest_quan.id + '_' + data.latest_quan.created_at;
+                    if (isNotifInit && lastSeenQuanKey && lastSeenQuanKey !== currentQuanKey) {
+                        const ownerText = data.latest_quan.nguoi_dang 
+                            ? `Người đăng: ${data.latest_quan.nguoi_dang.ho_ten} (${data.latest_quan.nguoi_dang.email})`
+                            : '';
+                        showRealtimeToast('Quán Ăn Mới Cần Duyệt Gấp!', `Quán "${data.latest_quan.ten_quan}" vừa gửi hồ sơ duyệt mới. ${ownerText}`, data.latest_quan.url, 'storefront', 'bg-amber-400');
+                    }
+                    lastSeenQuanKey = currentQuanKey;
+
+                    // If Admin is currently standing on the approval screen, inject row directly into DOM live if not present!
+                    const tbody = document.getElementById('pending-quan-tbody');
+                    if (tbody && !document.getElementById('quan-row-' + data.latest_quan.id)) {
+                        const emptyRow = document.getElementById('pending-quan-empty-row');
+                        if (emptyRow) emptyRow.remove();
+
+                        const newRow = document.createElement('tr');
+                        newRow.id = 'quan-row-' + data.latest_quan.id;
+                        newRow.className = 'bg-amber-100/90 transition-all duration-1000 animate-pulse';
+                        
+                        const ownerName = data.latest_quan.nguoi_dang ? data.latest_quan.nguoi_dang.ho_ten : 'Chưa xác định';
+                        const ownerEmail = data.latest_quan.nguoi_dang ? data.latest_quan.nguoi_dang.email : 'Chưa có Email';
+                        const ownerPhone = data.latest_quan.nguoi_dang ? (data.latest_quan.nguoi_dang.so_dien_thoai || 'Chưa có SĐT') : '';
+                        const quanAddr = data.latest_quan.dia_chi || 'Chưa cập nhật';
+                        const loaiHinh = data.latest_quan.loai_hinh ? `<span class="text-[10px] text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded font-normal block w-max mt-0.5">${data.latest_quan.loai_hinh}</span>` : '';
+
+                        newRow.innerHTML = `
+                            <td class="p-3 font-bold text-slate-900">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
+                                    ${data.latest_quan.ten_quan}
+                                </div>
+                                ${loaiHinh}
+                            </td>
+                            <td class="p-3 font-medium">
+                                <span class="font-bold text-slate-900 block">${ownerName}</span>
+                                <span class="text-[10px] text-slate-500 block">📧 ${ownerEmail}</span>
+                                <span class="text-[10px] text-slate-500 block">📞 ${ownerPhone}</span>
+                            </td>
+                            <td class="p-3 text-slate-600">${quanAddr}</td>
+                            <td class="p-3 text-emerald-600 font-bold">Vừa xong</td>
+                            <td class="p-3 text-right">
+                                <form action="/admin/duyet-xac-thuc/quan/${data.latest_quan.id}" method="POST" class="inline-block">
+                                    <input type="hidden" name="_token" value="${document.querySelector('meta[name="csrf-token"]')?.content || ''}">
+                                    <input type="hidden" name="_method" value="PUT">
+                                    <button type="submit" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition-colors flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-[16px]">check_circle</span>
+                                        Duyệt & Xác thực
+                                    </button>
+                                </form>
+                            </td>
+                        `;
+
+                        tbody.insertBefore(newRow, tbody.firstChild);
+
+                        setTimeout(() => {
+                            newRow.classList.remove('bg-amber-100/90', 'animate-pulse');
+                            newRow.classList.add('hover:bg-slate-50');
+                        }, 5000);
+                    }
+                }
+
+                // Update Dashboard KPI Cards Live
+                const kpiTotalQuan = document.getElementById('kpi-total-quan');
+                if (kpiTotalQuan && data.total_quan !== undefined) kpiTotalQuan.textContent = data.total_quan.toLocaleString();
+
+                const kpiPendingQuan = document.getElementById('kpi-pending-quan');
+                if (kpiPendingQuan && data.pending_quan !== undefined) kpiPendingQuan.textContent = data.pending_quan.toLocaleString();
+
+                const kpiTotalUsers = document.getElementById('kpi-total-users');
+                if (kpiTotalUsers && data.total_users !== undefined) kpiTotalUsers.textContent = data.total_users.toLocaleString();
+
+                const kpiActiveUsers = document.getElementById('kpi-active-users');
+                if (kpiActiveUsers && data.active_users !== undefined) kpiActiveUsers.textContent = data.active_users.toLocaleString() + ' người';
+
+                // Inject Live User Row if standing on User Management screen
+                const usersTbody = document.getElementById('users-tbody');
+                if (usersTbody && data.latest_user && !document.getElementById('user-row-' + data.latest_user.id)) {
+                    const uRow = document.createElement('tr');
+                    uRow.id = 'user-row-' + data.latest_user.id;
+                    uRow.className = 'hover:bg-gray-50/80 transition-colors bg-indigo-50/90 animate-pulse';
+                    uRow.innerHTML = `
+                        <td class="py-3.5 px-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-indigo-600 text-white font-bold flex items-center justify-center text-sm">
+                                    ${(data.latest_user.ho_ten || 'U').substring(0, 1).toUpperCase()}
+                                </div>
+                                <div>
+                                    <p class="font-bold text-gray-900 flex items-center gap-1">
+                                        <span class="w-2 h-2 rounded-full bg-indigo-500 animate-ping"></span>
+                                        ${data.latest_user.ho_ten}
+                                    </p>
+                                    <span class="text-xs text-gray-400">ID: ${data.latest_user.id.substring(0, 8)}...</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-3.5 px-4">
+                            <p class="font-medium text-gray-800">${data.latest_user.email}</p>
+                            <p class="text-xs text-gray-400">${data.latest_user.so_dien_thoai || 'Chưa cập nhật SĐT'}</p>
+                        </td>
+                        <td class="py-3.5 px-4">
+                            <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-700">nguoi_dung</span>
+                        </td>
+                        <td class="py-3.5 px-4">
+                            <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">Hoạt động</span>
+                        </td>
+                        <td class="py-3.5 px-4 text-center text-xs text-gray-400">0</td>
+                        <td class="py-3.5 px-4 text-right">
+                            <a href="/admin/nguoi-dung/${data.latest_user.id}/edit" class="px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg font-bold text-xs inline-flex items-center gap-1">
+                                <span class="material-symbols-outlined text-[16px]">edit</span> Chỉnh sửa
+                            </a>
+                        </td>
+                    `;
+                    usersTbody.insertBefore(uRow, usersTbody.firstChild);
+                    setTimeout(() => uRow.classList.remove('bg-indigo-50/90', 'animate-pulse'), 5000);
+                }
+
+                if (data.latest_blog) {
+                    const currentBlogKey = data.latest_blog.id + '_' + data.latest_blog.created_at;
+                    if (isNotifInit && lastSeenBlogKey && lastSeenBlogKey !== currentBlogKey) {
+                        showRealtimeToast('Bài Viết Mới Gửi Duyệt!', `Bài viết "${data.latest_blog.title}" vừa được gửi đến Admin.`, data.latest_blog.url, 'article', 'bg-blue-400');
+                    }
+                    lastSeenBlogKey = currentBlogKey;
+                }
+
+                isNotifInit = true;
+            })
+            .catch(() => {});
+        }
+
         function toggleSidebar() {
             const mobileSidebar = document.getElementById('admin-sidebar-mobile');
             const backdrop = document.getElementById('mobile-sidebar-backdrop');
@@ -310,6 +640,11 @@
             if (e.target === this) {
                 closeCommandPalette();
             }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            checkRealtimeAdminNotifications();
+            setInterval(checkRealtimeAdminNotifications, 3000);
         });
     </script>
     @stack('scripts')

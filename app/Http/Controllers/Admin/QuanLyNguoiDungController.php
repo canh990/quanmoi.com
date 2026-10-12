@@ -136,7 +136,7 @@ class QuanLyNguoiDungController extends Controller
             return response()->json(['success' => true, 'message' => 'Đã xóa tạm thời người dùng và khóa các quán liên quan.']);
         }
 
-        return redirect()->route('admin.nguoi-dung.index')->with('success', 'Đã xóa tạm người dùng thành công!');
+        return redirect()->route('admin.nguoi-dung.index')->with('success', 'Đã xóa tạm thời người dùng và khóa các quán liên quan.');
     }
 
     public function restore(Request $request, string $id)
@@ -161,7 +161,7 @@ class QuanLyNguoiDungController extends Controller
             return response()->json(['success' => true, 'message' => 'Khôi phục tài khoản và các quán liên quan thành công.']);
         }
 
-        return redirect()->route('admin.nguoi-dung.index')->with('success', 'Đã khôi phục người dùng!');
+        return redirect()->route('admin.nguoi-dung.index')->with('success', 'Khôi phục tài khoản và các quán liên quan thành công.');
     }
 
     public function forceDestroy(Request $request, string $id)
@@ -187,7 +187,7 @@ class QuanLyNguoiDungController extends Controller
             return response()->json(['success' => true, 'message' => 'Đã xóa vĩnh viễn người dùng và các quán liên quan.']);
         }
 
-        return redirect()->route('admin.nguoi-dung.index')->with('success', 'Đã xóa vĩnh viễn người dùng!');
+        return redirect()->route('admin.nguoi-dung.index')->with('success', 'Đã xóa vĩnh viễn người dùng và các quán liên quan.');
     }
 
     public function toggleXacThuc(Request $request, string $id)

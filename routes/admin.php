@@ -66,6 +66,7 @@ Route::middleware(['auth', 'KiemTraQuyenHan:admin'])->group(function () {
     // 8. Thông báo Hệ Thống
     Route::get('/thong-bao', [ThongBaoAdminController::class, 'index'])->name('thong-bao.index');
     Route::post('/thong-bao', [ThongBaoAdminController::class, 'sendSystemNotification'])->name('thong-bao.send');
+    Route::get('/realtime-check', [ThongBaoAdminController::class, 'realtimeCheck'])->name('realtime-check');
 
     // 9. Bảo mật
     Route::get('/bao-mat', [BaoMatController::class, 'index'])->name('bao-mat.index');

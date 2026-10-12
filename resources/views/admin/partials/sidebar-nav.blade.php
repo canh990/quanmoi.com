@@ -90,3 +90,13 @@
     </div>
 </div>
 
+{{-- Quay về trang chủ website --}}
+<div class="pt-3 border-t border-slate-800">
+    <a href="{{ route('home') }}" class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-all shadow-xs group">
+        <div class="flex items-center gap-2.5">
+            <span class="material-symbols-outlined text-[18px] text-amber-400 group-hover:-translate-x-0.5 transition-transform">arrow_back</span>
+            <span>Quay về trang chủ</span>
+        </div>
+        <span class="material-symbols-outlined text-[16px] text-amber-400/70">home</span>
+    </a>
+</div>

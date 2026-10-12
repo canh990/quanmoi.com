@@ -24,12 +24,21 @@
                         <th class="p-3 text-right">Thao Tác</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
+                <tbody id="pending-quan-tbody" class="divide-y divide-slate-100">
                     @forelse($pendingQuan as $q)
-                        <tr class="hover:bg-slate-50">
-                            <td class="p-3 font-bold text-slate-900">{{ $q->ten_quan }}</td>
-                            <td class="p-3 font-medium">{{ $q->chuQuan->ho_ten ?? 'N/A' }}</td>
-                            <td class="p-3 text-slate-600">{{ Str::limit($q->dia_chi, 50) }}</td>
+                        <tr id="quan-row-{{ $q->id }}" class="hover:bg-slate-50">
+                            <td class="p-3 font-bold text-slate-900">
+                                {{ $q->ten_quan }}
+                                @if($q->loai_hinh_kinh_doanh)
+                                    <span class="text-[10px] text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded font-normal block w-max mt-0.5">{{ $q->loai_hinh_kinh_doanh }}</span>
+                                @endif
+                            </td>
+                            <td class="p-3 font-medium">
+                                <span class="font-bold text-slate-900 block">{{ $q->chuQuan->ho_ten ?? 'Chưa xác định' }}</span>
+                                <span class="text-[10px] text-slate-500 block">📧 {{ $q->chuQuan->email ?? 'Chưa có Email' }}</span>
+                                <span class="text-[10px] text-slate-500 block">📞 {{ $q->chuQuan->so_dien_thoai ?? 'Chưa có SĐT' }}</span>
+                            </td>
+                            <td class="p-3 text-slate-600">{{ Str::limit($q->dia_chi_chi_tiet ?? $q->dia_chi, 50) }}</td>
                             <td class="p-3 text-slate-500">{{ $q->created_at ? $q->created_at->format('d/m/Y H:i') : '' }}</td>
                             <td class="p-3 text-right">
                                 <form action="{{ route('admin.duyet-xac-thuc.quan', $q->id) }}" method="POST" class="inline-block">
@@ -43,7 +52,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr>
+                        <tr id="pending-quan-empty-row">
                             <td colspan="5" class="p-6 text-center text-xs text-slate-500">Không có quán nào đang chờ duyệt.</td>
                         </tr>
                     @endforelse
