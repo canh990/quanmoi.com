@@ -21,7 +21,7 @@
     <div class="mb-5 flex items-center gap-1.5 text-[13px] font-bold uppercase tracking-wide">
         <a href="{{ route('chu-quan.quan.index') }}" class="text-gray-600 hover:text-primary transition-colors">QUẢN LÝ CỬA HÀNG</a>
         <span class="text-gray-300 mx-1.5">•</span>
-        <span class="text-blue-600">{{ mb_strtoupper($quan->ten_quan, 'UTF-8') }}</span>
+        <span class="min-w-0 break-words text-blue-600 [overflow-wrap:anywhere]">{{ mb_strtoupper($quan->ten_quan, 'UTF-8') }}</span>
     </div>
 
     {{-- Header / Cover Photo & Basic Info --}}
@@ -36,7 +36,7 @@
             </a>
 
             <div class="absolute bottom-6 left-6 right-6 flex flex-col md:flex-row md:items-end justify-between gap-4 text-white z-10">
-                <div>
+                <div class="min-w-0 flex-1">
                     <div class="flex items-center gap-2 mb-2">
                         @if($quan->trang_thai === 'da_duyet')
                             <div class="inline-flex items-center gap-1.5 bg-tick-xanh text-white px-3 py-1 rounded-full text-xs font-bold">
@@ -59,8 +59,8 @@
                             {{ $quan->loai_hinh_kinh_doanh ?? 'Quán ăn' }}
                         </div>
                     </div>
-                    <h1 class="text-2xl md:text-4xl font-black drop-shadow-md">{{ $quan->ten_quan }}</h1>
-                    <p class="text-white/90 text-sm flex items-center gap-1 mt-1 drop-shadow-md">
+                    <h1 class="text-2xl md:text-4xl font-black drop-shadow-md break-words [overflow-wrap:anywhere]">{{ $quan->ten_quan }}</h1>
+                    <p class="text-white/90 text-sm flex items-start gap-1 mt-1 drop-shadow-md break-words [overflow-wrap:anywhere]">
                         <span class="material-symbols-outlined text-[18px]">location_on</span>
                         {{ $quan->dia_chi_chi_tiet }}, {{ $quan->ten_quan_huyen }}, {{ $quan->ten_tinh_thanh }}
                     </p>
@@ -111,7 +111,14 @@
 
         {{-- Left: Details & Gallery --}}
         <div class="lg:col-span-2 space-y-8">
-            <div class="bg-white rounded-[24px] p-6 md:p-8 border border-gray-100 shadow-sm space-y-4">
+            <nav id="owner-venue-tabs" class="flex border-b border-gray-200 gap-5 overflow-x-auto no-scrollbar" aria-label="Điều hướng chi tiết quán">
+                <a href="#owner-menu-section" aria-current="location" class="tab-active py-3 text-xs sm:text-sm font-semibold whitespace-nowrap px-1">THỰC ĐƠN</a>
+                <a href="#owner-reviews-section" class="text-gray-500 hover:text-primary py-3 text-xs sm:text-sm font-semibold whitespace-nowrap px-1 transition-colors">ĐÁNH GIÁ</a>
+                <a href="#owner-info-section" class="text-gray-500 hover:text-primary py-3 text-xs sm:text-sm font-semibold whitespace-nowrap px-1 transition-colors">THÔNG TIN CHI TIẾT</a>
+                <a href="#owner-gallery-section" class="text-gray-500 hover:text-primary py-3 text-xs sm:text-sm font-semibold whitespace-nowrap px-1 transition-colors">HÌNH ẢNH</a>
+            </nav>
+
+            <div id="owner-gallery-section" hidden class="bg-white rounded-[24px] p-6 md:p-8 border border-gray-100 shadow-sm space-y-4">
                 <div class="flex items-center justify-between">
                     <h3 class="text-xl font-extrabold text-on-surface flex items-center gap-2">
                         <span class="material-symbols-outlined text-primary">photo_library</span>
@@ -164,7 +171,7 @@
             </div>
 
             {{-- Description --}}
-            <div class="bg-white rounded-[24px] p-6 md:p-8 border border-gray-100 shadow-sm space-y-4 group/desc relative">
+            <div id="owner-info-section" hidden class="bg-white rounded-[24px] p-6 md:p-8 border border-gray-100 shadow-sm space-y-4 group/desc relative">
                 <button onclick="openEditModal()" class="absolute top-6 right-6 w-8 h-8 rounded-full bg-gray-50 border border-gray-200 shadow-sm flex items-center justify-center text-gray-400 hover:text-orange-500 hover:border-orange-200 opacity-0 group-hover/desc:opacity-100 transition-all cursor-pointer z-10" title="Chỉnh sửa mô tả">
                     <span class="material-symbols-outlined text-[16px]">edit</span>
                 </button>
@@ -174,7 +181,7 @@
                         Mô tả thông tin quán
                     </h3>
                 </div>
-                <p class="text-gray-600 leading-relaxed text-[15px]" id="current-mo-ta">
+                <p class="text-gray-600 leading-relaxed text-[15px] break-words [overflow-wrap:anywhere]" id="current-mo-ta">
                     {{ $quan->mo_ta ?: 'Chưa có mô tả chi tiết cho quán ăn này.' }}
                 </p>
 
@@ -197,7 +204,112 @@
                     </a>
                 </div>
                 @endif
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 border-t border-gray-100 pt-4 text-sm text-gray-600">
+                    <p class="break-words [overflow-wrap:anywhere]"><strong class="text-gray-800">Địa chỉ:</strong> {{ $quan->dia_chi_chi_tiet }}, {{ $quan->ten_phuong_xa }}, {{ $quan->ten_quan_huyen }}, {{ $quan->ten_tinh_thanh }}</p>
+                    <p><strong class="text-gray-800">Điện thoại:</strong> {{ $quan->so_dien_thoai }}</p>
+                    @if($quan->email)
+                        <p class="break-words [overflow-wrap:anywhere]"><strong class="text-gray-800">Email:</strong> {{ $quan->email }}</p>
+                    @endif
+                    <p><strong class="text-gray-800">Giờ mở cửa:</strong> {{ $quan->gio_mo_cua }} - {{ $quan->gio_dong_cua }}</p>
+                </div>
             </div>
+            {{-- Menu preview for the owner --}}
+            <section class="bg-white rounded-[24px] p-6 md:p-8 border border-gray-100 shadow-sm space-y-6" id="owner-menu-section">
+                <div class="flex items-center justify-between gap-4">
+                    <h3 class="text-xl font-extrabold text-on-surface flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">restaurant_menu</span>
+                        Thực đơn
+                    </h3>
+                    <a href="{{ route('chu-quan.quan.menu.edit', $quan->slug) }}" class="shrink-0 text-sm font-bold text-primary hover:underline">Quản lý thực đơn</a>
+                </div>
+
+                @forelse($quan->danhMucMenu as $danhMuc)
+                    <div class="space-y-3">
+                        <h4 class="text-base font-bold text-on-surface break-words [overflow-wrap:anywhere]">{{ $danhMuc->ten_danh_muc }}</h4>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            @forelse($danhMuc->monAn as $monAn)
+                                <article class="flex min-w-0 gap-3 rounded-xl border border-gray-100 p-3">
+                                    @if($monAn->hinh_anh_url)
+                                        <img src="{{ $monAn->hinh_anh_url }}" alt="{{ $monAn->ten_mon }}" class="h-16 w-16 shrink-0 rounded-lg object-cover">
+                                    @endif
+                                    <div class="min-w-0 flex-1">
+                                        <h5 class="font-bold text-sm break-words [overflow-wrap:anywhere]">{{ $monAn->ten_mon }}</h5>
+                                        @if($monAn->mo_ta)
+                                            <p class="mt-1 text-xs text-gray-500 break-words [overflow-wrap:anywhere]">{{ $monAn->mo_ta }}</p>
+                                        @endif
+                                        <p class="mt-2 font-bold text-primary">{{ number_format($monAn->gia, 0, ',', '.') }}đ</p>
+                                    </div>
+                                </article>
+                            @empty
+                                <p class="text-sm text-gray-500">Danh mục này chưa có món.</p>
+                            @endforelse
+                        </div>
+                    </div>
+                @empty
+                    <p class="text-sm text-gray-500">Quán chưa có thực đơn. Thêm món để khách có thể xem.</p>
+                @endforelse
+            </section>
+
+            {{-- Read-only customer reviews for the owner --}}
+            <section hidden class="bg-white rounded-[24px] p-6 md:p-8 border border-gray-100 shadow-sm space-y-4" id="owner-reviews-section">
+                @php
+                    $ownerReviews = $quan->danhGia->sortByDesc('updated_at');
+                    $ownerReviewCount = $ownerReviews->count();
+                    $ownerAverageRating = $ownerReviewCount ? $ownerReviews->avg('so_sao') : 0;
+                @endphp
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <h3 class="text-xl font-extrabold text-on-surface flex items-center gap-2">
+                        <span class="material-symbols-outlined text-amber-500">star</span>
+                        Đánh giá của khách ({{ $ownerReviewCount }})
+                    </h3>
+                    @if($ownerReviewCount)
+                        <p class="font-bold text-amber-600">★ {{ number_format($ownerAverageRating, 1) }} / 5</p>
+                    @endif
+                </div>
+
+                <div class="space-y-3">
+                    @forelse($ownerReviews as $danhGia)
+                        <article class="rounded-xl border border-gray-100 p-4">
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <h4 class="font-bold text-sm break-words [overflow-wrap:anywhere]">{{ $danhGia->nguoiDung?->ho_ten ?? 'Thành viên' }}</h4>
+                                <time class="text-xs text-gray-400" datetime="{{ $danhGia->updated_at?->toISOString() }}">
+                                    {{ $danhGia->updated_at?->timezone('Asia/Ho_Chi_Minh')->format('d/m/Y H:i') }}
+                                </time>
+                            </div>
+                            <p class="mt-1 text-amber-500" aria-label="{{ $danhGia->so_sao }} trên 5 sao">{{ str_repeat('★', (int) $danhGia->so_sao) }}{{ str_repeat('☆', 5 - (int) $danhGia->so_sao) }}</p>
+                            @if($danhGia->binh_luan)
+                                <p class="mt-2 text-sm text-gray-600 whitespace-pre-line break-words [overflow-wrap:anywhere]">{{ $danhGia->binh_luan }}</p>
+                            @endif
+
+                            @if($danhGia->phan_hoi)
+                                <div class="mt-3 rounded-lg bg-orange-50 p-3">
+                                    <p class="text-xs font-bold text-primary">Phản hồi của quán</p>
+                                    <p class="mt-1 whitespace-pre-line break-words text-sm text-gray-700 [overflow-wrap:anywhere]">{{ $danhGia->phan_hoi }}</p>
+                                    @if($danhGia->phan_hoi_luc)
+                                        <time class="mt-1 block text-[11px] text-gray-400">{{ $danhGia->phan_hoi_luc->timezone('Asia/Ho_Chi_Minh')->format('d/m/Y H:i') }}</time>
+                                    @endif
+                                </div>
+                            @endif
+
+                            <form method="POST" action="{{ route('chu-quan.quan.danh-gia.reply', ['slug' => $quan->slug, 'reviewId' => $danhGia->id]) }}" class="mt-3 space-y-2">
+                                @csrf
+                                @method('PUT')
+                                <label for="phan-hoi-{{ $danhGia->id }}" class="block text-xs font-bold text-gray-700">{{ $danhGia->phan_hoi ? 'Chỉnh sửa phản hồi' : 'Trả lời đánh giá này' }}</label>
+                                <textarea id="phan-hoi-{{ $danhGia->id }}" name="phan_hoi_{{ $danhGia->id }}" rows="3" maxlength="2000" required class="w-full rounded-lg border border-gray-200 p-3 text-sm outline-none focus:border-primary" placeholder="Viết phản hồi cho khách...">{{ old('phan_hoi_'.$danhGia->id, $danhGia->phan_hoi) }}</textarea>
+                                @error('phan_hoi_'.$danhGia->id)
+                                    <p class="text-xs text-red-600">{{ $message }}</p>
+                                @enderror
+                                <button type="submit" class="rounded-lg bg-primary px-4 py-2 text-xs font-bold text-white hover:brightness-110">
+                                    {{ $danhGia->phan_hoi ? 'Cập nhật phản hồi' : 'Gửi phản hồi' }}
+                                </button>
+                            </form>
+                        </article>
+                    @empty
+                        <p class="text-sm text-gray-500">Quán chưa có đánh giá từ khách.</p>
+                    @endforelse
+                </div>
+            </section>
         </div>
 
         {{-- Right Sidebar --}}
@@ -417,6 +529,34 @@
 <script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <script>
+    const ownerVenueTabs = Array.from(document.querySelectorAll('#owner-venue-tabs a[href^="#owner-"]'));
+
+    function setOwnerVenueTab(hash) {
+        const requestedId = (hash || '').replace(/^#/, '');
+        const activeId = ownerVenueTabs.some(tab => tab.hash === `#${requestedId}`)
+            ? requestedId
+            : 'owner-menu-section';
+
+        ownerVenueTabs.forEach(tab => {
+            const active = tab.hash === `#${activeId}`;
+            tab.classList.toggle('tab-active', active);
+            tab.classList.toggle('text-gray-500', !active);
+            tab.classList.toggle('hover:text-primary', !active);
+            if (active) tab.setAttribute('aria-current', 'location');
+            else tab.removeAttribute('aria-current');
+
+            const panel = document.querySelector(tab.hash);
+            if (panel) panel.hidden = !active;
+        });
+    }
+
+    ownerVenueTabs.forEach(tab => tab.addEventListener('click', event => {
+        event.preventDefault();
+        setOwnerVenueTab(tab.hash);
+    }));
+    window.addEventListener('hashchange', () => setOwnerVenueTab(window.location.hash));
+    setOwnerVenueTab(window.location.hash);
+
     /* =========================================================
        FANCYBOX
     ========================================================= */

@@ -74,7 +74,7 @@
                             <div class="flex items-center gap-3">
                                 <div class="w-12 h-10 rounded overflow-hidden bg-gray-100 shrink-0">
                                     @if($blog->cover_image)
-                                        <img src="{{ Str::startsWith($blog->cover_image, 'http') ? $blog->cover_image : $r2Disk->url($blog->cover_image) }}" class="w-full h-full object-cover">
+                                        <img src="{{ $blog->cover_image_url }}" class="w-full h-full object-cover">
                                     @endif
                                 </div>
                                 <div class="max-w-[200px] truncate">
@@ -124,6 +124,26 @@
                         </td>
                         <td class="px-6 py-4">
                             <div class="flex items-center justify-end gap-2">
+                                @if($blog->status === 'pending')
+                                    <form action="{{ route('admin.blog.posts.update-status', $blog) }}" method="POST" class="inline">
+                                        @csrf
+                                        @method('PUT')
+                                        <input type="hidden" name="status" value="published">
+                                        <input type="hidden" name="note" value="Duyệt bài viết thành công">
+                                        <button type="submit" class="w-8 h-8 rounded-lg flex items-center justify-center text-emerald-600 hover:bg-emerald-50 transition-colors" title="Duyệt bài viết ngay">
+                                            <span class="material-symbols-outlined text-[18px]">check_circle</span>
+                                        </button>
+                                    </form>
+                                    <form action="{{ route('admin.blog.posts.update-status', $blog) }}" method="POST" class="inline">
+                                        @csrf
+                                        @method('PUT')
+                                        <input type="hidden" name="status" value="rejected">
+                                        <input type="hidden" name="note" value="Bài viết không đủ điều kiện đăng tải">
+                                        <button type="submit" class="w-8 h-8 rounded-lg flex items-center justify-center text-amber-600 hover:bg-amber-50 transition-colors" title="Từ chối bài viết">
+                                            <span class="material-symbols-outlined text-[18px]">cancel</span>
+                                        </button>
+                                    </form>
+                                @endif
                                 <a href="{{ route('admin.blog.posts.show', $blog) }}" class="w-8 h-8 rounded-lg flex items-center justify-center text-blue-600 hover:bg-blue-50 transition-colors" title="Xem chi tiết & Duyệt">
                                     <span class="material-symbols-outlined text-[18px]">visibility</span>
                                 </a>

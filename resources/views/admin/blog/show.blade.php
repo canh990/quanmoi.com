@@ -18,7 +18,7 @@
         <div class="lg:col-span-2 space-y-6">
             <div class="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm">
                 @if($blog->cover_image)
-                    <img src="{{ Str::startsWith($blog->cover_image, 'http') ? $blog->cover_image : asset('storage/'.$blog->cover_image) }}" class="w-full rounded-xl mb-6 shadow-sm">
+                    <img src="{{ $blog->cover_image_url }}" class="w-full rounded-xl mb-6 shadow-sm">
                 @endif
                 
                 <div class="mb-4">

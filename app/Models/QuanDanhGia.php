@@ -9,7 +9,11 @@ class QuanDanhGia extends Model
 {
     protected $table = 'quan_danh_gia';
 
-    protected $fillable = ['quan_id', 'nguoi_dung_id', 'so_sao', 'binh_luan'];
+    protected $fillable = ['quan_id', 'nguoi_dung_id', 'so_sao', 'binh_luan', 'phan_hoi', 'phan_hoi_luc'];
+
+    protected $casts = [
+        'phan_hoi_luc' => 'datetime',
+    ];
 
     public function quan(): BelongsTo
     {

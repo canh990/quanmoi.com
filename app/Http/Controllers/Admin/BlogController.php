@@ -109,7 +109,13 @@ class BlogController extends Controller
             ]);
             
             if ($oldStatus !== $status && isset($actionMap[$status])) {
-                $blog->user->notify(new BlogStatusUpdatedNotification($blog, $actionMap[$status], $request->note));
+                try {
+                    if ($blog->user) {
+                        $blog->user->notify(new BlogStatusUpdatedNotification($blog, $actionMap[$status], $request->note));
+                    }
+                } catch (\Throwable $notiEx) {
+                    \Illuminate\Support\Facades\Log::warning('BlogStatusUpdatedNotification error: ' . $notiEx->getMessage());
+                }
             }
         });
         
@@ -135,7 +141,7 @@ class BlogController extends Controller
         if ($request->has('force') && $request->force) {
             $this->authorize('forceDelete', $blog);
             if ($blog->cover_image) {
-                Storage::disk('r2')->delete($blog->cover_image);
+                Storage::disk(config('filesystems.upload_disk', 'r2'))->delete($blog->cover_image);
             }
             $blog->forceDelete();
             return redirect()->route('admin.blog.posts.index')->with('success', 'Bài viết đã bị xoá vĩnh viễn.');

@@ -264,10 +264,10 @@
             <div class="min-w-0">
                 <!-- Business Info Header -->
                 <div class="mb-6">
-                    <div class="flex items-center gap-2 mb-1">
-                        <h1 class="font-headline-lg text-headline-lg text-on-background font-black">{{ $quan->ten_quan }}</h1>
+                    <div class="flex min-w-0 items-start gap-2 mb-1">
+                        <h1 class="min-w-0 font-headline-lg text-headline-lg text-on-background font-black break-words [overflow-wrap:anywhere]">{{ $quan->ten_quan }}</h1>
                         @if($quan->is_xac_thuc)
-                            <span class="material-symbols-outlined text-tick-xanh fill-icon text-xl" title="Verified">verified</span>
+                            <span class="material-symbols-outlined shrink-0 text-tick-xanh fill-icon text-xl" title="Verified">verified</span>
                         @endif
                     </div>
                     <p class="text-on-surface-variant flex items-start gap-1 mb-3 text-xs sm:text-sm">
@@ -305,7 +305,7 @@
                         @if(isset($quan->danhMucMenu) && $quan->danhMucMenu->count() > 0)
                             @foreach($quan->danhMucMenu as $danhMuc)
                                 <div>
-                                    <h3 class="font-title-md text-sm sm:text-base text-on-background mb-3 flex items-center gap-2">
+                                    <h3 class="font-title-md text-sm sm:text-base text-on-background mb-3 flex items-center gap-2 min-w-0 break-words [overflow-wrap:anywhere]">
                                         <span class="w-1.5 h-6 bg-primary rounded-full"></span>
                                         {{ $danhMuc->ten_danh_muc }}
                                     </h3>
@@ -321,8 +321,8 @@
                                             </div>
                                             <div class="flex flex-col justify-between flex-1 min-w-0">
                                                 <div>
-                                                    <h4 class="text-xs sm:text-sm font-bold leading-snug whitespace-normal break-words">{{ $monAn->ten_mon }}</h4>
-                                                    <p class="text-on-surface-variant text-[10px] sm:text-xs line-clamp-2 leading-snug mt-1">{{ $monAn->mo_ta }}</p>
+                                                    <h4 class="text-xs sm:text-sm font-bold leading-snug break-words [overflow-wrap:anywhere]">{{ $monAn->ten_mon }}</h4>
+                                                    <p class="text-on-surface-variant text-[10px] sm:text-xs leading-snug mt-1 break-words [overflow-wrap:anywhere]">{{ $monAn->mo_ta }}</p>
                                                 </div>
                                                 <div class="flex justify-between items-center gap-1 mt-1">
                                                     <span class="text-primary font-bold text-xs sm:text-sm">{{ number_format($monAn->gia, 0, ',', '.') }}đ</span>
@@ -402,6 +402,15 @@
                                     </div>
                                     <p class="mt-1 text-xs text-amber-500" aria-label="{{ $danhGia->so_sao }} trên 5 sao">{{ str_repeat('★', $danhGia->so_sao) }}{{ str_repeat('☆', 5 - $danhGia->so_sao) }}</p>
                                     <p class="review-comment-text mt-1 min-w-0 whitespace-pre-line text-sm text-on-surface-variant">{{ $danhGia->binh_luan }}</p>
+                                    @if($danhGia->phan_hoi)
+                                        <div class="mt-3 rounded-lg bg-orange-50 p-3">
+                                            <p class="text-xs font-bold text-primary">Phản hồi của quán</p>
+                                            <p class="mt-1 whitespace-pre-line break-words text-sm text-on-surface-variant [overflow-wrap:anywhere]">{{ $danhGia->phan_hoi }}</p>
+                                            @if($danhGia->phan_hoi_luc)
+                                                <time class="mt-1 block text-[10px] text-gray-400">{{ $danhGia->phan_hoi_luc->timezone('Asia/Ho_Chi_Minh')->format('d/m/Y H:i') }}</time>
+                                            @endif
+                                        </div>
+                                    @endif
                                 </article>
                             @empty
                                 <p class="text-xs text-on-surface-variant">Chưa có đánh giá. Hãy là người đầu tiên chia sẻ trải nghiệm!</p>
@@ -411,7 +420,7 @@
                     <section id="info-section" hidden class="venue-section-anchor mt-7 border-t border-surface-variant pt-4">
                         <h2 class="text-sm font-bold mb-2">Thông tin chi tiết</h2>
                         <h3 class="font-bold text-xs mb-1">Giới thiệu</h3>
-                        <p class="text-on-surface-variant leading-relaxed">{{ $quan->mo_ta ?: 'Chưa có thông tin giới thiệu.' }}</p>
+                        <p class="text-on-surface-variant leading-relaxed break-words [overflow-wrap:anywhere]">{{ $quan->mo_ta ?: 'Chưa có thông tin giới thiệu.' }}</p>
                         <div class="mt-3 space-y-2 text-xs text-on-surface-variant">
                             <p><strong class="text-on-background">Địa chỉ:</strong> {{ $quan->dia_chi_chi_tiet }}, {{ $quan->ten_phuong_xa }}, {{ $quan->ten_quan_huyen }}, {{ $quan->ten_tinh_thanh }}</p>
                             @if($quan->so_dien_thoai)
@@ -436,18 +445,18 @@
                 <div class="sticky-sidebar space-y-3">
                     <!-- CTA Card -->
                     <div class="venue-side-card bg-surface-card rounded-xl p-4 shadow-[0px_6px_20px_rgba(0,0,0,0.08)] border border-primary/10 overflow-hidden relative">
-                        <h3 class="font-title-md text-sm font-bold text-on-background mb-2">Giao hàng tận nơi</h3>
-                        <p class="text-on-surface-variant text-[11px] leading-relaxed mb-3">Đặt món yêu thích và giao tận cửa từ quán.</p>
-                        @if($quan->shopeefood_url)
-                        <a href="{{ $quan->shopeefood_url }}" target="_blank" rel="noopener noreferrer" class="w-full bg-[#EE4D2D] text-white py-2.5 px-3 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 hover:brightness-110 transition-all shadow-sm mb-2">
-                            <span class="material-symbols-outlined text-base">shopping_bag</span>
-                            Đặt ngay trên ShopeeFood
-                        </a>
-                        @endif
-                        @if($quan->so_dien_thoai)
-                        <a href="tel:{{ $quan->so_dien_thoai }}" class="w-full border border-gray-200 text-gray-700 py-2 px-3 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 hover:bg-gray-50 transition-all">
-                            <span class="material-symbols-outlined text-base">call</span> Gọi đặt bàn
-                        </a>
+                        <h3 class="font-title-md text-sm font-bold text-on-background mb-2">Đặt món trên ShopeeFood</h3>
+                        <p class="text-on-surface-variant text-[11px] leading-relaxed mb-3">Nhấn để mở gian hàng ShopeeFood chính thức của quán.</p>
+                        @if(filled($quan->shopeefood_url))
+                            <a href="{{ $quan->shopeefood_url }}" target="_blank" rel="noopener noreferrer" class="w-full bg-[#EE4D2D] text-white py-2.5 px-3 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 hover:brightness-110 transition-all shadow-sm mb-2">
+                                <span class="material-symbols-outlined text-base">shopping_bag</span>
+                                Mở ShopeeFood của quán
+                                <span class="material-symbols-outlined text-sm">open_in_new</span>
+                            </a>
+                        @else
+                            <div class="w-full rounded-lg bg-gray-100 px-3 py-2.5 text-center text-xs text-gray-500" role="status">
+                                Quán chưa cập nhật liên kết ShopeeFood
+                            </div>
                         @endif
                     </div>
 

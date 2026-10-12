@@ -22,16 +22,16 @@
                 <img src="{{ $quan->anh_bia_url ?: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=900&q=80' }}" alt="{{ $quan->ten_quan }}" class="w-full h-52 object-cover">
                 <div class="p-5 flex-1 flex flex-col">
                     <div class="flex items-start justify-between gap-3">
-                        <div>
-                            <h2 class="text-xl font-black text-on-surface line-clamp-1">{{ $quan->ten_quan }}</h2>
-                            <p class="text-sm text-gray-500 mt-1 line-clamp-1">{{ $quan->ten_quan_huyen }}, {{ $quan->ten_tinh_thanh }}</p>
+                        <div class="min-w-0 flex-1">
+                            <h2 class="text-xl font-black text-on-surface break-words [overflow-wrap:anywhere]">{{ $quan->ten_quan }}</h2>
+                            <p class="text-sm text-gray-500 mt-1 break-words [overflow-wrap:anywhere]">{{ $quan->ten_quan_huyen }}, {{ $quan->ten_tinh_thanh }}</p>
                         </div>
                         <span class="whitespace-nowrap flex-shrink-0 px-3 py-1 rounded-full text-xs font-bold {{ $quan->trang_thai === 'da_duyet' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-800' }}">
                             {{ $quan->trang_thai === 'da_duyet' ? 'Đã duyệt' : 'Chờ duyệt' }}
                         </span>
                     </div>
 
-                    <p class="text-sm text-gray-500 mt-4 line-clamp-2">{{ $quan->mo_ta ?: 'Cập nhật mô tả để cửa hàng nổi bật hơn trên hệ thống.' }}</p>
+                    <p class="text-sm text-gray-500 mt-4 break-words [overflow-wrap:anywhere]">{{ $quan->mo_ta ?: 'Cập nhật mô tả để cửa hàng nổi bật hơn trên hệ thống.' }}</p>
 
                     <div class="mt-auto pt-4 flex flex-col gap-4">
                         <div class="flex items-center justify-between text-sm">

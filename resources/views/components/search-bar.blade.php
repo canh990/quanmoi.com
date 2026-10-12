@@ -15,6 +15,7 @@
         <input type="hidden" name="quan_huyen_id" id="{{ $prefix }}-quan-huyen-id" value="{{ request('quan_huyen_id') }}">
         <input type="hidden" name="lat" id="{{ $prefix }}-lat" value="{{ request('lat') }}">
         <input type="hidden" name="lng" id="{{ $prefix }}-lng" value="{{ request('lng') }}">
+        <input type="hidden" name="ban_kinh" id="{{ $prefix }}-ban-kinh" value="{{ request('ban_kinh') }}">
         <input type="hidden" name="sap_xep" id="{{ $prefix }}-sap-xep" value="{{ request('sap_xep') }}">
 
         {{-- Main Container Bar --}}
@@ -359,6 +360,7 @@
         const hiddenQuanHuyen = document.getElementById(prefix + '-quan-huyen-id');
         const hiddenLat = document.getElementById(prefix + '-lat');
         const hiddenLng = document.getElementById(prefix + '-lng');
+        const hiddenBanKinh = document.getElementById(prefix + '-ban-kinh');
         const hiddenSapXep = document.getElementById(prefix + '-sap-xep');
 
         const provinceSelect = document.getElementById(prefix + '-province-select');
@@ -578,6 +580,7 @@
                     hiddenSapXep.value = 'near_me';
                     
                     const radius = radiusInput.value;
+                    if (hiddenBanKinh) hiddenBanKinh.value = radius;
                     locationLabel.textContent = `Gần bạn (${radius}km)`;
                     gpsBtnText.textContent = '✓ Đã định vị thành công';
                 },
@@ -595,6 +598,7 @@
             hiddenQuanHuyen.value = '';
             hiddenLat.value = '';
             hiddenLng.value = '';
+            if (hiddenBanKinh) hiddenBanKinh.value = '';
             hiddenSapXep.value = '';
             locationLabel.textContent = 'Chọn khu vực';
             gpsBtnText.textContent = 'Lấy vị trí GPS hiện tại';
@@ -617,10 +621,12 @@
                 locationLabel.textContent = selectedText;
             } else if (hasGps) {
                 const radius = radiusInput.value;
+                if (hiddenBanKinh) hiddenBanKinh.value = radius;
                 locationLabel.textContent = `Gần bạn (${radius}km)`;
             } else {
                 hiddenTinhThanh.value = '';
                 hiddenQuanHuyen.value = '';
+                if (hiddenBanKinh) hiddenBanKinh.value = '';
                 locationLabel.textContent = 'Chọn khu vực';
             }
 

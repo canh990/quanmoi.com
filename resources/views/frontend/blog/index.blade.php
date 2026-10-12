@@ -131,17 +131,7 @@
                 <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[20px]">search</span>
             </form>
 
-            @auth
-                <button onclick="openCreateBlogModal()" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-gradient-to-r from-amber-600 via-primary to-orange-600 text-white text-xs font-bold hover:shadow-md active:scale-95 transition-all cursor-pointer whitespace-nowrap shadow-sm border border-white/20">
-                    <span class="material-symbols-outlined text-[16px]">edit_square</span>
-                    <span>Đăng bài</span>
-                </button>
-            @else
-                <button onclick="openGuestModal()" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-gradient-to-r from-amber-600 via-primary to-orange-600 text-white text-xs font-bold hover:shadow-md active:scale-95 transition-all cursor-pointer whitespace-nowrap shadow-sm border border-white/20">
-                    <span class="material-symbols-outlined text-[16px]">edit_square</span>
-                    <span>Đăng bài</span>
-                </button>
-            @endauth
+
         </div>
     </div>
     
@@ -290,197 +280,205 @@
 
 <!-- ==================== CREATE BLOG MODAL ==================== -->
 @auth
-<div id="createBlogModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
-    <div class="relative w-full max-w-3xl my-8 bg-white rounded-3xl shadow-2xl border border-outline-variant overflow-hidden animate-modal-in flex flex-col max-h-[90vh]">
-        
-        <!-- Modal Header -->
-        <div class="px-6 py-5 bg-gradient-to-r from-amber-600 via-primary to-orange-600 text-white flex items-center justify-between shrink-0">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30">
-                    <span class="material-symbols-outlined text-2xl">edit_note</span>
-                </div>
-                <div>
-                    <h3 class="text-xl font-extrabold text-white">Tạo Bài Viết Blog Mới</h3>
-                    <p class="text-xs text-white/80">Chia sẻ trải nghiệm & giới thiệu quán cho cộng đồng</p>
-                </div>
-            </div>
-            <button onclick="closeCreateBlogModal()" type="button" class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors">
-                <span class="material-symbols-outlined">close</span>
-            </button>
-        </div>
-
-        <!-- Modal Body Form -->
-        <form action="{{ route('nguoi-dung.blog.store') }}" method="POST" enctype="multipart/form-data" id="modal-blog-form" class="p-6 overflow-y-auto space-y-6 flex-grow">
+<div id="createBlogModal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-slate-900/65 backdrop-blur-md p-4 sm:p-8 lg:p-12">
+    <div class="flex min-h-full items-center justify-center p-0 text-center">
+        <form action="{{ route('nguoi-dung.blog.store') }}" method="POST" enctype="multipart/form-data" id="modal-blog-form" class="relative w-full max-w-3xl my-auto max-h-[82vh] bg-white rounded-3xl shadow-2xl border border-slate-200/80 overflow-hidden animate-modal-in flex flex-col text-left">
             @csrf
             <input type="hidden" name="redirect_to" value="{{ route('blog.index') }}">
             <input type="hidden" name="action" id="modal-action-input" value="pending">
             <input type="hidden" name="content" id="modal-content-input">
-
-            <!-- Client Validation Alert Box -->
-            <div id="modal-error-alert" class="hidden p-4 bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl text-xs font-bold flex items-center gap-2">
-                <span class="material-symbols-outlined text-rose-600 text-lg">warning</span>
-                <span>Vui lòng nhập đầy đủ Tiêu đề, chọn Danh mục và điền Nội dung bài viết trước khi gửi!</span>
-            </div>
-
-            <!-- Cover Image Upload -->
-            <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-2">Ảnh bìa bài viết</label>
-                <div class="relative w-full aspect-[21/9] bg-surface-container rounded-2xl overflow-hidden border-2 border-dashed border-outline-variant flex items-center justify-center group cursor-pointer hover:border-primary transition-colors" id="modal-cover-container">
-                    <input type="file" name="cover_image" id="modal_cover_image" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onchange="previewModalCoverImage(this)">
-                    
-                    <div class="text-center p-4" id="modal-cover-placeholder">
-                        <span class="material-symbols-outlined text-4xl text-primary mb-1">add_photo_alternate</span>
-                        <p class="text-sm font-bold text-on-surface">Nhấn hoặc kéo thả để tải ảnh bìa bài viết</p>
-                        <p class="text-xs text-text-muted mt-1">Định dạng JPG, PNG, WEBP (Khuyên dùng tỷ lệ 21:9, tối đa 5MB)</p>
+            
+            <!-- Modal Header (Pinned at Top) -->
+            <div style="background: linear-gradient(135deg, #b45309 0%, #d97706 50%, #ea580c 100%); color: #ffffff;" class="px-6 py-4 flex items-center justify-between shrink-0 shadow-sm relative z-20">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30 text-white shrink-0">
+                        <span class="material-symbols-outlined text-2xl">edit_note</span>
                     </div>
-                    
-                    <img id="modal-cover-preview" src="" class="absolute inset-0 w-full h-full object-cover hidden">
-                    
-                    <div class="absolute inset-0 bg-black/40 hidden group-hover:flex items-center justify-center z-20 pointer-events-none transition-opacity" id="modal-cover-overlay">
-                        <span class="text-white font-bold text-sm bg-black/50 px-4 py-2 rounded-xl backdrop-blur-sm flex items-center gap-2"><span class="material-symbols-outlined text-lg">edit</span> Thay đổi ảnh</span>
+                    <div class="leading-tight">
+                        <h3 class="text-lg font-extrabold text-white tracking-wide">Tạo Bài Viết Blog Mới</h3>
+                        <p class="text-xs text-amber-100/90 font-medium mt-0.5">Chia sẻ trải nghiệm & giới thiệu quán cho cộng đồng</p>
                     </div>
                 </div>
+                <button onclick="closeCreateBlogModal()" type="button" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all hover:rotate-90">
+                    <span class="material-symbols-outlined text-lg">close</span>
+                </button>
             </div>
 
-            <!-- Title -->
-            <div>
-                <label for="modal_title" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-2">Tiêu đề bài viết <span class="text-red-500">*</span></label>
-                <input type="text" id="modal_title" name="title" value="{{ old('title') }}" required placeholder="Ví dụ: Review chi tiết món lẩu nấm cực ngon tại Quán Mới..." class="w-full rounded-2xl border-outline-variant bg-surface-container-lowest focus:ring-2 focus:ring-primary focus:border-primary text-base font-bold py-3 px-4 shadow-sm">
-            </div>
+            <!-- Scrollable Body (Only this part scrolls!) -->
+            <div id="modal-scrollable-body" class="p-5 sm:p-6 overflow-y-auto space-y-4 flex-1 min-h-0">
+                <!-- Client Validation Alert Box -->
+                <div id="modal-error-alert" class="hidden p-4 bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl text-xs font-bold flex items-center gap-2 shadow-2xs">
+                    <span class="material-symbols-outlined text-rose-600 text-lg">warning</span>
+                    <span>Vui lòng nhập đầy đủ Tiêu đề, chọn Danh mục và điền Nội dung bài viết trước khi gửi!</span>
+                </div>
 
-            @php
-                $modalCategories = count($categories ?? []) > 0 ? $categories : \App\Models\BlogCategory::all();
-                if ($modalCategories->isEmpty()) {
-                    $defaultCatNames = ['Review Quán', 'Món Ngon Địa Phương', 'Góc Chủ Quán', 'Khám Phá Ẩm Thực', 'Khuyến Mãi & Ưu Đãi'];
-                    foreach ($defaultCatNames as $name) {
-                        \App\Models\BlogCategory::firstOrCreate(
-                            ['slug' => \Illuminate\Support\Str::slug($name)],
-                            ['name' => $name, 'status' => true]
-                        );
-                    }
-                    $modalCategories = \App\Models\BlogCategory::all();
-                }
+                <!-- Cover Image Upload -->
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Ảnh bìa bài viết</label>
+                    <div class="relative w-full h-44 sm:h-48 min-h-[160px] bg-amber-50/40 rounded-2xl overflow-hidden border-2 border-dashed border-amber-300/80 hover:border-amber-500 hover:bg-amber-50/80 transition-all duration-200 flex flex-col items-center justify-center text-center p-3 cursor-pointer group shadow-2xs" id="modal-cover-container">
+                        <input type="file" name="cover_image" id="modal_cover_image" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onchange="previewModalCoverImage(this)">
+                        
+                        <div class="text-center p-2" id="modal-cover-placeholder">
+                            <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center mx-auto mb-1.5 group-hover:scale-110 transition-transform">
+                                <span class="material-symbols-outlined text-xl">add_photo_alternate</span>
+                            </div>
+                            <p class="text-xs font-bold text-slate-800">Nhấn hoặc kéo thả để tải ảnh bìa bài viết</p>
+                            <p class="text-[11px] font-medium text-slate-500 mt-0.5">Định dạng JPG, PNG, WEBP (Tỷ lệ 21:9, tối đa 5MB)</p>
+                        </div>
+                        
+                        <img id="modal-cover-preview" src="" class="absolute inset-0 w-full h-full object-cover hidden">
+                        
+                        <div class="absolute inset-0 bg-slate-900/50 hidden group-hover:flex items-center justify-center z-20 pointer-events-none transition-opacity" id="modal-cover-overlay">
+                            <span class="text-white font-bold text-xs bg-slate-900/70 px-4 py-2 rounded-xl backdrop-blur-md flex items-center gap-1.5 shadow-md">
+                                <span class="material-symbols-outlined text-base">edit</span> Thay đổi ảnh
+                            </span>
+                        </div>
+                    </div>
+                </div>
 
-                $modalTags = \App\Models\BlogTag::all();
-                if ($modalTags->isEmpty()) {
-                    $defaultTagNames = ['ReviewQuan', 'MonNgon', 'KhamPha', 'GocChuQuan', 'AmThuc', 'KhuyenMai', 'MonMoi', 'TraiNghiem'];
-                    foreach ($defaultTagNames as $name) {
-                        \App\Models\BlogTag::firstOrCreate(
-                            ['slug' => \Illuminate\Support\Str::slug($name)],
-                            ['name' => $name]
-                        );
+                <!-- Title -->
+                <div>
+                    <label for="modal_title" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Tiêu đề bài viết <span class="text-red-500">*</span></label>
+                    <input type="text" id="modal_title" name="title" value="{{ old('title') }}" required placeholder="Ví dụ: Review chi tiết món lẩu nấm cực ngon tại Quán Mới..." class="w-full rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 text-xs font-bold text-slate-900 py-2.5 px-4 shadow-2xs transition-all outline-none placeholder:font-normal placeholder:text-slate-400">
+                </div>
+
+                @php
+                    $modalCategories = count($categories ?? []) > 0 ? $categories : \App\Models\BlogCategory::all();
+                    if ($modalCategories->isEmpty()) {
+                        $defaultCatNames = ['Review Quán', 'Món Ngon Địa Phương', 'Góc Chủ Quán', 'Khám Phá Ẩm Thực', 'Khuyến Mãi & Ưu Đãi'];
+                        foreach ($defaultCatNames as $name) {
+                            \App\Models\BlogCategory::firstOrCreate(
+                                ['slug' => \Illuminate\Support\Str::slug($name)],
+                                ['name' => $name, 'status' => true]
+                            );
+                        }
+                        $modalCategories = \App\Models\BlogCategory::all();
                     }
+
                     $modalTags = \App\Models\BlogTag::all();
-                }
-            @endphp
+                    if ($modalTags->isEmpty()) {
+                        $defaultTagNames = ['ReviewQuan', 'MonNgon', 'KhamPha', 'GocChuQuan', 'AmThuc', 'KhuyenMai', 'MonMoi', 'TraiNghiem'];
+                        foreach ($defaultTagNames as $name) {
+                            \App\Models\BlogTag::firstOrCreate(
+                                ['slug' => \Illuminate\Support\Str::slug($name)],
+                                ['name' => $name]
+                            );
+                        }
+                        $modalTags = \App\Models\BlogTag::all();
+                    }
+                @endphp
 
-            <!-- Category & Tags Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- Category with Live Autocomplete Suggestions -->
-                <div>
-                    <label for="modal_category_name" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-2">Danh mục bài viết <span class="text-red-500">*</span></label>
-                    <div class="relative autocomplete-wrapper">
-                        <input type="text" 
-                               id="modal_category_name" 
-                               name="category_name" 
-                               value="{{ old('category_name', old('new_category')) }}" 
-                               placeholder="Gõ hoặc chọn danh mục (VD: Review Quán, Món Ngon)..." 
-                               autocomplete="off"
-                               required
-                               class="w-full rounded-2xl border border-outline-variant bg-surface-container-lowest focus:ring-2 focus:ring-primary font-bold text-sm py-3 px-4 pr-10 shadow-sm"
-                               onfocus="showCategorySuggestions('modal_cat_dropdown')"
-                               oninput="filterCategorySuggestions(this, 'modal_cat_dropdown')">
-                        <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none text-xl">expand_more</span>
-                        
-                        <!-- Suggestions Dropdown list attached right below input -->
-                        <div id="modal_cat_dropdown" class="absolute left-0 right-0 top-full mt-1 bg-white border border-amber-300 rounded-2xl shadow-xl z-50 max-h-48 overflow-y-auto hidden divide-y divide-slate-100">
-                            @foreach($modalCategories as $category)
-                                <div class="cat-suggestion-item px-4 py-2.5 hover:bg-amber-50 cursor-pointer text-xs font-bold text-on-surface flex items-center justify-between transition-colors"
-                                     data-name="{{ strtolower($category->name) }}"
-                                     onclick="selectCategoryItem('modal_category_name', '{{ addslashes($category->name) }}', 'modal_cat_dropdown')">
-                                    <span class="flex items-center gap-2">
-                                        <span class="material-symbols-outlined text-amber-600 text-sm">folder</span>
-                                        <span>{{ $category->name }}</span>
-                                    </span>
-                                    <span class="text-[10px] text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full font-bold">Gợi ý danh mục</span>
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Tags with Live Autocomplete Suggestions & Quick Badges -->
-                <div>
-                    <div class="flex items-center justify-between mb-2">
-                        <label for="modal_custom_tags" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant">Thẻ bài viết (Tags)</label>
-                        <span class="text-[11px] font-bold text-primary">Gõ trực tiếp hoặc chọn bên dưới</span>
-                    </div>
-                    <div class="relative autocomplete-wrapper">
-                        <input type="text" 
-                               id="modal_custom_tags" 
-                               name="custom_tags" 
-                               value="{{ old('custom_tags') }}" 
-                               placeholder="Gõ tên thẻ (VD: Lẩu thái, Ăn đêm, Monngon)..." 
-                               autocomplete="off"
-                               class="w-full rounded-2xl border border-outline-variant bg-surface-container-lowest focus:ring-2 focus:ring-primary text-xs font-semibold py-2.5 px-4 pr-10 shadow-sm"
-                               onfocus="showTagSuggestions('modal_tag_dropdown')"
-                               oninput="filterTagSuggestions(this, 'modal_tag_dropdown')">
-                        <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none text-lg">local_offer</span>
-                        
-                        <!-- Tag Suggestions Dropdown List attached right below input -->
-                        <div id="modal_tag_dropdown" class="absolute left-0 right-0 top-full mt-1 bg-white border border-amber-300 rounded-2xl shadow-xl z-50 max-h-44 overflow-y-auto hidden divide-y divide-slate-100">
-                            @foreach($modalTags as $tag)
-                                <div class="tag-suggestion-item px-4 py-2 hover:bg-amber-50 cursor-pointer text-xs font-bold text-on-surface flex items-center justify-between transition-colors"
-                                     data-name="{{ strtolower($tag->name) }}"
-                                     onclick="selectTagItem('modal_custom_tags', '{{ addslashes($tag->name) }}', 'modal_tag_dropdown')">
-                                    <span class="flex items-center gap-1.5">
-                                        <span class="text-primary font-bold">#</span>
-                                        <span>{{ $tag->name }}</span>
-                                    </span>
-                                    <span class="text-[10px] text-text-muted">Gợi ý thẻ</span>
-                                </div>
-                            @endforeach
+                <!-- Category & Tags Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Category with Live Autocomplete Suggestions -->
+                    <div>
+                        <label for="modal_category_name" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Danh mục bài viết <span class="text-red-500">*</span></label>
+                        <div class="relative autocomplete-wrapper">
+                            <input type="text" 
+                                   id="modal_category_name" 
+                                   name="category_name" 
+                                   value="{{ old('category_name', old('new_category')) }}" 
+                                   placeholder="Gõ hoặc chọn danh mục..." 
+                                   autocomplete="off"
+                                   required
+                                   class="w-full rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 font-bold text-xs text-slate-900 py-2.5 px-4 pr-10 shadow-2xs transition-all outline-none placeholder:font-normal placeholder:text-slate-400"
+                                   onfocus="showCategorySuggestions('modal_cat_dropdown')"
+                                   oninput="filterCategorySuggestions(this, 'modal_cat_dropdown')">
+                            <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-lg">expand_more</span>
+                            
+                            <!-- Suggestions Dropdown list attached right below input -->
+                            <div id="modal_cat_dropdown" class="absolute left-0 right-0 top-full mt-1 bg-white border border-amber-200 rounded-2xl shadow-xl z-50 max-h-48 overflow-y-auto hidden divide-y divide-slate-100">
+                                @foreach($modalCategories as $category)
+                                    <div class="cat-suggestion-item px-4 py-2.5 hover:bg-amber-50/80 cursor-pointer text-xs font-bold text-slate-800 flex items-center justify-between transition-colors"
+                                         data-name="{{ strtolower($category->name) }}"
+                                         onclick="selectCategoryItem('modal_category_name', '{{ addslashes($category->name) }}', 'modal_cat_dropdown')">
+                                        <span class="flex items-center gap-2">
+                                            <span class="material-symbols-outlined text-amber-600 text-sm">folder</span>
+                                            <span>{{ $category->name }}</span>
+                                        </span>
+                                        <span class="text-[10px] text-amber-700 bg-amber-100/70 px-2 py-0.5 rounded-full font-bold">Gợi ý danh mục</span>
+                                    </div>
+                                @endforeach
+                            </div>
                         </div>
                     </div>
                     
-                    <!-- Quick Tag Badges -->
-                    <div class="flex flex-wrap gap-1.5 mt-2 max-h-20 overflow-y-auto p-2 bg-surface-container/50 rounded-xl border border-outline-variant/50">
-                        @foreach($modalTags as $tag)
-                            <button type="button" 
-                                    onclick="addQuickTag('modal_custom_tags', '{{ addslashes($tag->name) }}')"
-                                    class="px-2.5 py-1 text-[11px] rounded-full border border-outline-variant bg-white text-on-surface-variant font-bold hover:border-primary hover:text-primary transition-all flex items-center gap-1 cursor-pointer select-none">
-                                <span>+#{{ $tag->name }}</span>
-                            </button>
-                        @endforeach
+                    <!-- Tags with Live Autocomplete Suggestions & Quick Badges -->
+                    <div>
+                        <div class="flex items-center justify-between mb-1.5">
+                            <label for="modal_custom_tags" class="block text-xs font-bold uppercase tracking-wider text-slate-600">Thẻ bài viết (Tags)</label>
+                            <span class="text-[11px] font-bold text-amber-700">Chọn nhanh bên dưới</span>
+                        </div>
+                        <div class="relative autocomplete-wrapper">
+                            <input type="text" 
+                                   id="modal_custom_tags" 
+                                   name="custom_tags" 
+                                   value="{{ old('custom_tags') }}" 
+                                   placeholder="Gõ tên thẻ (VD: Lẩu thái, Monngon)..." 
+                                   autocomplete="off"
+                                   class="w-full rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 text-xs font-semibold text-slate-900 py-2.5 px-4 pr-10 shadow-2xs transition-all outline-none placeholder:font-normal placeholder:text-slate-400"
+                                   onfocus="showTagSuggestions('modal_tag_dropdown')"
+                                   oninput="filterTagSuggestions(this, 'modal_tag_dropdown')">
+                            <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-base">local_offer</span>
+                            
+                            <!-- Tag Suggestions Dropdown List -->
+                            <div id="modal_tag_dropdown" class="absolute left-0 right-0 top-full mt-1 bg-white border border-amber-200 rounded-2xl shadow-xl z-50 max-h-44 overflow-y-auto hidden divide-y divide-slate-100">
+                                @foreach($modalTags as $tag)
+                                    <div class="tag-suggestion-item px-4 py-2 hover:bg-amber-50/80 cursor-pointer text-xs font-bold text-slate-800 flex items-center justify-between transition-colors"
+                                         data-name="{{ strtolower($tag->name) }}"
+                                         onclick="selectTagItem('modal_custom_tags', '{{ addslashes($tag->name) }}', 'modal_tag_dropdown')">
+                                        <span class="flex items-center gap-1.5">
+                                            <span class="text-amber-600 font-bold">#</span>
+                                            <span>{{ $tag->name }}</span>
+                                        </span>
+                                        <span class="text-[10px] text-slate-400">Gợi ý thẻ</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                        
+                        <!-- Quick Tag Badges -->
+                        <div class="flex flex-wrap gap-1.5 mt-2 max-h-20 overflow-y-auto p-2 bg-slate-50/60 rounded-xl border border-slate-200/60">
+                            @foreach($modalTags as $tag)
+                                <button type="button" 
+                                        onclick="addQuickTag('modal_custom_tags', '{{ addslashes($tag->name) }}')"
+                                        class="px-2.5 py-1 text-[11px] rounded-full border border-amber-200/80 bg-amber-50/60 text-amber-800 font-medium hover:bg-amber-100 hover:border-amber-300 transition-all flex items-center gap-1 cursor-pointer select-none">
+                                    <span>+#{{ $tag->name }}</span>
+                                </button>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Excerpt -->
+                <div>
+                    <label for="modal_excerpt" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Mô tả ngắn (Excerpt)</label>
+                    <textarea id="modal_excerpt" name="excerpt" rows="2" placeholder="Tóm tắt nội dung hấp dẫn nhất của bài viết..." class="w-full rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 text-xs font-medium text-slate-800 p-2.5 shadow-2xs transition-all outline-none resize-none placeholder:text-slate-400">{{ old('excerpt') }}</textarea>
+                </div>
+
+                <!-- Content Quill Editor -->
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Nội dung bài viết <span class="text-red-500">*</span></label>
+                    <div id="modal-editor-container" class="bg-white rounded-xl">
+                        {!! old('content') !!}
                     </div>
                 </div>
             </div>
 
-            <!-- Excerpt -->
-            <div>
-                <label for="modal_excerpt" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-2">Mô tả ngắn (Excerpt)</label>
-                <textarea id="modal_excerpt" name="excerpt" rows="2" placeholder="Tóm tắt nội dung hấp dẫn nhất của bài viết..." class="w-full rounded-2xl border-outline-variant bg-surface-container-lowest focus:ring-2 focus:ring-primary focus:border-primary text-sm p-3 resize-none">{{ old('excerpt') }}</textarea>
-            </div>
-
-            <!-- Content Quill Editor -->
-            <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-2">Nội dung bài viết <span class="text-red-500">*</span></label>
-                <div id="modal-editor-container">
-                    {!! old('content') !!}
-                </div>
-            </div>
-
-            <!-- Form Footer Buttons -->
-            <div class="pt-4 border-t border-outline-variant flex flex-col sm:flex-row items-center justify-between gap-3 sticky bottom-0 bg-white z-20 py-2">
-                <a href="{{ route('nguoi-dung.blog.create') }}" class="text-xs text-primary font-bold hover:underline flex items-center gap-1">
-                    <span class="material-symbols-outlined text-sm">open_in_new</span> Mở giao diện soạn thảo đầy đủ
+            <!-- Form Footer Buttons (Pinned at Bottom) -->
+            <div class="shrink-0 bg-slate-50 border-t border-slate-200/80 px-6 py-3.5 flex items-center justify-between gap-3 relative z-30">
+                <a href="{{ route('nguoi-dung.blog.create') }}" class="text-xs font-bold text-amber-700 hover:text-amber-800 flex items-center gap-1 shrink-0 transition-colors">
+                    <span class="material-symbols-outlined text-base">open_in_new</span>
+                    <span class="hidden sm:inline">Mở giao diện soạn thảo đầy đủ</span>
+                    <span class="sm:hidden">Soạn thảo</span>
                 </a>
-                <div class="flex items-center gap-3 w-full sm:w-auto">
-                    <button type="button" onclick="submitModalBlogForm('draft')" class="w-1/2 sm:w-auto px-5 py-2.5 rounded-full font-bold text-xs text-on-surface-variant bg-surface-container hover:bg-surface-container-high transition-colors">
+                <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+                    <button type="button" onclick="submitModalBlogForm('draft')" style="background-color: #ffffff; color: #334155; border: 1px solid #cbd5e1;" class="px-4 sm:px-5 py-2.5 rounded-xl font-bold text-xs hover:bg-slate-100 active:scale-95 transition-all shadow-2xs whitespace-nowrap cursor-pointer">
                         Lưu bản nháp
                     </button>
-                    <button type="button" onclick="submitModalBlogForm('pending')" class="w-1/2 sm:w-auto px-6 py-2.5 rounded-full font-bold text-xs text-white bg-gradient-to-r from-amber-600 via-primary to-orange-600 hover:opacity-95 transition-all shadow-md flex items-center justify-center gap-1.5">
-                        <span class="material-symbols-outlined text-base">send</span> Gửi duyệt bài
+                    <button type="button" onclick="submitModalBlogForm('pending')" style="background-color: #d97706; color: #ffffff;" class="px-5 sm:px-6 py-2.5 rounded-xl font-bold text-xs hover:bg-amber-700 active:scale-95 transition-all shadow-md flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer">
+                        <span class="material-symbols-outlined text-base text-white">send</span>
+                        <span class="text-white font-extrabold">Gửi duyệt bài</span>
                     </button>
                 </div>
             </div>
@@ -559,8 +557,11 @@
         const modal = document.getElementById('createBlogModal');
         if (modal) {
             modal.classList.remove('hidden');
-            modal.classList.add('flex');
+            modal.classList.add('block');
             document.body.classList.add('overflow-hidden');
+            modal.scrollTop = 0;
+            const scrollBody = document.getElementById('modal-scrollable-body');
+            if (scrollBody) scrollBody.scrollTop = 0;
             initModalQuill();
         }
     }
@@ -569,7 +570,7 @@
         const modal = document.getElementById('createBlogModal');
         if (modal) {
             modal.classList.add('hidden');
-            modal.classList.remove('flex');
+            modal.classList.remove('block');
             document.body.classList.remove('overflow-hidden');
         }
     }

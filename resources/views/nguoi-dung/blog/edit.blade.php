@@ -22,28 +22,28 @@
 @endpush
 
 @section('content')
-<main class="max-w-[1200px] mx-auto px-container-margin py-stack-lg min-h-[819px] pt-6">
-    <div class="grid grid-cols-1 md:grid-cols-12 gap-stack-lg">
+<main class="max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-screen">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         @include('nguoi-dung.partials.sidebar')
         
-        <div class="md:col-span-9">
-            <div class="mb-8">
-        <a href="{{ route('nguoi-dung.blog.index') }}" class="inline-flex items-center gap-1 text-sm font-medium text-on-surface-variant hover:text-primary transition-colors mb-4">
-            <span class="material-symbols-outlined text-[18px]">arrow_back</span>
-            Quay lại danh sách
-        </a>
-        <h1 class="text-3xl font-extrabold text-on-surface">Chỉnh sửa bài viết</h1>
-        
-        @if($blog->status === 'need_revision')
-            <div class="mt-4 p-4 bg-orange-50 border border-orange-200 rounded-xl flex gap-3">
-                <span class="material-symbols-outlined text-orange-600">info</span>
-                <div>
-                    <h4 class="font-bold text-orange-800 text-sm">Bài viết cần chỉnh sửa</h4>
-                    <p class="text-orange-700 text-sm mt-1">Quản trị viên đã yêu cầu bạn chỉnh sửa bài viết này trước khi xuất bản.</p>
-                </div>
+        <div class="lg:col-span-9 space-y-6">
+            <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-2xs">
+                <a href="{{ route('nguoi-dung.blog.index') }}" class="inline-flex items-center gap-1.5 text-xs font-bold text-amber-700 hover:text-amber-800 transition-colors mb-3">
+                    <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+                    Quay lại danh sách bài viết
+                </a>
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Chỉnh sửa bài viết</h1>
+                
+                @if($blog->status === 'need_revision')
+                    <div class="mt-4 p-4 bg-orange-50 border border-orange-200/80 rounded-2xl flex items-start gap-3">
+                        <span class="material-symbols-outlined text-orange-600 text-xl shrink-0">info</span>
+                        <div>
+                            <h4 class="font-bold text-orange-900 text-sm">Bài viết cần chỉnh sửa</h4>
+                            <p class="text-orange-700 text-xs mt-0.5">Quản trị viên đã yêu cầu bạn bổ sung/sửa đổi nội dung bài viết trước khi xuất bản.</p>
+                        </div>
+                    </div>
+                @endif
             </div>
-        @endif
-    </div>
 
     @if ($errors->any())
         <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">

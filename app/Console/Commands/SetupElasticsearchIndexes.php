@@ -93,6 +93,7 @@ class SetupElasticsearchIndexes extends Command
                         'co_shopeefood' => ['type' => 'boolean'],
                         'duoi_50k' => ['type' => 'boolean'],
                         'dang_mo_cua' => ['type' => 'boolean'],
+                        'co_video_review' => ['type' => 'boolean'],
                         'created_at' => ['type' => 'long'],
                         'updated_at' => ['type' => 'long'],
                     ],
