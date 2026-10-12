@@ -33,31 +33,60 @@
                 </a>
             </div>
 
-            <!-- Status Filter Tabs -->
-            <div class="flex items-center gap-2 overflow-x-auto pb-3 border-b border-outline-variant/40 mb-6 scrollbar-hide">
-                <a href="{{ route('nguoi-dung.blog.index') }}" class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 {{ !request('status') ? 'bg-primary text-white shadow-sm' : 'bg-surface-container text-on-surface hover:bg-surface-container-high' }}">
-                    <span>Tất cả bài viết</span>
-                    <span class="px-2 py-0.5 rounded-full text-[10px] {{ !request('status') ? 'bg-white/20 text-white' : 'bg-black/5 text-on-surface-variant' }}">{{ $totalCount ?? 0 }}</span>
-                </a>
-                
-                <a href="{{ route('nguoi-dung.blog.index', ['status' => 'draft']) }}" class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 {{ request('status') === 'draft' ? 'bg-primary text-white shadow-sm' : 'bg-surface-container text-on-surface hover:bg-surface-container-high' }}">
-                    <span class="material-symbols-outlined text-sm">edit_note</span>
-                    <span>Bài viết nháp</span>
-                    <span class="px-2 py-0.5 rounded-full text-[10px] {{ request('status') === 'draft' ? 'bg-white/20 text-white' : 'bg-black/5 text-on-surface-variant' }}">{{ $statusCounts['draft'] ?? 0 }}</span>
-                </a>
+            <!-- Status Filter Tabs & Search Bar -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-outline-variant/40 mb-6">
+                <!-- Status Filter Tabs -->
+                <div class="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-hide">
+                    <a href="{{ route('nguoi-dung.blog.index', array_filter(['search' => request('search')])) }}" class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 {{ !request('status') ? 'bg-primary text-white shadow-sm' : 'bg-surface-container text-on-surface hover:bg-surface-container-high' }}">
+                        <span>Tất cả</span>
+                        <span class="px-2 py-0.5 rounded-full text-[10px] {{ !request('status') ? 'bg-white/20 text-white' : 'bg-black/5 text-on-surface-variant' }}">{{ $totalCount ?? 0 }}</span>
+                    </a>
+                    
+                    <a href="{{ route('nguoi-dung.blog.index', array_filter(['status' => 'draft', 'search' => request('search')])) }}" class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 {{ request('status') === 'draft' ? 'bg-primary text-white shadow-sm' : 'bg-surface-container text-on-surface hover:bg-surface-container-high' }}">
+                        <span class="material-symbols-outlined text-sm">edit_note</span>
+                        <span>Nháp</span>
+                        <span class="px-2 py-0.5 rounded-full text-[10px] {{ request('status') === 'draft' ? 'bg-white/20 text-white' : 'bg-black/5 text-on-surface-variant' }}">{{ $statusCounts['draft'] ?? 0 }}</span>
+                    </a>
 
-                <a href="{{ route('nguoi-dung.blog.index', ['status' => 'pending']) }}" class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 {{ request('status') === 'pending' ? 'bg-primary text-white shadow-sm' : 'bg-surface-container text-on-surface hover:bg-surface-container-high' }}">
-                    <span class="material-symbols-outlined text-sm">hourglass_empty</span>
-                    <span>Chờ duyệt</span>
-                    <span class="px-2 py-0.5 rounded-full text-[10px] {{ request('status') === 'pending' ? 'bg-white/20 text-white' : 'bg-black/5 text-on-surface-variant' }}">{{ $statusCounts['pending'] ?? 0 }}</span>
-                </a>
+                    <a href="{{ route('nguoi-dung.blog.index', array_filter(['status' => 'pending', 'search' => request('search')])) }}" class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 {{ request('status') === 'pending' ? 'bg-primary text-white shadow-sm' : 'bg-surface-container text-on-surface hover:bg-surface-container-high' }}">
+                        <span class="material-symbols-outlined text-sm">hourglass_empty</span>
+                        <span>Chờ duyệt</span>
+                        <span class="px-2 py-0.5 rounded-full text-[10px] {{ request('status') === 'pending' ? 'bg-white/20 text-white' : 'bg-black/5 text-on-surface-variant' }}">{{ $statusCounts['pending'] ?? 0 }}</span>
+                    </a>
 
-                <a href="{{ route('nguoi-dung.blog.index', ['status' => 'published']) }}" class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 {{ request('status') === 'published' ? 'bg-primary text-white shadow-sm' : 'bg-surface-container text-on-surface hover:bg-surface-container-high' }}">
-                    <span class="material-symbols-outlined text-sm">check_circle</span>
-                    <span>Đã xuất bản</span>
-                    <span class="px-2 py-0.5 rounded-full text-[10px] {{ request('status') === 'published' ? 'bg-white/20 text-white' : 'bg-black/5 text-on-surface-variant' }}">{{ $statusCounts['published'] ?? 0 }}</span>
-                </a>
+                    <a href="{{ route('nguoi-dung.blog.index', array_filter(['status' => 'published', 'search' => request('search')])) }}" class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 {{ request('status') === 'published' ? 'bg-primary text-white shadow-sm' : 'bg-surface-container text-on-surface hover:bg-surface-container-high' }}">
+                        <span class="material-symbols-outlined text-sm">check_circle</span>
+                        <span>Đã xuất bản</span>
+                        <span class="px-2 py-0.5 rounded-full text-[10px] {{ request('status') === 'published' ? 'bg-white/20 text-white' : 'bg-black/5 text-on-surface-variant' }}">{{ $statusCounts['published'] ?? 0 }}</span>
+                    </a>
+                </div>
+
+                <!-- Search Input in User Blog -->
+                <form action="{{ route('nguoi-dung.blog.index') }}" method="GET" class="relative w-full sm:w-64 shrink-0">
+                    @if(request('status'))
+                        <input type="hidden" name="status" value="{{ request('status') }}">
+                    @endif
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Tìm trong bài của bạn..." class="w-full pl-9 pr-8 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-primary focus:border-primary outline-none shadow-2xs">
+                    <span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-lg pointer-events-none">search</span>
+                    @if(request('search'))
+                        <a href="{{ route('nguoi-dung.blog.index', array_filter(['status' => request('status')])) }}" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5" title="Xóa tìm kiếm">
+                            <span class="material-symbols-outlined text-base">cancel</span>
+                        </a>
+                    @endif
+                </form>
             </div>
+
+            @if(request()->filled('search'))
+                <div class="mb-6 p-3.5 bg-amber-50 border border-amber-200 rounded-2xl flex items-center justify-between shadow-2xs">
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-amber-600 text-lg">search</span>
+                        <span class="text-xs text-slate-700">Kết quả tìm kiếm cho: <b class="text-slate-900">"{{ request('search') }}"</b> ({{ $blogs->total() }} bài viết)</span>
+                    </div>
+                    <a href="{{ route('nguoi-dung.blog.index', array_filter(['status' => request('status')])) }}" class="text-xs font-bold text-slate-500 hover:text-red-600 flex items-center gap-1">
+                        <span class="material-symbols-outlined text-sm">close</span> Xóa tìm kiếm
+                    </a>
+                </div>
+            @endif
 
             @if($blogs->count() > 0)
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-stack-lg mb-8">
@@ -144,14 +173,25 @@
                     {{ $blogs->links() }}
                 </div>
             @else
-                <div class="text-center py-20 bg-surface-container-lowest rounded-3xl border border-outline-variant">
-                    <span class="material-symbols-outlined text-6xl text-on-surface-variant mb-4">edit_document</span>
-                    <h3 class="text-xl font-bold text-on-surface mb-2">Bạn chưa có bài viết nào</h3>
-                    <p class="text-on-surface-variant mb-6">Hãy chia sẻ trải nghiệm và câu chuyện của bạn với mọi người.</p>
-                    <a href="{{ route('nguoi-dung.blog.create') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-primary text-on-primary rounded-full font-bold hover:bg-primary-hover transition-colors">
-                        <span class="material-symbols-outlined">edit</span> Viết bài ngay
-                    </a>
-                </div>
+                @if(request()->filled('search'))
+                    <div class="text-center py-16 bg-surface-container-lowest rounded-3xl border border-outline-variant px-4">
+                        <span class="material-symbols-outlined text-5xl text-amber-500 mb-3">search_off</span>
+                        <h3 class="text-lg font-bold text-on-surface mb-1">Không tìm thấy bài viết</h3>
+                        <p class="text-on-surface-variant text-xs mb-4">Không có bài viết nào khớp với từ khóa "{{ request('search') }}".</p>
+                        <a href="{{ route('nguoi-dung.blog.index', array_filter(['status' => request('status')])) }}" class="inline-flex items-center gap-1.5 px-5 py-2 bg-primary text-on-primary rounded-full text-xs font-bold hover:bg-primary-hover transition-colors">
+                            <span class="material-symbols-outlined text-base">refresh</span> Xóa bộ lọc tìm kiếm
+                        </a>
+                    </div>
+                @else
+                    <div class="text-center py-20 bg-surface-container-lowest rounded-3xl border border-outline-variant">
+                        <span class="material-symbols-outlined text-6xl text-on-surface-variant mb-4">edit_document</span>
+                        <h3 class="text-xl font-bold text-on-surface mb-2">Bạn chưa có bài viết nào</h3>
+                        <p class="text-on-surface-variant mb-6">Hãy chia sẻ trải nghiệm và câu chuyện của bạn với mọi người.</p>
+                        <a href="{{ route('nguoi-dung.blog.create') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-primary text-on-primary rounded-full font-bold hover:bg-primary-hover transition-colors">
+                            <span class="material-symbols-outlined">edit</span> Viết bài ngay
+                        </a>
+                    </div>
+                @endif
             @endif
         </div>
     </div>

@@ -120,18 +120,42 @@
         </nav>
         
         <div class="flex items-center gap-3 w-full md:w-auto shrink-0 justify-end">
-            <form action="{{ route('blog.index') }}" method="GET" class="relative flex-grow md:w-60">
+            <form action="{{ route('blog.index') }}" method="GET" class="relative flex-grow md:w-72" id="blog-search-form">
                 @if(request()->has('category'))
                     <input type="hidden" name="category" value="{{ request('category') }}">
                 @endif
                 @if(request()->has('tag'))
                     <input type="hidden" name="tag" value="{{ request('tag') }}">
                 @endif
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Tìm kiếm bài viết..." class="w-full pl-10 pr-4 py-2 bg-surface-container rounded-full text-body-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none border-none shadow-inner">
-                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[20px]">search</span>
+                <input type="text" 
+                       id="blog-search-input"
+                       name="search" 
+                       value="{{ request('search') }}" 
+                       placeholder="Tìm kiếm bài viết..." 
+                       autocomplete="off"
+                       oninput="handleBlogSearchInput(this)"
+                       class="w-full pl-10 pr-9 py-2 bg-surface-container rounded-full text-body-sm focus:ring-2 focus:ring-primary focus:bg-white focus:border-primary outline-none border border-transparent shadow-inner transition-all">
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[20px] pointer-events-none">search</span>
+                
+                @if(request('search'))
+                    <a href="{{ route('blog.index', array_filter(['category' => request('category'), 'tag' => request('tag')])) }}" 
+                       class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 p-0.5 rounded-full hover:bg-slate-200/60 transition-colors"
+                       title="Xóa tìm kiếm">
+                        <span class="material-symbols-outlined text-[18px]">cancel</span>
+                    </a>
+                @endif
+
+                <!-- Live Suggestions Dropdown -->
+                <div id="blog-search-suggestions" class="absolute left-0 right-0 top-full mt-2 bg-white rounded-2xl shadow-2xl border border-slate-200/80 overflow-hidden z-50 hidden divide-y divide-slate-100">
+                    <div id="blog-suggestions-list" class="max-h-80 overflow-y-auto divide-y divide-slate-100"></div>
+                    <div class="p-2.5 bg-slate-50 text-center">
+                        <button type="submit" class="text-xs font-bold text-primary hover:underline flex items-center justify-center gap-1 w-full">
+                            <span>Xem tất cả kết quả</span>
+                            <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                        </button>
+                    </div>
+                </div>
             </form>
-
-
         </div>
     </div>
     
@@ -139,6 +163,25 @@
         
         <!-- Article Grid -->
         <div class="lg:w-3/4">
+            @if(request()->filled('search'))
+                <div class="mb-6 p-4 bg-amber-50/90 border border-amber-200/90 rounded-2xl flex items-center justify-between shadow-2xs">
+                    <div class="flex items-center gap-2.5">
+                        <span class="material-symbols-outlined text-amber-600 text-xl">search</span>
+                        <div>
+                            <span class="text-xs text-slate-500 font-medium">Kết quả tìm kiếm cho:</span>
+                            <span class="font-extrabold text-sm text-slate-900 ml-1">"{{ request('search') }}"</span>
+                            <span class="text-xs font-bold text-amber-800 bg-amber-100 px-2.5 py-0.5 rounded-full ml-2">
+                                {{ $blogs->total() }} bài viết
+                            </span>
+                        </div>
+                    </div>
+                    <a href="{{ route('blog.index', array_filter(['category' => request('category'), 'tag' => request('tag')])) }}" class="text-xs font-bold text-slate-500 hover:text-red-600 flex items-center gap-1 py-1 px-3 rounded-xl hover:bg-white transition-all">
+                        <span class="material-symbols-outlined text-base">close</span>
+                        <span>Xóa tìm kiếm</span>
+                    </a>
+                </div>
+            @endif
+
             @if($blogs->count() > 0)
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
                     @foreach($blogs as $blog)
@@ -171,20 +214,33 @@
                     {{ $blogs->links() }}
                 </div>
             @else
-                <div class="text-center py-20 bg-white rounded-2xl border border-outline-variant shadow-sm">
-                    <span class="material-symbols-outlined text-6xl text-gray-300 mb-4">edit_note</span>
-                    <h3 class="text-xl font-bold text-on-surface mb-2">Chưa có bài viết nào</h3>
-                    <p class="text-on-surface-variant max-w-md mx-auto mb-6">Hãy trở thành người đầu tiên đăng bài viết review hoặc chia sẻ không gian quán của bạn!</p>
-                    @auth
-                        <button onclick="openCreateBlogModal()" type="button" class="px-6 py-3 rounded-full bg-primary text-white font-bold text-sm shadow-md hover:bg-primary/90 transition-all inline-flex items-center gap-2">
-                            <span class="material-symbols-outlined">add</span> Đăng bài viết ngay
-                        </button>
-                    @else
-                        <button onclick="openGuestModal()" type="button" class="px-6 py-3 rounded-full bg-primary text-white font-bold text-sm shadow-md hover:bg-primary/90 transition-all inline-flex items-center gap-2">
-                            <span class="material-symbols-outlined">login</span> Đăng nhập để đăng bài
-                        </button>
-                    @endauth
-                </div>
+                @if(request()->filled('search'))
+                    <div class="text-center py-16 bg-white rounded-3xl border border-outline-variant shadow-sm px-4">
+                        <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600">
+                            <span class="material-symbols-outlined text-3xl">search_off</span>
+                        </div>
+                        <h3 class="text-xl font-extrabold text-on-surface mb-2">Không tìm thấy bài viết nào</h3>
+                        <p class="text-on-surface-variant max-w-md mx-auto mb-6 text-sm">Không có bài viết nào khớp với từ khóa "<span class="font-bold text-slate-900">{{ request('search') }}</span>". Hãy thử từ khóa khác hoặc quay lại danh sách bài viết.</p>
+                        <a href="{{ route('blog.index') }}" class="px-6 py-2.5 rounded-full bg-primary text-white font-bold text-xs shadow-md hover:bg-primary/90 transition-all inline-flex items-center gap-2">
+                            <span class="material-symbols-outlined text-base">refresh</span> Xem tất cả bài viết
+                        </a>
+                    </div>
+                @else
+                    <div class="text-center py-20 bg-white rounded-2xl border border-outline-variant shadow-sm">
+                        <span class="material-symbols-outlined text-6xl text-gray-300 mb-4">edit_note</span>
+                        <h3 class="text-xl font-bold text-on-surface mb-2">Chưa có bài viết nào</h3>
+                        <p class="text-on-surface-variant max-w-md mx-auto mb-6">Hãy trở thành người đầu tiên đăng bài viết review hoặc chia sẻ không gian quán của bạn!</p>
+                        @auth
+                            <button onclick="openCreateBlogModal()" type="button" class="px-6 py-3 rounded-full bg-primary text-white font-bold text-sm shadow-md hover:bg-primary/90 transition-all inline-flex items-center gap-2">
+                                <span class="material-symbols-outlined">add</span> Đăng bài viết ngay
+                            </button>
+                        @else
+                            <button onclick="openGuestModal()" type="button" class="px-6 py-3 rounded-full bg-primary text-white font-bold text-sm shadow-md hover:bg-primary/90 transition-all inline-flex items-center gap-2">
+                                <span class="material-symbols-outlined">login</span> Đăng nhập để đăng bài
+                            </button>
+                        @endauth
+                    </div>
+                @endif
             @endif
         </div>
         
@@ -901,6 +957,72 @@
             form.submit();
         }
     }
+
+    // Live Blog Search Suggestions
+    let searchDebounceTimer = null;
+    function handleBlogSearchInput(input) {
+        clearTimeout(searchDebounceTimer);
+        const query = input.value.trim();
+        const suggestionsBox = document.getElementById('blog-search-suggestions');
+        const listContainer = document.getElementById('blog-suggestions-list');
+
+        if (!suggestionsBox || !listContainer) return;
+
+        if (query.length < 1) {
+            suggestionsBox.classList.add('hidden');
+            listContainer.innerHTML = '';
+            return;
+        }
+
+        searchDebounceTimer = setTimeout(() => {
+            fetch(`/blog?suggest=1&search=${encodeURIComponent(query)}`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                listContainer.innerHTML = '';
+                if (data && data.length > 0) {
+                    data.forEach(item => {
+                        const row = document.createElement('a');
+                        row.href = item.url;
+                        row.className = 'flex items-center gap-3 p-3 hover:bg-amber-50/80 transition-colors group cursor-pointer';
+                        row.innerHTML = `
+                            <img src="${item.cover_url}" class="w-12 h-10 object-cover rounded-lg shrink-0 border border-slate-100" />
+                            <div class="flex-1 min-w-0">
+                                <h5 class="text-xs font-bold text-slate-800 group-hover:text-amber-700 truncate">${item.title}</h5>
+                                <div class="flex items-center gap-2 mt-0.5 text-[10px] text-slate-400">
+                                    ${item.category ? `<span class="text-amber-700 font-semibold">${item.category}</span>` : ''}
+                                    ${item.published_date ? `<span>• ${item.published_date}</span>` : ''}
+                                </div>
+                            </div>
+                            <span class="material-symbols-outlined text-sm text-slate-300 group-hover:text-amber-600 shrink-0">chevron_right</span>
+                        `;
+                        listContainer.appendChild(row);
+                    });
+                    suggestionsBox.classList.remove('hidden');
+                } else {
+                    listContainer.innerHTML = `
+                        <div class="p-4 text-center text-xs text-slate-400 flex items-center justify-center gap-1.5">
+                            <span class="material-symbols-outlined text-base text-slate-300">search_off</span>
+                            <span>Không có bài viết khớp</span>
+                        </div>
+                    `;
+                    suggestionsBox.classList.remove('hidden');
+                }
+            })
+            .catch(() => {
+                suggestionsBox.classList.add('hidden');
+            });
+        }, 250);
+    }
+
+    document.addEventListener('click', function(e) {
+        const searchForm = document.getElementById('blog-search-form');
+        const suggestionsBox = document.getElementById('blog-search-suggestions');
+        if (suggestionsBox && searchForm && !searchForm.contains(e.target)) {
+            suggestionsBox.classList.add('hidden');
+        }
+    });
 
     // Auto open modal if there are validation errors
     @if($errors->any() && auth()->check())
