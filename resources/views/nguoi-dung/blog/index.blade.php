@@ -112,13 +112,13 @@
                                 
                                 <!-- Actions -->
                                 <div class="pt-4 border-t border-surface-dim flex items-center justify-between">
-                                    @if(in_array($blog->status, ['draft', 'need_revision', 'rejected']))
+                                    @if(in_array($blog->status, ['draft', 'need_revision', 'rejected', 'published']))
                                         <a href="{{ route('nguoi-dung.blog.edit', $blog) }}" class="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl bg-primary/10 text-primary hover:bg-primary hover:text-white font-label-md transition-colors">
                                             <span class="material-symbols-outlined text-[18px]">edit</span> Sửa bài
                                         </a>
                                     @else
                                         <div class="flex-1 text-center py-2 text-xs text-text-muted font-medium bg-surface-container rounded-xl cursor-not-allowed">
-                                            Không thể sửa
+                                            Đang chờ duyệt
                                         </div>
                                     @endif
                                     
@@ -128,13 +128,12 @@
                                         </a>
                                     @endif
 
-                                    <form action="{{ route('nguoi-dung.blog.destroy', $blog) }}" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa bài viết này?')" class="ml-2">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="w-10 h-10 rounded-xl flex items-center justify-center bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-colors" title="Xóa bài viết">
-                                            <span class="material-symbols-outlined text-[20px]">delete</span>
-                                        </button>
-                                    </form>
+                                    <button type="button" 
+                                            onclick="confirmDeleteBlog('{{ route('nguoi-dung.blog.destroy', $blog) }}', '{{ addslashes($blog->title) }}')"
+                                            class="w-10 h-10 ml-2 rounded-xl flex items-center justify-center bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all cursor-pointer shadow-2xs active:scale-95" 
+                                            title="Xóa bài viết">
+                                        <span class="material-symbols-outlined text-[20px]">delete</span>
+                                    </button>
                                 </div>
                             </div>
                         </article>
@@ -157,4 +156,104 @@
         </div>
     </div>
 </main>
+
+<!-- Modal Xác Nhận Xóa Bài Viết Hiện Đại -->
+<div id="deleteConfirmModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 transition-all">
+    <div class="relative w-full max-w-md bg-white rounded-3xl p-6 sm:p-7 shadow-2xl border border-slate-100 transform transition-all scale-95 opacity-0 duration-200" id="deleteConfirmModalBox">
+        <button type="button" onclick="closeDeleteModal()" class="absolute right-4 top-4 text-slate-400 hover:text-slate-600 p-1.5 rounded-full hover:bg-slate-100 transition-colors cursor-pointer">
+            <span class="material-symbols-outlined text-xl">close</span>
+        </button>
+
+        <div class="text-center">
+            <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center text-red-600 shadow-inner">
+                <span class="material-symbols-outlined text-3xl">delete_forever</span>
+            </div>
+
+            <h3 class="text-xl font-extrabold text-slate-900 mb-1.5">Xác nhận xóa bài viết</h3>
+            <p class="text-slate-500 text-xs sm:text-sm mb-3">Bạn có chắc chắn muốn xóa bài viết này không?</p>
+            
+            <div class="p-3 bg-slate-50 border border-slate-200/80 rounded-2xl text-xs font-bold text-slate-800 line-clamp-2 mb-3 text-left flex items-start gap-2">
+                <span class="material-symbols-outlined text-amber-600 text-base shrink-0 mt-0.5">article</span>
+                <span id="deleteModalBlogTitle" class="line-clamp-2">Tên bài viết</span>
+            </div>
+            
+            <p class="text-[11px] text-red-500 font-semibold mb-6 flex items-center justify-center gap-1">
+                <span class="material-symbols-outlined text-sm">warning</span> Bài viết sau khi xóa sẽ được chuyển vào thùng rác.
+            </p>
+
+            <form id="deleteConfirmForm" method="POST" action="">
+                @csrf
+                @method('DELETE')
+                <div class="grid grid-cols-2 gap-3">
+                    <button type="button" 
+                            onclick="closeDeleteModal()" 
+                            style="background-color: #ffffff; color: #334155; border: 1px solid #cbd5e1;" 
+                            class="w-full py-2.5 px-4 rounded-xl font-bold text-xs sm:text-sm hover:bg-slate-50 active:scale-95 transition-all cursor-pointer">
+                        Hủy bỏ
+                    </button>
+                    <button type="submit" 
+                            style="background-color: #dc2626 !important; color: #ffffff !important; border: 1px solid #dc2626 !important;" 
+                            class="w-full py-2.5 px-4 rounded-xl font-bold text-xs sm:text-sm shadow-md flex items-center justify-center gap-1.5 cursor-pointer hover:opacity-95 active:scale-95 transition-all">
+                        <span class="material-symbols-outlined text-lg" style="color: #ffffff !important;">delete</span>
+                        <span style="color: #ffffff !important; font-weight: 700;">Xác nhận xóa</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 @endsection
+
+@push('scripts')
+<script>
+    function confirmDeleteBlog(deleteUrl, blogTitle) {
+        const modal = document.getElementById('deleteConfirmModal');
+        const modalBox = document.getElementById('deleteConfirmModalBox');
+        const form = document.getElementById('deleteConfirmForm');
+        const titleSpan = document.getElementById('deleteModalBlogTitle');
+
+        if (!modal || !form) return;
+
+        form.action = deleteUrl;
+        if (titleSpan) titleSpan.textContent = blogTitle || 'Bài viết này';
+
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.body.classList.add('overflow-hidden');
+
+        setTimeout(() => {
+            modalBox.classList.remove('scale-95', 'opacity-0');
+            modalBox.classList.add('scale-100', 'opacity-100');
+        }, 10);
+    }
+
+    function closeDeleteModal() {
+        const modal = document.getElementById('deleteConfirmModal');
+        const modalBox = document.getElementById('deleteConfirmModalBox');
+
+        if (!modal || !modalBox) return;
+
+        modalBox.classList.remove('scale-100', 'opacity-100');
+        modalBox.classList.add('scale-95', 'opacity-0');
+
+        setTimeout(() => {
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+        }, 150);
+    }
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeDeleteModal();
+        }
+    });
+
+    document.addEventListener('click', function(e) {
+        const modal = document.getElementById('deleteConfirmModal');
+        if (e.target === modal) {
+            closeDeleteModal();
+        }
+    });
+</script>
+@endpush

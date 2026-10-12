@@ -63,14 +63,29 @@ class BlogService
      */
     public function uploadCoverImage(UploadedFile $file): string
     {
-        $uploadDisk = config('filesystems.upload_disk', 'r2');
+        $uploadDisk = config('filesystems.upload_disk', 'public');
+        if ($uploadDisk === 'r2' && empty(config('filesystems.disks.r2.bucket'))) {
+            $uploadDisk = 'public';
+        }
+
         try {
             return $file->store('blogs/covers', $uploadDisk);
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('Blog cover image upload failed.', [
+            \Illuminate\Support\Facades\Log::warning('Blog cover image upload on primary disk failed, attempting public fallback.', [
                 'disk' => $uploadDisk,
                 'error' => $e->getMessage(),
             ]);
+
+            if ($uploadDisk !== 'public') {
+                try {
+                    return $file->store('blogs/covers', 'public');
+                } catch (\Throwable $fallbackEx) {
+                    \Illuminate\Support\Facades\Log::error('Blog cover image fallback to public disk also failed.', [
+                        'error' => $fallbackEx->getMessage(),
+                    ]);
+                }
+            }
+
             throw new \RuntimeException('Lỗi lưu ảnh bìa bài viết. Vui lòng thử lại sau.');
         }
     }

@@ -88,6 +88,9 @@ class BlogController extends Controller
         
         DB::transaction(function () use ($blog, $status, $oldStatus, $request) {
             $blog->status = $status;
+            if ($status === 'published' && !$blog->published_at) {
+                $blog->published_at = now();
+            }
             $blog->save();
             
             // Log Moderation
@@ -141,7 +144,19 @@ class BlogController extends Controller
         if ($request->has('force') && $request->force) {
             $this->authorize('forceDelete', $blog);
             if ($blog->cover_image) {
-                Storage::disk(config('filesystems.upload_disk', 'r2'))->delete($blog->cover_image);
+                try {
+                    $disk = config('filesystems.upload_disk', 'public');
+                    if ($disk === 'r2' && empty(config('filesystems.disks.r2.bucket'))) {
+                        $disk = 'public';
+                    }
+                    if (Storage::disk($disk)->exists($blog->cover_image)) {
+                        Storage::disk($disk)->delete($blog->cover_image);
+                    } elseif ($disk !== 'public' && Storage::disk('public')->exists($blog->cover_image)) {
+                        Storage::disk('public')->delete($blog->cover_image);
+                    }
+                } catch (\Throwable $th) {
+                    // Ignore storage deletion errors
+                }
             }
             $blog->forceDelete();
             return redirect()->route('admin.blog.posts.index')->with('success', 'Bài viết đã bị xoá vĩnh viễn.');

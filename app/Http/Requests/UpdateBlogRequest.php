@@ -35,8 +35,8 @@ class UpdateBlogRequest extends FormRequest
             'seo_title' => ['nullable', 'string', 'max:255'],
             'seo_description' => ['nullable', 'string', 'max:500'],
             'meta_keywords' => ['nullable', 'string', 'max:255'],
-            // Action can be 'draft' or 'pending' (submit for review)
-            'action' => ['required', 'string', Rule::in(['draft', 'pending'])],
+            // Action can be 'draft', 'pending' (submit for review), or 'published'/'update' (direct update when already published)
+            'action' => ['required', 'string', Rule::in(['draft', 'pending', 'published', 'update'])],
         ];
     }
 
