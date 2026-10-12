@@ -141,7 +141,17 @@ class BlogController extends Controller
         if ($request->has('force') && $request->force) {
             $this->authorize('forceDelete', $blog);
             if ($blog->cover_image) {
-                Storage::disk(config('filesystems.upload_disk', 'r2'))->delete($blog->cover_image);
+                try {
+                    $uploadDisk = config('filesystems.upload_disk', 'r2');
+                    $r2Configured = !empty(config('filesystems.disks.r2.key'))
+                        && !empty(config('filesystems.disks.r2.secret'))
+                        && !empty(config('filesystems.disks.r2.bucket'))
+                        && !empty(config('filesystems.disks.r2.endpoint'));
+                    $targetDisk = ($uploadDisk === 'r2' && ! $r2Configured) ? 'uploads' : $uploadDisk;
+                    Storage::disk($targetDisk)->delete($blog->cover_image);
+                } catch (\Throwable $th) {
+                    // Ignore storage deletion errors
+                }
             }
             $blog->forceDelete();
             return redirect()->route('admin.blog.posts.index')->with('success', 'Bài viết đã bị xoá vĩnh viễn.');

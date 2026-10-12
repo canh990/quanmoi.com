@@ -120,6 +120,12 @@ class Blog extends Model
         }
 
         $cleanPath = ltrim($this->cover_image, '/');
+        if (\Illuminate\Support\Str::startsWith($cleanPath, 'uploads/')) {
+            return '/' . $cleanPath;
+        }
+        if (is_file(public_path('uploads/' . $cleanPath))) {
+            return '/uploads/' . $cleanPath;
+        }
         if (\Illuminate\Support\Str::startsWith($cleanPath, 'storage/')) {
             return '/' . $cleanPath;
         }

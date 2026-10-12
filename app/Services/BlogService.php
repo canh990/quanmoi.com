@@ -64,11 +64,24 @@ class BlogService
     public function uploadCoverImage(UploadedFile $file): string
     {
         $uploadDisk = config('filesystems.upload_disk', 'r2');
+        $r2Configured = !empty(config('filesystems.disks.r2.key'))
+            && !empty(config('filesystems.disks.r2.secret'))
+            && !empty(config('filesystems.disks.r2.bucket'))
+            && !empty(config('filesystems.disks.r2.endpoint'));
+
+        $targetDisk = ($uploadDisk === 'r2' && ! $r2Configured) ? 'uploads' : $uploadDisk;
+
         try {
-            return $file->store('blogs/covers', $uploadDisk);
+            return $file->store('blogs/covers', $targetDisk);
         } catch (\Throwable $e) {
+            if ($targetDisk === 'r2') {
+                \Illuminate\Support\Facades\Log::warning('Blog cover upload to R2 failed; falling back to local uploads disk.', [
+                    'error' => $e->getMessage(),
+                ]);
+                return $file->store('blogs/covers', 'uploads');
+            }
             \Illuminate\Support\Facades\Log::error('Blog cover image upload failed.', [
-                'disk' => $uploadDisk,
+                'disk' => $targetDisk,
                 'error' => $e->getMessage(),
             ]);
             throw new \RuntimeException('Lỗi lưu ảnh bìa bài viết. Vui lòng thử lại sau.');

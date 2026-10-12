@@ -135,16 +135,40 @@ class MenuController extends Controller
                                 $imageContents = $encoded->toString();
                                 
                                 $uploadDisk = config('filesystems.upload_disk', 'r2');
+                                $r2Configured = !empty(config('filesystems.disks.r2.key'))
+                                    && !empty(config('filesystems.disks.r2.secret'))
+                                    && !empty(config('filesystems.disks.r2.bucket'))
+                                    && !empty(config('filesystems.disks.r2.endpoint'));
+
+                                $targetDisk = ($uploadDisk === 'r2' && ! $r2Configured) ? 'uploads' : $uploadDisk;
+
                                 try {
-                                    Storage::disk($uploadDisk)->put($fileName, $imageContents);
-                                    $imagePath = Storage::disk($uploadDisk)->url($fileName);
+                                    Storage::disk($targetDisk)->put($fileName, $imageContents);
+                                    $imagePath = ($targetDisk === 'uploads') ? '/uploads/'.$fileName : Storage::disk($targetDisk)->url($fileName);
                                 } catch (\Throwable $e) {
-                                    \Illuminate\Support\Facades\Log::error('Menu image upload failed.', [
-                                        'disk' => $uploadDisk,
-                                        'key' => $fileName,
-                                        'error' => $e->getMessage(),
-                                    ]);
-                                    throw new \RuntimeException('Lỗi lưu ảnh món ăn lên Cloud Storage. Vui lòng thử lại sau.');
+                                    if ($targetDisk === 'r2') {
+                                        \Illuminate\Support\Facades\Log::warning('Menu image upload to R2 failed; falling back to local uploads disk.', [
+                                            'key' => $fileName,
+                                            'error' => $e->getMessage(),
+                                        ]);
+                                        try {
+                                            Storage::disk('uploads')->put($fileName, $imageContents);
+                                            $imagePath = '/uploads/'.$fileName;
+                                        } catch (\Throwable $fallbackEx) {
+                                            \Illuminate\Support\Facades\Log::error('Menu image fallback upload failed.', [
+                                                'key' => $fileName,
+                                                'error' => $fallbackEx->getMessage(),
+                                            ]);
+                                            throw new \RuntimeException('Lỗi lưu ảnh món ăn lên Cloud Storage. Vui lòng thử lại sau.');
+                                        }
+                                    } else {
+                                        \Illuminate\Support\Facades\Log::error('Menu image upload failed.', [
+                                            'disk' => $targetDisk,
+                                            'key' => $fileName,
+                                            'error' => $e->getMessage(),
+                                        ]);
+                                        throw new \RuntimeException('Lỗi lưu ảnh món ăn lên Cloud Storage. Vui lòng thử lại sau.');
+                                    }
                                 }
                             }
 

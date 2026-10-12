@@ -186,14 +186,38 @@ class QuanController extends Controller
     private function storeVenueImage(string $objectKey, string $contents): array
     {
         $uploadDisk = config('filesystems.upload_disk', 'r2');
+        $r2Configured = !empty(config('filesystems.disks.r2.key'))
+            && !empty(config('filesystems.disks.r2.secret'))
+            && !empty(config('filesystems.disks.r2.bucket'))
+            && !empty(config('filesystems.disks.r2.endpoint'));
+
+        $targetDisk = ($uploadDisk === 'r2' && ! $r2Configured) ? 'uploads' : $uploadDisk;
+
         try {
-            Storage::disk($uploadDisk)->put($objectKey, $contents);
-            $url = Storage::disk($uploadDisk)->url($objectKey);
-            $storedKey = ($uploadDisk === 'uploads' || $uploadDisk === 'public' || $uploadDisk === 'local') ? 'local:'.$objectKey : $objectKey;
+            Storage::disk($targetDisk)->put($objectKey, $contents);
+            $url = ($targetDisk === 'uploads') ? '/uploads/'.$objectKey : Storage::disk($targetDisk)->url($objectKey);
+            $storedKey = ($targetDisk === 'uploads' || $targetDisk === 'public' || $targetDisk === 'local') ? 'local:'.$objectKey : $objectKey;
             return [$url, $storedKey];
         } catch (\Throwable $e) {
+            if ($targetDisk === 'r2') {
+                \Illuminate\Support\Facades\Log::warning('Venue image upload to R2 failed; falling back to local uploads disk.', [
+                    'key' => $objectKey,
+                    'error' => $e->getMessage(),
+                ]);
+                try {
+                    Storage::disk('uploads')->put($objectKey, $contents);
+                    return ['/uploads/'.$objectKey, 'local:'.$objectKey];
+                } catch (\Throwable $fallbackEx) {
+                    \Illuminate\Support\Facades\Log::error('Venue image fallback upload failed.', [
+                        'key' => $objectKey,
+                        'error' => $fallbackEx->getMessage(),
+                    ]);
+                    throw new \RuntimeException('Lỗi lưu ảnh lên Cloud Storage. Vui lòng thử lại sau.');
+                }
+            }
+
             \Illuminate\Support\Facades\Log::error('Venue image upload failed.', [
-                'disk' => $uploadDisk,
+                'disk' => $targetDisk,
                 'key' => $objectKey,
                 'error' => $e->getMessage(),
             ]);
@@ -208,12 +232,20 @@ class QuanController extends Controller
         }
 
         if (Str::startsWith($key, 'local:')) {
-            Storage::disk('uploads')->delete(Str::after($key, 'local:'));
+            $path = Str::after($key, 'local:');
+            $disk = Storage::disk('uploads')->exists($path) ? 'uploads' : 'public';
+            Storage::disk($disk)->delete($path);
             return;
         }
 
         try {
-            Storage::disk('r2')->delete($key);
+            $r2Configured = !empty(config('filesystems.disks.r2.key'))
+                && !empty(config('filesystems.disks.r2.secret'))
+                && !empty(config('filesystems.disks.r2.bucket'))
+                && !empty(config('filesystems.disks.r2.endpoint'));
+            if ($r2Configured) {
+                Storage::disk('r2')->delete($key);
+            }
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::error('Venue image deletion on R2 failed.', [
                 'key' => $key,

@@ -22,9 +22,10 @@ class HinhAnhQuanController extends Controller
             404
         );
 
-        abort_unless(Storage::disk('public')->exists($path), 404);
+        $disk = Storage::disk('uploads')->exists($path) ? 'uploads' : (Storage::disk('public')->exists($path) ? 'public' : null);
+        abort_unless($disk !== null, 404);
 
-        return Storage::disk('public')->response($path, basename($path), [
+        return Storage::disk($disk)->response($path, basename($path), [
             'Cache-Control' => 'public, max-age=86400',
         ]);
     }
@@ -47,6 +48,7 @@ class HinhAnhQuanController extends Controller
             ->where('trang_thai', 'da_duyet')
             ->firstOrFail();
         $this->authorize('update', $quan);
+
         $uploaded = [];
 
         if ($request->hasFile('hinh_anh')) {
@@ -62,20 +64,48 @@ class HinhAnhQuanController extends Controller
 
                 $objectKey = 'quan/gallery/'.$quan->id.'/'.$filename;
                 $uploadDisk = config('filesystems.upload_disk', 'r2');
+                $r2Configured = !empty(config('filesystems.disks.r2.key'))
+                    && !empty(config('filesystems.disks.r2.secret'))
+                    && !empty(config('filesystems.disks.r2.bucket'))
+                    && !empty(config('filesystems.disks.r2.endpoint'));
+
+                $targetDisk = ($uploadDisk === 'r2' && ! $r2Configured) ? 'uploads' : $uploadDisk;
+
                 try {
-                    Storage::disk($uploadDisk)->put($objectKey, (string) $encoded);
-                    $imageUrl = Storage::disk($uploadDisk)->url($objectKey);
-                    $storedKey = ($uploadDisk === 'public' || $uploadDisk === 'local') ? 'local:'.$objectKey : $objectKey;
+                    Storage::disk($targetDisk)->put($objectKey, (string) $encoded);
+                    $imageUrl = ($targetDisk === 'uploads') ? '/uploads/'.$objectKey : Storage::disk($targetDisk)->url($objectKey);
+                    $storedKey = ($targetDisk === 'uploads' || $targetDisk === 'public' || $targetDisk === 'local') ? 'local:'.$objectKey : $objectKey;
                 } catch (\Throwable $e) {
-                    Log::error('Venue gallery upload failed.', [
-                        'disk' => $uploadDisk,
-                        'key' => $objectKey,
-                        'error' => $e->getMessage(),
-                    ]);
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Lỗi lưu ảnh lên Cloud Storage. Vui lòng thử lại sau.',
-                    ], 500);
+                    if ($targetDisk === 'r2') {
+                        Log::warning('Venue gallery upload to R2 failed; using local storage.', [
+                            'key' => $objectKey,
+                            'error' => $e->getMessage(),
+                        ]);
+                        try {
+                            Storage::disk('uploads')->put($objectKey, (string) $encoded);
+                            $imageUrl = '/uploads/'.$objectKey;
+                            $storedKey = 'local:'.$objectKey;
+                        } catch (\Throwable $fallbackEx) {
+                            Log::error('Venue gallery fallback upload failed.', [
+                                'key' => $objectKey,
+                                'error' => $fallbackEx->getMessage(),
+                            ]);
+                            return response()->json([
+                                'success' => false,
+                                'message' => 'Lỗi lưu ảnh lên Cloud Storage. Vui lòng thử lại sau.',
+                            ], 500);
+                        }
+                    } else {
+                        Log::error('Venue gallery upload failed.', [
+                            'disk' => $targetDisk,
+                            'key' => $objectKey,
+                            'error' => $e->getMessage(),
+                        ]);
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Lỗi lưu ảnh lên Cloud Storage. Vui lòng thử lại sau.',
+                        ], 500);
+                    }
                 }
 
                 $img = HinhAnhQuan::create([
@@ -119,7 +149,13 @@ class HinhAnhQuanController extends Controller
             Storage::disk($disk)->delete($path);
         } elseif ($img->object_key && Str::startsWith($img->object_key, 'quan/gallery/')) {
             try {
-                Storage::disk('r2')->delete($img->object_key);
+                $r2Configured = !empty(config('filesystems.disks.r2.key'))
+                    && !empty(config('filesystems.disks.r2.secret'))
+                    && !empty(config('filesystems.disks.r2.bucket'))
+                    && !empty(config('filesystems.disks.r2.endpoint'));
+                if ($r2Configured) {
+                    Storage::disk('r2')->delete($img->object_key);
+                }
             } catch (\Exception $e) {
                 Log::warning('Không thể xóa ảnh quán trên R2: '.$e->getMessage(), [
                     'hinh_anh_id' => $img->id,
