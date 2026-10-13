@@ -7,6 +7,7 @@ use App\Models\Blog;
 use App\Models\BlogCategory;
 use App\Models\BlogTag;
 use App\Models\User;
+use App\Services\BlogAiService;
 use App\Services\BlogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -14,10 +15,12 @@ use Illuminate\Support\Facades\Auth;
 class BlogController extends Controller
 {
     protected BlogService $blogService;
+    protected BlogAiService $blogAiService;
 
-    public function __construct(BlogService $blogService)
+    public function __construct(BlogService $blogService, BlogAiService $blogAiService)
     {
         $this->blogService = $blogService;
+        $this->blogAiService = $blogAiService;
     }
 
     public function index(Request $request)
@@ -141,5 +144,84 @@ class BlogController extends Controller
         $tags = BlogTag::has('blogs')->limit(15)->get();
 
         return view('frontend.blog.show', compact('blog', 'relatedBlogs', 'tags'));
+    }
+
+    /**
+     * Gửi bình luận và kiểm duyệt tự động bằng AI (AI Moderation)
+     */
+    public function storeComment(Request $request, string $slug)
+    {
+        $blog = Blog::where('slug', $slug)->firstOrFail();
+
+        if (! $blog->allow_comments) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Bài viết này hiện đã tắt tính năng bình luận.',
+                ], 403);
+            }
+            return back()->with('error', 'Bài viết này hiện đã tắt tính năng bình luận.');
+        }
+
+        $request->validate([
+            'content' => 'required|string|min:2|max:1000',
+        ], [
+            'content.required' => 'Vui lòng nhập nội dung bình luận.',
+            'content.min' => 'Bình luận phải có ít nhất 2 ký tự.',
+            'content.max' => 'Bình luận không được vượt quá 1000 ký tự.',
+        ]);
+
+        $user = Auth::user();
+        if (! $user) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Vui lòng đăng nhập để gửi bình luận.',
+                ], 401);
+            }
+            return redirect()->route('login');
+        }
+
+        // Kiểm duyệt bình luận bằng AI
+        $moderation = $this->blogAiService->moderateComment($request->content, $user);
+
+        if (! $moderation['is_safe']) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'moderated' => true,
+                    'flag' => $moderation['flag'],
+                    'message' => $moderation['reason'],
+                ], 422);
+            }
+            return back()->withInput()->with('error', $moderation['reason']);
+        }
+
+        $comment = \App\Models\BlogComment::create([
+            'blog_id' => $blog->id,
+            'user_id' => $user->id,
+            'content' => trim($request->content),
+            'status' => 'active',
+        ]);
+
+        $blog->increment('comment_count');
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Bình luận đã được đăng thành công và kiểm duyệt an toàn bởi AI!',
+                'comment' => [
+                    'id' => $comment->id,
+                    'user_name' => $user->ho_ten,
+                    'user_avatar' => $user->anh_dai_dien_url ?? ('https://ui-avatars.com/api/?name=' . urlencode($user->ho_ten) . '&background=random'),
+                    'content' => e($comment->content),
+                    'created_at_human' => 'Vừa xong',
+                    'is_verified_ai' => true,
+                ],
+                'comment_count' => $blog->fresh()->comment_count,
+            ]);
+        }
+
+        return back()->with('success', 'Bình luận của bạn đã được đăng thành công!');
     }
 }

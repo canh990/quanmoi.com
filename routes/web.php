@@ -22,6 +22,7 @@ Route::get('/quan-moi', [KhamPhaController::class, 'quanMoi'])->name('quan-moi')
 Route::get('/quan-noi-bat', [KhamPhaController::class, 'quanNoiBat'])->name('quan-noi-bat');
 Route::get('/blog', [FrontendBlogController::class, 'index'])->name('blog.index');
 Route::get('/blog/{slug}', [FrontendBlogController::class, 'show'])->name('blog.show');
+Route::post('/blog/{slug}/binh-luan', [FrontendBlogController::class, 'storeComment'])->middleware(['auth', 'throttle:20,1'])->name('blog.comment.store');
 Route::get('/video-review', [\App\Http\Controllers\NguoiDung\VideoShortController::class, 'index'])->name('video-review.index');
 Route::view('/gioi-thieu', 'pages.about')->name('about');
 Route::get('/media/venue/{path}', [HinhAnhQuanController::class, 'localImage'])
@@ -88,6 +89,13 @@ Route::middleware('auth')->group(function () {
     Route::post('/quan/{slug}/danh-gia', [\App\Http\Controllers\NguoiDung\QuanDanhGiaController::class, 'store'])
         ->middleware('throttle:10,1')
         ->name('quan.danh-gia.store');
+
+    Route::prefix('ai/blog')->name('ai.blog.')->group(function () {
+        Route::post('/suggest-titles', [\App\Http\Controllers\NguoiDung\BlogAiController::class, 'suggestTitles'])->name('suggest-titles');
+        Route::post('/generate-outline', [\App\Http\Controllers\NguoiDung\BlogAiController::class, 'generateOutline'])->name('generate-outline');
+        Route::post('/fix-spelling', [\App\Http\Controllers\NguoiDung\BlogAiController::class, 'fixSpelling'])->name('fix-spelling');
+        Route::post('/suggest-tags-category', [\App\Http\Controllers\NguoiDung\BlogAiController::class, 'suggestTagsCategory'])->name('suggest-tags-category');
+    });
 
     Route::prefix('thanh-vien/blog')->name('nguoi-dung.blog.')->group(function () {
         Route::get('/', [UserBlogController::class, 'index'])->name('index');

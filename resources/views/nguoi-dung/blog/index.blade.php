@@ -4,7 +4,7 @@
 @section('content')
 <main class="max-w-[1200px] mx-auto px-container-margin py-stack-lg min-h-[819px] pt-6">
     @if(session('success'))
-    <div id="toast-success" class="mb-6 flex items-center gap-3 bg-white border border-green-200 rounded-2xl px-5 py-4 shadow-lg shadow-green-100/50 animate-modal-in">
+    <div id="toast-success" class="mb-6 flex items-center gap-3 bg-white border border-green-200 rounded-2xl px-5 py-4 shadow-lg shadow-green-100/50 animate-modal-in transition-opacity duration-300">
         <div class="w-9 h-9 rounded-xl bg-green-100 flex items-center justify-center shrink-0">
             <span class="material-symbols-outlined text-green-600" style="font-variation-settings:'FILL' 1">check_circle</span>
         </div>
@@ -16,6 +16,15 @@
             <span class="material-symbols-outlined text-[20px]">close</span>
         </button>
     </div>
+    <script>
+        setTimeout(function() {
+            var el = document.getElementById('toast-success');
+            if (el) {
+                el.style.opacity = '0';
+                setTimeout(function() { el.remove(); }, 300);
+            }
+        }, 2500);
+    </script>
     @endif
 
     <div class="grid grid-cols-1 md:grid-cols-12 gap-stack-lg">
