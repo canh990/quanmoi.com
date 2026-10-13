@@ -15,7 +15,7 @@ return [
 
     'default' => env('FILESYSTEM_DISK', 'local'),
 
-    'upload_disk' => env('UPLOAD_DISK', env('CLOUDFLARE_R2_BUCKET') ? 'r2' : 'public'),
+    'upload_disk' => env('UPLOAD_DISK', env('CLOUDFLARE_R2_BUCKET') ? 'r2' : 'uploads'),
 
     /*
     |--------------------------------------------------------------------------

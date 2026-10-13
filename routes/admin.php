@@ -61,7 +61,10 @@ Route::middleware(['auth', 'KiemTraQuyenHan:admin'])->group(function () {
     // 7. Duyệt xác thực (Quán / User)
     Route::get('/duyet-xac-thuc', [DuyetXacThucController::class, 'index'])->name('duyet-xac-thuc.index');
     Route::put('/duyet-xac-thuc/quan/{id}', [DuyetXacThucController::class, 'approveQuan'])->name('duyet-xac-thuc.quan');
+    Route::put('/duyet-xac-thuc/quan/{id}/reject', [DuyetXacThucController::class, 'rejectQuan'])->name('duyet-xac-thuc.quan.reject');
+    Route::delete('/duyet-xac-thuc/quan/{id}', [DuyetXacThucController::class, 'destroyQuan'])->name('duyet-xac-thuc.quan.destroy');
     Route::put('/duyet-xac-thuc/user/{id}', [DuyetXacThucController::class, 'verifyUser'])->name('duyet-xac-thuc.user');
+    Route::put('/duyet-xac-thuc/user/{id}/reject', [DuyetXacThucController::class, 'rejectUser'])->name('duyet-xac-thuc.user.reject');
 
     // 8. Thông báo Hệ Thống
     Route::get('/thong-bao', [ThongBaoAdminController::class, 'index'])->name('thong-bao.index');

@@ -58,20 +58,36 @@ class BlogService
      */
     public function uploadCoverImage(UploadedFile $file): string
     {
-        $uploadDisk = config('filesystems.upload_disk', 'public');
-        if ($uploadDisk === 'r2' && empty(config('filesystems.disks.r2.bucket'))) {
-            $uploadDisk = 'public';
-        }
+        $uploadDisk = config('filesystems.upload_disk', 'r2');
+        $r2Configured = !empty(config('filesystems.disks.r2.key'))
+            && !empty(config('filesystems.disks.r2.secret'))
+            && !empty(config('filesystems.disks.r2.bucket'))
+            && !empty(config('filesystems.disks.r2.endpoint'));
+
+        $targetDisk = ($uploadDisk === 'r2' && ! $r2Configured) ? 'uploads' : $uploadDisk;
 
         try {
-            return $file->store('blogs/covers', $uploadDisk);
+            return $file->store('blogs/covers', $targetDisk);
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::warning('Blog cover image upload on primary disk failed, attempting public fallback.', [
-                'disk' => $uploadDisk,
+            if ($targetDisk === 'r2') {
+                \Illuminate\Support\Facades\Log::warning('Blog cover upload to R2 failed; falling back to local uploads disk.', [
+                    'error' => $e->getMessage(),
+                ]);
+                try {
+                    return $file->store('blogs/covers', 'uploads');
+                } catch (\Throwable $uploadsEx) {
+                    \Illuminate\Support\Facades\Log::warning('Blog cover fallback to uploads disk failed; attempting public disk.', [
+                        'error' => $uploadsEx->getMessage(),
+                    ]);
+                }
+            }
+
+            \Illuminate\Support\Facades\Log::error('Blog cover image upload failed.', [
+                'disk' => $targetDisk,
                 'error' => $e->getMessage(),
             ]);
 
-            if ($uploadDisk !== 'public') {
+            if ($targetDisk !== 'public') {
                 try {
                     return $file->store('blogs/covers', 'public');
                 } catch (\Throwable $fallbackEx) {

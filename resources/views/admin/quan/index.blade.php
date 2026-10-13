@@ -44,7 +44,7 @@
                         <th class="py-3.5 px-4">CHỦ SỞ HỮU</th>
                         <th class="py-3.5 px-4">ĐỊA CHỈ</th>
                         <th class="py-3.5 px-4">TRẠNG THÁI</th>
-                        <th class="py-3.5 px-4 text-right">THAO TÁC</th>
+                        <th class="py-3.5 px-4 text-right whitespace-nowrap min-w-[170px]">THAO TÁC</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 text-xs">
@@ -52,7 +52,7 @@
                         <tr class="hover:bg-slate-50/80 transition-colors {{ $quan->trashed() ? 'bg-rose-50/30' : '' }}">
                             <td class="py-3.5 px-4">
                                 <div class="flex items-center gap-3">
-                                    <img src="{{ $quan->anh_bia_url ?: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=100&q=80' }}" class="w-10 h-10 rounded-lg object-cover border border-slate-200 flex-shrink-0" alt="" />
+                                    <img src="{{ $quan->anh_bia_url ?: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=100&q=80' }}" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=100&q=80';" class="w-10 h-10 rounded-lg object-cover border border-slate-200 flex-shrink-0" alt="{{ $quan->ten_quan }}" />
                                     <div>
                                         <p class="font-bold text-slate-900 leading-tight flex items-center gap-1">
                                             {{ $quan->ten_quan }}
@@ -85,8 +85,8 @@
                                     <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200/80">• Đã duyệt</span>
                                 @endif
                             </td>
-                            <td class="py-3.5 px-4 text-right">
-                                <div class="flex items-center justify-end gap-1.5">
+                            <td class="py-3.5 px-4 text-right whitespace-nowrap min-w-[170px]">
+                                <div class="flex items-center justify-end gap-1.5 flex-nowrap shrink-0">
                                     @if(!$quan->trashed())
                                         <form action="{{ route('admin.quan.toggle-xac-thuc', $quan->id) }}" method="POST" class="inline">
                                             @csrf

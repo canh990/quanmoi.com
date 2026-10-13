@@ -160,9 +160,11 @@ class Quan extends Model
 
     protected $appends = ['anh_bia_url'];
 
-    /** Resolve old storage URLs to project-local copies usable in Docker. */
+    /** Resolve image URLs safely: local uploads, storage, external CDN, or reliable fallback. */
     public function getAnhBiaUrlAttribute(): ?string
     {
+        $defaultFallback = 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80';
+
         $key = $this->attributes['anh_bia_key'] ?? null;
         if (is_string($key) && str_starts_with($key, 'local:quan/anh-bia/')) {
             $localPath = substr($key, strlen('local:'));
@@ -173,33 +175,38 @@ class Quan extends Model
 
         $value = $this->attributes['anh_bia'] ?? null;
         if (! is_string($value) || trim($value) === '') {
-            return null;
+            return $defaultFallback;
+        }
+
+        // Nếu là link external đầy đủ (Unsplash, Cloudflare R2 CDN, Google Storage...)
+        if (str_starts_with($value, 'http://') || str_starts_with($value, 'https://')) {
+            $host = strtolower((string) parse_url($value, PHP_URL_HOST));
+            if (! in_array($host, ['localhost', '127.0.0.1', '::1'], true)) {
+                return $value;
+            }
         }
 
         $path = parse_url($value, PHP_URL_PATH) ?: $value;
         $path = ltrim(str_replace('\\', '/', $path), '/');
         $path = preg_replace('#^(?:storage|public)/#', '', $path);
 
-        // New local uploads are stored under public/uploads, not storage/app/public.
-        // Normalize /uploads/foo, uploads/foo, and absolute localhost URLs consistently.
         $isUploadsPath = str_starts_with($path, 'uploads/');
         if ($isUploadsPath) {
             $path = substr($path, strlen('uploads/'));
         }
+
+        // 1. Kiểm tra tồn tại trong public/uploads
         if (is_file(public_path('uploads/'.$path))) {
             return '/uploads/'.$path;
         }
 
-        if (str_starts_with($value, 'http://') || str_starts_with($value, 'https://')) {
-            $host = strtolower((string) parse_url($value, PHP_URL_HOST));
-            if (in_array($host, ['localhost', '127.0.0.1', '::1'], true)) {
-                return ($isUploadsPath ? '/uploads/' : '/storage/').$path;
-            }
-
-            return $value;
+        // 2. Kiểm tra tồn tại trong storage/app/public hoặc public/storage
+        if (is_file(public_path('storage/'.$path)) || is_file(storage_path('app/public/'.$path))) {
+            return '/storage/'.$path;
         }
 
-        return '/storage/'.$path;
+        // 3. Nếu file không tồn tại trên ổ đĩa, trả về ảnh mặc định thay vì trả về đường dẫn 404 hỏng
+        return $defaultFallback;
     }
 
     public function delete()

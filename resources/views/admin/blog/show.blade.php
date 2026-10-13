@@ -18,7 +18,7 @@
         <div class="lg:col-span-2 space-y-6">
             <div class="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm">
                 @if($blog->cover_image)
-                    <img src="{{ $blog->cover_image_url }}" class="w-full rounded-xl mb-6 shadow-sm">
+                    <img src="{{ $blog->cover_image_url }}" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=80';" class="w-full rounded-xl mb-6 shadow-sm">
                 @endif
                 
                 <div class="mb-4">
@@ -68,7 +68,7 @@
             <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
                 <h3 class="text-lg font-bold text-gray-900 mb-4">Thông tin tác giả</h3>
                 <div class="flex items-center gap-4 mb-4">
-                    <img src="{{ $blog->user->anh_dai_dien_url ?? 'https://ui-avatars.com/api/?name='.urlencode($blog->user->ho_ten) }}" class="w-12 h-12 rounded-full">
+                    <img src="{{ $blog->user->anh_dai_dien_url ?? 'https://ui-avatars.com/api/?name='.urlencode($blog->user->ho_ten) }}" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name={{ urlencode($blog->user->ho_ten ?? \'U\') }}';" class="w-12 h-12 rounded-full">
                     <div>
                         <p class="font-bold text-gray-900">{{ $blog->user->ho_ten }}</p>
                         <p class="text-sm text-gray-500">{{ $blog->user->email }}</p>
