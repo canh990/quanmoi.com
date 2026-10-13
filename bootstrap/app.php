@@ -23,10 +23,6 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->validateCsrfTokens(except: [
-            'blog/*/luot-xem',
-        ]);
-
         $middleware->alias([
             'KiemTraQuyenHan' => \App\Http\Middleware\KiemTraQuyenHan::class,
             'CheckAdmin'      => \App\Http\Middleware\KiemTraQuyenHan::class,

@@ -88,9 +88,6 @@ class BlogController extends Controller
         
         DB::transaction(function () use ($blog, $status, $oldStatus, $request) {
             $blog->status = $status;
-            if ($status === 'published' && !$blog->published_at) {
-                $blog->published_at = now();
-            }
             $blog->save();
             
             // Log Moderation
@@ -145,15 +142,13 @@ class BlogController extends Controller
             $this->authorize('forceDelete', $blog);
             if ($blog->cover_image) {
                 try {
-                    $disk = config('filesystems.upload_disk', 'public');
-                    if ($disk === 'r2' && empty(config('filesystems.disks.r2.bucket'))) {
-                        $disk = 'public';
-                    }
-                    if (Storage::disk($disk)->exists($blog->cover_image)) {
-                        Storage::disk($disk)->delete($blog->cover_image);
-                    } elseif ($disk !== 'public' && Storage::disk('public')->exists($blog->cover_image)) {
-                        Storage::disk('public')->delete($blog->cover_image);
-                    }
+                    $uploadDisk = config('filesystems.upload_disk', 'r2');
+                    $r2Configured = !empty(config('filesystems.disks.r2.key'))
+                        && !empty(config('filesystems.disks.r2.secret'))
+                        && !empty(config('filesystems.disks.r2.bucket'))
+                        && !empty(config('filesystems.disks.r2.endpoint'));
+                    $targetDisk = ($uploadDisk === 'r2' && ! $r2Configured) ? 'uploads' : $uploadDisk;
+                    Storage::disk($targetDisk)->delete($blog->cover_image);
                 } catch (\Throwable $th) {
                     // Ignore storage deletion errors
                 }

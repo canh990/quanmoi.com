@@ -12,28 +12,33 @@ use Illuminate\Support\Facades\DB;
 class BlogService
 {
     /**
-     * Ghi nhận mỗi lượt vào xem bài viết blog.
-     * Mỗi lần người dùng vào/tải bài viết sẽ được cộng thêm 1 lượt xem.
+     * Increment view count for a blog post, preventing SPAM using session/IP.
      */
-    public function incrementView(Blog $blog, ?string $sessionId, ?string $ipAddress): bool
+    public function incrementView(Blog $blog, string $sessionId, ?string $ipAddress): void
     {
-        // Chỉ ghi nhận cho bài viết đã xuất bản
-        if ($blog->status !== 'published') {
-            return false;
+        // Check if a view exists for this session/ip within the last hour
+        $recentView = BlogView::where('blog_id', $blog->id)
+            ->where(function ($query) use ($sessionId, $ipAddress) {
+                if ($sessionId) {
+                    $query->where('session_id', $sessionId);
+                }
+                if ($ipAddress) {
+                    $query->orWhere('ip_address', $ipAddress);
+                }
+            })
+            ->where('created_at', '>=', now()->subHour())
+            ->first();
+
+        if (!$recentView) {
+            DB::transaction(function () use ($blog, $sessionId, $ipAddress) {
+                BlogView::create([
+                    'blog_id' => $blog->id,
+                    'session_id' => $sessionId,
+                    'ip_address' => $ipAddress,
+                ]);
+                $blog->increment('view_count');
+            });
         }
-
-        return DB::transaction(function () use ($blog, $sessionId, $ipAddress) {
-            BlogView::create([
-                'blog_id' => $blog->id,
-                'session_id' => $sessionId,
-                'ip_address' => $ipAddress,
-            ]);
-
-            $blog->increment('view_count');
-            $blog->refresh();
-
-            return true;
-        });
     }
 
     /**
@@ -58,29 +63,27 @@ class BlogService
      */
     public function uploadCoverImage(UploadedFile $file): string
     {
-        $uploadDisk = config('filesystems.upload_disk', 'public');
-        if ($uploadDisk === 'r2' && empty(config('filesystems.disks.r2.bucket'))) {
-            $uploadDisk = 'public';
-        }
+        $uploadDisk = config('filesystems.upload_disk', 'r2');
+        $r2Configured = !empty(config('filesystems.disks.r2.key'))
+            && !empty(config('filesystems.disks.r2.secret'))
+            && !empty(config('filesystems.disks.r2.bucket'))
+            && !empty(config('filesystems.disks.r2.endpoint'));
+
+        $targetDisk = ($uploadDisk === 'r2' && ! $r2Configured) ? 'uploads' : $uploadDisk;
 
         try {
-            return $file->store('blogs/covers', $uploadDisk);
+            return $file->store('blogs/covers', $targetDisk);
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::warning('Blog cover image upload on primary disk failed, attempting public fallback.', [
-                'disk' => $uploadDisk,
+            if ($targetDisk === 'r2') {
+                \Illuminate\Support\Facades\Log::warning('Blog cover upload to R2 failed; falling back to local uploads disk.', [
+                    'error' => $e->getMessage(),
+                ]);
+                return $file->store('blogs/covers', 'uploads');
+            }
+            \Illuminate\Support\Facades\Log::error('Blog cover image upload failed.', [
+                'disk' => $targetDisk,
                 'error' => $e->getMessage(),
             ]);
-
-            if ($uploadDisk !== 'public') {
-                try {
-                    return $file->store('blogs/covers', 'public');
-                } catch (\Throwable $fallbackEx) {
-                    \Illuminate\Support\Facades\Log::error('Blog cover image fallback to public disk also failed.', [
-                        'error' => $fallbackEx->getMessage(),
-                    ]);
-                }
-            }
-
             throw new \RuntimeException('Lỗi lưu ảnh bìa bài viết. Vui lòng thử lại sau.');
         }
     }

@@ -120,42 +120,18 @@
         </nav>
         
         <div class="flex items-center gap-3 w-full md:w-auto shrink-0 justify-end">
-            <form action="{{ route('blog.index') }}" method="GET" class="relative flex-grow md:w-72" id="blog-search-form">
+            <form action="{{ route('blog.index') }}" method="GET" class="relative flex-grow md:w-60">
                 @if(request()->has('category'))
                     <input type="hidden" name="category" value="{{ request('category') }}">
                 @endif
                 @if(request()->has('tag'))
                     <input type="hidden" name="tag" value="{{ request('tag') }}">
                 @endif
-                <input type="text" 
-                       id="blog-search-input"
-                       name="search" 
-                       value="{{ request('search') }}" 
-                       placeholder="Tìm kiếm bài viết..." 
-                       autocomplete="off"
-                       oninput="handleBlogSearchInput(this)"
-                       class="w-full pl-10 pr-9 py-2 bg-surface-container rounded-full text-body-sm focus:ring-2 focus:ring-primary focus:bg-white focus:border-primary outline-none border border-transparent shadow-inner transition-all">
-                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[20px] pointer-events-none">search</span>
-                
-                @if(request('search'))
-                    <a href="{{ route('blog.index', array_filter(['category' => request('category'), 'tag' => request('tag')])) }}" 
-                       class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 p-0.5 rounded-full hover:bg-slate-200/60 transition-colors"
-                       title="Xóa tìm kiếm">
-                        <span class="material-symbols-outlined text-[18px]">cancel</span>
-                    </a>
-                @endif
-
-                <!-- Live Suggestions Dropdown -->
-                <div id="blog-search-suggestions" class="absolute left-0 right-0 top-full mt-2 bg-white rounded-2xl shadow-2xl border border-slate-200/80 overflow-hidden z-50 hidden divide-y divide-slate-100">
-                    <div id="blog-suggestions-list" class="max-h-80 overflow-y-auto divide-y divide-slate-100"></div>
-                    <div class="p-2.5 bg-slate-50 text-center">
-                        <button type="submit" class="text-xs font-bold text-primary hover:underline flex items-center justify-center gap-1 w-full">
-                            <span>Xem tất cả kết quả</span>
-                            <span class="material-symbols-outlined text-sm">arrow_forward</span>
-                        </button>
-                    </div>
-                </div>
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Tìm kiếm bài viết..." class="w-full pl-10 pr-4 py-2 bg-surface-container rounded-full text-body-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none border-none shadow-inner">
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[20px]">search</span>
             </form>
+
+
         </div>
     </div>
     
@@ -163,25 +139,6 @@
         
         <!-- Article Grid -->
         <div class="lg:w-3/4">
-            @if(request()->filled('search'))
-                <div class="mb-6 p-4 bg-amber-50/90 border border-amber-200/90 rounded-2xl flex items-center justify-between shadow-2xs">
-                    <div class="flex items-center gap-2.5">
-                        <span class="material-symbols-outlined text-amber-600 text-xl">search</span>
-                        <div>
-                            <span class="text-xs text-slate-500 font-medium">Kết quả tìm kiếm cho:</span>
-                            <span class="font-extrabold text-sm text-slate-900 ml-1">"{{ request('search') }}"</span>
-                            <span class="text-xs font-bold text-amber-800 bg-amber-100 px-2.5 py-0.5 rounded-full ml-2">
-                                {{ $blogs->total() }} bài viết
-                            </span>
-                        </div>
-                    </div>
-                    <a href="{{ route('blog.index', array_filter(['category' => request('category'), 'tag' => request('tag')])) }}" class="text-xs font-bold text-slate-500 hover:text-red-600 flex items-center gap-1 py-1 px-3 rounded-xl hover:bg-white transition-all">
-                        <span class="material-symbols-outlined text-base">close</span>
-                        <span>Xóa tìm kiếm</span>
-                    </a>
-                </div>
-            @endif
-
             @if($blogs->count() > 0)
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
                     @foreach($blogs as $blog)
@@ -202,7 +159,7 @@
                                 <div class="mt-auto pt-4 border-t border-outline-variant flex justify-between items-center">
                                     <span class="font-label-sm text-label-sm text-text-muted">{{ Str::limit($blog->user->ho_ten ?? 'Tác giả', 15) }} • {{ $blog->published_at ? $blog->published_at->format('d/m/Y') : '' }}</span>
                                     <span class="font-label-sm text-label-sm text-text-muted flex items-center gap-1">
-                                        <span class="material-symbols-outlined text-[14px]">visibility</span> {{ number_format($blog->view_count ?? 0) }} lượt xem
+                                        <span class="material-symbols-outlined text-[14px]">visibility</span> {{ number_format($blog->view_count ?? 0) }}
                                     </span>
                                 </div>
                             </div>
@@ -214,33 +171,20 @@
                     {{ $blogs->links() }}
                 </div>
             @else
-                @if(request()->filled('search'))
-                    <div class="text-center py-16 bg-white rounded-3xl border border-outline-variant shadow-sm px-4">
-                        <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600">
-                            <span class="material-symbols-outlined text-3xl">search_off</span>
-                        </div>
-                        <h3 class="text-xl font-extrabold text-on-surface mb-2">Không tìm thấy bài viết nào</h3>
-                        <p class="text-on-surface-variant max-w-md mx-auto mb-6 text-sm">Không có bài viết nào khớp với từ khóa "<span class="font-bold text-slate-900">{{ request('search') }}</span>". Hãy thử từ khóa khác hoặc quay lại danh sách bài viết.</p>
-                        <a href="{{ route('blog.index') }}" class="px-6 py-2.5 rounded-full bg-primary text-white font-bold text-xs shadow-md hover:bg-primary/90 transition-all inline-flex items-center gap-2">
-                            <span class="material-symbols-outlined text-base">refresh</span> Xem tất cả bài viết
-                        </a>
-                    </div>
-                @else
-                    <div class="text-center py-20 bg-white rounded-2xl border border-outline-variant shadow-sm">
-                        <span class="material-symbols-outlined text-6xl text-gray-300 mb-4">edit_note</span>
-                        <h3 class="text-xl font-bold text-on-surface mb-2">Chưa có bài viết nào</h3>
-                        <p class="text-on-surface-variant max-w-md mx-auto mb-6">Hãy trở thành người đầu tiên đăng bài viết review hoặc chia sẻ không gian quán của bạn!</p>
-                        @auth
-                            <button onclick="openCreateBlogModal()" type="button" class="px-6 py-3 rounded-full bg-primary text-white font-bold text-sm shadow-md hover:bg-primary/90 transition-all inline-flex items-center gap-2">
-                                <span class="material-symbols-outlined">add</span> Đăng bài viết ngay
-                            </button>
-                        @else
-                            <button onclick="openGuestModal()" type="button" class="px-6 py-3 rounded-full bg-primary text-white font-bold text-sm shadow-md hover:bg-primary/90 transition-all inline-flex items-center gap-2">
-                                <span class="material-symbols-outlined">login</span> Đăng nhập để đăng bài
-                            </button>
-                        @endauth
-                    </div>
-                @endif
+                <div class="text-center py-20 bg-white rounded-2xl border border-outline-variant shadow-sm">
+                    <span class="material-symbols-outlined text-6xl text-gray-300 mb-4">edit_note</span>
+                    <h3 class="text-xl font-bold text-on-surface mb-2">Chưa có bài viết nào</h3>
+                    <p class="text-on-surface-variant max-w-md mx-auto mb-6">Hãy trở thành người đầu tiên đăng bài viết review hoặc chia sẻ không gian quán của bạn!</p>
+                    @auth
+                        <button onclick="openCreateBlogModal()" type="button" class="px-6 py-3 rounded-full bg-primary text-white font-bold text-sm shadow-md hover:bg-primary/90 transition-all inline-flex items-center gap-2">
+                            <span class="material-symbols-outlined">add</span> Đăng bài viết ngay
+                        </button>
+                    @else
+                        <button onclick="openGuestModal()" type="button" class="px-6 py-3 rounded-full bg-primary text-white font-bold text-sm shadow-md hover:bg-primary/90 transition-all inline-flex items-center gap-2">
+                            <span class="material-symbols-outlined">login</span> Đăng nhập để đăng bài
+                        </button>
+                    @endauth
+                </div>
             @endif
         </div>
         
@@ -338,7 +282,7 @@
 @auth
 <div id="createBlogModal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-slate-900/65 backdrop-blur-md p-4 sm:p-8 lg:p-12">
     <div class="flex min-h-full items-center justify-center p-0 text-center">
-        <form action="{{ route('nguoi-dung.blog.store') }}" method="POST" enctype="multipart/form-data" id="modal-blog-form" onsubmit="event.preventDefault(); submitModalBlogForm('pending');" class="relative w-full max-w-3xl my-auto max-h-[82vh] bg-white rounded-3xl shadow-2xl border border-slate-200/80 overflow-hidden animate-modal-in flex flex-col text-left">
+        <form action="{{ route('nguoi-dung.blog.store') }}" method="POST" enctype="multipart/form-data" id="modal-blog-form" class="relative w-full max-w-3xl my-auto max-h-[82vh] bg-white rounded-3xl shadow-2xl border border-slate-200/80 overflow-hidden animate-modal-in flex flex-col text-left">
             @csrf
             <input type="hidden" name="redirect_to" value="{{ route('blog.index') }}">
             <input type="hidden" name="action" id="modal-action-input" value="pending">
@@ -368,9 +312,6 @@
                     <span>Vui lòng nhập đầy đủ Tiêu đề, chọn Danh mục và điền Nội dung bài viết trước khi gửi!</span>
                 </div>
 
-                {{-- AI Content Writer Assistant Toolbar --}}
-                @include('nguoi-dung.blog.partials.ai-toolbar', ['context' => 'modal'])
-
                 <!-- Cover Image Upload -->
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Ảnh bìa bài viết</label>
@@ -397,12 +338,7 @@
 
                 <!-- Title -->
                 <div>
-                    <div class="flex items-center justify-between mb-1.5">
-                        <label for="modal_title" class="block text-xs font-bold uppercase tracking-wider text-slate-600">Tiêu đề bài viết <span class="text-red-500">*</span></label>
-                        <button type="button" onclick="openAiTitleSuggestModal('modal')" class="text-[11px] font-bold text-purple-600 hover:text-purple-800 flex items-center gap-1 transition-colors cursor-pointer">
-                            <span class="material-symbols-outlined text-sm">auto_fix_high</span> Gợi ý tiêu đề AI
-                        </button>
-                    </div>
+                    <label for="modal_title" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Tiêu đề bài viết <span class="text-red-500">*</span></label>
                     <input type="text" id="modal_title" name="title" value="{{ old('title') }}" required placeholder="Ví dụ: Review chi tiết món lẩu nấm cực ngon tại Quán Mới..." class="w-full rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 text-xs font-bold text-slate-900 py-2.5 px-4 shadow-2xs transition-all outline-none placeholder:font-normal placeholder:text-slate-400">
                 </div>
 
@@ -441,23 +377,17 @@
                             <input type="text" 
                                    id="modal_category_name" 
                                    name="category_name" 
-                                   list="modal_category_datalist"
                                    value="{{ old('category_name', old('new_category')) }}" 
                                    placeholder="Gõ hoặc chọn danh mục..." 
                                    autocomplete="off"
                                    required
                                    class="w-full rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 font-bold text-xs text-slate-900 py-2.5 px-4 pr-10 shadow-2xs transition-all outline-none placeholder:font-normal placeholder:text-slate-400"
-                                   onclick="toggleCategoryDropdown('modal_cat_dropdown')"
+                                   onfocus="showCategorySuggestions('modal_cat_dropdown')"
                                    oninput="filterCategorySuggestions(this, 'modal_cat_dropdown')">
-                            <button type="button" 
-                                    onclick="toggleCategoryDropdown('modal_cat_dropdown')"
-                                    class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-amber-600 p-1 rounded-lg transition-colors flex items-center justify-center cursor-pointer"
-                                    title="Mở danh mục">
-                                <span class="material-symbols-outlined text-lg">expand_more</span>
-                            </button>
+                            <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-lg">expand_more</span>
                             
                             <!-- Suggestions Dropdown list attached right below input -->
-                            <div id="modal_cat_dropdown" class="cat-dropdown-menu absolute left-0 right-0 top-full mt-1 bg-white border border-amber-200 rounded-2xl shadow-xl z-50 max-h-48 overflow-y-auto hidden divide-y divide-slate-100">
+                            <div id="modal_cat_dropdown" class="absolute left-0 right-0 top-full mt-1 bg-white border border-amber-200 rounded-2xl shadow-xl z-50 max-h-48 overflow-y-auto hidden divide-y divide-slate-100">
                                 @foreach($modalCategories as $category)
                                     <div class="cat-suggestion-item px-4 py-2.5 hover:bg-amber-50/80 cursor-pointer text-xs font-bold text-slate-800 flex items-center justify-between transition-colors"
                                          data-name="{{ strtolower($category->name) }}"
@@ -466,24 +396,10 @@
                                             <span class="material-symbols-outlined text-amber-600 text-sm">folder</span>
                                             <span>{{ $category->name }}</span>
                                         </span>
-                                        <span class="text-[10px] text-amber-700 bg-amber-100/70 px-2 py-0.5 rounded-full font-bold">Danh mục có sẵn</span>
+                                        <span class="text-[10px] text-amber-700 bg-amber-100/70 px-2 py-0.5 rounded-full font-bold">Gợi ý danh mục</span>
                                     </div>
                                 @endforeach
-                                <div class="cat-custom-option hidden px-4 py-2.5 bg-amber-50 hover:bg-amber-100 cursor-pointer text-xs font-bold text-amber-900 flex items-center justify-between transition-colors border-t border-amber-200"
-                                     onclick="selectCustomCategoryItem('modal_category_name', 'modal_cat_dropdown')">
-                                    <span class="flex items-center gap-2">
-                                        <span class="material-symbols-outlined text-amber-700 text-sm">add_circle</span>
-                                        <span>Dùng danh mục mới: "<span class="cat-custom-text"></span>"</span>
-                                    </span>
-                                    <span class="text-[10px] text-white bg-amber-600 px-2 py-0.5 rounded-full font-bold">Mới</span>
-                                </div>
                             </div>
-
-                            <datalist id="modal_category_datalist">
-                                @foreach($modalCategories as $category)
-                                    <option value="{{ $category->name }}"></option>
-                                @endforeach
-                            </datalist>
                         </div>
                     </div>
                     
@@ -491,29 +407,22 @@
                     <div>
                         <div class="flex items-center justify-between mb-1.5">
                             <label for="modal_custom_tags" class="block text-xs font-bold uppercase tracking-wider text-slate-600">Thẻ bài viết (Tags)</label>
-                            <span class="text-[11px] font-bold text-amber-700">Gõ thẻ mới (nhấn Enter) hoặc chọn</span>
+                            <span class="text-[11px] font-bold text-amber-700">Chọn nhanh bên dưới</span>
                         </div>
                         <div class="relative autocomplete-wrapper">
                             <input type="text" 
                                    id="modal_custom_tags" 
                                    name="custom_tags" 
-                                   list="modal_tag_datalist"
                                    value="{{ old('custom_tags') }}" 
-                                   placeholder="Gõ tên thẻ mới (nhấn Enter hoặc dấu phẩy để thêm)..." 
+                                   placeholder="Gõ tên thẻ (VD: Lẩu thái, Monngon)..." 
                                    autocomplete="off"
                                    class="w-full rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 text-xs font-semibold text-slate-900 py-2.5 px-4 pr-10 shadow-2xs transition-all outline-none placeholder:font-normal placeholder:text-slate-400"
-                                   onkeydown="handleTagInputKeydown(event, this, 'modal_tag_dropdown')"
-                                   onclick="toggleTagDropdown('modal_tag_dropdown')"
-                                   oninput="filterTagSuggestions(this, 'modal_tag_dropdown'); syncQuickTagStates('modal_custom_tags');">
-                            <button type="button" 
-                                    onclick="toggleTagDropdown('modal_tag_dropdown')"
-                                    class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-amber-600 p-1 rounded-lg transition-colors flex items-center justify-center cursor-pointer"
-                                    title="Mở gợi ý thẻ">
-                                <span class="material-symbols-outlined text-base">local_offer</span>
-                            </button>
+                                   onfocus="showTagSuggestions('modal_tag_dropdown')"
+                                   oninput="filterTagSuggestions(this, 'modal_tag_dropdown')">
+                            <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-base">local_offer</span>
                             
                             <!-- Tag Suggestions Dropdown List -->
-                            <div id="modal_tag_dropdown" class="tag-dropdown-menu absolute left-0 right-0 top-full mt-1 bg-white border border-amber-200 rounded-2xl shadow-xl z-50 max-h-48 overflow-y-auto hidden divide-y divide-slate-100">
+                            <div id="modal_tag_dropdown" class="absolute left-0 right-0 top-full mt-1 bg-white border border-amber-200 rounded-2xl shadow-xl z-50 max-h-44 overflow-y-auto hidden divide-y divide-slate-100">
                                 @foreach($modalTags as $tag)
                                     <div class="tag-suggestion-item px-4 py-2 hover:bg-amber-50/80 cursor-pointer text-xs font-bold text-slate-800 flex items-center justify-between transition-colors"
                                          data-name="{{ strtolower($tag->name) }}"
@@ -525,32 +434,16 @@
                                         <span class="text-[10px] text-slate-400">Gợi ý thẻ</span>
                                     </div>
                                 @endforeach
-                                <div class="tag-custom-option hidden px-4 py-2.5 bg-amber-50 hover:bg-amber-100 cursor-pointer text-xs font-bold text-amber-900 flex items-center justify-between transition-colors border-t border-amber-200"
-                                     onclick="selectCustomTagItem('modal_custom_tags', 'modal_tag_dropdown')">
-                                    <span class="flex items-center gap-2">
-                                        <span class="material-symbols-outlined text-amber-700 text-sm">add_circle</span>
-                                        <span>Thêm thẻ mới: #<span class="tag-custom-text font-bold text-amber-800"></span></span>
-                                    </span>
-                                    <span class="text-[10px] text-white bg-amber-600 px-2 py-0.5 rounded-full font-bold">Thêm mới</span>
-                                </div>
                             </div>
-
-                            <datalist id="modal_tag_datalist">
-                                @foreach($modalTags as $tag)
-                                    <option value="{{ $tag->name }}"></option>
-                                @endforeach
-                            </datalist>
                         </div>
                         
-                        <!-- Quick Tag Badges with interactive toggle state -->
-                        <div class="quick-tags-container flex flex-wrap gap-1.5 mt-2 max-h-20 overflow-y-auto p-2 bg-slate-50/60 rounded-xl border border-slate-200/60" data-target="modal_custom_tags">
+                        <!-- Quick Tag Badges -->
+                        <div class="flex flex-wrap gap-1.5 mt-2 max-h-20 overflow-y-auto p-2 bg-slate-50/60 rounded-xl border border-slate-200/60">
                             @foreach($modalTags as $tag)
                                 <button type="button" 
-                                        data-tag="{{ strtolower($tag->name) }}"
                                         onclick="addQuickTag('modal_custom_tags', '{{ addslashes($tag->name) }}')"
-                                        class="quick-tag-btn px-2.5 py-1 text-[11px] rounded-full border border-amber-200/80 bg-amber-50/60 text-amber-800 font-medium hover:bg-amber-100 hover:border-amber-300 transition-all flex items-center gap-1 cursor-pointer select-none">
-                                    <span class="material-symbols-outlined text-xs tag-icon">add</span>
-                                    <span>#{{ $tag->name }}</span>
+                                        class="px-2.5 py-1 text-[11px] rounded-full border border-amber-200/80 bg-amber-50/60 text-amber-800 font-medium hover:bg-amber-100 hover:border-amber-300 transition-all flex items-center gap-1 cursor-pointer select-none">
+                                    <span>+#{{ $tag->name }}</span>
                                 </button>
                             @endforeach
                         </div>
@@ -565,18 +458,7 @@
 
                 <!-- Content Quill Editor -->
                 <div>
-                    <div class="flex items-center justify-between mb-1.5">
-                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600">Nội dung bài viết <span class="text-red-500">*</span></label>
-                        <div class="flex items-center gap-2">
-                            <button type="button" onclick="openAiOutlineModal('modal')" class="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 transition-colors cursor-pointer">
-                                <span class="material-symbols-outlined text-sm">article</span> AI Dàn ý
-                            </button>
-                            <span class="text-slate-300">•</span>
-                            <button type="button" onclick="runAiSpellCheck('modal')" class="text-[11px] font-bold text-emerald-600 hover:text-emerald-800 flex items-center gap-1 transition-colors cursor-pointer">
-                                <span class="material-symbols-outlined text-sm">spellcheck</span> AI Sửa chính tả
-                            </button>
-                        </div>
-                    </div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Nội dung bài viết <span class="text-red-500">*</span></label>
                     <div id="modal-editor-container" class="bg-white rounded-xl">
                         {!! old('content') !!}
                     </div>
@@ -626,9 +508,6 @@
         </div>
     </div>
 </div>
-
-{{-- AI Assistant Modals & Script --}}
-@include('nguoi-dung.blog.partials.ai-assistant')
 
 @endsection
 
@@ -684,7 +563,6 @@
             const scrollBody = document.getElementById('modal-scrollable-body');
             if (scrollBody) scrollBody.scrollTop = 0;
             initModalQuill();
-            syncQuickTagStates('modal_custom_tags');
         }
     }
 
@@ -734,19 +612,9 @@
         }
     }
 
-    function toggleCategoryDropdown(dropdownId) {
+    function showCategorySuggestions(dropdownId) {
         const dropdown = document.getElementById(dropdownId);
-        if (!dropdown) return;
-        const isHidden = dropdown.classList.contains('hidden');
-        document.querySelectorAll('.cat-dropdown-menu, .tag-dropdown-menu').forEach(d => {
-            if (d.id !== dropdownId) d.classList.add('hidden');
-        });
-        if (isHidden) {
-            dropdown.querySelectorAll('.cat-suggestion-item').forEach(item => item.classList.remove('hidden'));
-            dropdown.classList.remove('hidden');
-        } else {
-            dropdown.classList.add('hidden');
-        }
+        if (dropdown) dropdown.classList.remove('hidden');
     }
 
     function filterCategorySuggestions(input, dropdownId) {
@@ -755,134 +623,49 @@
         const query = input.value.trim().toLowerCase();
         dropdown.classList.remove('hidden');
         const items = dropdown.querySelectorAll('.cat-suggestion-item');
-        let exactMatch = false;
         items.forEach(item => {
-            const name = (item.getAttribute('data-name') || '').toLowerCase();
+            const name = item.getAttribute('data-name') || '';
             if (!query || name.includes(query)) {
                 item.classList.remove('hidden');
             } else {
                 item.classList.add('hidden');
             }
-            if (query && name === query) {
-                exactMatch = true;
-            }
         });
-
-        const customOption = dropdown.querySelector('.cat-custom-option');
-        if (customOption) {
-            if (query && !exactMatch) {
-                customOption.classList.remove('hidden');
-                const textSpan = customOption.querySelector('.cat-custom-text');
-                if (textSpan) textSpan.textContent = input.value.trim();
-            } else {
-                customOption.classList.add('hidden');
-            }
-        }
     }
 
     function selectCategoryItem(inputId, value, dropdownId) {
         const input = document.getElementById(inputId);
-        if (input) {
-            input.value = value;
-            input.dispatchEvent(new Event('change'));
-        }
+        if (input) input.value = value;
         const dropdown = document.getElementById(dropdownId);
         if (dropdown) dropdown.classList.add('hidden');
     }
 
-    function selectCustomCategoryItem(inputId, dropdownId) {
-        const input = document.getElementById(inputId);
+    function showTagSuggestions(dropdownId) {
         const dropdown = document.getElementById(dropdownId);
-        if (dropdown) dropdown.classList.add('hidden');
-        if (input) input.focus();
-    }
-
-    function toggleTagDropdown(dropdownId) {
-        const dropdown = document.getElementById(dropdownId);
-        if (!dropdown) return;
-        const isHidden = dropdown.classList.contains('hidden');
-        document.querySelectorAll('.tag-dropdown-menu, .cat-dropdown-menu').forEach(d => {
-            if (d.id !== dropdownId) d.classList.add('hidden');
-        });
-        if (isHidden) {
-            dropdown.querySelectorAll('.tag-suggestion-item').forEach(item => item.classList.remove('hidden'));
-            dropdown.classList.remove('hidden');
-        } else {
-            dropdown.classList.add('hidden');
-        }
+        if (dropdown) dropdown.classList.remove('hidden');
     }
 
     function filterTagSuggestions(input, dropdownId) {
         const dropdown = document.getElementById(dropdownId);
         if (!dropdown) return;
-        const rawTerms = input.value.split(',');
-        const currentTerm = rawTerms[rawTerms.length - 1].trim().toLowerCase().replace(/^#/, '');
+        const terms = input.value.split(',');
+        const currentTerm = terms[terms.length - 1].trim().toLowerCase();
         dropdown.classList.remove('hidden');
         const items = dropdown.querySelectorAll('.tag-suggestion-item');
-        let exactMatch = false;
         items.forEach(item => {
-            const name = (item.getAttribute('data-name') || '').toLowerCase().replace(/^#/, '');
+            const name = item.getAttribute('data-name') || '';
             if (!currentTerm || name.includes(currentTerm)) {
                 item.classList.remove('hidden');
             } else {
                 item.classList.add('hidden');
             }
-            if (currentTerm && name === currentTerm) {
-                exactMatch = true;
-            }
         });
-
-        const customOption = dropdown.querySelector('.tag-custom-option');
-        if (customOption) {
-            const rawCurrent = rawTerms[rawTerms.length - 1].trim().replace(/^#/, '');
-            if (rawCurrent && !exactMatch) {
-                customOption.classList.remove('hidden');
-                const textSpan = customOption.querySelector('.tag-custom-text');
-                if (textSpan) textSpan.textContent = rawCurrent;
-            } else {
-                customOption.classList.add('hidden');
-            }
-        }
-    }
-
-    function handleTagInputKeydown(event, input, dropdownId) {
-        if (event.key === 'Enter') {
-            event.preventDefault();
-            commitCurrentTag(input.id, dropdownId);
-        }
-    }
-
-    function commitCurrentTag(inputId, dropdownId) {
-        const input = document.getElementById(inputId);
-        if (!input) return;
-        const rawTerms = input.value.split(',');
-        const currentTerm = rawTerms[rawTerms.length - 1].trim().replace(/^#/, '');
-        if (currentTerm) {
-            let terms = rawTerms.map(t => t.trim().replace(/^#/, '')).filter(t => t.length > 0);
-            let uniqueTerms = [];
-            terms.forEach(t => {
-                if (!uniqueTerms.includes(t)) uniqueTerms.push(t);
-            });
-            input.value = uniqueTerms.join(', ') + ', ';
-        } else if (input.value.trim().length > 0 && !input.value.trim().endsWith(',')) {
-            input.value = input.value.trim() + ', ';
-        }
-        const dropdown = document.getElementById(dropdownId);
-        if (dropdown) dropdown.classList.add('hidden');
-        syncQuickTagStates(inputId);
-    }
-
-    function selectCustomTagItem(inputId, dropdownId) {
-        commitCurrentTag(inputId, dropdownId);
-        const input = document.getElementById(inputId);
-        if (input) input.focus();
     }
 
     function selectTagItem(inputId, tagName, dropdownId) {
         const input = document.getElementById(inputId);
         if (!input) return;
-        tagName = tagName.replace(/^#/, '');
-        let terms = input.value.split(',').map(t => t.trim().replace(/^#/, '')).filter(t => t.length > 0);
+        let terms = input.value.split(',').map(t => t.trim()).filter(t => t.length > 0);
         if (!terms.includes(tagName)) {
             if (terms.length > 0) terms.pop();
             terms.push(tagName);
@@ -890,56 +673,29 @@
         input.value = terms.join(', ') + ', ';
         const dropdown = document.getElementById(dropdownId);
         if (dropdown) dropdown.classList.add('hidden');
-        syncQuickTagStates(inputId);
     }
 
     function addQuickTag(inputId, tagName) {
         const input = document.getElementById(inputId);
         if (!input) return;
-        tagName = tagName.replace(/^#/, '');
-        let terms = input.value.split(',').map(t => t.trim().replace(/^#/, '')).filter(t => t.length > 0);
-        const index = terms.indexOf(tagName);
-        if (index >= 0) {
-            // Already present -> Toggle off (remove)
-            terms.splice(index, 1);
-        } else {
-            // Not present -> Toggle on (add)
+        let terms = input.value.split(',').map(t => t.trim()).filter(t => t.length > 0);
+        if (!terms.includes(tagName)) {
             terms.push(tagName);
         }
-        input.value = terms.length > 0 ? terms.join(', ') + ', ' : '';
-        syncQuickTagStates(inputId);
-    }
-
-    function syncQuickTagStates(inputId) {
-        const input = document.getElementById(inputId);
-        if (!input) return;
-        let terms = input.value.split(',').map(t => t.trim().toLowerCase().replace(/^#/, '')).filter(t => t.length > 0);
-        
-        const container = document.querySelector(`.quick-tags-container[data-target="${inputId}"]`);
-        if (!container) return;
-
-        container.querySelectorAll('.quick-tag-btn').forEach(btn => {
-            const tag = (btn.getAttribute('data-tag') || '').toLowerCase().replace(/^#/, '');
-            const icon = btn.querySelector('.tag-icon');
-            if (terms.includes(tag)) {
-                btn.className = "quick-tag-btn px-2.5 py-1 text-[11px] rounded-full border border-amber-600 bg-amber-600 text-white font-bold transition-all flex items-center gap-1 cursor-pointer select-none shadow-2xs";
-                if (icon) icon.textContent = "check";
-            } else {
-                btn.className = "quick-tag-btn px-2.5 py-1 text-[11px] rounded-full border border-amber-200/80 bg-amber-50/60 text-amber-800 font-medium hover:bg-amber-100 hover:border-amber-300 transition-all flex items-center gap-1 cursor-pointer select-none";
-                if (icon) icon.textContent = "add";
-            }
-        });
+        input.value = terms.join(', ') + ', ';
+        const dropdown = document.getElementById('modal_tag_dropdown');
+        if (dropdown) dropdown.classList.add('hidden');
     }
 
     document.addEventListener('click', function(e) {
         if (!e.target.closest('.autocomplete-wrapper')) {
-            document.querySelectorAll('.cat-dropdown-menu, .tag-dropdown-menu').forEach(d => d.classList.add('hidden'));
+            document.querySelectorAll('#modal_cat_dropdown, #modal_tag_dropdown, #create_cat_dropdown, #create_tag_dropdown, #edit_cat_dropdown, #edit_tag_dropdown').forEach(d => d.classList.add('hidden'));
         }
     });
 
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
-            document.querySelectorAll('.cat-dropdown-menu, .tag-dropdown-menu').forEach(d => d.classList.add('hidden'));
+            document.querySelectorAll('#modal_cat_dropdown, #modal_tag_dropdown, #create_cat_dropdown, #create_tag_dropdown, #edit_cat_dropdown, #edit_tag_dropdown').forEach(d => d.classList.add('hidden'));
         }
     });
 
@@ -980,84 +736,11 @@
         }
     }
 
-    // Live Blog Search Suggestions
-    let searchDebounceTimer = null;
-    function handleBlogSearchInput(input) {
-        clearTimeout(searchDebounceTimer);
-        const query = input.value.trim();
-        const suggestionsBox = document.getElementById('blog-search-suggestions');
-        const listContainer = document.getElementById('blog-suggestions-list');
-
-        if (!suggestionsBox || !listContainer) return;
-
-        if (query.length < 1) {
-            suggestionsBox.classList.add('hidden');
-            listContainer.innerHTML = '';
-            return;
-        }
-
-        searchDebounceTimer = setTimeout(() => {
-            fetch(`/blog?suggest=1&search=${encodeURIComponent(query)}`, {
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            })
-            .then(res => res.json())
-            .then(data => {
-                listContainer.innerHTML = '';
-                if (data && data.length > 0) {
-                    data.forEach(item => {
-                        const row = document.createElement('a');
-                        row.href = item.url;
-                        row.className = 'flex items-center gap-3 p-3 hover:bg-amber-50/80 transition-colors group cursor-pointer';
-                        row.innerHTML = `
-                            <img src="${item.cover_url}" class="w-12 h-10 object-cover rounded-lg shrink-0 border border-slate-100" />
-                            <div class="flex-1 min-w-0">
-                                <h5 class="text-xs font-bold text-slate-800 group-hover:text-amber-700 truncate">${item.title}</h5>
-                                <div class="flex items-center gap-2 mt-0.5 text-[10px] text-slate-400">
-                                    ${item.category ? `<span class="text-amber-700 font-semibold">${item.category}</span>` : ''}
-                                    ${item.published_date ? `<span>• ${item.published_date}</span>` : ''}
-                                </div>
-                            </div>
-                            <span class="material-symbols-outlined text-sm text-slate-300 group-hover:text-amber-600 shrink-0">chevron_right</span>
-                        `;
-                        listContainer.appendChild(row);
-                    });
-                    suggestionsBox.classList.remove('hidden');
-                } else {
-                    listContainer.innerHTML = `
-                        <div class="p-4 text-center text-xs text-slate-400 flex items-center justify-center gap-1.5">
-                            <span class="material-symbols-outlined text-base text-slate-300">search_off</span>
-                            <span>Không có bài viết khớp</span>
-                        </div>
-                    `;
-                    suggestionsBox.classList.remove('hidden');
-                }
-            })
-            .catch(() => {
-                suggestionsBox.classList.add('hidden');
-            });
-        }, 250);
-    }
-
-    document.addEventListener('click', function(e) {
-        const searchForm = document.getElementById('blog-search-form');
-        const suggestionsBox = document.getElementById('blog-search-suggestions');
-        if (suggestionsBox && searchForm && !searchForm.contains(e.target)) {
-            suggestionsBox.classList.add('hidden');
-        }
-    });
-
     // Auto open modal if there are validation errors
     @if($errors->any() && auth()->check())
         document.addEventListener('DOMContentLoaded', function() {
             openCreateBlogModal();
         });
     @endif
-
-    // Luôn làm mới dữ liệu lượt xem khi quay lại trang bằng nút Back
-    window.addEventListener('pageshow', function(event) {
-        if (event.persisted) {
-            window.location.reload();
-        }
-    });
 </script>
 @endpush

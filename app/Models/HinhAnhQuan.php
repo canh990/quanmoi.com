@@ -28,7 +28,18 @@ class HinhAnhQuan extends Model
     {
         $objectKey = $this->attributes['object_key'] ?? null;
         if (Str::startsWith($objectKey, 'local:quan/gallery/')) {
-            return '/media/venue/'.Str::after($objectKey, 'local:');
+            $localPath = Str::after($objectKey, 'local:');
+            if (is_file(public_path('uploads/'.$localPath))) {
+                return '/uploads/'.$localPath;
+            }
+            return '/media/venue/'.$localPath;
+        }
+
+        if (is_string($value) && (Str::startsWith($value, 'http://') || Str::startsWith($value, 'https://'))) {
+            $host = strtolower((string) parse_url($value, PHP_URL_HOST));
+            if (in_array($host, ['localhost', '127.0.0.1', '::1'], true)) {
+                return parse_url($value, PHP_URL_PATH) ?: $value;
+            }
         }
 
         return $value;

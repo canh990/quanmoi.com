@@ -34,22 +34,7 @@ class BlogController extends Controller
             $query->where('status', $request->status);
         }
 
-        if ($request->filled('search')) {
-            $searchTerm = trim($request->search);
-            $query->where(function($q) use ($searchTerm) {
-                $q->where('title', 'like', "%{$searchTerm}%")
-                  ->orWhere('excerpt', 'like', "%{$searchTerm}%")
-                  ->orWhere('content', 'like', "%{$searchTerm}%")
-                  ->orWhereHas('category', function ($catQ) use ($searchTerm) {
-                      $catQ->where('name', 'like', "%{$searchTerm}%");
-                  })
-                  ->orWhereHas('tags', function ($tagQ) use ($searchTerm) {
-                      $tagQ->where('name', 'like', "%{$searchTerm}%");
-                  });
-            });
-        }
-
-        $blogs = $query->latest()->paginate(10)->withQueryString();
+        $blogs = $query->latest()->paginate(10);
 
         $statusCounts = Blog::where('user_id', Auth::id())
             ->selectRaw('status, count(*) as count')
@@ -85,7 +70,7 @@ class BlogController extends Controller
             $catName = trim($request->input('category_name', $request->input('new_category', '')));
             if (!empty($catName)) {
                 $category = BlogCategory::firstOrCreate(
-                    ['slug' => \Illuminate\Support\Str::slug($catName) ?: 'danh-muc-' . time()],
+                    ['slug' => \Illuminate\Support\Str::slug($catName)],
                     ['name' => $catName, 'status' => true]
                 );
                 $blog->category_id = $category->id;
@@ -95,7 +80,7 @@ class BlogController extends Controller
                 } else {
                     $catName = trim($data['category_id']);
                     $category = BlogCategory::firstOrCreate(
-                        ['slug' => \Illuminate\Support\Str::slug($catName) ?: 'danh-muc-' . time()],
+                        ['slug' => \Illuminate\Support\Str::slug($catName)],
                         ['name' => $catName, 'status' => true]
                     );
                     $blog->category_id = $category->id;
@@ -103,7 +88,7 @@ class BlogController extends Controller
             }
 
             $blog->excerpt = $data['excerpt'] ?? null;
-            $blog->content = function_exists('clean') ? clean($data['content']) : $data['content'];
+            $blog->content = clean($data['content']);
             $blog->status = (isset($data['action']) && $data['action'] === 'pending') ? 'pending' : 'draft';
             
             if ($request->hasFile('cover_image')) {
@@ -121,10 +106,10 @@ class BlogController extends Controller
             if (!empty($request->input('custom_tags'))) {
                 $rawTags = explode(',', $request->input('custom_tags'));
                 foreach ($rawTags as $rawTag) {
-                    $tagName = ltrim(trim($rawTag), '#');
+                    $tagName = trim($rawTag);
                     if ($tagName !== '') {
                         $newTag = BlogTag::firstOrCreate(
-                            ['slug' => \Illuminate\Support\Str::slug($tagName) ?: 'the-' . time() . '-' . rand(1, 999)],
+                            ['slug' => \Illuminate\Support\Str::slug($tagName)],
                             ['name' => $tagName]
                         );
                         $tagIds[] = $newTag->id;
@@ -200,7 +185,7 @@ class BlogController extends Controller
             } else {
                 $catName = trim($data['category_id']);
                 $category = BlogCategory::firstOrCreate(
-                    ['slug' => \Illuminate\Support\Str::slug($catName) ?: 'danh-muc-' . time()],
+                    ['slug' => \Illuminate\Support\Str::slug($catName)],
                     ['name' => $catName, 'status' => true]
                 );
                 $blog->category_id = $category->id;
@@ -209,24 +194,12 @@ class BlogController extends Controller
 
         $blog->excerpt = $data['excerpt'] ?? null;
         $blog->content = clean($data['content']);
-        if ($oldStatus === 'published') {
-            $blog->status = ($data['action'] === 'draft') ? 'draft' : 'published';
-        } else {
-            $blog->status = ($data['action'] === 'pending') ? 'pending' : 'draft';
-        }
+        $blog->status = $data['action'] === 'pending' ? 'pending' : 'draft';
         
         if ($request->hasFile('cover_image')) {
             try {
                 if ($blog->cover_image) {
-                    $disk = config('filesystems.upload_disk', 'public');
-                    if ($disk === 'r2' && empty(config('filesystems.disks.r2.bucket'))) {
-                        $disk = 'public';
-                    }
-                    if (Storage::disk($disk)->exists($blog->cover_image)) {
-                        Storage::disk($disk)->delete($blog->cover_image);
-                    } elseif ($disk !== 'public' && Storage::disk('public')->exists($blog->cover_image)) {
-                        Storage::disk('public')->delete($blog->cover_image);
-                    }
+                    Storage::disk(config('filesystems.upload_disk', 'r2'))->delete($blog->cover_image);
                 }
             } catch (\Throwable $th) {
                 // Ignore storage deletion errors
@@ -245,10 +218,10 @@ class BlogController extends Controller
         if (!empty($request->input('custom_tags'))) {
             $rawTags = explode(',', $request->input('custom_tags'));
             foreach ($rawTags as $rawTag) {
-                $tagName = ltrim(trim($rawTag), '#');
+                $tagName = trim($rawTag);
                 if ($tagName !== '') {
                     $newTag = BlogTag::firstOrCreate(
-                        ['slug' => \Illuminate\Support\Str::slug($tagName) ?: 'the-' . time() . '-' . rand(1, 999)],
+                        ['slug' => \Illuminate\Support\Str::slug($tagName)],
                         ['name' => $tagName]
                     );
                     $tagIds[] = $newTag->id;
@@ -256,23 +229,21 @@ class BlogController extends Controller
             }
         }
 
-        $this->blogService->syncTags($blog, array_unique($tagIds));
+        if (!empty($tagIds)) {
+            $this->blogService->syncTags($blog, array_unique($tagIds));
+        }
         
         if ($blog->status === 'pending' && $oldStatus !== 'pending') {
             $blog->last_submitted_at = Carbon::now();
             $blog->save();
-            try {
-                BlogModerationLog::create([
-                    'blog_id' => $blog->id,
-                    'admin_id' => Auth::id(),
-                    'action' => 'submitted',
-                    'from_status' => $oldStatus,
-                    'to_status' => 'pending',
-                    'note' => 'Gửi lại bài viết để duyệt'
-                ]);
-            } catch (\Throwable $logEx) {
-                \Illuminate\Support\Facades\Log::warning('BlogModerationLog update error: ' . $logEx->getMessage());
-            }
+            BlogModerationLog::create([
+                'blog_id' => $blog->id,
+                'admin_id' => Auth::id(), // We map it to admin_id field as per user req
+                'action' => 'submitted',
+                'from_status' => $oldStatus,
+                'to_status' => 'pending',
+                'note' => 'Gửi lại bài viết để duyệt'
+            ]);
         }
         
         return redirect()->route('nguoi-dung.blog.index')->with('success', 'Đã cập nhật bài viết thành công.');

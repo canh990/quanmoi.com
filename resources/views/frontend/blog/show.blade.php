@@ -88,10 +88,10 @@
                     <span class="material-symbols-outlined text-[16px]">calendar_today</span>
                     {{ $blog->published_at ? $blog->published_at->format('d/m/Y') : 'Bản nháp' }}
                 </div>
-                <div class="w-px h-6 bg-surface-dim"></div>
-                <div class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1.5 bg-surface-container/60 px-2.5 py-1 rounded-full">
-                    <span class="material-symbols-outlined text-[16px] text-primary">visibility</span>
-                    <span><strong id="blog-view-count" class="font-semibold text-on-surface">{{ number_format($blog->view_count ?? 0) }}</strong> lượt xem</span>
+                <div class="w-px h-6 bg-surface-dim hidden md:block"></div>
+                <div class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1 hidden md:flex">
+                    <span class="material-symbols-outlined text-[16px]">visibility</span>
+                    {{ number_format($blog->view_count ?? 0) }} lượt xem
                 </div>
             </div>
 
@@ -123,85 +123,46 @@
             @endif
         </article>
         
-        <!-- Comments Section with AI Moderation -->
+        <!-- Comments Section -->
         <section class="mt-8 bg-surface-card rounded-xl p-6 md:p-stack-lg shadow-[0_4px_20px_rgba(0,0,0,0.05)] border border-outline-variant/30">
-            <div class="flex items-center justify-between mb-6 flex-wrap gap-3 pb-4 border-b border-surface-dim">
-                <h3 class="font-title-md text-title-md text-on-background flex items-center gap-2">
-                    <span class="material-symbols-outlined text-primary">forum</span>
-                    <span>Bình luận (<span id="comments-count-badge">{{ $blog->comments->count() }}</span>)</span>
-                </h3>
-                
-                {{-- AI Moderation Shield Badge --}}
-                <div class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-bold shadow-2xs">
-                    <span class="material-symbols-outlined text-sm text-emerald-600">verified_user</span>
-                    <span>Bảo vệ bởi AI Moderation (Tự động lọc spam & ngôn từ độc hại)</span>
-                </div>
-            </div>
-
-            {{-- Dynamic AI Moderation Alert Banner --}}
-            <div id="comment-alert-box" class="hidden mb-6 p-4 rounded-2xl text-xs font-bold transition-all flex items-start gap-3 shadow-2xs">
-                <span class="material-symbols-outlined text-xl shrink-0" id="comment-alert-icon">info</span>
-                <div class="flex-1">
-                    <h5 class="font-extrabold text-sm mb-0.5" id="comment-alert-title">Thông báo kiểm duyệt</h5>
-                    <p id="comment-alert-msg" class="leading-relaxed"></p>
-                </div>
-                <button type="button" onclick="document.getElementById('comment-alert-box').classList.add('hidden')" class="text-slate-400 hover:text-slate-600">
-                    <span class="material-symbols-outlined text-base">close</span>
-                </button>
-            </div>
+            <h3 class="font-title-md text-title-md text-on-background mb-stack-md flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary">forum</span>
+                Bình luận ({{ $blog->comments->count() }})
+            </h3>
             
             @auth
                 <!-- Comment Form -->
-                <form id="blog-comment-form" action="{{ route('blog.comment.store', $blog->slug) }}" method="POST" onsubmit="handleCommentSubmit(event)" class="mb-8 flex gap-4 items-start">
+                <form action="#" method="POST" class="mb-8 flex gap-4 items-start">
                     @csrf
-                    <img src="{{ auth()->user()->anh_dai_dien_url ?? 'https://ui-avatars.com/api/?name='.urlencode(auth()->user()->ho_ten).'&background=random' }}" class="w-10 h-10 rounded-full flex-shrink-0 shadow-sm border border-gray-100 object-cover">
-                    <div class="flex-1 space-y-2">
-                        <textarea id="comment-content-input" name="content" rows="3" required placeholder="Chia sẻ suy nghĩ hoặc đánh giá của bạn về bài viết này..." class="w-full rounded-xl border border-surface-dim bg-surface-container-lowest focus:ring-2 focus:ring-primary focus:border-primary resize-none text-sm p-3.5 outline-none transition-all"></textarea>
-                        <div class="flex items-center justify-between flex-wrap gap-2">
-                            <span class="text-[11px] text-text-muted flex items-center gap-1">
-                                <span class="material-symbols-outlined text-xs text-emerald-600">smart_toy</span>
-                                Bình luận được quét & kiểm duyệt tự động trước khi hiển thị
-                            </span>
-                            <button type="submit" id="comment-submit-btn" class="px-6 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-full font-label-md text-label-md transition-all shadow-xs flex items-center gap-1.5 cursor-pointer">
-                                <span class="material-symbols-outlined text-base">send</span>
-                                <span id="comment-submit-text">Gửi bình luận</span>
-                            </button>
+                    <img src="{{ auth()->user()->anh_dai_dien_url ?? 'https://ui-avatars.com/api/?name='.urlencode(auth()->user()->ho_ten).'&background=random' }}" class="w-10 h-10 rounded-full flex-shrink-0 shadow-sm border border-gray-100">
+                    <div class="flex-1">
+                        <textarea name="content" rows="3" placeholder="Viết bình luận của bạn..." class="w-full rounded-xl border border-surface-dim bg-surface-container-lowest focus:ring-1 focus:ring-primary focus:border-primary resize-none text-sm p-3"></textarea>
+                        <div class="mt-2 flex justify-end">
+                            <button type="submit" class="px-6 py-2 bg-primary text-white rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity">Gửi bình luận</button>
                         </div>
                     </div>
                 </form>
             @else
-                <div class="p-6 bg-surface-container rounded-2xl mb-8 text-center border border-outline-variant/30">
-                    <p class="text-on-surface-variant font-label-md mb-3">Vui lòng đăng nhập tài khoản để tham gia bình luận bài viết.</p>
+                <div class="p-6 bg-surface-container rounded-xl mb-8 text-center">
+                    <p class="text-on-surface-variant font-label-md mb-4">Vui lòng đăng nhập để tham gia bình luận.</p>
                     <a href="{{ route('login') }}" class="inline-flex px-6 py-2 bg-primary text-white rounded-full font-label-md hover:opacity-90 transition-opacity">Đăng nhập</a>
                 </div>
             @endauth
             
             <!-- Comment List -->
-            <div id="comments-list-container" class="space-y-4">
-                @forelse($blog->comments as $comment)
-                    <div class="comment-item flex gap-4 p-4 rounded-2xl bg-white hover:bg-surface-container/40 transition-colors border border-surface-dim/50">
-                        <img src="{{ $comment->user->anh_dai_dien_url ?? 'https://ui-avatars.com/api/?name='.urlencode($comment->user->ho_ten).'&background=random' }}" class="w-10 h-10 rounded-full flex-shrink-0 object-cover border border-gray-100 shadow-2xs">
-                        <div class="flex-1">
-                            <div class="flex items-center justify-between gap-2 mb-1">
-                                <div class="flex items-center gap-2">
-                                    <span class="font-title-md text-[14px] font-bold text-on-background">{{ $comment->user->ho_ten }}</span>
-                                    <span class="text-xs text-on-surface-variant">• {{ $comment->created_at->diffForHumans() }}</span>
-                                </div>
-                                <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full flex items-center gap-0.5 shadow-2xs">
-                                    <span class="material-symbols-outlined text-[12px] text-emerald-600">verified</span>
-                                    <span>AI Đã Kiểm Duyệt</span>
-                                </span>
+            <div class="space-y-6">
+                @foreach($blog->comments as $comment)
+                    <div class="flex gap-4 p-4 rounded-xl hover:bg-surface-container transition-colors">
+                        <img src="{{ $comment->user->anh_dai_dien_url ?? 'https://ui-avatars.com/api/?name='.urlencode($comment->user->ho_ten).'&background=random' }}" class="w-10 h-10 rounded-full flex-shrink-0 object-cover">
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="font-title-md text-[14px] text-on-background">{{ $comment->user->ho_ten }}</span>
+                                <span class="text-xs text-on-surface-variant">{{ $comment->created_at->diffForHumans() }}</span>
                             </div>
-                            <p class="text-on-surface font-body-sm whitespace-pre-line text-sm leading-relaxed">{{ $comment->content }}</p>
+                            <p class="text-on-surface font-body-sm whitespace-pre-line">{{ $comment->content }}</p>
                         </div>
                     </div>
-                @empty
-                    <div id="comments-empty-state" class="p-8 text-center rounded-2xl bg-surface-container/20 border border-dashed border-outline-variant/40">
-                        <span class="material-symbols-outlined text-3xl text-text-muted mb-2">forum</span>
-                        <p class="text-xs font-bold text-slate-600">Chưa có bình luận nào cho bài viết này</p>
-                        <p class="text-[11px] text-text-muted mt-0.5">Hãy là người đầu tiên chia sẻ cảm nghĩ và nhận xét của bạn!</p>
-                    </div>
-                @endforelse
+                @endforeach
             </div>
         </section>
         
@@ -287,107 +248,3 @@
     </aside>
 </main>
 @endsection
-
-@push('scripts')
-<script>
-    function handleCommentSubmit(e) {
-        e.preventDefault();
-        const form = document.getElementById('blog-comment-form');
-        const textarea = document.getElementById('comment-content-input');
-        const btn = document.getElementById('comment-submit-btn');
-        const btnText = document.getElementById('comment-submit-text');
-        const alertBox = document.getElementById('comment-alert-box');
-        const alertTitle = document.getElementById('comment-alert-title');
-        const alertMsg = document.getElementById('comment-alert-msg');
-        const alertIcon = document.getElementById('comment-alert-icon');
-        const listContainer = document.getElementById('comments-list-container');
-        const emptyState = document.getElementById('comments-empty-state');
-        const counterBadge = document.getElementById('comments-count-badge');
-
-        const content = textarea.value.trim();
-        if (!content) return;
-
-        // Loading state
-        btn.disabled = true;
-        btnText.textContent = 'AI đang quét kiểm duyệt...';
-        btn.classList.add('opacity-75');
-
-        fetch(form.action, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-            },
-            body: JSON.stringify({ content: content })
-        })
-        .then(res => res.json().then(data => ({ status: res.status, body: data })))
-        .then(({ status, body }) => {
-            btn.disabled = false;
-            btnText.textContent = 'Gửi bình luận';
-            btn.classList.remove('opacity-75');
-
-            if (status === 200 && body.success) {
-                // Success: clean & verified
-                alertBox.className = 'mb-6 p-4 rounded-2xl text-xs font-bold transition-all flex items-start gap-3 shadow-2xs bg-emerald-50 border border-emerald-200 text-emerald-800';
-                alertIcon.className = 'material-symbols-outlined text-xl text-emerald-600 shrink-0';
-                alertIcon.textContent = 'verified_user';
-                alertTitle.textContent = 'Kiểm duyệt an toàn thành công!';
-                alertMsg.textContent = body.message;
-                alertBox.classList.remove('hidden');
-
-                // Clear textarea
-                textarea.value = '';
-
-                // Remove empty state if present
-                if (emptyState) emptyState.remove();
-
-                // Prepend new comment
-                const newCommentHtml = `
-                    <div class="comment-item flex gap-4 p-4 rounded-2xl bg-white hover:bg-surface-container/40 transition-colors border border-emerald-200/80 shadow-xs">
-                        <img src="${body.comment.user_avatar}" class="w-10 h-10 rounded-full flex-shrink-0 object-cover border border-gray-100 shadow-2xs">
-                        <div class="flex-1">
-                            <div class="flex items-center justify-between gap-2 mb-1">
-                                <div class="flex items-center gap-2">
-                                    <span class="font-title-md text-[14px] font-bold text-on-background">${body.comment.user_name}</span>
-                                    <span class="text-xs text-on-surface-variant">• ${body.comment.created_at_human}</span>
-                                </div>
-                                <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full flex items-center gap-0.5 shadow-2xs">
-                                    <span class="material-symbols-outlined text-[12px] text-emerald-600">verified</span>
-                                    <span>AI Đã Kiểm Duyệt</span>
-                                </span>
-                            </div>
-                            <p class="text-on-surface font-body-sm whitespace-pre-line text-sm leading-relaxed">${body.comment.content}</p>
-                        </div>
-                    </div>
-                `;
-                listContainer.insertAdjacentHTML('afterbegin', newCommentHtml);
-
-                if (counterBadge && body.comment_count !== undefined) {
-                    counterBadge.textContent = body.comment_count;
-                }
-            } else {
-                // Moderation blocked or error
-                alertBox.className = 'mb-6 p-4 rounded-2xl text-xs font-bold transition-all flex items-start gap-3 shadow-2xs bg-rose-50 border border-rose-200 text-rose-800';
-                alertIcon.className = 'material-symbols-outlined text-xl text-rose-600 shrink-0';
-                alertIcon.textContent = 'gpp_bad';
-                alertTitle.textContent = 'Bình luận bị AI chặn kiểm duyệt!';
-                alertMsg.textContent = body.message || 'Bình luận của bạn không đáp ứng tiêu chuẩn an toàn cộng đồng.';
-                alertBox.classList.remove('hidden');
-            }
-        })
-        .catch(err => {
-            btn.disabled = false;
-            btnText.textContent = 'Gửi bình luận';
-            btn.classList.remove('opacity-75');
-
-            alertBox.className = 'mb-6 p-4 rounded-2xl text-xs font-bold transition-all flex items-start gap-3 shadow-2xs bg-rose-50 border border-rose-200 text-rose-800';
-            alertIcon.className = 'material-symbols-outlined text-xl text-rose-600 shrink-0';
-            alertIcon.textContent = 'error';
-            alertTitle.textContent = 'Lỗi gửi bình luận';
-            alertMsg.textContent = 'Không thể kết nối đến máy chủ. Vui lòng thử lại sau.';
-            alertBox.classList.remove('hidden');
-        });
-    }
-</script>
-@endpush
