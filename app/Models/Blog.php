@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Support\Str;
 
 class Blog extends Model
 {
@@ -104,32 +103,5 @@ class Blog extends Model
     public function publishedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'published_by');
-    }
-
-    /**
-     * Get the full URL for the blog's cover image.
-     */
-    public function getCoverImageUrlAttribute(): ?string
-    {
-        if (empty($this->cover_image)) {
-            return null;
-        }
-
-        if (\Illuminate\Support\Str::startsWith($this->cover_image, ['http://', 'https://'])) {
-            return $this->cover_image;
-        }
-
-        $cleanPath = ltrim($this->cover_image, '/');
-        if (\Illuminate\Support\Str::startsWith($cleanPath, 'uploads/')) {
-            return '/' . $cleanPath;
-        }
-        if (is_file(public_path('uploads/' . $cleanPath))) {
-            return '/uploads/' . $cleanPath;
-        }
-        if (\Illuminate\Support\Str::startsWith($cleanPath, 'storage/')) {
-            return '/' . $cleanPath;
-        }
-
-        return '/storage/' . $cleanPath;
     }
 }

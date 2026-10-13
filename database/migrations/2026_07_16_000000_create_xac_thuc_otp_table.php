@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('xac_thuc_otp', function (Blueprint $table) {
             $table->id();
-            $table->string('email', 100)->index();
+            $table->string('email')->index();
             $table->string('otp');
             $table->timestamp('expires_at');
             $table->timestamps();

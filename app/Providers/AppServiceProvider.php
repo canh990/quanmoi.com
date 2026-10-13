@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -21,10 +20,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->bind(
-            \Elastic\ScoutDriver\Factories\SearchParametersFactoryInterface::class,
-            \App\Search\CustomSearchParametersFactory::class
-        );
+        //
     }
 
     /**
@@ -32,11 +28,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        \Carbon\Carbon::setLocale('vi');
-        app()->setLocale('vi');
-
-        Schema::defaultStringLength(191);
-
         Gate::before(function ($user, $ability) {
             if (method_exists($user, 'hasPermissionTo')) {
                 // Check explicit user override

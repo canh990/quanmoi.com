@@ -14,22 +14,6 @@ use Intervention\Image\ImageManager;
 
 class HinhAnhQuanController extends Controller
 {
-    /** Serve locally stored public venue images without relying on a cross-platform storage symlink. */
-    public function localImage(string $path)
-    {
-        abort_unless(
-            Str::startsWith($path, ['quan/gallery/', 'quan/anh-bia/']) && ! str_contains($path, '..'),
-            404
-        );
-
-        $disk = Storage::disk('uploads')->exists($path) ? 'uploads' : (Storage::disk('public')->exists($path) ? 'public' : null);
-        abort_unless($disk !== null, 404);
-
-        return Storage::disk($disk)->response($path, basename($path), [
-            'Cache-Control' => 'public, max-age=86400',
-        ]);
-    }
-
     /**
      * Upload bộ sưu tập hình ảnh quán lên Cloudflare R2.
      * Lưu CDN URL vào MySQL (duong_dan) và object key để xóa sau này (object_key).
@@ -48,7 +32,6 @@ class HinhAnhQuanController extends Controller
             ->where('trang_thai', 'da_duyet')
             ->firstOrFail();
         $this->authorize('update', $quan);
-
         $uploaded = [];
 
         if ($request->hasFile('hinh_anh')) {
@@ -63,55 +46,12 @@ class HinhAnhQuanController extends Controller
                 $encoded = $image->encodeUsingFileExtension('webp', 80);
 
                 $objectKey = 'quan/gallery/'.$quan->id.'/'.$filename;
-                $uploadDisk = config('filesystems.upload_disk', 'r2');
-                $r2Configured = !empty(config('filesystems.disks.r2.key'))
-                    && !empty(config('filesystems.disks.r2.secret'))
-                    && !empty(config('filesystems.disks.r2.bucket'))
-                    && !empty(config('filesystems.disks.r2.endpoint'));
-
-                $targetDisk = ($uploadDisk === 'r2' && ! $r2Configured) ? 'uploads' : $uploadDisk;
-
-                try {
-                    Storage::disk($targetDisk)->put($objectKey, (string) $encoded);
-                    $imageUrl = ($targetDisk === 'uploads') ? '/uploads/'.$objectKey : Storage::disk($targetDisk)->url($objectKey);
-                    $storedKey = ($targetDisk === 'uploads' || $targetDisk === 'public' || $targetDisk === 'local') ? 'local:'.$objectKey : $objectKey;
-                } catch (\Throwable $e) {
-                    if ($targetDisk === 'r2') {
-                        Log::warning('Venue gallery upload to R2 failed; using local storage.', [
-                            'key' => $objectKey,
-                            'error' => $e->getMessage(),
-                        ]);
-                        try {
-                            Storage::disk('uploads')->put($objectKey, (string) $encoded);
-                            $imageUrl = '/uploads/'.$objectKey;
-                            $storedKey = 'local:'.$objectKey;
-                        } catch (\Throwable $fallbackEx) {
-                            Log::error('Venue gallery fallback upload failed.', [
-                                'key' => $objectKey,
-                                'error' => $fallbackEx->getMessage(),
-                            ]);
-                            return response()->json([
-                                'success' => false,
-                                'message' => 'Lỗi lưu ảnh lên Cloud Storage. Vui lòng thử lại sau.',
-                            ], 500);
-                        }
-                    } else {
-                        Log::error('Venue gallery upload failed.', [
-                            'disk' => $targetDisk,
-                            'key' => $objectKey,
-                            'error' => $e->getMessage(),
-                        ]);
-                        return response()->json([
-                            'success' => false,
-                            'message' => 'Lỗi lưu ảnh lên Cloud Storage. Vui lòng thử lại sau.',
-                        ], 500);
-                    }
-                }
+                Storage::disk('r2')->put($objectKey, (string) $encoded);
 
                 $img = HinhAnhQuan::create([
                     'quan_id' => $quan->id,
-                    'duong_dan' => $imageUrl,
-                    'object_key' => $storedKey,
+                    'duong_dan' => Storage::disk('r2')->url($objectKey), // CDN URL
+                    'object_key' => $objectKey,                           // R2 key để xóa
                     'tieu_de' => $file->getClientOriginalName(),
                 ]);
 
@@ -132,6 +72,7 @@ class HinhAnhQuanController extends Controller
 
     /**
      * Xóa hình ảnh khỏi thư viện quán.
+     * Xóa file trên R2 trước, sau đó xóa bản ghi trong database.
      */
     public function destroy(Request $request, $id)
     {
@@ -143,27 +84,19 @@ class HinhAnhQuanController extends Controller
             ->firstOrFail();
         $this->authorize('update', $img->quan);
 
-        if ($img->object_key && Str::startsWith($img->object_key, 'local:quan/gallery/')) {
-            $path = Str::after($img->object_key, 'local:');
-            $disk = Storage::disk('uploads')->exists($path) ? 'uploads' : 'public';
-            Storage::disk($disk)->delete($path);
-        } elseif ($img->object_key && Str::startsWith($img->object_key, 'quan/gallery/')) {
+        // Xóa file trên R2 (nếu có object_key)
+        if ($img->object_key && Str::startsWith($img->object_key, 'quan/gallery/')) {
             try {
-                $r2Configured = !empty(config('filesystems.disks.r2.key'))
-                    && !empty(config('filesystems.disks.r2.secret'))
-                    && !empty(config('filesystems.disks.r2.bucket'))
-                    && !empty(config('filesystems.disks.r2.endpoint'));
-                if ($r2Configured) {
-                    Storage::disk('r2')->delete($img->object_key);
-                }
+                Storage::disk('r2')->delete($img->object_key);
             } catch (\Exception $e) {
+                // Ghi log nhưng không chặn việc xóa bản ghi DB
                 Log::warning('Không thể xóa ảnh quán trên R2: '.$e->getMessage(), [
                     'hinh_anh_id' => $img->id,
                     'object_key' => $img->object_key,
                 ]);
             }
         } elseif ($img->object_key) {
-            Log::warning('Refusing to delete a venue image with an invalid key prefix.', [
+            Log::warning('Refusing to delete a venue image with an invalid R2 key prefix.', [
                 'hinh_anh_id' => $img->id,
             ]);
         }

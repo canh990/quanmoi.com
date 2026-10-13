@@ -115,7 +115,7 @@ class CrudNguoiDungTest extends TestCase
         $this->assertNotSoftDeleted('nguoi_dung', ['id' => $user->id], null, 'ngay_xoa');
     }
 
-    public function test_user_update_validation_messages_are_in_vietnamese(): void
+    public function test_admin_can_view_user_details_page(): void
     {
         $adminRole = VaiTro::where('ten', 'admin')->first();
         $admin = User::factory()->create([
@@ -123,22 +123,18 @@ class CrudNguoiDungTest extends TestCase
             'vai_tro_id' => $adminRole?->id,
         ]);
 
-        $user = User::factory()->create();
-
-        $response = $this->actingAs($admin)->put('/admin/nguoi-dung/' . $user->id, [
-            'ho_ten' => '',
-            'email' => 'not-an-email',
-            'trang_thai' => '',
+        $targetUser = User::factory()->create([
+            'ho_ten' => 'Target User Test',
+            'email' => 'target@example.com',
         ]);
 
-        $response->assertSessionHasErrors([
-            'ho_ten' => 'Họ và tên người dùng không được để trống.',
-            'email' => 'Địa chỉ email không đúng định dạng.',
-            'trang_thai' => 'Trạng thái tài khoản không được để trống.',
-        ]);
+        $response = $this->actingAs($admin)->get('/admin/nguoi-dung/' . $targetUser->id);
+        $response->assertStatus(200);
+        $response->assertSee('Target User Test');
+        $response->assertSee('target@example.com');
     }
 
-    public function test_admin_cannot_self_lock_or_demote_themselves(): void
+    public function test_admin_can_toggle_user_status(): void
     {
         $adminRole = VaiTro::where('ten', 'admin')->first();
         $admin = User::factory()->create([
@@ -146,30 +142,16 @@ class CrudNguoiDungTest extends TestCase
             'vai_tro_id' => $adminRole?->id,
         ]);
 
-        $response = $this->actingAs($admin)->put('/admin/nguoi-dung/' . $admin->id, [
-            'ho_ten' => 'Admin Self',
-            'email' => 'admin@quanmoi.com',
+        $targetUser = User::factory()->create([
+            'trang_thai' => 'hoat_dong',
+        ]);
+
+        $response = $this->actingAs($admin)->put('/admin/nguoi-dung/' . $targetUser->id . '/toggle-trang-thai');
+        $response->assertSessionHas('success');
+
+        $this->assertDatabaseHas('nguoi_dung', [
+            'id' => $targetUser->id,
             'trang_thai' => 'bi_khoa',
         ]);
-
-        $response->assertSessionHasErrors([
-            'trang_thai' => 'Không thể tự hạ quyền, khóa hoặc xóa tài khoản quản trị đang đăng nhập.',
-        ]);
-    }
-
-    public function test_admin_can_toggle_tick_xanh(): void
-    {
-        $adminRole = VaiTro::where('ten', 'admin')->first();
-        $admin = User::factory()->create([
-            'email' => 'admin@quanmoi.com',
-            'vai_tro_id' => $adminRole?->id,
-        ]);
-
-        $user = User::factory()->create(['da_xac_thuc' => false]);
-
-        $response = $this->actingAs($admin)->put('/admin/nguoi-dung/' . $user->id . '/toggle-xac-thuc');
-        $response->assertRedirect();
-
-        $this->assertTrue($user->fresh()->da_xac_thuc);
     }
 }

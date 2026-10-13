@@ -24,19 +24,17 @@ class UpdateBlogRequest extends FormRequest
     {
         return [
             'title' => ['required', 'string', 'max:255'],
-            'category_id' => ['nullable'],
-            'category_name' => ['nullable', 'string', 'max:100'],
-            'new_category' => ['nullable', 'string', 'max:100'],
+            'category_id' => ['required', 'exists:blog_categories,id'],
             'excerpt' => ['nullable', 'string', 'max:500'],
             'content' => ['required', 'string'],
             'cover_image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:5120'], // 5MB Max
             'tags' => ['nullable', 'array'],
-            'custom_tags' => ['nullable', 'string', 'max:255'],
+            'tags.*' => ['exists:blog_tags,id'],
             'seo_title' => ['nullable', 'string', 'max:255'],
             'seo_description' => ['nullable', 'string', 'max:500'],
             'meta_keywords' => ['nullable', 'string', 'max:255'],
-            // Action can be 'draft', 'pending' (submit for review), or 'published'/'update' (direct update when already published)
-            'action' => ['required', 'string', Rule::in(['draft', 'pending', 'published', 'update'])],
+            // Action can be 'draft' or 'pending' (submit for review)
+            'action' => ['required', 'string', Rule::in(['draft', 'pending'])],
         ];
     }
 

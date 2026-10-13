@@ -17,12 +17,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             NguoiDungSeeder::class,
-            DanhMucQuanSeeder::class,
-            QuanSeeder::class,
-            MonAnSeeder::class,
-            VideoShortSeeder::class,
             BlogSeeder::class,
-            QuanDanhGiaSeeder::class,
         ]);
     }
 }

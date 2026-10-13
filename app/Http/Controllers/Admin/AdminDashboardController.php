@@ -9,7 +9,6 @@ use App\Models\Quan;
 use App\Models\ThanhToan;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
 
 class AdminDashboardController extends Controller
@@ -41,33 +40,31 @@ class AdminDashboardController extends Controller
             'recent_payments' => Schema::hasTable('thanh_toan') ? ThanhToan::with(['user', 'quan'])->latest()->take(5)->get() : collect(),
         ];
 
-        // 2. Monthly registration & revenue chart data (cached 60s for ultra-fast response)
-        $chartData = Cache::remember('admin_dashboard_charts_6m', 60, function () {
-            $chartLabels = [];
-            $quanMonthly = [];
-            $usersMonthly = [];
-            $revenueMonthly = [];
+        // 2. Monthly registration & revenue chart data (last 6 months)
+        $chartLabels = [];
+        $quanMonthly = [];
+        $usersMonthly = [];
+        $revenueMonthly = [];
 
-            for ($i = 5; $i >= 0; $i--) {
-                $monthDate = now()->subMonths($i);
-                $start = $monthDate->copy()->startOfMonth();
-                $end = $monthDate->copy()->endOfMonth();
+        for ($i = 5; $i >= 0; $i--) {
+            $monthDate = now()->subMonths($i);
+            $start = $monthDate->copy()->startOfMonth();
+            $end = $monthDate->copy()->endOfMonth();
 
-                $chartLabels[] = 'T' . $monthDate->format('m/Y');
-                $quanMonthly[] = Quan::whereBetween('created_at', [$start, $end])->count();
-                $usersMonthly[] = User::whereBetween('created_at', [$start, $end])->count();
-                $revenueMonthly[] = Schema::hasTable('thanh_toan') 
-                    ? (float) ThanhToan::where('trang_thai', 'thanh_cong')->whereBetween('created_at', [$start, $end])->sum('so_tien')
-                    : 0;
-            }
+            $chartLabels[] = 'T' . $monthDate->format('m/Y');
+            $quanMonthly[] = Quan::whereBetween('created_at', [$start, $end])->count();
+            $usersMonthly[] = User::whereBetween('created_at', [$start, $end])->count();
+            $revenueMonthly[] = Schema::hasTable('thanh_toan') 
+                ? (float) ThanhToan::where('trang_thai', 'thanh_cong')->whereBetween('created_at', [$start, $end])->sum('so_tien')
+                : 0;
+        }
 
-            return [
-                'labels' => $chartLabels,
-                'quan' => $quanMonthly,
-                'users' => $usersMonthly,
-                'revenue' => $revenueMonthly,
-            ];
-        });
+        $chartData = [
+            'labels' => $chartLabels,
+            'quan' => $quanMonthly,
+            'users' => $usersMonthly,
+            'revenue' => $revenueMonthly,
+        ];
 
         return view('admin.dashboard', compact('stats', 'chartData'));
     }

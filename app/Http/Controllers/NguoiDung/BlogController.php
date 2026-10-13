@@ -11,7 +11,6 @@ use App\Http\Requests\UpdateBlogRequest;
 use App\Services\BlogService;
 use App\Models\BlogModerationLog;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
@@ -27,39 +26,12 @@ class BlogController extends Controller
 
     public function index(Request $request)
     {
-        $query = Blog::with(['category'])
-            ->where('user_id', Auth::id());
-
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        if ($request->filled('search')) {
-            $searchTerm = trim($request->search);
-            $query->where(function($q) use ($searchTerm) {
-                $q->where('title', 'like', "%{$searchTerm}%")
-                  ->orWhere('excerpt', 'like', "%{$searchTerm}%")
-                  ->orWhere('content', 'like', "%{$searchTerm}%")
-                  ->orWhereHas('category', function ($catQ) use ($searchTerm) {
-                      $catQ->where('name', 'like', "%{$searchTerm}%");
-                  })
-                  ->orWhereHas('tags', function ($tagQ) use ($searchTerm) {
-                      $tagQ->where('name', 'like', "%{$searchTerm}%");
-                  });
-            });
-        }
-
-        $blogs = $query->latest()->paginate(10)->withQueryString();
-
-        $statusCounts = Blog::where('user_id', Auth::id())
-            ->selectRaw('status, count(*) as count')
-            ->groupBy('status')
-            ->pluck('count', 'status')
-            ->toArray();
-
-        $totalCount = array_sum($statusCounts);
+        $blogs = Blog::with(['category'])
+            ->where('user_id', Auth::id())
+            ->latest()
+            ->paginate(10);
             
-        return view('nguoi-dung.blog.index', compact('blogs', 'statusCounts', 'totalCount'));
+        return view('nguoi-dung.blog.index', compact('blogs'));
     }
 
     public function create()
@@ -75,97 +47,39 @@ class BlogController extends Controller
     {
         $data = $request->validated();
         
-        try {
-            $blog = new Blog();
-            $blog->user_id = Auth::id();
-            $blog->title = $data['title'];
-            $blog->slug = $this->blogService->generateUniqueSlug($data['title']);
-
-            // Handle typed Category Name or selected Category ID
-            $catName = trim($request->input('category_name', $request->input('new_category', '')));
-            if (!empty($catName)) {
-                $category = BlogCategory::firstOrCreate(
-                    ['slug' => \Illuminate\Support\Str::slug($catName) ?: 'danh-muc-' . time()],
-                    ['name' => $catName, 'status' => true]
-                );
-                $blog->category_id = $category->id;
-            } elseif (!empty($data['category_id'])) {
-                if (is_numeric($data['category_id'])) {
-                    $blog->category_id = $data['category_id'];
-                } else {
-                    $catName = trim($data['category_id']);
-                    $category = BlogCategory::firstOrCreate(
-                        ['slug' => \Illuminate\Support\Str::slug($catName) ?: 'danh-muc-' . time()],
-                        ['name' => $catName, 'status' => true]
-                    );
-                    $blog->category_id = $category->id;
-                }
-            }
-
-            $blog->excerpt = $data['excerpt'] ?? null;
-            $blog->content = function_exists('clean') ? clean($data['content']) : $data['content'];
-            $blog->status = (isset($data['action']) && $data['action'] === 'pending') ? 'pending' : 'draft';
-            
-            if ($request->hasFile('cover_image')) {
-                $blog->cover_image = $this->blogService->uploadCoverImage($request->file('cover_image'));
-            }
-            
-            $blog->save();
-            
-            // Handle Tags (Selected existing tag IDs + custom typed new tags string)
-            $tagIds = [];
-            if (!empty($data['tags']) && is_array($data['tags'])) {
-                $tagIds = array_merge($tagIds, $data['tags']);
-            }
-
-            if (!empty($request->input('custom_tags'))) {
-                $rawTags = explode(',', $request->input('custom_tags'));
-                foreach ($rawTags as $rawTag) {
-                    $tagName = ltrim(trim($rawTag), '#');
-                    if ($tagName !== '') {
-                        $newTag = BlogTag::firstOrCreate(
-                            ['slug' => \Illuminate\Support\Str::slug($tagName) ?: 'the-' . time() . '-' . rand(1, 999)],
-                            ['name' => $tagName]
-                        );
-                        $tagIds[] = $newTag->id;
-                    }
-                }
-            }
-
-            if (!empty($tagIds)) {
-                $this->blogService->syncTags($blog, array_unique($tagIds));
-            }
-            
-            if ($blog->status === 'pending') {
-                $blog->last_submitted_at = now();
-                $blog->save();
-                try {
-                    BlogModerationLog::create([
-                        'blog_id' => $blog->id,
-                        'admin_id' => Auth::id(),
-                        'action' => 'submitted',
-                        'from_status' => null,
-                        'to_status' => 'pending',
-                        'note' => 'Gửi bài viết để duyệt'
-                    ]);
-                } catch (\Throwable $logEx) {
-                    \Illuminate\Support\Facades\Log::error('BlogModerationLog error: ' . $logEx->getMessage());
-                }
-            }
-            
-            $msg = $blog->status === 'pending'
-                ? 'Đã gửi bài viết thành công! Bài viết của bạn đang được duyệt.'
-                : 'Đã lưu bản nháp thành công!';
-            
-            if ($request->filled('redirect_to')) {
-                return redirect($request->input('redirect_to'))->with('success', $msg);
-            }
-
-            return redirect()->route('nguoi-dung.blog.index')->with('success', $msg);
-        } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('Blog store error: ' . $e->getMessage());
-            return back()->withInput()->withErrors(['error' => 'Có lỗi xảy ra: ' . $e->getMessage()]);
+        $blog = new Blog();
+        $blog->user_id = Auth::id();
+        $blog->title = $data['title'];
+        $blog->slug = $this->blogService->generateUniqueSlug($data['title']);
+        $blog->category_id = $data['category_id'];
+        $blog->excerpt = $data['excerpt'] ?? null;
+        $blog->content = clean($data['content']);
+        $blog->status = $data['action'] === 'pending' ? 'pending' : 'draft';
+        
+        if ($request->hasFile('cover_image')) {
+            $blog->cover_image = $this->blogService->uploadCoverImage($request->file('cover_image'));
         }
+        
+        $blog->save();
+        
+        if (isset($data['tags'])) {
+            $this->blogService->syncTags($blog, $data['tags']);
+        }
+        
+        if ($blog->status === 'pending') {
+            $blog->last_submitted_at = now();
+            $blog->save();
+            BlogModerationLog::create([
+                'blog_id' => $blog->id,
+                'user_id' => Auth::id(),
+                'action' => 'submitted',
+                'from_status' => null,
+                'to_status' => 'pending',
+                'note' => 'Gửi bài viết để duyệt'
+            ]);
+        }
+        
+        return redirect()->route('nguoi-dung.blog.index')->with('success', 'Đã lưu bài viết thành công.');
     }
 
     public function edit(Blog $blog)
@@ -185,94 +99,37 @@ class BlogController extends Controller
         $oldStatus = $blog->status;
         
         $blog->title = $data['title'];
-        
-        // Handle typed Category Name or selected Category ID
-        $catName = trim($request->input('category_name', $request->input('new_category', '')));
-        if (!empty($catName)) {
-            $category = BlogCategory::firstOrCreate(
-                ['slug' => \Illuminate\Support\Str::slug($catName)],
-                ['name' => $catName, 'status' => true]
-            );
-            $blog->category_id = $category->id;
-        } elseif (!empty($data['category_id'])) {
-            if (is_numeric($data['category_id'])) {
-                $blog->category_id = $data['category_id'];
-            } else {
-                $catName = trim($data['category_id']);
-                $category = BlogCategory::firstOrCreate(
-                    ['slug' => \Illuminate\Support\Str::slug($catName) ?: 'danh-muc-' . time()],
-                    ['name' => $catName, 'status' => true]
-                );
-                $blog->category_id = $category->id;
-            }
-        }
-
+        // Optional: Do not change slug to prevent breaking links, or update it
+        // $blog->slug = $this->blogService->generateUniqueSlug($data['title'], $blog->id);
+        $blog->category_id = $data['category_id'];
         $blog->excerpt = $data['excerpt'] ?? null;
         $blog->content = clean($data['content']);
-        if ($oldStatus === 'published') {
-            $blog->status = ($data['action'] === 'draft') ? 'draft' : 'published';
-        } else {
-            $blog->status = ($data['action'] === 'pending') ? 'pending' : 'draft';
-        }
+        $blog->status = $data['action'] === 'pending' ? 'pending' : 'draft';
         
         if ($request->hasFile('cover_image')) {
-            try {
-                if ($blog->cover_image) {
-                    $disk = config('filesystems.upload_disk', 'public');
-                    if ($disk === 'r2' && empty(config('filesystems.disks.r2.bucket'))) {
-                        $disk = 'public';
-                    }
-                    if (Storage::disk($disk)->exists($blog->cover_image)) {
-                        Storage::disk($disk)->delete($blog->cover_image);
-                    } elseif ($disk !== 'public' && Storage::disk('public')->exists($blog->cover_image)) {
-                        Storage::disk('public')->delete($blog->cover_image);
-                    }
-                }
-            } catch (\Throwable $th) {
-                // Ignore storage deletion errors
+            if ($blog->cover_image) {
+                Storage::disk('r2')->delete($blog->cover_image);
             }
             $blog->cover_image = $this->blogService->uploadCoverImage($request->file('cover_image'));
         }
         
         $blog->save();
         
-        // Handle Tags (Selected existing tag IDs + custom typed new tags string)
-        $tagIds = [];
-        if (!empty($data['tags']) && is_array($data['tags'])) {
-            $tagIds = array_merge($tagIds, $data['tags']);
+        if (isset($data['tags'])) {
+            $this->blogService->syncTags($blog, $data['tags']);
         }
-
-        if (!empty($request->input('custom_tags'))) {
-            $rawTags = explode(',', $request->input('custom_tags'));
-            foreach ($rawTags as $rawTag) {
-                $tagName = ltrim(trim($rawTag), '#');
-                if ($tagName !== '') {
-                    $newTag = BlogTag::firstOrCreate(
-                        ['slug' => \Illuminate\Support\Str::slug($tagName) ?: 'the-' . time() . '-' . rand(1, 999)],
-                        ['name' => $tagName]
-                    );
-                    $tagIds[] = $newTag->id;
-                }
-            }
-        }
-
-        $this->blogService->syncTags($blog, array_unique($tagIds));
         
         if ($blog->status === 'pending' && $oldStatus !== 'pending') {
-            $blog->last_submitted_at = Carbon::now();
+            $blog->last_submitted_at = now();
             $blog->save();
-            try {
-                BlogModerationLog::create([
-                    'blog_id' => $blog->id,
-                    'admin_id' => Auth::id(),
-                    'action' => 'submitted',
-                    'from_status' => $oldStatus,
-                    'to_status' => 'pending',
-                    'note' => 'Gửi lại bài viết để duyệt'
-                ]);
-            } catch (\Throwable $logEx) {
-                \Illuminate\Support\Facades\Log::warning('BlogModerationLog update error: ' . $logEx->getMessage());
-            }
+            BlogModerationLog::create([
+                'blog_id' => $blog->id,
+                'admin_id' => Auth::id(), // We map it to admin_id field as per user req
+                'action' => 'submitted',
+                'from_status' => $oldStatus,
+                'to_status' => 'pending',
+                'note' => 'Gửi lại bài viết để duyệt'
+            ]);
         }
         
         return redirect()->route('nguoi-dung.blog.index')->with('success', 'Đã cập nhật bài viết thành công.');

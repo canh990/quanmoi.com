@@ -223,7 +223,7 @@
                                     </div>
                                 </td>
                                 <td class="py-3 px-3 font-medium text-slate-700">
-                                    {{ $tv->chuQuan->ho_ten ?? 'Khách vãng lai / Đã xóa' }}
+                                    {{ $tv->chuQuan->ho_ten ?? 'Chưa gắn chủ' }}
                                 </td>
                                 <td class="py-3 px-3 text-slate-500">
                                     {{ $tv->ten_tinh_thanh ?? 'Chưa rõ' }}
@@ -234,7 +234,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="text-center py-6 text-slate-400">Chưa có dữ liệu lượt xem quán ăn nào trong hệ thống.</td>
+                                <td colspan="4" class="text-center py-6 text-slate-400">Chưa có dữ liệu lượt xem quán</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -261,11 +261,11 @@
                                 <span class="font-extrabold text-indigo-600">{{ number_format($reg->total_quan) }} quán</span>
                             </div>
                             <div class="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
-                                <div class="h-full rounded-full bg-indigo-600 transition-all duration-500" data-width-percent="{{ $percent }}"></div>
+                                <div class="h-full rounded-full bg-indigo-600 transition-all duration-500" style="width: {{ $percent }}%"></div>
                             </div>
                         </div>
                     @empty
-                        <p class="text-xs text-slate-400 py-3 text-center">Chưa ghi nhận thông tin địa bàn hoạt động của các quán ăn.</p>
+                        <p class="text-xs text-slate-400 py-3 text-center">Chưa ghi nhận địa bàn quán</p>
                     @endforelse
                 </div>
             </div>
@@ -286,7 +286,7 @@
                             <span class="font-black text-emerald-600 text-sm">{{ number_format($pkg->total_revenue) }} đ</span>
                         </div>
                     @empty
-                        <p class="text-xs text-slate-400 py-3 text-center">Chưa phát sinh doanh thu từ gói dịch vụ nào trong kỳ lọc.</p>
+                        <p class="text-xs text-slate-400 py-3 text-center">Chưa phát sinh doanh thu gói</p>
                     @endforelse
                 </div>
             </div>
@@ -344,8 +344,8 @@
                     @forelse($payments as $p)
                         <tr class="hover:bg-slate-50/80 transition-colors">
                             <td class="py-3 px-4 font-mono font-bold text-slate-900">{{ $p->ma_giao_dich }}</td>
-                            <td class="py-3 px-4 font-bold text-slate-800">{{ $p->user->ho_ten ?? 'Khách vãng lai / Đã xóa' }}</td>
-                            <td class="py-3 px-4 text-slate-600">{{ $p->quan->ten_quan ?? 'Không có' }}</td>
+                            <td class="py-3 px-4 font-bold text-slate-800">{{ $p->user->ho_ten ?? 'N/A' }}</td>
+                            <td class="py-3 px-4 text-slate-600">{{ $p->quan->ten_quan ?? 'N/A' }}</td>
                             <td class="py-3 px-4 font-semibold text-slate-700">{{ $p->ten_goi_dich_vu }}</td>
                             <td class="py-3 px-4 font-black text-emerald-600 text-sm">{{ number_format($p->so_tien) }} đ</td>
                             <td class="py-3 px-4 font-bold text-slate-600 uppercase">{{ $p->phuong_thuc ?? 'VNPAY' }}</td>
@@ -383,14 +383,12 @@
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script type="application/json" id="admin-statistics-chart-data">@json($chartData)</script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        document.querySelectorAll('[data-width-percent]').forEach((bar) => {
-            bar.style.width = `${bar.dataset.widthPercent}%`;
-        });
-        const { labels, revenue: revenueData, quan: quanData, users: userData } =
-            JSON.parse(document.getElementById('admin-statistics-chart-data').textContent);
+        const labels = @json($chartData['labels']);
+        const revenueData = @json($chartData['revenue']);
+        const quanData = @json($chartData['quan']);
+        const userData = @json($chartData['users']);
 
         // 1. Chart: Revenue Trend
         const ctxRev = document.getElementById('revenueTrendChart')?.getContext('2d');
@@ -496,3 +494,4 @@
     });
 </script>
 @endpush
+

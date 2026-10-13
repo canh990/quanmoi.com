@@ -10,7 +10,6 @@ use App\Models\VideoShort;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Intervention\Image\Drivers\Gd\Driver;
@@ -49,7 +48,10 @@ class QuanController extends Controller
             $encoded = $image->encodeUsingFileExtension('webp', 80);
 
             $objectKey = 'quan/anh-bia/'.$filename;
-            [$anhBiaPath, $anhBiaKey] = $this->storeVenueImage($objectKey, (string) $encoded);
+            Storage::disk('r2')->put($objectKey, (string) $encoded);
+
+            $anhBiaPath = Storage::disk('r2')->url($objectKey);
+            $anhBiaKey = $objectKey;
         }
 
         $galleryKeys = [];
@@ -63,9 +65,10 @@ class QuanController extends Controller
                 $encoded = $image->encodeUsingFileExtension('webp', 80);
 
                 $objectKey = 'quan/gallery/'.$filename;
-                [$path, $key] = $this->storeVenueImage($objectKey, (string) $encoded);
-                $galleryPaths[] = $path;
-                $galleryKeys[] = $key;
+                Storage::disk('r2')->put($objectKey, (string) $encoded);
+
+                $galleryPaths[] = Storage::disk('r2')->url($objectKey);
+                $galleryKeys[] = $objectKey;
             }
         }
 
@@ -106,7 +109,6 @@ class QuanController extends Controller
                     'anh_bia' => $anhBiaPath,
                     'anh_bia_key' => $anhBiaKey,
                     'tiktok_url' => $validated['tiktok_url'] ?? null,
-                    'shopeefood_url' => $validated['shopeefood_url'] ?? null,
                     'trang_thai' => 'chua_duyet',
                 ]);
 
@@ -123,26 +125,21 @@ class QuanController extends Controller
                 return $q;
             });
         } catch (\Exception $e) {
-            // Roll back uploaded images if the database transaction fails.
+            // Rollback uploaded image on R2 if transaction fails
             if ($anhBiaKey) {
-                $this->deleteVenueImage($anhBiaKey);
+                Storage::disk('r2')->delete($anhBiaKey);
             }
             foreach ($galleryKeys as $key) {
-                $this->deleteVenueImage($key);
+                Storage::disk('r2')->delete($key);
             }
             throw $e;
         }
 
         if ($request->wantsJson()) {
-            $roleChuQuan = DB::table('vai_tro')->where('ten', 'chu_quan')->value('id');
-            if ($roleChuQuan && ! $user->hasRole('admin')) {
-                $user->update(['vai_tro_id' => $roleChuQuan]);
-            }
-
             return response()->json([
                 'success' => true,
                 'message' => 'Hồ sơ quán đã được gửi và đang chờ duyệt.',
-                'redirect_to' => route('chu-quan.quan.show', ['slug' => $quan->slug]),
+                'redirect_to' => route('home'),
                 'data' => $quan,
             ]);
         }
@@ -159,6 +156,7 @@ class QuanController extends Controller
     {
         $quanList = $request->user()
             ->quan()
+            ->where('trang_thai', 'da_duyet')
             ->latest()
             ->get();
 
@@ -172,9 +170,9 @@ class QuanController extends Controller
     {
         $quan = Quan::where('slug', $slug)
             ->where('chu_quan_id', Auth::id())
-            ->with(['hinhAnh', 'danhMucMenu.monAn', 'danhGia.nguoiDung'])
+            ->where('trang_thai', 'da_duyet')
+            ->with(['hinhAnh', 'danhMucMenu.monAn'])
             ->firstOrFail();
-
         $this->authorize('update', $quan);
 
         $luotLuu = $quan->savedByUsers()->count();
@@ -183,82 +181,14 @@ class QuanController extends Controller
         return view('chu-quan.chi-tiet-quan', compact('quan', 'luotLuu', 'luotVideo'));
     }
 
-    private function storeVenueImage(string $objectKey, string $contents): array
-    {
-        $uploadDisk = config('filesystems.upload_disk', 'r2');
-        $r2Configured = !empty(config('filesystems.disks.r2.key'))
-            && !empty(config('filesystems.disks.r2.secret'))
-            && !empty(config('filesystems.disks.r2.bucket'))
-            && !empty(config('filesystems.disks.r2.endpoint'));
-
-        $targetDisk = ($uploadDisk === 'r2' && ! $r2Configured) ? 'uploads' : $uploadDisk;
-
-        try {
-            Storage::disk($targetDisk)->put($objectKey, $contents);
-            $url = ($targetDisk === 'uploads') ? '/uploads/'.$objectKey : Storage::disk($targetDisk)->url($objectKey);
-            $storedKey = ($targetDisk === 'uploads' || $targetDisk === 'public' || $targetDisk === 'local') ? 'local:'.$objectKey : $objectKey;
-            return [$url, $storedKey];
-        } catch (\Throwable $e) {
-            if ($targetDisk === 'r2') {
-                \Illuminate\Support\Facades\Log::warning('Venue image upload to R2 failed; falling back to local uploads disk.', [
-                    'key' => $objectKey,
-                    'error' => $e->getMessage(),
-                ]);
-                try {
-                    Storage::disk('uploads')->put($objectKey, $contents);
-                    return ['/uploads/'.$objectKey, 'local:'.$objectKey];
-                } catch (\Throwable $fallbackEx) {
-                    \Illuminate\Support\Facades\Log::error('Venue image fallback upload failed.', [
-                        'key' => $objectKey,
-                        'error' => $fallbackEx->getMessage(),
-                    ]);
-                    throw new \RuntimeException('Lỗi lưu ảnh lên Cloud Storage. Vui lòng thử lại sau.');
-                }
-            }
-
-            \Illuminate\Support\Facades\Log::error('Venue image upload failed.', [
-                'disk' => $targetDisk,
-                'key' => $objectKey,
-                'error' => $e->getMessage(),
-            ]);
-            throw new \RuntimeException('Lỗi lưu ảnh lên Cloud Storage. Vui lòng thử lại sau.');
-        }
-    }
-
-    private function deleteVenueImage(?string $key): void
-    {
-        if (! $key) {
-            return;
-        }
-
-        if (Str::startsWith($key, 'local:')) {
-            $path = Str::after($key, 'local:');
-            $disk = Storage::disk('uploads')->exists($path) ? 'uploads' : 'public';
-            Storage::disk($disk)->delete($path);
-            return;
-        }
-
-        try {
-            $r2Configured = !empty(config('filesystems.disks.r2.key'))
-                && !empty(config('filesystems.disks.r2.secret'))
-                && !empty(config('filesystems.disks.r2.bucket'))
-                && !empty(config('filesystems.disks.r2.endpoint'));
-            if ($r2Configured) {
-                Storage::disk('r2')->delete($key);
-            }
-        } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('Venue image deletion on R2 failed.', [
-                'key' => $key,
-                'error' => $e->getMessage(),
-            ]);
-        }
-    }
-
-    /** Cap nhat thong tin quan (AJAX). */
+    /**
+     * Cap nhat thong tin quan (AJAX)
+     */
     public function update(Request $request, $slug)
     {
         $quan = Quan::where('slug', $slug)
             ->where('chu_quan_id', Auth::id())
+            ->where('trang_thai', 'da_duyet')
             ->firstOrFail();
         $this->authorize('update', $quan);
 
@@ -270,26 +200,14 @@ class QuanController extends Controller
             'gia_nho_nhat' => 'nullable|numeric|min:0',
             'gia_lon_nhat' => 'nullable|numeric|min:0',
             'tiktok_url' => 'nullable|url|max:255',
-            'shopeefood_url' => 'nullable|url:http,https|max:500',
             'anh_bia' => 'nullable|image|max:5120',
-        ], [
-            'so_dien_thoai.required' => 'Số điện thoại không được để trống.',
-            'so_dien_thoai.max' => 'Số điện thoại không được vượt quá 20 ký tự.',
-            'gio_mo_cua.required' => 'Vui lòng chọn giờ mở cửa.',
-            'gio_dong_cua.required' => 'Vui lòng chọn giờ đóng cửa.',
-            'gia_nho_nhat.numeric' => 'Giá nhỏ nhất phải là định dạng số.',
-            'gia_lon_nhat.numeric' => 'Giá lớn nhất phải là định dạng số.',
-            'tiktok_url.url' => 'Đường dẫn TikTok không hợp lệ.',
-            'shopeefood_url.url' => 'Đường dẫn ShopeeFood không hợp lệ.',
-            'anh_bia.image' => 'Ảnh bìa phải là định dạng hình ảnh.',
-            'anh_bia.max' => 'Dung lượng ảnh bìa không được vượt quá 5MB.',
         ]);
 
         // Upload ảnh bìa mới nếu có
         if ($request->hasFile('anh_bia')) {
             // Xóa ảnh cũ
-            if ($quan->anh_bia_key && (Str::startsWith($quan->anh_bia_key, 'quan/anh-bia/') || Str::startsWith($quan->anh_bia_key, 'local:quan/anh-bia/'))) {
-                $this->deleteVenueImage($quan->anh_bia_key);
+            if ($quan->anh_bia_key && Str::startsWith($quan->anh_bia_key, 'quan/anh-bia/')) {
+                Storage::disk('r2')->delete($quan->anh_bia_key);
             }
 
             $file = $request->file('anh_bia');
@@ -299,7 +217,10 @@ class QuanController extends Controller
             $encoded = $image->encodeUsingFileExtension('webp', 85);
 
             $objectKey = 'quan/anh-bia/'.$filename;
-            [$validated['anh_bia'], $validated['anh_bia_key']] = $this->storeVenueImage($objectKey, (string) $encoded);
+            Storage::disk('r2')->put($objectKey, (string) $encoded);
+
+            $validated['anh_bia'] = Storage::disk('r2')->url($objectKey);
+            $validated['anh_bia_key'] = $objectKey;
         }
 
         $quan->update($validated);

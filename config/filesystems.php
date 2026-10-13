@@ -15,8 +15,6 @@ return [
 
     'default' => env('FILESYSTEM_DISK', 'local'),
 
-    'upload_disk' => env('UPLOAD_DISK', env('CLOUDFLARE_R2_BUCKET') ? 'r2' : 'uploads'),
-
     /*
     |--------------------------------------------------------------------------
     | Filesystem Disks
@@ -46,17 +44,6 @@ return [
             'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/storage',
             'visibility' => 'public',
             'throw' => false,
-            'report' => false,
-        ],
-
-        // Uploaded menu images live in public/uploads so they survive Docker
-        // restarts and can be committed with the project when desired.
-        'uploads' => [
-            'driver' => 'local',
-            'root' => public_path('uploads'),
-            'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/uploads',
-            'visibility' => 'public',
-            'throw' => true,
             'report' => false,
         ],
 

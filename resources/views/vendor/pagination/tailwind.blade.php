@@ -1,25 +1,25 @@
 @if ($paginator->hasPages())
-    <nav role="navigation" aria-label="{{ __('Điều hướng phân trang') }}">
+    <nav role="navigation" aria-label="{{ __('Pagination Navigation') }}">
         
         {{-- Mobile pagination --}}
         <div class="flex items-center justify-between sm:hidden">
             @if ($paginator->onFirstPage())
                 <span class="inline-flex items-center px-4 py-2 text-sm font-bold text-gray-400 bg-gray-50 border border-gray-200 cursor-not-allowed rounded-xl">
-                    {!! __('Trước') !!}
+                    {!! __('pagination.previous') !!}
                 </span>
             @else
                 <a href="{{ $paginator->previousPageUrl() }}" class="inline-flex items-center px-4 py-2 text-sm font-bold text-primary bg-primary/10 border border-primary/20 rounded-xl hover:bg-primary/20 transition-all">
-                    {!! __('Trước') !!}
+                    {!! __('pagination.previous') !!}
                 </a>
             @endif
 
             @if ($paginator->hasMorePages())
                 <a href="{{ $paginator->nextPageUrl() }}" class="inline-flex items-center px-4 py-2 text-sm font-bold text-primary bg-primary/10 border border-primary/20 rounded-xl hover:bg-primary/20 transition-all">
-                    {!! __('Sau') !!}
+                    {!! __('pagination.next') !!}
                 </a>
             @else
                 <span class="inline-flex items-center px-4 py-2 text-sm font-bold text-gray-400 bg-gray-50 border border-gray-200 cursor-not-allowed rounded-xl">
-                    {!! __('Sau') !!}
+                    {!! __('pagination.next') !!}
                 </span>
             @endif
         </div>
@@ -28,17 +28,17 @@
         <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
             <div>
                 <p class="text-sm text-gray-500 font-medium">
-                    {!! __('Hiển thị') !!}
+                    {!! __('Showing') !!}
                     @if ($paginator->firstItem())
                         <span class="font-bold text-gray-900">{{ $paginator->firstItem() }}</span>
-                        {!! __('đến') !!}
+                        {!! __('to') !!}
                         <span class="font-bold text-gray-900">{{ $paginator->lastItem() }}</span>
                     @else
                         {{ $paginator->count() }}
                     @endif
-                    {!! __('trong tổng số') !!}
+                    {!! __('of') !!}
                     <span class="font-bold text-primary">{{ $paginator->total() }}</span>
-                    {!! __('kết quả') !!}
+                    {!! __('results') !!}
                 </p>
             </div>
 
@@ -46,13 +46,13 @@
                 <span class="inline-flex items-center gap-1.5 shadow-sm rounded-xl bg-white border border-gray-100 p-1.5">
                     {{-- Previous Page Link --}}
                     @if ($paginator->onFirstPage())
-                        <span aria-disabled="true" aria-label="{{ __('Trang trước') }}">
+                        <span aria-disabled="true" aria-label="{{ __('pagination.previous') }}">
                             <span class="inline-flex items-center justify-center w-9 h-9 text-gray-300 cursor-not-allowed rounded-lg" aria-hidden="true">
                                 <span class="material-symbols-outlined text-[20px]">chevron_left</span>
                             </span>
                         </span>
                     @else
-                        <a href="{{ $paginator->previousPageUrl() }}" rel="prev" class="inline-flex items-center justify-center w-9 h-9 text-gray-600 rounded-lg hover:bg-gray-100 hover:text-primary transition-all" aria-label="{{ __('Trang trước') }}">
+                        <a href="{{ $paginator->previousPageUrl() }}" rel="prev" class="inline-flex items-center justify-center w-9 h-9 text-gray-600 rounded-lg hover:bg-gray-100 hover:text-primary transition-all" aria-label="{{ __('pagination.previous') }}">
                             <span class="material-symbols-outlined text-[20px]">chevron_left</span>
                         </a>
                     @endif
@@ -74,7 +74,7 @@
                                         <span class="inline-flex items-center justify-center w-9 h-9 text-sm font-bold text-white bg-primary rounded-lg shadow-md cursor-default">{{ $page }}</span>
                                     </span>
                                 @else
-                                    <a href="{{ $url }}" class="inline-flex items-center justify-center w-9 h-9 text-sm font-semibold text-gray-600 rounded-lg hover:bg-primary/10 hover:text-primary transition-all" aria-label="{{ __('Đến trang :page', ['page' => $page]) }}">
+                                    <a href="{{ $url }}" class="inline-flex items-center justify-center w-9 h-9 text-sm font-semibold text-gray-600 rounded-lg hover:bg-primary/10 hover:text-primary transition-all" aria-label="{{ __('Go to page :page', ['page' => $page]) }}">
                                         {{ $page }}
                                     </a>
                                 @endif
@@ -84,11 +84,11 @@
 
                     {{-- Next Page Link --}}
                     @if ($paginator->hasMorePages())
-                        <a href="{{ $paginator->nextPageUrl() }}" rel="next" class="inline-flex items-center justify-center w-9 h-9 text-gray-600 rounded-lg hover:bg-gray-100 hover:text-primary transition-all" aria-label="{{ __('Trang sau') }}">
+                        <a href="{{ $paginator->nextPageUrl() }}" rel="next" class="inline-flex items-center justify-center w-9 h-9 text-gray-600 rounded-lg hover:bg-gray-100 hover:text-primary transition-all" aria-label="{{ __('pagination.next') }}">
                             <span class="material-symbols-outlined text-[20px]">chevron_right</span>
                         </a>
                     @else
-                        <span aria-disabled="true" aria-label="{{ __('Trang sau') }}">
+                        <span aria-disabled="true" aria-label="{{ __('pagination.next') }}">
                             <span class="inline-flex items-center justify-center w-9 h-9 text-gray-300 cursor-not-allowed rounded-lg" aria-hidden="true">
                                 <span class="material-symbols-outlined text-[20px]">chevron_right</span>
                             </span>

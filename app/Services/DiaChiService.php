@@ -36,27 +36,25 @@ class DiaChiService
      */
     public function getQuanHuyen(string $tinhCode)
     {
-        $cached = Cache::get("quan_huyen_{$tinhCode}");
-        if (is_array($cached) && ! empty($cached)) {
-            return $cached;
-        }
+        return Cache::remember("quan_huyen_{$tinhCode}", 86400, function () use ($tinhCode) {
+            try {
+                $response = Http::timeout(10)
+                    ->retry(2, 300)
+                    ->withHeaders([
+                        'Accept' => 'application/json',
+                        'User-Agent' => 'QuanMoi/1.0',
+                    ])
+                    ->get("{$this->baseUrl}/p/{$tinhCode}", ['depth' => 2]);
 
-        try {
-            $response = Http::timeout(10)
-                ->retry(2, 300)
-                ->withHeaders([
-                    'Accept' => 'application/json',
-                    'User-Agent' => 'QuanMoi/1.0',
-                ])
-                ->get("{$this->baseUrl}/p/{$tinhCode}", ['depth' => 2]);
-
-            $data = $response->successful() ? ($response->json()['districts'] ?? []) : [];
-            Cache::put("quan_huyen_{$tinhCode}", $data, 86400);
-
-            return $data;
-        } catch (\Exception $e) {
-            return Cache::get("quan_huyen_{$tinhCode}", []);
-        }
+                if ($response->successful()) {
+                    $data = $response->json();
+                    return $data['districts'] ?? [];
+                }
+                return [];
+            } catch (\Exception $e) {
+                return [];
+            }
+        });
     }
 
     /**
@@ -64,27 +62,25 @@ class DiaChiService
      */
     public function getPhuongXa(string $huyenCode)
     {
-        $cached = Cache::get("phuong_xa_{$huyenCode}");
-        if (is_array($cached) && ! empty($cached)) {
-            return $cached;
-        }
+        return Cache::remember("phuong_xa_{$huyenCode}", 86400, function () use ($huyenCode) {
+            try {
+                $response = Http::timeout(10)
+                    ->retry(2, 300)
+                    ->withHeaders([
+                        'Accept' => 'application/json',
+                        'User-Agent' => 'QuanMoi/1.0',
+                    ])
+                    ->get("{$this->baseUrl}/d/{$huyenCode}", ['depth' => 2]);
 
-        try {
-            $response = Http::timeout(10)
-                ->retry(2, 300)
-                ->withHeaders([
-                    'Accept' => 'application/json',
-                    'User-Agent' => 'QuanMoi/1.0',
-                ])
-                ->get("{$this->baseUrl}/d/{$huyenCode}", ['depth' => 2]);
-
-            $data = $response->successful() ? ($response->json()['wards'] ?? []) : [];
-            Cache::put("phuong_xa_{$huyenCode}", $data, 86400);
-
-            return $data;
-        } catch (\Exception $e) {
-            return Cache::get("phuong_xa_{$huyenCode}", []);
-        }
+                if ($response->successful()) {
+                    $data = $response->json();
+                    return $data['wards'] ?? [];
+                }
+                return [];
+            } catch (\Exception $e) {
+                return [];
+            }
+        });
     }
 
     /**

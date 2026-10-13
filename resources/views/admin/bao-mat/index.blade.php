@@ -39,9 +39,9 @@
                 <input type="text" name="ip_whitelist" value="{{ $securitySettings['ip_whitelist'] }}" placeholder="127.0.0.1, 192.168.1.1" class="w-full px-3.5 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none">
             </div>
 
-            <button type="submit" class="btn-enterprise btn-enterprise-dark">
+            <button type="submit" class="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow-xs transition-colors flex items-center gap-2">
                 <span class="material-symbols-outlined text-[18px]">save</span>
-                <span>Lưu Cấu Hình Bảo Mật</span>
+                Lưu Cấu Hình Bảo Mật
             </button>
         </form>
     </div>

@@ -23,30 +23,15 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->validateCsrfTokens(except: [
-            'blog/*/luot-xem',
-        ]);
-
         $middleware->alias([
             'KiemTraQuyenHan' => \App\Http\Middleware\KiemTraQuyenHan::class,
-            'CheckAdmin'      => \App\Http\Middleware\KiemTraQuyenHan::class,
+            'CheckAdmin' => \App\Http\Middleware\KiemTraQuyenHan::class,
             'CheckPermission' => \App\Http\Middleware\CheckPermission::class,
-            'permission'      => \App\Http\Middleware\CheckPermission::class,
-            'guest'           => \App\Http\Middleware\RedirectIfAuthenticated::class,
+            'permission' => \App\Http\Middleware\CheckPermission::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->expectsJson() || $request->is('api/*'),
         );
-        $exceptions->render(function (\Illuminate\Auth\Access\AuthorizationException $e, Request $request) {
-            if ($request->expectsJson() || $request->wantsJson()) {
-                return response()->json(['message' => 'Bạn không có quyền thực hiện thao tác này.'], 403);
-            }
-        });
-        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\NotFoundHttpException $e, Request $request) {
-            if ($request->expectsJson() || $request->wantsJson()) {
-                return response()->json(['message' => 'Dữ liệu hoặc trang yêu cầu không tồn tại trong hệ thống.'], 404);
-            }
-        });
     })->create();

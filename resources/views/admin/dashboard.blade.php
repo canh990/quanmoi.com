@@ -18,11 +18,6 @@
         </div>
 
         <div class="flex items-center gap-2.5">
-            <a href="{{ route('home') }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-300 transition-colors shadow-xs">
-                <span class="material-symbols-outlined text-[16px] text-amber-500">home</span>
-                <span>Quay về trang chủ</span>
-            </a>
-
             {{-- Date Range Selector --}}
             <div class="relative inline-block text-left">
                 <select class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors shadow-xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500">
@@ -57,7 +52,7 @@
                 </span>
             </div>
             <div class="mt-3 flex items-baseline justify-between">
-                <h3 id="kpi-total-quan" class="text-2xl font-bold text-slate-900 tracking-tight">{{ number_format($stats['total_quan']) }}</h3>
+                <h3 class="text-2xl font-bold text-slate-900 tracking-tight">{{ number_format($stats['total_quan']) }}</h3>
                 <span class="inline-flex items-center gap-0.5 text-xs font-semibold text-emerald-600">
                     <span class="material-symbols-outlined text-[14px]">trending_up</span> +12.4%
                 </span>
@@ -77,7 +72,7 @@
                 </span>
             </div>
             <div class="mt-3 flex items-baseline justify-between">
-                <h3 id="kpi-pending-quan" class="text-2xl font-bold {{ $stats['pending_quan'] > 0 ? 'text-amber-600' : 'text-slate-900' }} tracking-tight">
+                <h3 class="text-2xl font-bold {{ $stats['pending_quan'] > 0 ? 'text-amber-600' : 'text-slate-900' }} tracking-tight">
                     {{ number_format($stats['pending_quan']) }}
                 </h3>
                 @if($stats['pending_quan'] > 0)
@@ -103,14 +98,14 @@
                 </span>
             </div>
             <div class="mt-3 flex items-baseline justify-between">
-                <h3 id="kpi-total-users" class="text-2xl font-bold text-slate-900 tracking-tight">{{ number_format($stats['total_users']) }}</h3>
+                <h3 class="text-2xl font-bold text-slate-900 tracking-tight">{{ number_format($stats['total_users']) }}</h3>
                 <span class="inline-flex items-center gap-0.5 text-xs font-semibold text-emerald-600">
                     <span class="material-symbols-outlined text-[14px]">trending_up</span> +8.2%
                 </span>
             </div>
             <div class="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
                 <span>Tài khoản hoạt động:</span>
-                <span id="kpi-active-users" class="font-semibold text-slate-800">{{ number_format($stats['active_users']) }} người</span>
+                <span class="font-semibold text-slate-800">{{ number_format($stats['active_users']) }} người</span>
             </div>
         </div>
 
@@ -217,7 +212,7 @@
                         </span>
                     </div>
                 @empty
-                    <p class="text-xs text-slate-400 py-4 text-center">Chưa có người dùng mới.</p>
+                    <p class="text-xs text-slate-400 py-4 text-center">Chưa có dữ liệu</p>
                 @endforelse
             </div>
         </div>
@@ -243,7 +238,7 @@
                         </span>
                     </div>
                 @empty
-                    <p class="text-xs text-slate-400 py-4 text-center">Chưa có quán nào mới.</p>
+                    <p class="text-xs text-slate-400 py-4 text-center">Chưa có dữ liệu</p>
                 @endforelse
             </div>
         </div>
@@ -269,7 +264,7 @@
                         </span>
                     </div>
                 @empty
-                    <p class="text-xs text-slate-400 py-4 text-center">Chưa ghi nhận nhật ký thao tác nào.</p>
+                    <p class="text-xs text-slate-400 py-4 text-center">Chưa ghi nhận log</p>
                 @endforelse
             </div>
         </div>
@@ -281,11 +276,12 @@
 
 @stack('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script type="application/json" id="admin-dashboard-chart-data">@json($chartData)</script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const { labels, quan: quanData, users: userData, revenue: revenueData } =
-            JSON.parse(document.getElementById('admin-dashboard-chart-data').textContent);
+        const labels = @json($chartData['labels']);
+        const quanData = @json($chartData['quan']);
+        const userData = @json($chartData['users']);
+        const revenueData = @json($chartData['revenue']);
 
         // 1. Chart: Registration Growth
         const ctxReg = document.getElementById('registrationChart').getContext('2d');

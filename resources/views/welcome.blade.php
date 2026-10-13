@@ -43,25 +43,23 @@
     {{-- DESKTOP Main Content --}}
     <main class="hidden md:block flex-grow">
         {{-- Hero Section --}}
-        <section class="relative w-full h-[480px] flex items-center justify-center z-30">
-            {{-- Slider Track Container --}}
-            <div class="absolute inset-0 overflow-hidden pointer-events-none">
-                <div id="hero-slider-track" class="absolute inset-0 flex w-[300%] transition-transform duration-1000 ease-in-out" style="transform: translateX(0%);">
-                    {{-- Slide 1: Bàn tiệc ẩm thực hấp dẫn --}}
-                    <div class="w-1/3 h-full bg-cover bg-center relative" style="background-image: url('https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1920&q=80')">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/30"></div>
-                    </div>
-                    {{-- Slide 2: Không gian nhà hàng sang trọng --}}
-                    <div class="w-1/3 h-full bg-cover bg-center relative" style="background-image: url('https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1920&q=80')">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/30"></div>
-                    </div>
-                    {{-- Slide 3: Ẩm thực nướng/lẩu sầm uất --}}
-                    <div class="w-1/3 h-full bg-cover bg-center relative" style="background-image: url('https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=1920&q=80')">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/30"></div>
-                    </div>
+        <section class="relative w-full h-[480px] flex items-center justify-center overflow-hidden">
+            {{-- Slider Track --}}
+            <div id="hero-slider-track" class="absolute inset-0 flex w-[300%] transition-transform duration-1000 ease-in-out" style="transform: translateX(0%);">
+                {{-- Slide 1: Bàn tiệc ẩm thực hấp dẫn --}}
+                <div class="w-1/3 h-full bg-cover bg-center relative" style="background-image: url('https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1920&q=80')">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/30"></div>
+                </div>
+                {{-- Slide 2: Không gian nhà hàng sang trọng --}}
+                <div class="w-1/3 h-full bg-cover bg-center relative" style="background-image: url('https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1920&q=80')">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/30"></div>
+                </div>
+                {{-- Slide 3: Ẩm thực nướng/lẩu sầm uất --}}
+                <div class="w-1/3 h-full bg-cover bg-center relative" style="background-image: url('https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=1920&q=80')">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/30"></div>
                 </div>
             </div>
-            <div class="relative z-20 text-center px-4 max-w-4xl space-y-6">
+            <div class="relative z-10 text-center px-4 max-w-4xl space-y-6">
                 <div class="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-4 py-1.5 rounded-full text-white text-sm font-semibold border border-white/30 mb-2">
                     <span class="material-symbols-outlined text-[18px] text-tick-xanh" style="font-variation-settings: 'FILL' 1;">verified</span>
                     Cộng đồng ẩm thực & giải trí hàng đầu
@@ -73,15 +71,19 @@
                     Tìm kiếm hàng ngàn quán ăn, quán cà phê, tiệm trà sữa và địa điểm giải trí được yêu thích nhất gần bạn.
                 </p>
 
-                {{-- Hero Search Bar (Tìm món ăn, Gợi ý món ngon, Chọn khu vực) --}}
-                <div class="mt-4">
-                    <x-search-bar prefix="hero" />
+                {{-- Hero Search Trigger Box --}}
+                <div class="bg-white p-2.5 rounded-full flex items-center shadow-2xl max-w-2xl mx-auto w-full cursor-pointer hover:shadow-primary/20 transition-all border border-white/80" onclick="openLocationModal()">
+                    <span class="material-symbols-outlined text-primary text-2xl ml-4 mr-2">location_on</span>
+                    <input class="flex-grow bg-transparent border-none focus:ring-0 text-gray-800 text-[16px] font-medium px-2 outline-none cursor-pointer" placeholder="Bạn muốn ăn gì, tìm quán ở đâu?" type="text" readonly onclick="openLocationModal()"/>
+                    <button type="button" onclick="openLocationModal()" class="bg-primary text-white px-7 py-3.5 rounded-full font-bold text-[15px] hover:bg-surface-tint transition-all active:scale-95 flex items-center gap-2 shadow-md">
+                        <span class="material-symbols-outlined text-[20px]">search</span> Tìm kiếm
+                    </button>
                 </div>
             </div>
         </section>
 
         {{-- Categories Section --}}
-        <section class="max-w-[1240px] mx-auto py-16 px-container-margin relative z-10">
+        <section class="max-w-[1240px] mx-auto py-16 px-container-margin">
             <div class="flex justify-between items-end mb-8">
                 <div>
                     <h2 class="text-2xl font-black text-on-surface">Danh mục khám phá</h2>
@@ -156,10 +158,10 @@
                         Xem tất cả <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
                     </a>
                 </div>
-                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 xl:gap-8">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                     @forelse($quanNoiBat as $quan)
-                    <a href="{{ route('quan.detail', $quan->slug) }}" class="block bg-white rounded-2xl shadow-sm overflow-hidden group cursor-pointer hover:shadow-xl transition-all border border-gray-100 flex flex-col h-full">
-                        <div class="relative h-52 w-full overflow-hidden flex-shrink-0">
+                    <a href="{{ route('quan.detail', $quan->slug) }}" class="block bg-white rounded-2xl shadow-sm overflow-hidden group cursor-pointer hover:shadow-xl transition-all border border-gray-100">
+                        <div class="relative h-52 w-full overflow-hidden">
                             <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="{{ $quan->anh_bia ? $quan->anh_bia : 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=600&q=80' }}"/>
                             <div class="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-xl text-primary font-bold text-xs flex items-center gap-1 shadow-sm">
                                 <span class="material-symbols-outlined text-[15px]" style="font-variation-settings: 'FILL' 1;">star</span> 4.9 (520+)
@@ -169,31 +171,23 @@
                                 <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' {{ in_array($quan->id, $savedQuanIds) ? '1' : '0' }};">favorite</span>
                             </button>
                         </div>
-                        <div class="p-4 sm:p-5 flex flex-col flex-1 justify-between gap-2.5">
-                            <div class="space-y-1.5">
-                                <div class="flex items-center justify-between gap-1.5">
-                                    <h3 class="min-w-0 flex-1 font-bold text-[16px] sm:text-[17px] text-on-surface break-words [overflow-wrap:anywhere] group-hover:text-primary transition-colors">{{ $quan->ten_quan }}</h3>
-                                    @if($quan->is_xac_thuc)
-                                        <span class="material-symbols-outlined text-tick-xanh text-[19px] flex-shrink-0" style="font-variation-settings: 'FILL' 1;" title="Đã xác thực">verified</span>
-                                    @endif
-                                </div>
-                                <p class="text-text-muted text-[13px] flex items-center gap-1">
-                                    <span class="material-symbols-outlined text-[16px] text-gray-400 flex-shrink-0">location_on</span>
-                                    <span class="truncate">{{ $quan->dia_chi_chi_tiet }}, {{ $quan->ten_phuong_xa }}, {{ $quan->ten_quan_huyen }}</span>
-                                </p>
+                        <div class="p-5 space-y-2">
+                            <div class="flex items-center justify-between">
+                                <h3 class="font-bold text-[17px] text-on-surface truncate group-hover:text-primary transition-colors">{{ $quan->ten_quan }}</h3>
+                                @if($quan->is_xac_thuc)
+                                    <span class="material-symbols-outlined text-tick-xanh text-[20px] flex-shrink-0" style="font-variation-settings: 'FILL' 1;" title="Đã xác thực">verified</span>
+                                @endif
                             </div>
-                            <div class="flex items-center justify-between pt-2.5 border-t border-gray-100 gap-2 min-w-0">
-                                <div class="flex items-center gap-1.5 min-w-0 flex-shrink">
-                                    <span class="bg-gray-100 px-2 py-0.5 rounded-md text-gray-600 text-[11px] font-medium whitespace-nowrap truncate max-w-[95px] xl:max-w-[120px]" title="{{ str_replace('_', ' ', \Illuminate\Support\Str::title($quan->loai_hinh_kinh_doanh ?? 'Quán ăn')) }}">
-                                        {{ str_replace('_', ' ', \Illuminate\Support\Str::title($quan->loai_hinh_kinh_doanh ?? 'Quán ăn')) }}
-                                    </span>
-                                    <span class="flex items-center gap-0.5 text-gray-500 text-[11px] whitespace-nowrap flex-shrink-0">
-                                        <span class="material-symbols-outlined text-[13px]">visibility</span>{{ number_format($quan->luot_xem) }}
-                                    </span>
+                            <p class="text-text-muted text-[13px] flex items-center gap-1">
+                                <span class="material-symbols-outlined text-[16px] text-gray-400">location_on</span>
+                                <span class="truncate">{{ $quan->dia_chi_chi_tiet }}, {{ $quan->ten_phuong_xa }}, {{ $quan->ten_quan_huyen }}</span>
+                            </p>
+                            <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+                                <div class="flex gap-1.5 items-center">
+                                    <span class="bg-gray-100 px-2 py-0.5 rounded-md text-gray-600 text-[12px] font-medium">{{ str_replace('_', ' ', \Illuminate\Support\Str::title($quan->loai_hinh_kinh_doanh ?? 'Quán ăn')) }}</span>
+                                    <span class="flex items-center gap-1 text-gray-500 text-[12px] ml-1"><span class="material-symbols-outlined text-[14px]">visibility</span>{{ number_format($quan->luot_xem) }}</span>
                                 </div>
-                                <span class="text-primary font-bold text-[12.5px] xl:text-[13.5px] whitespace-nowrap flex-shrink-0 ml-auto">
-                                    {{ number_format($quan->gia_nho_nhat, 0, ',', '.') }}đ - {{ number_format($quan->gia_lon_nhat, 0, ',', '.') }}đ
-                                </span>
+                                <span class="text-primary font-bold text-[14px]">{{ number_format($quan->gia_nho_nhat, 0, ',', '.') }}đ - {{ number_format($quan->gia_lon_nhat, 0, ',', '.') }}đ</span>
                             </div>
                         </div>
                     </a>
@@ -230,7 +224,7 @@
                         @forelse($quanMoi as $quan)
                         <a href="{{ route('quan.detail', $quan->slug) }}" class="group rounded-2xl border border-gray-100 bg-white hover:shadow-lg hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col h-full">
                             <div class="relative w-full h-44 flex-shrink-0 overflow-hidden">
-                                <img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" src="{{ $quan->anh_bia_url ?: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=600&q=80' }}" alt="{{ $quan->ten_quan }}" />
+                                <img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" src="{{ $quan->anh_bia ? $quan->anh_bia : 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=600&q=80' }}" alt="{{ $quan->ten_quan }}" />
                                 <div class="absolute top-2 left-2 bg-secondary text-white px-2 py-1 rounded-lg text-[10px] font-bold shadow-sm">Mới Mở</div>
                                 <button type="button" onclick="event.preventDefault(); toggleSave(this, '{{ $quan->id }}')" class="absolute top-2 right-2 w-8 h-8 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center text-red-500 shadow-sm hover:scale-110 transition-transform z-10" title="Lưu quán">
                                     <span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' {{ in_array($quan->id, $savedQuanIds) ? '1' : '0' }};">favorite</span>
@@ -251,12 +245,12 @@
                                     <span class="material-symbols-outlined text-[14px]">location_on</span>
                                     {{ $quan->ten_quan_huyen }}, {{ $quan->ten_tinh_thanh }}
                                 </p>
-                                <div class="mt-3 pt-3 flex items-center justify-between border-t border-gray-100 gap-2 min-w-0">
-                                    <div class="flex gap-1.5 items-center min-w-0 flex-shrink">
-                                        <span class="bg-gray-50 text-gray-600 px-2 py-0.5 rounded-md text-[11px] font-medium whitespace-nowrap truncate max-w-[95px]" title="{{ str_replace('_', ' ', \Illuminate\Support\Str::title($quan->loai_hinh_kinh_doanh ?? 'Quán ăn')) }}">{{ str_replace('_', ' ', \Illuminate\Support\Str::title($quan->loai_hinh_kinh_doanh ?? 'Quán ăn')) }}</span>
-                                        <span class="flex items-center gap-0.5 text-gray-500 text-[11px] whitespace-nowrap flex-shrink-0"><span class="material-symbols-outlined text-[13px]">visibility</span>{{ number_format($quan->luot_xem) }}</span>
+                                <div class="mt-3 pt-3 flex items-center justify-between border-t border-gray-100">
+                                    <div class="flex gap-1.5 items-center">
+                                        <span class="bg-gray-50 text-gray-600 px-2 py-1 rounded-md text-[11px] font-medium">{{ str_replace('_', ' ', \Illuminate\Support\Str::title($quan->loai_hinh_kinh_doanh ?? 'Quán ăn')) }}</span>
+                                        <span class="flex items-center gap-1 text-gray-500 text-[11px] ml-1"><span class="material-symbols-outlined text-[13px]">visibility</span>{{ number_format($quan->luot_xem) }}</span>
                                     </div>
-                                    <span class="font-bold text-primary text-[13px] whitespace-nowrap flex-shrink-0 ml-auto">{{ number_format($quan->gia_nho_nhat, 0, ',', '.') }}đ</span>
+                                    <span class="font-bold text-primary text-[13px]">{{ number_format($quan->gia_nho_nhat, 0, ',', '.') }}đ</span>
                                 </div>
                             </div>
                         </a>
@@ -390,6 +384,69 @@
             </div>
         </section>
 
+        {{-- SECTION 5: Latest News & Announcements (Date Badge Style) --}}
+        <section class="max-w-[1240px] mx-auto py-12 px-container-margin">
+            <div class="flex justify-between items-end mb-6">
+                <div>
+                    <div class="inline-flex items-center gap-1.5 text-blue-700 text-xs font-bold uppercase tracking-wider mb-1">
+                        <span class="material-symbols-outlined text-[16px]">newspaper</span>
+                        Tin tức & Thông báo
+                    </div>
+                    <h2 class="text-2xl font-black text-on-surface">Cập nhật thông tin mới nhất</h2>
+                </div>
+                <a class="text-[#1b55a6] font-bold text-[14px] flex items-center hover:underline gap-1" href="{{ route('blog.index') }}">
+                    Xem tất cả tin tức <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+                </a>
+            </div>
+
+            <div class="space-y-4">
+                @forelse($latestBlogs as $blog)
+                    @php
+                        $pubDate = $blog->published_at ?? $blog->created_at;
+                        $dayStr = $pubDate ? $pubDate->format('d') : '01';
+                        $monthStr = $pubDate ? $pubDate->format('m') : '01';
+                        $excerptText = $blog->excerpt ?? strip_tags($blog->content ?? '');
+                    @endphp
+                    <article class="bg-white border border-gray-200 shadow-sm rounded-sm p-4 sm:p-5 hover:border-blue-400 hover:shadow-md transition-all">
+                        <div class="flex items-start">
+                            <div class="flex flex-col items-center justify-center min-w-[70px] sm:min-w-[85px] pr-4 sm:pr-5 border-r border-gray-300 select-none flex-shrink-0 pt-0.5">
+                                <span class="text-3xl sm:text-4xl font-serif font-bold text-gray-800 leading-none tracking-tight">
+                                    {{ $dayStr }}
+                                </span>
+                                <span class="text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider mt-1.5 whitespace-nowrap">
+                                    THÁNG {{ $monthStr }}
+                                </span>
+                            </div>
+                            <div class="flex-1 pl-4 sm:pl-5">
+                                <a href="{{ route('blog.show', $blog->slug) }}" class="group block mb-1.5">
+                                    <h3 class="font-bold text-[#1b55a6] group-hover:text-blue-800 text-sm sm:text-base md:text-[17px] uppercase leading-snug tracking-tight">
+                                        {{ $blog->title }}
+                                    </h3>
+                                </a>
+                                <p class="text-gray-600 text-xs sm:text-sm font-normal leading-relaxed">
+                                    {{ Str::limit($excerptText, 140, '') }}[...]
+                                </p>
+                            </div>
+                        </div>
+                    </article>
+                @empty
+                    <article class="bg-white border border-gray-200 shadow-sm rounded-sm p-4 sm:p-5 hover:border-blue-400 hover:shadow-md transition-all">
+                        <div class="flex items-start">
+                            <div class="flex flex-col items-center justify-center min-w-[70px] sm:min-w-[85px] pr-4 sm:pr-5 border-r border-gray-300 select-none flex-shrink-0 pt-0.5">
+                                <span class="text-3xl sm:text-4xl font-serif font-bold text-gray-800 leading-none tracking-tight">07</span>
+                                <span class="text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider mt-1.5 whitespace-nowrap">THÁNG 10</span>
+                            </div>
+                            <div class="flex-1 pl-4 sm:pl-5">
+                                <a href="#" class="group block mb-1.5">
+                                    <h3 class="font-bold text-[#1b55a6] group-hover:text-blue-800 text-sm sm:text-base md:text-[17px] uppercase leading-snug tracking-tight">LỊCH PHỎNG VẤN CHƯƠNG TRÌNH CNTT NHẬT BẢN 2021</h3>
+                                </a>
+                                <p class="text-gray-600 text-xs sm:text-sm font-normal leading-relaxed">Các sinh viên có tên trong danh sách vui lòng có mặt theo lịch để tham dự phỏng vấn.[...]</p>
+                            </div>
+                        </div>
+                    </article>
+                @endforelse
+            </div>
+        </section>
     </main>
 
     {{-- MOBILE Main Content --}}
@@ -402,8 +459,12 @@
                     Khám phá địa điểm gần bạn
                 </div>
                 <h1 class="text-xl font-black text-on-surface">Hôm nay bạn muốn ăn gì?</h1>
-                <div class="mt-2">
-                    <x-search-bar prefix="mhero" />
+                <div class="relative flex items-center w-full cursor-pointer" onclick="openLocationModal()">
+                    <span class="material-symbols-outlined absolute left-3.5 text-primary z-10 text-[20px]">location_on</span>
+                    <input class="w-full bg-gray-100 pl-10 pr-10 py-3 rounded-xl border-none text-[14px] font-medium placeholder:text-gray-400 outline-none cursor-pointer" placeholder="Tìm kiếm quán ăn, khu vực..." type="text" readonly onclick="openLocationModal()"/>
+                    <button type="button" onclick="openLocationModal()" class="absolute right-2 bg-primary text-white p-2 rounded-lg flex items-center justify-center shadow-sm">
+                        <span class="material-symbols-outlined text-[18px]">search</span>
+                    </button>
                 </div>
             </div>
         </section>
@@ -463,7 +524,7 @@
                 @forelse($quanNoiBat as $quan)
                 <a href="{{ route('quan.detail', $quan->slug) }}" class="bg-white rounded-2xl p-3 flex gap-3 shadow-sm border border-gray-100 active:bg-gray-50 transition-colors">
                     <div class="w-24 h-24 rounded-xl overflow-hidden flex-shrink-0 relative">
-                        <img class="w-full h-full object-cover" src="{{ $quan->anh_bia_url ?: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=300&q=80' }}"/>
+                        <img class="w-full h-full object-cover" src="{{ $quan->anh_bia ? $quan->anh_bia : 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=300&q=80' }}"/>
                         <div class="absolute bottom-1 right-1 bg-black/70 text-white px-1.5 py-0.5 rounded-md text-[10px] font-bold flex items-center gap-0.5">
                             <span class="material-symbols-outlined text-[10px] text-amber-400" style="font-variation-settings: 'FILL' 1;">star</span> 4.9
                         </div>

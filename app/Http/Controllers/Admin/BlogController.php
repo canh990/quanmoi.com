@@ -7,7 +7,6 @@ use App\Models\Blog;
 use App\Models\BlogModerationLog;
 use App\Notifications\BlogStatusUpdatedNotification;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -79,7 +78,7 @@ class BlogController extends Controller
                 $status = 'scheduled';
             } else {
                 if (!$blog->published_at) {
-                    $blog->published_at = Carbon::now();
+                    $blog->published_at = now();
                 }
                 $blog->published_by = Auth::id();
                 $blog->approved_by = Auth::id();
@@ -88,9 +87,6 @@ class BlogController extends Controller
         
         DB::transaction(function () use ($blog, $status, $oldStatus, $request) {
             $blog->status = $status;
-            if ($status === 'published' && !$blog->published_at) {
-                $blog->published_at = now();
-            }
             $blog->save();
             
             // Log Moderation
@@ -112,13 +108,7 @@ class BlogController extends Controller
             ]);
             
             if ($oldStatus !== $status && isset($actionMap[$status])) {
-                try {
-                    if ($blog->user) {
-                        $blog->user->notify(new BlogStatusUpdatedNotification($blog, $actionMap[$status], $request->note));
-                    }
-                } catch (\Throwable $notiEx) {
-                    \Illuminate\Support\Facades\Log::warning('BlogStatusUpdatedNotification error: ' . $notiEx->getMessage());
-                }
+                $blog->user->notify(new BlogStatusUpdatedNotification($blog, $actionMap[$status], $request->note));
             }
         });
         
@@ -144,21 +134,7 @@ class BlogController extends Controller
         if ($request->has('force') && $request->force) {
             $this->authorize('forceDelete', $blog);
             if ($blog->cover_image) {
-                try {
-                    $uploadDisk = config('filesystems.upload_disk', 'uploads');
-                    $r2Configured = !empty(config('filesystems.disks.r2.key'))
-                        && !empty(config('filesystems.disks.r2.secret'))
-                        && !empty(config('filesystems.disks.r2.bucket'))
-                        && !empty(config('filesystems.disks.r2.endpoint'));
-                    $targetDisk = ($uploadDisk === 'r2' && ! $r2Configured) ? 'uploads' : $uploadDisk;
-                    if (Storage::disk($targetDisk)->exists($blog->cover_image)) {
-                        Storage::disk($targetDisk)->delete($blog->cover_image);
-                    } elseif ($targetDisk !== 'public' && Storage::disk('public')->exists($blog->cover_image)) {
-                        Storage::disk('public')->delete($blog->cover_image);
-                    }
-                } catch (\Throwable $th) {
-                    // Ignore storage deletion errors
-                }
+                Storage::disk('r2')->delete($blog->cover_image);
             }
             $blog->forceDelete();
             return redirect()->route('admin.blog.posts.index')->with('success', 'Bài viết đã bị xoá vĩnh viễn.');

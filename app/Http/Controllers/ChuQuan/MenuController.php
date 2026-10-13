@@ -22,7 +22,7 @@ class MenuController extends Controller
     {
         $quan = Quan::where('slug', $slug)
             ->where('chu_quan_id', $request->user()->id)
-            ->whereIn('trang_thai', ['chua_duyet', 'da_duyet'])
+            ->where('trang_thai', 'da_duyet')
             ->firstOrFail();
         $this->authorize('update', $quan);
 
@@ -41,7 +41,7 @@ class MenuController extends Controller
     {
         $quan = Quan::where('slug', $slug)
             ->where('chu_quan_id', $request->user()->id)
-            ->whereIn('trang_thai', ['chua_duyet', 'da_duyet'])
+            ->where('trang_thai', 'da_duyet')
             ->firstOrFail();
         $this->authorize('update', $quan);
 
@@ -65,13 +65,6 @@ class MenuController extends Controller
             'menu_categories_array.*.items.*.tmp_id' => 'nullable|integer',
             'menu_categories_array.*.items.*.price' => 'nullable|numeric|min:0|max:999999999',
             'menu_categories_array.*.items.*.description' => 'nullable|string|max:2000',
-            'menu_categories_array.*.items.*.shopeefood_url' => 'nullable|url:http,https|max:2048',
-        ], [
-            'menu_categories_array.*.name.required' => 'Tên danh mục thực đơn không được để trống.',
-            'menu_categories_array.*.items.*.name.required' => 'Tên món ăn không được để trống.',
-            'menu_categories_array.*.items.*.price.numeric' => 'Giá món ăn phải là định dạng số.',
-            'menu_categories_array.*.items.*.price.min' => 'Giá món ăn phải lớn hơn hoặc bằng 0.',
-            'menu_categories_array.*.items.*.shopeefood_url.url' => 'Đường dẫn ShopeeFood của món ăn không hợp lệ.',
         ]);
 
         $safeMenuCategories = $validatedData['menu_categories_array'];
@@ -118,58 +111,21 @@ class MenuController extends Controller
                             // Ép kiểu float và chống XSS cho description
                             $price = isset($itemData['price']) ? (float) $itemData['price'] : 0;
                             $description = isset($itemData['description']) ? strip_tags(trim($itemData['description'])) : null;
-                            $shopeefoodUrl = isset($itemData['shopeefood_url']) ? trim($itemData['shopeefood_url']) : null;
 
                             $itemId = $itemData['db_id'] ?? null;
                             $tmpId = $itemData['tmp_id'] ?? null;
                             $imagePath = null;
 
-                            // Upload dish photos to Cloudflare R2
+                            // Handle Image Upload
                             if ($tmpId && $request->hasFile("item_image_{$tmpId}")) {
                                 $file = $request->file("item_image_{$tmpId}");
                                 $manager = new ImageManager(new Driver);
                                 $image = $manager->decode($file->getRealPath());
                                 $image->scaleDown(width: 800);
                                 $encoded = $image->encodeUsingFileExtension('webp', 80);
-                                $fileName = 'quan/menu/'.bin2hex(random_bytes(16)).'.webp';
-                                $imageContents = $encoded->toString();
-                                
-                                $uploadDisk = config('filesystems.upload_disk', 'r2');
-                                $r2Configured = !empty(config('filesystems.disks.r2.key'))
-                                    && !empty(config('filesystems.disks.r2.secret'))
-                                    && !empty(config('filesystems.disks.r2.bucket'))
-                                    && !empty(config('filesystems.disks.r2.endpoint'));
-
-                                $targetDisk = ($uploadDisk === 'r2' && ! $r2Configured) ? 'uploads' : $uploadDisk;
-
-                                try {
-                                    Storage::disk($targetDisk)->put($fileName, $imageContents);
-                                    $imagePath = ($targetDisk === 'uploads') ? '/uploads/'.$fileName : Storage::disk($targetDisk)->url($fileName);
-                                } catch (\Throwable $e) {
-                                    if ($targetDisk === 'r2') {
-                                        \Illuminate\Support\Facades\Log::warning('Menu image upload to R2 failed; falling back to local uploads disk.', [
-                                            'key' => $fileName,
-                                            'error' => $e->getMessage(),
-                                        ]);
-                                        try {
-                                            Storage::disk('uploads')->put($fileName, $imageContents);
-                                            $imagePath = '/uploads/'.$fileName;
-                                        } catch (\Throwable $fallbackEx) {
-                                            \Illuminate\Support\Facades\Log::error('Menu image fallback upload failed.', [
-                                                'key' => $fileName,
-                                                'error' => $fallbackEx->getMessage(),
-                                            ]);
-                                            throw new \RuntimeException('Lỗi lưu ảnh món ăn lên Cloud Storage. Vui lòng thử lại sau.');
-                                        }
-                                    } else {
-                                        \Illuminate\Support\Facades\Log::error('Menu image upload failed.', [
-                                            'disk' => $targetDisk,
-                                            'key' => $fileName,
-                                            'error' => $e->getMessage(),
-                                        ]);
-                                        throw new \RuntimeException('Lỗi lưu ảnh món ăn lên Cloud Storage. Vui lòng thử lại sau.');
-                                    }
-                                }
+                                $fileName = 'menu/'.uniqid('mon_').'.webp';
+                                Storage::disk('r2')->put($fileName, $encoded->toString(), 'public');
+                                $imagePath = $fileName;
                             }
 
                             if ($itemId && MonTrongMenu::where('id', $itemId)->where('danh_muc_id', $danhMuc->id)->exists()) {
@@ -178,7 +134,6 @@ class MenuController extends Controller
                                     'ten_mon' => $itemName,
                                     'gia' => $price,
                                     'mo_ta' => $description,
-                                    'shopeefood_url' => $shopeefoodUrl ?: null,
                                 ];
                                 if ($imagePath) {
                                     $updateData['hinh_anh'] = $imagePath;
@@ -190,7 +145,6 @@ class MenuController extends Controller
                                     'ten_mon' => $itemName,
                                     'gia' => $price,
                                     'mo_ta' => $description,
-                                    'shopeefood_url' => $shopeefoodUrl ?: null,
                                     'hinh_anh' => $imagePath,
                                 ]);
                             }

@@ -57,33 +57,8 @@ class ThongKeController extends Controller
         } else {
             $tuNgayStr = $tuNgayStr ?? now()->subDays(29)->format('Y-m-d');
             $denNgayStr = $denNgayStr ?? now()->format('Y-m-d');
-
-            try {
-                $tuNgay = Carbon::parse($tuNgayStr)->startOfDay();
-            } catch (\Throwable $e) {
-                $tuNgayStr = now()->subDays(29)->format('Y-m-d');
-                $tuNgay = now()->subDays(29)->startOfDay();
-            }
-
-            try {
-                $denNgay = Carbon::parse($denNgayStr)->endOfDay();
-            } catch (\Throwable $e) {
-                $denNgayStr = now()->format('Y-m-d');
-                $denNgay = now()->endOfDay();
-            }
-
-            if ($tuNgay > $denNgay) {
-                $temp = $tuNgay;
-                $tuNgay = $denNgay->copy()->startOfDay();
-                $denNgay = $temp->copy()->endOfDay();
-                $tuNgayStr = $tuNgay->format('Y-m-d');
-                $denNgayStr = $denNgay->format('Y-m-d');
-            }
-
-            if ($tuNgay->diffInDays($denNgay) > 365) {
-                $tuNgay = $denNgay->copy()->subDays(365)->startOfDay();
-                $tuNgayStr = $tuNgay->format('Y-m-d');
-            }
+            $tuNgay = Carbon::parse($tuNgayStr)->startOfDay();
+            $denNgay = Carbon::parse($denNgayStr)->endOfDay();
         }
 
         // 1. Overview KPIs
@@ -207,16 +182,15 @@ class ThongKeController extends Controller
                 $query->where('trang_thai', $statusFilter);
             }
             if ($searchKey) {
-                $escapedSearch = addcslashes($searchKey, '%_');
-                $query->where(function ($q) use ($escapedSearch) {
-                    $q->where('ma_giao_dich', 'like', "%{$escapedSearch}%")
-                      ->orWhere('ten_goi_dich_vu', 'like', "%{$escapedSearch}%")
-                      ->orWhereHas('user', function ($uq) use ($escapedSearch) {
-                          $uq->where('ho_ten', 'like', "%{$escapedSearch}%")
-                             ->orWhere('email', 'like', "%{$escapedSearch}%");
+                $query->where(function ($q) use ($searchKey) {
+                    $q->where('ma_giao_dich', 'like', "%{$searchKey}%")
+                      ->orWhere('ten_goi_dich_vu', 'like', "%{$searchKey}%")
+                      ->orWhereHas('user', function ($uq) use ($searchKey) {
+                          $uq->where('ho_ten', 'like', "%{$searchKey}%")
+                             ->orWhere('email', 'like', "%{$searchKey}%");
                       })
-                      ->orWhereHas('quan', function ($qq) use ($escapedSearch) {
-                          $qq->where('ten_quan', 'like', "%{$escapedSearch}%");
+                      ->orWhereHas('quan', function ($qq) use ($searchKey) {
+                          $qq->where('ten_quan', 'like', "%{$searchKey}%");
                       });
                 });
             }
@@ -285,33 +259,8 @@ class ThongKeController extends Controller
         } else {
             $tuNgayStr = $tuNgayStr ?? now()->subDays(29)->format('Y-m-d');
             $denNgayStr = $denNgayStr ?? now()->format('Y-m-d');
-
-            try {
-                $tuNgay = Carbon::parse($tuNgayStr)->startOfDay();
-            } catch (\Throwable $e) {
-                $tuNgayStr = now()->subDays(29)->format('Y-m-d');
-                $tuNgay = now()->subDays(29)->startOfDay();
-            }
-
-            try {
-                $denNgay = Carbon::parse($denNgayStr)->endOfDay();
-            } catch (\Throwable $e) {
-                $denNgayStr = now()->format('Y-m-d');
-                $denNgay = now()->endOfDay();
-            }
-
-            if ($tuNgay > $denNgay) {
-                $temp = $tuNgay;
-                $tuNgay = $denNgay->copy()->startOfDay();
-                $denNgay = $temp->copy()->endOfDay();
-                $tuNgayStr = $tuNgay->format('Y-m-d');
-                $denNgayStr = $denNgay->format('Y-m-d');
-            }
-
-            if ($tuNgay->diffInDays($denNgay) > 365) {
-                $tuNgay = $denNgay->copy()->subDays(365)->startOfDay();
-                $tuNgayStr = $tuNgay->format('Y-m-d');
-            }
+            $tuNgay = Carbon::parse($tuNgayStr)->startOfDay();
+            $denNgay = Carbon::parse($denNgayStr)->endOfDay();
         }
 
         $fileName = 'baocao_thongke_quanmoi_' . $tuNgayStr . '_den_' . $denNgayStr . '.csv';
@@ -398,21 +347,17 @@ class ThongKeController extends Controller
                     ->orderBy('created_at', 'desc')
                     ->get();
 
-                if ($transactions->isEmpty()) {
-                    fputcsv($file, ['Không có dữ liệu giao dịch trong khoảng thời gian đã chọn để xuất báo cáo.']);
-                } else {
-                    foreach ($transactions as $tx) {
-                        fputcsv($file, [
-                            $tx->ma_giao_dich,
-                            $tx->user->ho_ten ?? 'Khách vãng lai / Đã xóa',
-                            $tx->quan->ten_quan ?? 'Không có',
-                            $tx->ten_goi_dich_vu,
-                            number_format($tx->so_tien, 0, ',', '.'),
-                            strtoupper($tx->phuong_thuc ?? 'VNPAY'),
-                            $tx->trang_thai === 'thanh_cong' ? 'Thành công' : ($tx->trang_thai === 'cho_xu_ly' ? 'Chờ xử lý' : 'Thất bại'),
-                            $tx->created_at ? $tx->created_at->format('d/m/Y H:i') : '',
-                        ]);
-                    }
+                foreach ($transactions as $tx) {
+                    fputcsv($file, [
+                        $tx->ma_giao_dich,
+                        $tx->user->ho_ten ?? 'N/A',
+                        $tx->quan->ten_quan ?? 'N/A',
+                        $tx->ten_goi_dich_vu,
+                        number_format($tx->so_tien, 0, ',', '.'),
+                        strtoupper($tx->phuong_thuc ?? 'VNPAY'),
+                        $tx->trang_thai === 'thanh_cong' ? 'Thành công' : ($tx->trang_thai === 'cho_xu_ly' ? 'Chờ xử lý' : 'Thất bại'),
+                        $tx->created_at ? $tx->created_at->format('d/m/Y H:i') : '',
+                    ]);
                 }
             }
 

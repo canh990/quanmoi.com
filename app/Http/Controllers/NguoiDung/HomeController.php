@@ -4,31 +4,26 @@ namespace App\Http\Controllers\NguoiDung;
 
 use App\Http\Controllers\Controller;
 use App\Models\Quan;
-use App\Models\User;
 use App\Models\VideoShort;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Schema;
 
 class HomeController extends Controller
 {
     public function index()
     {
-        $hasFeaturedColumn = Schema::hasColumn('quan', 'is_noi_bat');
+        // Lấy danh sách quán nổi bật (hiện tại lấy ngẫu nhiên hoặc theo lượt xem/đánh giá, tạm thời lấy random)
+        $quanNoiBat = Quan::where('trang_thai', 'da_duyet')
+            ->where('is_noi_bat', true)
+            ->orderBy('updated_at', 'desc')
+            ->take(9)
+            ->get();
 
-        $quanNoiBat = Quan::query()->where('trang_thai', 'da_duyet');
-        if ($hasFeaturedColumn) {
-            $quanNoiBat = $quanNoiBat->where('is_noi_bat', true);
-        }
-        $quanNoiBat = $quanNoiBat->orderBy('updated_at', 'desc')->take(9)->get();
-
+        // Lấy danh sách quán mới nhất
         $quanMoi = Quan::where('trang_thai', 'da_duyet')
             ->orderBy('created_at', 'desc')
             ->take(12)
             ->get();
         $totalQuanMoi = Quan::where('trang_thai', 'da_duyet')->count();
-        $totalQuanNoiBat = $hasFeaturedColumn
-            ? Quan::where('trang_thai', 'da_duyet')->where('is_noi_bat', true)->count()
-            : 0;
+        $totalQuanNoiBat = Quan::where('trang_thai', 'da_duyet')->where('is_noi_bat', true)->count();
 
         // Lấy video shorts
         $videoShorts = VideoShort::with('quan')
@@ -45,9 +40,8 @@ class HomeController extends Controller
             ->get();
 
         $savedQuanIds = [];
-        $user = Auth::user();
-        if ($user instanceof User) {
-            $savedQuanIds = $user->savedQuan()->pluck('quan_id')->toArray();
+        if (auth()->check()) {
+            $savedQuanIds = auth()->user()->savedQuan()->pluck('quan_id')->toArray();
         }
 
         return view('welcome', compact('quanNoiBat', 'quanMoi', 'totalQuanMoi', 'totalQuanNoiBat', 'savedQuanIds', 'videoShorts', 'latestBlogs'));
@@ -55,37 +49,18 @@ class HomeController extends Controller
 
     public function show($slug)
     {
-        $quan = Quan::with([
-            'danhMucMenu.monAn',
-            'hinhAnh',
-            'danhGia.nguoiDung',
-        ])
+        $quan = Quan::with(['danhMucMenu.monAn', 'hinhAnh'])
             ->where('slug', $slug)
+            ->where('trang_thai', 'da_duyet')
             ->firstOrFail();
 
-        // Nếu quán chưa được duyệt hoặc bị khóa, chỉ cho phép Admin hoặc Chủ quán xem trước
-        if ($quan->trang_thai !== 'da_duyet') {
-            $user = Auth::user();
-            $canPreview = $user instanceof User && ($user->isAdmin() || $user->id === $quan->chu_quan_id);
-            if (! $canPreview) {
-                abort(404);
-            }
+        // Chống Spam View: Lưu ID quán vào Session trong vòng 2 tiếng
+        $sessionKey = 'viewed_quan_'.$quan->id;
+        if (! session()->has($sessionKey)) {
+            $quan->increment('luot_xem');
+            session()->put($sessionKey, true);
         }
 
-        // Chống Spam View: Lưu ID quán vào Session trong vòng 2 tiếng (chỉ tính view khi quán đã được duyệt)
-        if ($quan->trang_thai === 'da_duyet') {
-            $sessionKey = 'viewed_quan_'.$quan->id;
-            if (! session()->has($sessionKey) && Schema::hasColumn('quan', 'luot_xem')) {
-                $quan->increment('luot_xem');
-                session()->put($sessionKey, true);
-            }
-        }
-
-        $user = Auth::user();
-        $danhGiaCuaToi = $user instanceof User
-            ? $quan->danhGia->firstWhere('nguoi_dung_id', $user->id)
-            : null;
-
-        return view('nguoi-dung.chi-tiet', compact('quan', 'danhGiaCuaToi'));
+        return view('nguoi-dung.chi-tiet', compact('quan'));
     }
 }

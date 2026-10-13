@@ -28,13 +28,13 @@
 
         <div class="d-none flex-sm-fill d-sm-flex align-items-sm-center justify-content-sm-between">
             <div class="small text-muted">
-                {!! __('Hiển thị') !!}
+                {!! __('Showing') !!}
                 <span class="fw-semibold">{{ $paginator->firstItem() }}</span>
-                {!! __('đến') !!}
+                {!! __('to') !!}
                 <span class="fw-semibold">{{ $paginator->lastItem() }}</span>
-                {!! __('trong tổng số') !!}
+                {!! __('of') !!}
                 <span class="fw-semibold">{{ $paginator->total() }}</span>
-                {!! __('kết quả') !!}
+                {!! __('results') !!}
             </div>
 
             <div>

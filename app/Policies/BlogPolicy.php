@@ -48,7 +48,7 @@ class BlogPolicy
             return true;
         }
 
-        if ($user->id === $blog->user_id && in_array($blog->status, ['draft', 'need_revision', 'rejected', 'published'])) {
+        if ($user->id === $blog->user_id && in_array($blog->status, ['draft', 'need_revision', 'rejected'])) {
             return true;
         }
 
@@ -64,7 +64,7 @@ class BlogPolicy
             return true;
         }
 
-        if ($user->id === $blog->user_id) {
+        if ($user->id === $blog->user_id && ! in_array($blog->status, ['published', 'scheduled'])) {
             return true;
         }
 
