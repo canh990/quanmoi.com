@@ -88,10 +88,10 @@
                     <span class="material-symbols-outlined text-[16px]">calendar_today</span>
                     {{ $blog->published_at ? $blog->published_at->format('d/m/Y') : 'Bản nháp' }}
                 </div>
-                <div class="w-px h-6 bg-surface-dim hidden md:block"></div>
-                <div class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1 hidden md:flex">
-                    <span class="material-symbols-outlined text-[16px]">visibility</span>
-                    {{ number_format($blog->view_count ?? 0) }} lượt xem
+                <div class="w-px h-6 bg-surface-dim"></div>
+                <div class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1.5 bg-surface-container/60 px-2.5 py-1 rounded-full">
+                    <span class="material-symbols-outlined text-[16px] text-primary">visibility</span>
+                    <span><strong id="blog-view-count" class="font-semibold text-on-surface">{{ number_format($blog->view_count ?? 0) }}</strong> lượt xem</span>
                 </div>
             </div>
 

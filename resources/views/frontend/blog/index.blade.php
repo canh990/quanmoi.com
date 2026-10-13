@@ -202,7 +202,7 @@
                                 <div class="mt-auto pt-4 border-t border-outline-variant flex justify-between items-center">
                                     <span class="font-label-sm text-label-sm text-text-muted">{{ Str::limit($blog->user->ho_ten ?? 'Tác giả', 15) }} • {{ $blog->published_at ? $blog->published_at->format('d/m/Y') : '' }}</span>
                                     <span class="font-label-sm text-label-sm text-text-muted flex items-center gap-1">
-                                        <span class="material-symbols-outlined text-[14px]">visibility</span> {{ number_format($blog->view_count ?? 0) }}
+                                        <span class="material-symbols-outlined text-[14px]">visibility</span> {{ number_format($blog->view_count ?? 0) }} lượt xem
                                     </span>
                                 </div>
                             </div>
@@ -1052,5 +1052,12 @@
             openCreateBlogModal();
         });
     @endif
+
+    // Luôn làm mới dữ liệu lượt xem khi quay lại trang bằng nút Back
+    window.addEventListener('pageshow', function(event) {
+        if (event.persisted) {
+            window.location.reload();
+        }
+    });
 </script>
 @endpush
