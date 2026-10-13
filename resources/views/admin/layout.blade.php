@@ -498,14 +498,25 @@
                             <td class="p-3 text-slate-600">${quanAddr}</td>
                             <td class="p-3 text-emerald-600 font-bold">Vừa xong</td>
                             <td class="p-3 text-right">
-                                <form action="/admin/duyet-xac-thuc/quan/${data.latest_quan.id}" method="POST" class="inline-block">
-                                    <input type="hidden" name="_token" value="${document.querySelector('meta[name="csrf-token"]')?.content || ''}">
-                                    <input type="hidden" name="_method" value="PUT">
-                                    <button type="submit" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition-colors flex items-center gap-1">
-                                        <span class="material-symbols-outlined text-[16px]">check_circle</span>
-                                        Duyệt & Xác thực
-                                    </button>
-                                </form>
+                                <div class="flex items-center justify-end gap-2">
+                                    <form action="/admin/duyet-xac-thuc/quan/${data.latest_quan.id}" method="POST" class="inline-block">
+                                        <input type="hidden" name="_token" value="${document.querySelector('meta[name="csrf-token"]')?.content || ''}">
+                                        <input type="hidden" name="_method" value="PUT">
+                                        <button type="submit" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition-colors flex items-center gap-1">
+                                            <span class="material-symbols-outlined text-[16px]">check_circle</span>
+                                            Duyệt
+                                        </button>
+                                    </form>
+
+                                    <form action="/admin/duyet-xac-thuc/quan/${data.latest_quan.id}/reject" method="POST" class="inline-block" onsubmit="return confirm('Bạn có chắc chắn muốn không duyệt quán này?')">
+                                        <input type="hidden" name="_token" value="${document.querySelector('meta[name="csrf-token"]')?.content || ''}">
+                                        <input type="hidden" name="_method" value="PUT">
+                                        <button type="submit" class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shadow-xs transition-colors flex items-center gap-1">
+                                            <span class="material-symbols-outlined text-[16px]">cancel</span>
+                                            Không duyệt
+                                        </button>
+                                    </form>
+                                </div>
                             </td>
                         `;
 

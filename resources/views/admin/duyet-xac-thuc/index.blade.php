@@ -41,14 +41,25 @@
                             <td class="p-3 text-slate-600">{{ Str::limit($q->dia_chi_chi_tiet ?? $q->dia_chi, 50) }}</td>
                             <td class="p-3 text-slate-500">{{ $q->created_at ? $q->created_at->format('d/m/Y H:i') : '' }}</td>
                             <td class="p-3 text-right">
-                                <form action="{{ route('admin.duyet-xac-thuc.quan', $q->id) }}" method="POST" class="inline-block">
-                                    @csrf
-                                    @method('PUT')
-                                    <button type="submit" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition-colors flex items-center gap-1">
-                                        <span class="material-symbols-outlined text-[16px]">check_circle</span>
-                                        Duyệt & Xác thực
-                                    </button>
-                                </form>
+                                <div class="flex items-center justify-end gap-2">
+                                    <form action="{{ route('admin.duyet-xac-thuc.quan', $q->id) }}" method="POST" class="inline-block">
+                                        @csrf
+                                        @method('PUT')
+                                        <button type="submit" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition-colors flex items-center gap-1">
+                                            <span class="material-symbols-outlined text-[16px]">check_circle</span>
+                                            Duyệt
+                                        </button>
+                                    </form>
+
+                                    <form action="{{ route('admin.duyet-xac-thuc.quan.reject', $q->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Bạn có chắc chắn muốn không duyệt quán \'{{ addslashes($q->ten_quan) }}\'?')">
+                                        @csrf
+                                        @method('PUT')
+                                        <button type="submit" class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shadow-xs transition-colors flex items-center gap-1">
+                                            <span class="material-symbols-outlined text-[16px]">cancel</span>
+                                            Không duyệt
+                                        </button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     @empty
@@ -87,13 +98,25 @@
                             <td class="p-3 text-slate-600">{{ $u->email }}</td>
                             <td class="p-3 text-slate-600">{{ $u->so_dien_thoai ?? 'N/A' }}</td>
                             <td class="p-3 text-right">
-                                <form action="{{ route('admin.duyet-xac-thuc.user', $u->id) }}" method="POST" class="inline-block">
-                                    @csrf
-                                    @method('PUT')
-                                    <button type="submit" class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition-colors">
-                                        Đánh dấu đã xác thực
-                                    </button>
-                                </form>
+                                <div class="flex items-center justify-end gap-2">
+                                    <form action="{{ route('admin.duyet-xac-thuc.user', $u->id) }}" method="POST" class="inline-block">
+                                        @csrf
+                                        @method('PUT')
+                                        <button type="submit" class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition-colors flex items-center gap-1">
+                                            <span class="material-symbols-outlined text-[16px]">verified</span>
+                                            Xác thực
+                                        </button>
+                                    </form>
+
+                                    <form action="{{ route('admin.duyet-xac-thuc.user.reject', $u->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Bạn có chắc chắn không duyệt xác thực người dùng \'{{ addslashes($u->ho_ten) }}\'?')">
+                                        @csrf
+                                        @method('PUT')
+                                        <button type="submit" class="px-3.5 py-1.5 bg-slate-600 hover:bg-slate-700 text-white font-bold text-xs rounded-xl transition-colors flex items-center gap-1">
+                                            <span class="material-symbols-outlined text-[16px]">block</span>
+                                            Không duyệt
+                                        </button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     @empty
