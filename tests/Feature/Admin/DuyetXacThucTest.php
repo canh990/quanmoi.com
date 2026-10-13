@@ -35,7 +35,7 @@ class DuyetXacThucTest extends TestCase
         $response = $this->actingAs($admin)->get(route('admin.duyet-xac-thuc.index'));
 
         $response->assertStatus(200);
-        $response->assertSee('Danh Sách Quán Chờ Duyệt');
+        $response->assertSee('Quán Chờ Duyệt');
         $response->assertSee('Tài Khoản Chưa Xác Thực');
     }
 

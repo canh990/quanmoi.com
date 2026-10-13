@@ -74,7 +74,7 @@
                             <div class="flex items-center gap-3">
                                 <div class="w-12 h-10 rounded overflow-hidden bg-gray-100 shrink-0">
                                     @if($blog->cover_image)
-                                        <img src="{{ $blog->cover_image_url }}" class="w-full h-full object-cover">
+                                        <img src="{{ $blog->cover_image_url }}" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80';" class="w-full h-full object-cover">
                                     @endif
                                 </div>
                                 <div class="max-w-[200px] truncate">
@@ -85,7 +85,7 @@
                         </td>
                         <td class="px-6 py-4">
                             <div class="flex items-center gap-2">
-                                <img src="{{ $blog->user->anh_dai_dien_url ?? 'https://ui-avatars.com/api/?name='.urlencode($blog->user->ho_ten) }}" class="w-6 h-6 rounded-full">
+                                <img src="{{ $blog->user->anh_dai_dien_url ?? 'https://ui-avatars.com/api/?name='.urlencode($blog->user->ho_ten) }}" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name={{ urlencode($blog->user->ho_ten ?? \'U\') }}';" class="w-6 h-6 rounded-full">
                                 <span class="text-gray-700">{{ $blog->user->ho_ten }}</span>
                             </div>
                         </td>

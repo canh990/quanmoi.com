@@ -50,7 +50,7 @@
                         <th class="py-3.5 px-4">Vai Trò</th>
                         <th class="py-3.5 px-4">Trạng Thái</th>
                         <th class="py-3.5 px-4 text-center">Quán</th>
-                        <th class="py-3.5 px-4 text-right">Thao Tác</th>
+                        <th class="py-3.5 px-4 text-right whitespace-nowrap min-w-[160px]">Thao Tác</th>
                     </tr>
                 </thead>
                 <tbody id="users-tbody" class="divide-y divide-gray-100 text-sm">
@@ -58,7 +58,7 @@
                         <tr id="user-row-{{ $user->id }}" class="hover:bg-gray-50/80 transition-colors {{ $user->trashed() ? 'bg-red-50/30' : '' }}">
                             <td class="py-3.5 px-4">
                                 <div class="flex items-center gap-3">
-                                    <img src="{{ $user->anh_dai_dien ?: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80' }}" class="w-10 h-10 rounded-full object-cover border border-gray-200" alt="" />
+                                    <img src="{{ $user->anh_dai_dien ?: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80' }}" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80';" class="w-10 h-10 rounded-full object-cover border border-gray-200" alt="{{ $user->ho_ten }}" />
                                     <div>
                                         <p class="font-bold text-gray-900 flex items-center gap-1">
                                              {{ $user->ho_ten }}
@@ -94,8 +94,8 @@
                             <td class="py-3.5 px-4 text-center">
                                 <span class="font-bold text-gray-700">{{ $user->quan->count() }}</span>
                             </td>
-                            <td class="py-3.5 px-4 text-right">
-                                <div class="flex items-center justify-end gap-2">
+                            <td class="py-3.5 px-4 text-right whitespace-nowrap min-w-[160px]">
+                                <div class="flex items-center justify-end gap-2 flex-nowrap shrink-0">
                                     @if(!$user->trashed())
                                         <form action="{{ route('admin.nguoi-dung.toggle-xac-thuc', $user->id) }}" method="POST" class="inline">
                                             @csrf

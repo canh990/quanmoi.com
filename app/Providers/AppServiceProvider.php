@@ -32,6 +32,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        \Carbon\Carbon::setLocale('vi');
+        app()->setLocale('vi');
+
         Schema::defaultStringLength(191);
 
         Gate::before(function ($user, $ability) {
