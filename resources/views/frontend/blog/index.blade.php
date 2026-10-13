@@ -368,6 +368,9 @@
                     <span>Vui lòng nhập đầy đủ Tiêu đề, chọn Danh mục và điền Nội dung bài viết trước khi gửi!</span>
                 </div>
 
+                {{-- AI Content Writer Assistant Toolbar --}}
+                @include('nguoi-dung.blog.partials.ai-toolbar', ['context' => 'modal'])
+
                 <!-- Cover Image Upload -->
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Ảnh bìa bài viết</label>
@@ -394,7 +397,12 @@
 
                 <!-- Title -->
                 <div>
-                    <label for="modal_title" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Tiêu đề bài viết <span class="text-red-500">*</span></label>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label for="modal_title" class="block text-xs font-bold uppercase tracking-wider text-slate-600">Tiêu đề bài viết <span class="text-red-500">*</span></label>
+                        <button type="button" onclick="openAiTitleSuggestModal('modal')" class="text-[11px] font-bold text-purple-600 hover:text-purple-800 flex items-center gap-1 transition-colors cursor-pointer">
+                            <span class="material-symbols-outlined text-sm">auto_fix_high</span> Gợi ý tiêu đề AI
+                        </button>
+                    </div>
                     <input type="text" id="modal_title" name="title" value="{{ old('title') }}" required placeholder="Ví dụ: Review chi tiết món lẩu nấm cực ngon tại Quán Mới..." class="w-full rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 text-xs font-bold text-slate-900 py-2.5 px-4 shadow-2xs transition-all outline-none placeholder:font-normal placeholder:text-slate-400">
                 </div>
 
@@ -557,7 +565,18 @@
 
                 <!-- Content Quill Editor -->
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Nội dung bài viết <span class="text-red-500">*</span></label>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600">Nội dung bài viết <span class="text-red-500">*</span></label>
+                        <div class="flex items-center gap-2">
+                            <button type="button" onclick="openAiOutlineModal('modal')" class="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 transition-colors cursor-pointer">
+                                <span class="material-symbols-outlined text-sm">article</span> AI Dàn ý
+                            </button>
+                            <span class="text-slate-300">•</span>
+                            <button type="button" onclick="runAiSpellCheck('modal')" class="text-[11px] font-bold text-emerald-600 hover:text-emerald-800 flex items-center gap-1 transition-colors cursor-pointer">
+                                <span class="material-symbols-outlined text-sm">spellcheck</span> AI Sửa chính tả
+                            </button>
+                        </div>
+                    </div>
                     <div id="modal-editor-container" class="bg-white rounded-xl">
                         {!! old('content') !!}
                     </div>
@@ -607,6 +626,9 @@
         </div>
     </div>
 </div>
+
+{{-- AI Assistant Modals & Script --}}
+@include('nguoi-dung.blog.partials.ai-assistant')
 
 @endsection
 

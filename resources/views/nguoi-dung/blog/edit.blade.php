@@ -103,17 +103,30 @@
             </div>
         </div>
 
+        {{-- AI Content Writer Assistant Toolbar --}}
+        @include('nguoi-dung.blog.partials.ai-toolbar', ['context' => 'page'])
+
         <div class="bg-surface-container-lowest p-6 rounded-3xl border border-outline-variant space-y-6">
             <!-- Title -->
             <div>
-                <label for="title" class="block text-sm font-bold text-on-surface mb-2">Tiêu đề <span class="text-red-500">*</span></label>
+                <div class="flex items-center justify-between mb-2">
+                    <label for="title" class="block text-sm font-bold text-on-surface">Tiêu đề <span class="text-red-500">*</span></label>
+                    <button type="button" onclick="openAiTitleSuggestModal('page')" class="text-xs font-bold text-purple-600 hover:text-purple-800 flex items-center gap-1 transition-colors cursor-pointer">
+                        <span class="material-symbols-outlined text-sm">auto_fix_high</span> Gợi ý tiêu đề AI
+                    </button>
+                </div>
                 <input type="text" id="title" name="title" value="{{ old('title', $blog->title) }}" required class="w-full rounded-xl border-outline-variant bg-surface-container-lowest focus:ring-primary focus:border-primary text-lg font-medium py-3">
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Category with Live Autocomplete Suggestions -->
                 <div>
-                    <label for="edit_category_name" class="block text-sm font-bold text-on-surface mb-2">Danh mục bài viết <span class="text-red-500">*</span></label>
+                    <div class="flex items-center justify-between mb-2">
+                        <label for="edit_category_name" class="block text-sm font-bold text-on-surface">Danh mục bài viết <span class="text-red-500">*</span></label>
+                        <button type="button" onclick="runAiTagging('page')" class="text-xs font-bold text-amber-600 hover:text-amber-800 flex items-center gap-1 transition-colors cursor-pointer">
+                            <span class="material-symbols-outlined text-sm">psychology</span> AI Đề xuất
+                        </button>
+                    </div>
                     <div class="relative autocomplete-wrapper">
                         <input type="text" 
                                id="edit_category_name" 
@@ -242,7 +255,18 @@
 
             <!-- Content -->
             <div>
-                <label class="block text-sm font-bold text-on-surface mb-2">Nội dung <span class="text-red-500">*</span></label>
+                <div class="flex items-center justify-between mb-2">
+                    <label class="block text-sm font-bold text-on-surface">Nội dung <span class="text-red-500">*</span></label>
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="openAiOutlineModal('page')" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 transition-colors cursor-pointer">
+                            <span class="material-symbols-outlined text-sm">article</span> AI Dàn ý
+                        </button>
+                        <span class="text-slate-300">•</span>
+                        <button type="button" onclick="runAiSpellCheck('page')" class="text-xs font-bold text-emerald-600 hover:text-emerald-800 flex items-center gap-1 transition-colors cursor-pointer">
+                            <span class="material-symbols-outlined text-sm">spellcheck</span> AI Sửa chính tả
+                        </button>
+                    </div>
+                </div>
                 <input type="hidden" name="content" id="content-input" value="{{ old('content', $blog->content) }}">
                 <div id="editor-container">
                     {!! old('content', $blog->content) !!}
@@ -285,6 +309,9 @@
         </div>
     </div>
 </main>
+
+{{-- AI Assistant Modals & Script --}}
+@include('nguoi-dung.blog.partials.ai-assistant')
 @endsection
 
 @push('scripts')
