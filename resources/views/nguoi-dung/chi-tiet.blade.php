@@ -221,6 +221,34 @@
             </span>
         </nav>
 
+        {{-- Preview Banner for Unapproved / Pending Venues --}}
+        @if($quan->trang_thai !== 'da_duyet')
+            <div class="my-3 p-4 rounded-2xl border border-amber-300 bg-amber-50 text-amber-900 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-sm">
+                        <span class="material-symbols-outlined text-[22px]">pending_actions</span>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-sm text-amber-950">Chế độ xem trước thẩm định hồ sơ</span>
+                            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold {{ $quan->trang_thai === 'chua_duyet' ? 'bg-amber-200 text-amber-900' : 'bg-rose-100 text-rose-800' }}">
+                                {{ $quan->trang_thai === 'chua_duyet' ? '⏳ Chờ phê duyệt' : '🔒 Bị khóa / Từ chối' }}
+                            </span>
+                        </div>
+                        <p class="text-xs text-amber-800 mt-0.5">Trang quán này chưa được công khai cho khách. Chỉ Quản trị viên và Chủ sở hữu quán mới có thể xem trước nội dung này.</p>
+                    </div>
+                </div>
+                @if(auth()->check() && auth()->user()->isAdmin())
+                    <div class="flex items-center gap-2 shrink-0">
+                        <a href="{{ route('admin.duyet-xac-thuc.index') }}" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 shadow-sm transition-all">
+                            <span class="material-symbols-outlined text-[16px]">verified</span>
+                            <span>Quay lại duyệt quán</span>
+                        </a>
+                    </div>
+                @endif
+            </div>
+        @endif
+
         <!-- Hero Gallery Section -->
         <section id="gallery-section" class="venue-section-anchor mb-5">
             <div class="bento-grid">

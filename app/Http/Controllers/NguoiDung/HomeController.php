@@ -61,14 +61,24 @@ class HomeController extends Controller
             'danhGia.nguoiDung',
         ])
             ->where('slug', $slug)
-            ->where('trang_thai', 'da_duyet')
             ->firstOrFail();
 
-        // Chống Spam View: Lưu ID quán vào Session trong vòng 2 tiếng
-        $sessionKey = 'viewed_quan_'.$quan->id;
-        if (! session()->has($sessionKey) && Schema::hasColumn('quan', 'luot_xem')) {
-            $quan->increment('luot_xem');
-            session()->put($sessionKey, true);
+        // Nếu quán chưa được duyệt hoặc bị khóa, chỉ cho phép Admin hoặc Chủ quán xem trước
+        if ($quan->trang_thai !== 'da_duyet') {
+            $user = Auth::user();
+            $canPreview = $user instanceof User && ($user->isAdmin() || $user->id === $quan->chu_quan_id);
+            if (! $canPreview) {
+                abort(404);
+            }
+        }
+
+        // Chống Spam View: Lưu ID quán vào Session trong vòng 2 tiếng (chỉ tính view khi quán đã được duyệt)
+        if ($quan->trang_thai === 'da_duyet') {
+            $sessionKey = 'viewed_quan_'.$quan->id;
+            if (! session()->has($sessionKey) && Schema::hasColumn('quan', 'luot_xem')) {
+                $quan->increment('luot_xem');
+                session()->put($sessionKey, true);
+            }
         }
 
         $user = Auth::user();

@@ -100,3 +100,12 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::get('/quan/{slug}', [HomeController::class, 'show'])->name('quan.detail');
+
+// Tự động chuyển hướng nếu người dùng truy cập /{slug} trực tiếp về /quan/{slug}
+Route::get('/{slug}', function (string $slug) {
+    if (\App\Models\Quan::where('slug', $slug)->exists()) {
+        return redirect()->route('quan.detail', ['slug' => $slug]);
+    }
+    abort(404);
+})->where('slug', '[a-zA-Z0-9\-]+');
+
