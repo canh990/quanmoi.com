@@ -22,6 +22,7 @@ Route::get('/quan-moi', [KhamPhaController::class, 'quanMoi'])->name('quan-moi')
 Route::get('/quan-noi-bat', [KhamPhaController::class, 'quanNoiBat'])->name('quan-noi-bat');
 Route::get('/blog', [FrontendBlogController::class, 'index'])->name('blog.index');
 Route::get('/blog/{slug}', [FrontendBlogController::class, 'show'])->name('blog.show');
+Route::post('/blog/{slug}/luot-xem', [FrontendBlogController::class, 'recordView'])->name('blog.view.record');
 Route::post('/blog/{slug}/binh-luan', [FrontendBlogController::class, 'storeComment'])->middleware(['auth', 'throttle:20,1'])->name('blog.comment.store');
 Route::get('/video-review', [\App\Http\Controllers\NguoiDung\VideoShortController::class, 'index'])->name('video-review.index');
 Route::view('/gioi-thieu', 'pages.about')->name('about');

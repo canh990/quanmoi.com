@@ -145,7 +145,7 @@
                                 
                                 <div class="flex items-center justify-between text-xs text-on-surface-variant mb-4">
                                     <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">calendar_today</span> {{ $blog->created_at->format('d/m/Y') }}</span>
-                                    <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">visibility</span> {{ number_format($blog->view_count ?? 0) }} view</span>
+                                    <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">visibility</span> {{ number_format($blog->view_count ?? 0) }} lượt xem</span>
                                 </div>
                                 
                                 <!-- Actions -->
@@ -302,6 +302,13 @@
         const modal = document.getElementById('deleteConfirmModal');
         if (e.target === modal) {
             closeDeleteModal();
+        }
+    });
+
+    // Luôn làm mới dữ liệu lượt xem khi quay lại trang bằng nút Back
+    window.addEventListener('pageshow', function(event) {
+        if (event.persisted) {
+            window.location.reload();
         }
     });
 </script>

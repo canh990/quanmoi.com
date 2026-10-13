@@ -12,33 +12,28 @@ use Illuminate\Support\Facades\DB;
 class BlogService
 {
     /**
-     * Increment view count for a blog post, preventing SPAM using session/IP.
+     * Ghi nhận mỗi lượt vào xem bài viết blog.
+     * Mỗi lần người dùng vào/tải bài viết sẽ được cộng thêm 1 lượt xem.
      */
-    public function incrementView(Blog $blog, string $sessionId, ?string $ipAddress): void
+    public function incrementView(Blog $blog, ?string $sessionId, ?string $ipAddress): bool
     {
-        // Check if a view exists for this session/ip within the last hour
-        $recentView = BlogView::where('blog_id', $blog->id)
-            ->where(function ($query) use ($sessionId, $ipAddress) {
-                if ($sessionId) {
-                    $query->where('session_id', $sessionId);
-                }
-                if ($ipAddress) {
-                    $query->orWhere('ip_address', $ipAddress);
-                }
-            })
-            ->where('created_at', '>=', now()->subHour())
-            ->first();
-
-        if (!$recentView) {
-            DB::transaction(function () use ($blog, $sessionId, $ipAddress) {
-                BlogView::create([
-                    'blog_id' => $blog->id,
-                    'session_id' => $sessionId,
-                    'ip_address' => $ipAddress,
-                ]);
-                $blog->increment('view_count');
-            });
+        // Chỉ ghi nhận cho bài viết đã xuất bản
+        if ($blog->status !== 'published') {
+            return false;
         }
+
+        return DB::transaction(function () use ($blog, $sessionId, $ipAddress) {
+            BlogView::create([
+                'blog_id' => $blog->id,
+                'session_id' => $sessionId,
+                'ip_address' => $ipAddress,
+            ]);
+
+            $blog->increment('view_count');
+            $blog->refresh();
+
+            return true;
+        });
     }
 
     /**

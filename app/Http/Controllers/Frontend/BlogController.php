@@ -147,6 +147,34 @@ class BlogController extends Controller
     }
 
     /**
+     * Ghi nhận lượt xem cho bài viết qua AJAX / beacon.
+     */
+    public function recordView(Request $request, string $slug)
+    {
+        $blog = Blog::where('slug', $slug)->firstOrFail();
+
+        if ($blog->status !== 'published') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Bài viết chưa được xuất bản.',
+            ], 404);
+        }
+
+        $incremented = $this->blogService->incrementView(
+            $blog,
+            $request->session()->getId(),
+            $request->ip()
+        );
+
+        return response()->json([
+            'success' => true,
+            'incremented' => $incremented,
+            'view_count' => (int) $blog->view_count,
+            'formatted_view_count' => number_format((int) $blog->view_count),
+        ]);
+    }
+
+    /**
      * Gửi bình luận và kiểm duyệt tự động bằng AI (AI Moderation)
      */
     public function storeComment(Request $request, string $slug)
