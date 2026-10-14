@@ -4,6 +4,7 @@ namespace App\Http\Controllers\NguoiDung;
 
 use App\Http\Controllers\Controller;
 use App\Models\Quan;
+use App\Services\DiaChiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 
@@ -39,12 +40,31 @@ class KhamPhaController extends Controller
             }
         }
 
-        if (!empty($tinhThanhId)) {
-            $query->whereIn('tinh_thanh_id', [$tinhThanhId]);
+        $hasGps = !empty($lat) && !empty($lon) && is_numeric($lat) && is_numeric($lon);
+        $isNearMe = $hasGps && ($sapXep === 'near_me' || !empty($banKinh));
+
+        // Tách biệt giữa chọn khu vực (tỉnh thành / quận huyện) và tìm kiếm gần bạn (GPS)
+        if ($isNearMe) {
+            $tinhThanhId = '';
+            $quanHuyenId = '';
+        } elseif (!empty($tinhThanhId) || !empty($quanHuyenId)) {
+            $banKinh = null;
+            if ($sapXep === 'near_me') {
+                $sapXep = '';
+            }
         }
 
-        if (!empty($quanHuyenId)) {
-            $query->whereIn('quan_huyen_id', [$quanHuyenId]);
+        // Mã hành chính theo provinces.open-api.vn (v1), cùng nguồn với form đăng quán
+        $tinhThanhId = $this->normalizeLegacyTinhThanh($tinhThanhId);
+        $tinhCodes   = $this->codeVariants($tinhThanhId);
+        $huyenCodes  = $this->codeVariants($quanHuyenId);
+
+        if (!empty($tinhCodes)) {
+            $query->whereIn('tinh_thanh_id', $tinhCodes);
+        }
+
+        if (!empty($huyenCodes)) {
+            $query->whereIn('quan_huyen_id', $huyenCodes);
         }
 
         if ($isXacThuc) {
@@ -140,38 +160,47 @@ class KhamPhaController extends Controller
             }
         }
 
-        $tinhThanhMap = $this->getTinhThanhMap();
-        $tenTinhThanh = $tinhThanhMap[$tinhThanhId] ?? $tinhThanhId;
+        [$tenTinhThanh, $tenQuanHuyen] = $this->resolveTenKhuVuc($tinhThanhId, $quanHuyenId);
 
-        // Tìm các món ăn khớp với từ khóa (chỉ hiển thị ở trang đầu)
+        // Tìm các món ăn khớp với từ khóa theo từng trang phân trang.
+        // Chỉ lấy món thuộc các quán thỏa TOÀN BỘ bộ lọc hiện tại (dùng lại truy vấn ES của danh sách quán).
         $monAns = collect();
-        if ($tuKhoa !== '' && $quans->currentPage() === 1) {
-            $monAns = \App\Models\MonTrongMenu::query()
+        $totalMonAns = 0;
+        $totalMonAnPages = 0;
+        if ($tuKhoa !== '' && $quans->total() > 0) {
+            $quanIds = (clone $query)->take(500)->keys()->map(fn ($id) => (string) $id)->values();
+            $thuTuQuan = $quanIds->flip();
+
+            $allMatchingMonAns = \App\Models\MonTrongMenu::query()
                 ->where('ten_mon', 'like', '%' . $tuKhoa . '%')
-                ->whereHas('danhMuc.quan', function ($q) use ($tinhThanhId, $quanHuyenId) {
-                    $q->where('trang_thai', 'da_duyet');
-                    if (!empty($tinhThanhId)) {
-                        $q->where('tinh_thanh_id', $tinhThanhId);
-                    }
-                    if (!empty($quanHuyenId)) {
-                        $q->where('quan_huyen_id', $quanHuyenId);
-                    }
-                })
+                ->whereHas('danhMuc', fn ($q) => $q->whereIn('quan_id', $quanIds->all()))
                 ->with(['danhMuc.quan:id,slug,ten_quan,ten_quan_huyen,ten_tinh_thanh,anh_bia'])
-                ->orderByDesc('con_hang')
-                ->take(12)
-                ->get();
+                ->get()
+                ->sortBy([
+                    fn ($a, $b) => (int) $b->con_hang <=> (int) $a->con_hang,
+                    fn ($a, $b) => ($thuTuQuan[$a->danhMuc?->quan_id] ?? PHP_INT_MAX) <=> ($thuTuQuan[$b->danhMuc?->quan_id] ?? PHP_INT_MAX),
+                ]);
+
+            $totalMonAns = $allMatchingMonAns->count();
+            $perPageMonAn = 12;
+            $totalMonAnPages = (int) ceil($totalMonAns / $perPageMonAn);
+            $currentPage = (int) $request->input('page', 1);
+
+            $monAns = $allMatchingMonAns->forPage($currentPage, $perPageMonAn)->values();
         }
 
         return view('nguoi-dung.kham-pha.index', [
-            'quans'        => $quans,
-            'quansGoiY'    => $quansGoiY,
-            'monAns'       => $monAns,
-            'danhMuc'      => $danhMuc,
-            'tuKhoa'       => $tuKhoa,
+            'quans'           => $quans,
+            'quansGoiY'       => $quansGoiY,
+            'monAns'          => $monAns,
+            'totalMonAns'     => $totalMonAns,
+            'totalMonAnPages' => $totalMonAnPages,
+            'danhMuc'         => $danhMuc,
+            'tuKhoa'          => $tuKhoa,
             'tinhThanhId'  => $tinhThanhId,
             'tenTinhThanh' => $tenTinhThanh,
             'quanHuyenId'  => $quanHuyenId,
+            'tenQuanHuyen' => $tenQuanHuyen,
             'mucGia'       => $mucGia,
             'sapXep'       => $sapXep,
             'isXacThuc'    => $isXacThuc,
@@ -240,20 +269,92 @@ class KhamPhaController extends Controller
         return round($earthRadius * $c, 1);
     }
 
-    protected function getTinhThanhMap(): array
+    /**
+     * Mã viết tắt cũ (HN, HCM...) từ các link đã chia sẻ trước đây -> mã tỉnh của provinces.open-api.vn.
+     */
+    protected const LEGACY_TINH_THANH = [
+        'HN' => '1', 'HCM' => '79', 'DN' => '48', 'CT' => '92', 'BD' => '74', 'DNAI' => '75',
+        'VT' => '77', 'HUE' => '46', 'HP' => '31', 'KH' => '56', 'LD' => '68',
+    ];
+
+    protected function normalizeLegacyTinhThanh(string $tinhThanhId): string
     {
-        return [
-            'HCM'  => 'Hồ Chí Minh',
-            'HN'   => 'Hà Nội',
-            'DN'   => 'Đà Nẵng',
-            'CT'   => 'Cần Thơ',
-            'BD'   => 'Bình Dương',
-            'DNai' => 'Đồng Nai',
-            'VT'   => 'Bà Rịa - Vũng Tàu',
-            'HUE'  => 'Thừa Thiên Huế',
-            'HP'   => 'Hải Phòng',
-            'KH'   => 'Khánh Hòa',
-            'LD'   => 'Lâm Đồng',
-        ];
+        return self::LEGACY_TINH_THANH[strtoupper($tinhThanhId)] ?? $tinhThanhId;
+    }
+
+    /**
+     * API trả mã dạng số (1, 79, 760) nhưng dữ liệu cũ có thể lưu kèm số 0 ('01', '001').
+     * Trả về mọi biến thể để so khớp chính xác.
+     */
+    protected function codeVariants(string $code): array
+    {
+        if ($code === '') {
+            return [];
+        }
+
+        if (!ctype_digit($code)) {
+            return [$code];
+        }
+
+        $n = (string) (int) $code;
+
+        return array_values(array_unique([
+            $code,
+            $n,
+            str_pad($n, 2, '0', STR_PAD_LEFT),
+            str_pad($n, 3, '0', STR_PAD_LEFT),
+            str_pad($n, 5, '0', STR_PAD_LEFT),
+        ]));
+    }
+
+    /**
+     * Lấy tên tỉnh/thành và quận/huyện từ provinces.open-api.vn (đã cache qua DiaChiService).
+     *
+     * @return array{0: string, 1: string}
+     */
+    protected function resolveTenKhuVuc(string $tinhThanhId, string $quanHuyenId): array
+    {
+        if ($tinhThanhId === '' && $quanHuyenId === '') {
+            return ['', ''];
+        }
+
+        $tenTinh = '';
+        $tenHuyen = '';
+
+        try {
+            $diaChi = app(DiaChiService::class);
+
+            if (ctype_digit($tinhThanhId)) {
+                $tinh = collect($diaChi->getTinhThanh())->first(
+                    fn ($p) => (int) ($p['code'] ?? -1) === (int) $tinhThanhId
+                );
+                $tenTinh = $tinh['name'] ?? '';
+
+                if (ctype_digit($quanHuyenId)) {
+                    $huyen = collect($diaChi->getQuanHuyen((string) (int) $tinhThanhId))->first(
+                        fn ($d) => (int) ($d['code'] ?? -1) === (int) $quanHuyenId
+                    );
+                    $tenHuyen = $huyen['name'] ?? '';
+                }
+            }
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
+        // Fallback: lấy tên đã lưu trong DB nếu API không phản hồi
+        if (($tenTinh === '' && $tinhThanhId !== '') || ($tenHuyen === '' && $quanHuyenId !== '')) {
+            $q = Quan::query();
+            if ($tinhThanhId !== '') {
+                $q->whereIn('tinh_thanh_id', $this->codeVariants($tinhThanhId));
+            }
+            if ($quanHuyenId !== '') {
+                $q->whereIn('quan_huyen_id', $this->codeVariants($quanHuyenId));
+            }
+            $mau = $q->first(['ten_tinh_thanh', 'ten_quan_huyen']);
+            $tenTinh = $tenTinh ?: (string) ($mau->ten_tinh_thanh ?? '');
+            $tenHuyen = $tenHuyen ?: ($quanHuyenId !== '' ? (string) ($mau->ten_quan_huyen ?? '') : '');
+        }
+
+        return [$tenTinh, $tenHuyen];
     }
 }

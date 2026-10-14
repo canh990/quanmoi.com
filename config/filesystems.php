@@ -91,6 +91,11 @@ return [
             'url'                     => env('CLOUDFLARE_R2_URL'),            // https://cdn.quanmoi.com (custom domain)
             'use_path_style_endpoint' => true,
             'throw'                   => true,                                // Ném exception khi R2 trả lỗi
+            'retries'                 => 2,
+            'http'                    => [
+                'timeout'         => 30,
+                'connect_timeout' => 10,
+            ],
         ],
 
     ],

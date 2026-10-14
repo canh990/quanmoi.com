@@ -17,23 +17,29 @@ class BlogService
      */
     public function incrementView(Blog $blog, ?string $sessionId, ?string $ipAddress): bool
     {
-        // Chỉ ghi nhận cho bài viết đã xuất bản
-        if ($blog->status !== 'published') {
-            return false;
+        // Check if a view exists for this session/ip within the last hour
+        $recentView = BlogView::where('blog_id', $blog->id)
+            ->where(function ($query) use ($sessionId, $ipAddress) {
+                if ($sessionId) {
+                    $query->where('session_id', $sessionId);
+                }
+                if ($ipAddress) {
+                    $query->orWhere('ip_address', $ipAddress);
+                }
+            })
+            ->where('created_at', '>=', now()->subHour())
+            ->first();
+
+        if (!$recentView) {
+            DB::transaction(function () use ($blog, $sessionId, $ipAddress) {
+                BlogView::create([
+                    'blog_id' => $blog->id,
+                    'session_id' => $sessionId,
+                    'ip_address' => $ipAddress,
+                ]);
+                $blog->increment('view_count');
+            });
         }
-
-        return DB::transaction(function () use ($blog, $sessionId, $ipAddress) {
-            BlogView::create([
-                'blog_id' => $blog->id,
-                'session_id' => $sessionId,
-                'ip_address' => $ipAddress,
-            ]);
-
-            $blog->increment('view_count');
-            $blog->refresh();
-
-            return true;
-        });
     }
 
     /**
@@ -69,29 +75,17 @@ class BlogService
         try {
             return $file->store('blogs/covers', $targetDisk);
         } catch (\Throwable $e) {
-            if ($targetDisk === 'r2') {
-                \Illuminate\Support\Facades\Log::warning('Blog cover upload to R2 failed; falling back to local uploads disk.', [
-                    'error' => $e->getMessage(),
-                ]);
-                try {
-                    return $file->store('blogs/covers', 'uploads');
-                } catch (\Throwable $uploadsEx) {
-                    \Illuminate\Support\Facades\Log::warning('Blog cover fallback to uploads disk failed; attempting public disk.', [
-                        'error' => $uploadsEx->getMessage(),
-                    ]);
-                }
-            }
-
-            \Illuminate\Support\Facades\Log::error('Blog cover image upload failed.', [
-                'disk' => $targetDisk,
+            \Illuminate\Support\Facades\Log::warning('Blog cover image upload failed on primary disk, falling back to local.', [
+                'disk' => $uploadDisk,
                 'error' => $e->getMessage(),
+                'previous' => $e->getPrevious()?->getMessage(),
             ]);
 
-            if ($targetDisk !== 'public') {
+            if ($uploadDisk !== 'uploads') {
                 try {
-                    return $file->store('blogs/covers', 'public');
+                    return $file->store('blogs/covers', 'uploads');
                 } catch (\Throwable $fallbackEx) {
-                    \Illuminate\Support\Facades\Log::error('Blog cover image fallback to public disk also failed.', [
+                    \Illuminate\Support\Facades\Log::error('Blog cover image local fallback also failed.', [
                         'error' => $fallbackEx->getMessage(),
                     ]);
                 }

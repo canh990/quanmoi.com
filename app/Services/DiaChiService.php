@@ -14,21 +14,31 @@ class DiaChiService
      */
     public function getTinhThanh()
     {
-        return Cache::remember('tinh_thanh_list', 86400, function () {
-            try {
-                $response = Http::timeout(10)
-                    ->retry(2, 300)
-                    ->withHeaders([
-                        'Accept' => 'application/json',
-                        'User-Agent' => 'QuanMoi/1.0',
-                    ])
-                    ->get("{$this->baseUrl}/p/");
+        $cached = Cache::get('tinh_thanh_list');
+        if (is_array($cached) && ! empty($cached)) {
+            return $cached;
+        }
 
-                return $response->successful() ? $response->json() : [];
-            } catch (\Exception $e) {
-                return $this->getFallbackProvinces();
+        try {
+            $response = Http::timeout(10)
+                ->retry(2, 300)
+                ->withHeaders([
+                    'Accept' => 'application/json',
+                    'User-Agent' => 'QuanMoi/1.0',
+                ])
+                ->get("{$this->baseUrl}/p/");
+
+            $data = $response->successful() ? $response->json() : [];
+            if (is_array($data) && ! empty($data)) {
+                Cache::put('tinh_thanh_list', $data, 86400);
+
+                return $data;
             }
-        });
+        } catch (\Exception $e) {
+            // Rơi xuống danh sách dự phòng bên dưới
+        }
+
+        return $this->getFallbackProvinces();
     }
 
     /**

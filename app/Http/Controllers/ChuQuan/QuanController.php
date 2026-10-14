@@ -194,33 +194,35 @@ class QuanController extends Controller
         $targetDisk = ($uploadDisk === 'r2' && ! $r2Configured) ? 'uploads' : $uploadDisk;
 
         try {
-            Storage::disk($targetDisk)->put($objectKey, $contents);
-            $url = ($targetDisk === 'uploads') ? '/uploads/'.$objectKey : Storage::disk($targetDisk)->url($objectKey);
-            $storedKey = ($targetDisk === 'uploads' || $targetDisk === 'public' || $targetDisk === 'local') ? 'local:'.$objectKey : $objectKey;
-            return [$url, $storedKey];
+        try {
+            $saved = Storage::disk($uploadDisk)->put($objectKey, $contents);
+            if ($saved) {
+                $url = Storage::disk($uploadDisk)->url($objectKey);
+                $storedKey = ($uploadDisk === 'uploads' || $uploadDisk === 'public' || $uploadDisk === 'local') ? 'local:'.$objectKey : $objectKey;
+                return [$url, $storedKey];
+            }
+            throw new \RuntimeException("Disk {$uploadDisk} returned false on put.");
         } catch (\Throwable $e) {
-            if ($targetDisk === 'r2') {
-                \Illuminate\Support\Facades\Log::warning('Venue image upload to R2 failed; falling back to local uploads disk.', [
-                    'key' => $objectKey,
-                    'error' => $e->getMessage(),
-                ]);
+            \Illuminate\Support\Facades\Log::warning('Venue image upload failed on primary disk, falling back to local uploads.', [
+                'disk' => $uploadDisk,
+                'key' => $objectKey,
+                'error' => $e->getMessage(),
+                'previous' => $e->getPrevious()?->getMessage(),
+            ]);
+
+            // Tự động fallback sang disk 'uploads' (local) nếu cloud storage (R2) gặp sự cố mạng hoặc lỗi
+            if ($uploadDisk !== 'uploads') {
                 try {
                     Storage::disk('uploads')->put($objectKey, $contents);
-                    return ['/uploads/'.$objectKey, 'local:'.$objectKey];
+                    $url = Storage::disk('uploads')->url($objectKey);
+                    return [$url, 'local:'.$objectKey];
                 } catch (\Throwable $fallbackEx) {
-                    \Illuminate\Support\Facades\Log::error('Venue image fallback upload failed.', [
-                        'key' => $objectKey,
+                    \Illuminate\Support\Facades\Log::error('Venue image local fallback also failed.', [
                         'error' => $fallbackEx->getMessage(),
                     ]);
-                    throw new \RuntimeException('Lỗi lưu ảnh lên Cloud Storage. Vui lòng thử lại sau.');
                 }
             }
 
-            \Illuminate\Support\Facades\Log::error('Venue image upload failed.', [
-                'disk' => $targetDisk,
-                'key' => $objectKey,
-                'error' => $e->getMessage(),
-            ]);
             throw new \RuntimeException('Lỗi lưu ảnh lên Cloud Storage. Vui lòng thử lại sau.');
         }
     }
