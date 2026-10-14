@@ -67,10 +67,22 @@ class BlogService
         try {
             return $file->store('blogs/covers', $uploadDisk);
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('Blog cover image upload failed.', [
+            \Illuminate\Support\Facades\Log::warning('Blog cover image upload failed on primary disk, falling back to local.', [
                 'disk' => $uploadDisk,
                 'error' => $e->getMessage(),
+                'previous' => $e->getPrevious()?->getMessage(),
             ]);
+
+            if ($uploadDisk !== 'uploads') {
+                try {
+                    return $file->store('blogs/covers', 'uploads');
+                } catch (\Throwable $fallbackEx) {
+                    \Illuminate\Support\Facades\Log::error('Blog cover image local fallback also failed.', [
+                        'error' => $fallbackEx->getMessage(),
+                    ]);
+                }
+            }
+
             throw new \RuntimeException('Lỗi lưu ảnh bìa bài viết. Vui lòng thử lại sau.');
         }
     }

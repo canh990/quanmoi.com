@@ -108,118 +108,173 @@
                 <x-search-bar prefix="kp" />
             </div>
 
-            {{-- Hàng Filter Chips nhanh (Quick Filter Pills) nằm ngang --}}
+            {{-- Hàng Filter Chips nhanh (Quick Filter Pills) nằm ngang - Hỗ trợ kéo chuột qua lại như mobile --}}
+            <style>
+                .filter-pill-btn {
+                    display: inline-flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    gap: 6px !important;
+                    height: 38px !important;
+                    min-height: 38px !important;
+                    max-height: 38px !important;
+                    padding-left: 16px !important;
+                    padding-right: 16px !important;
+                    padding-top: 0 !important;
+                    padding-bottom: 0 !important;
+                    border-radius: 9999px !important;
+                    font-size: 13.5px !important;
+                    line-height: 38px !important;
+                    white-space: nowrap !important;
+                    border-width: 1px !important;
+                    border-style: solid !important;
+                    box-sizing: border-box !important;
+                    flex-shrink: 0 !important;
+                    user-select: none !important;
+                    cursor: pointer !important;
+                    transition: all 0.2s ease !important;
+                    vertical-align: middle !important;
+                    margin: 0 !important;
+                    text-decoration: none !important;
+                }
+                .filter-pill-btn * {
+                    box-sizing: border-box !important;
+                }
+                #quick-filter-pills::-webkit-scrollbar,
+                .no-scrollbar::-webkit-scrollbar {
+                    display: none !important;
+                    width: 0 !important;
+                    height: 0 !important;
+                }
+                #quick-filter-pills,
+                .no-scrollbar {
+                    -ms-overflow-style: none !important;
+                    scrollbar-width: none !important;
+                }
+            </style>
             <div class="mt-4 sm:mt-5 w-full">
-                <div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 scroll-smooth">
+                <div id="quick-filter-pills" class="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 scroll-smooth select-none cursor-grab active:cursor-grabbing" style="-ms-overflow-style: none; scrollbar-width: none;">
                     {{-- [Tất cả] --}}
                     <a href="{{ route('kham-pha') }}" 
-                       class="inline-flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-full text-[13px] sm:text-[13.5px] whitespace-nowrap transition-all duration-200 cursor-pointer border select-none active:scale-95 shadow-2xs {{ $isAllActive ? 'bg-primary text-white border-primary shadow-sm font-bold' : 'bg-white/95 text-gray-700 hover:text-primary hover:bg-white border-gray-200/90 hover:border-primary/40 font-semibold' }}">
-                        <span class="material-symbols-outlined text-[17px]">apps</span>
+                       class="filter-pill-btn {{ $isAllActive ? 'bg-primary text-white border-primary shadow-sm font-bold' : 'bg-white/95 text-gray-700 hover:text-primary hover:bg-white border-gray-200/90 hover:border-primary/40 font-semibold' }}"
+                       style="height: 38px; min-height: 38px; box-sizing: border-box;">
+                        <span class="material-symbols-outlined text-[18px] flex-shrink-0">apps</span>
                         <span>Tất cả</span>
                     </a>
 
                     {{-- [Gần tôi 📍 (GPS)] --}}
                     @if($isNearMeActive)
                         <a href="{{ request()->fullUrlWithQuery(['sap_xep' => null, 'lat' => null, 'lon' => null, 'lng' => null, 'ban_kinh' => null]) }}" 
-                           class="inline-flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-full text-[13px] sm:text-[13.5px] whitespace-nowrap transition-all duration-200 cursor-pointer border select-none active:scale-95 shadow-sm bg-rose-600 text-white border-rose-600 font-bold"
+                           class="filter-pill-btn bg-rose-600 text-white border-rose-600 shadow-sm font-bold"
+                           style="height: 38px; min-height: 38px; box-sizing: border-box;"
                            title="Đang tìm gần bạn. Nhấp để bỏ lọc.">
-                            <span class="material-symbols-outlined text-[17px] animate-pulse">my_location</span>
+                            <span class="material-symbols-outlined text-[18px] flex-shrink-0 animate-pulse">my_location</span>
                             <span>Gần tôi{{ !empty($banKinh) ? " (< {$banKinh}km)" : '' }}</span>
-                            <span class="material-symbols-outlined text-[15px]">close</span>
+                            <span class="material-symbols-outlined text-[15px] flex-shrink-0">close</span>
                         </a>
                     @else
                         <button type="button" 
                                 onclick="triggerNearMe()" 
-                                class="inline-flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-full text-[13px] sm:text-[13.5px] whitespace-nowrap transition-all duration-200 cursor-pointer border select-none active:scale-95 shadow-2xs bg-white/95 text-gray-700 hover:text-rose-600 hover:bg-white border-gray-200/90 hover:border-rose-300 font-semibold">
-                            <span class="material-symbols-outlined text-[17px] text-rose-500">near_me</span>
+                                class="filter-pill-btn bg-white/95 text-gray-700 hover:text-rose-600 hover:bg-white border-gray-200/90 hover:border-rose-300 font-semibold"
+                                style="height: 38px; min-height: 38px; box-sizing: border-box;">
+                            <span class="material-symbols-outlined text-[18px] flex-shrink-0 text-rose-500">near_me</span>
                             <span>Gần tôi</span>
                         </button>
                     @endif
 
                     {{-- [Đang mở cửa 🟢] --}}
                     <a href="{{ $isDangMoCuaActive ? request()->fullUrlWithQuery(['dang_mo_cua' => null]) : request()->fullUrlWithQuery(['dang_mo_cua' => 1]) }}" 
-                       class="inline-flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-full text-[13px] sm:text-[13.5px] whitespace-nowrap transition-all duration-200 cursor-pointer border select-none active:scale-95 shadow-2xs {{ $isDangMoCuaActive ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm font-bold' : 'bg-white/95 text-gray-700 hover:text-emerald-700 hover:bg-white border-gray-200/90 hover:border-emerald-300 font-semibold' }}">
-                        <span class="w-2.5 h-2.5 rounded-full {{ $isDangMoCuaActive ? 'bg-white' : 'bg-emerald-500 animate-pulse' }}"></span>
+                       class="filter-pill-btn {{ $isDangMoCuaActive ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm font-bold' : 'bg-white/95 text-gray-700 hover:text-emerald-700 hover:bg-white border-gray-200/90 hover:border-emerald-300 font-semibold' }}"
+                       style="height: 38px; min-height: 38px; box-sizing: border-box;">
+                        <span class="w-2.5 h-2.5 rounded-full flex-shrink-0 {{ $isDangMoCuaActive ? 'bg-white' : 'bg-emerald-500 animate-pulse' }}"></span>
                         <span>Đang mở cửa</span>
                     </a>
 
                     {{-- [Khoảng giá ▾] Dropdown --}}
                     @if($isPriceActive)
-                        <div class="inline-flex items-center rounded-full bg-primary text-white border border-primary shadow-sm text-[13px] sm:text-[13.5px] font-bold">
+                        <div class="filter-pill-btn bg-primary text-white border-primary shadow-sm font-bold !p-0"
+                             style="height: 38px; min-height: 38px; box-sizing: border-box;">
                             <button type="button" 
                                     id="price-dropdown-btn"
                                     onclick="togglePriceDropdown(event)"
-                                    class="inline-flex items-center gap-1.5 pl-3.5 sm:pl-4 pr-1 py-2 whitespace-nowrap cursor-pointer hover:brightness-105 transition-all">
-                                <span class="material-symbols-outlined text-[17px]">payments</span>
+                                    class="h-full inline-flex items-center gap-1.5 pl-4 pr-1 whitespace-nowrap cursor-pointer hover:brightness-105">
+                                <span class="material-symbols-outlined text-[18px] flex-shrink-0">payments</span>
                                 <span>{{ $activePriceShortLabel }}</span>
-                                <span class="material-symbols-outlined text-[17px]">arrow_drop_down</span>
+                                <span class="material-symbols-outlined text-[18px] flex-shrink-0">arrow_drop_down</span>
                             </button>
                             <a href="{{ request()->fullUrlWithQuery(['muc_gia' => null]) }}" 
-                               class="pr-3 pl-1 py-2 hover:opacity-80 transition-opacity flex items-center" 
+                               class="h-full pr-3.5 pl-1 hover:opacity-80 transition-opacity flex items-center" 
                                title="Bỏ lọc mức giá">
-                                <span class="material-symbols-outlined text-[15px]">close</span>
+                                <span class="material-symbols-outlined text-[15px] flex-shrink-0">close</span>
                             </a>
                         </div>
                     @else
                         <button type="button" 
                                 id="price-dropdown-btn"
                                 onclick="togglePriceDropdown(event)"
-                                class="inline-flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-full text-[13px] sm:text-[13.5px] whitespace-nowrap transition-all duration-200 cursor-pointer border select-none active:scale-95 shadow-2xs bg-white/95 text-gray-700 hover:text-amber-800 hover:bg-white border-gray-200/90 hover:border-amber-300 font-semibold">
-                            <span class="material-symbols-outlined text-[17px] text-amber-600">payments</span>
+                                class="filter-pill-btn bg-white/95 text-gray-700 hover:text-amber-800 hover:bg-white border-gray-200/90 hover:border-amber-300 font-semibold"
+                                style="height: 38px; min-height: 38px; box-sizing: border-box;">
+                            <span class="material-symbols-outlined text-[18px] flex-shrink-0 text-amber-600">payments</span>
                             <span>Khoảng giá</span>
-                            <span class="material-symbols-outlined text-[18px] text-gray-400">arrow_drop_down</span>
+                            <span class="material-symbols-outlined text-[18px] flex-shrink-0 text-gray-400">arrow_drop_down</span>
                         </button>
                     @endif
 
                     {{-- [Danh mục quán ▾] (Gộp Lẩu Nướng, Cà phê & Trà, Ăn vặt, Nhà hàng...) --}}
                     @if($isCategoryActive)
-                        <div class="inline-flex items-center rounded-full bg-primary text-white border border-primary shadow-sm text-[13px] sm:text-[13.5px] font-bold">
+                        <div class="filter-pill-btn bg-primary text-white border-primary shadow-sm font-bold !p-0"
+                             style="height: 38px; min-height: 38px; box-sizing: border-box;">
                             <button type="button" 
                                     id="category-dropdown-btn"
                                     onclick="toggleCategoryDropdown(event)"
-                                    class="inline-flex items-center gap-1.5 pl-3.5 sm:pl-4 pr-1 py-2 whitespace-nowrap cursor-pointer hover:brightness-105 transition-all">
-                                <span class="material-symbols-outlined text-[17px]">restaurant_menu</span>
+                                    class="h-full inline-flex items-center gap-1.5 pl-4 pr-1 whitespace-nowrap cursor-pointer hover:brightness-105">
+                                <span class="material-symbols-outlined text-[18px] flex-shrink-0">restaurant_menu</span>
                                 <span>{{ $activeCategoryLabel }}</span>
-                                <span class="material-symbols-outlined text-[17px]">arrow_drop_down</span>
+                                <span class="material-symbols-outlined text-[18px] flex-shrink-0">arrow_drop_down</span>
                             </button>
                             <a href="{{ request()->fullUrlWithQuery(['danh_muc' => null]) }}" 
-                               class="pr-3 pl-1 py-2 hover:opacity-80 transition-opacity flex items-center" 
+                               class="h-full pr-3.5 pl-1 hover:opacity-80 transition-opacity flex items-center" 
                                title="Bỏ lọc danh mục">
-                                <span class="material-symbols-outlined text-[15px]">close</span>
+                                <span class="material-symbols-outlined text-[15px] flex-shrink-0">close</span>
                             </a>
                         </div>
                     @else
                         <button type="button" 
                                 id="category-dropdown-btn"
                                 onclick="toggleCategoryDropdown(event)"
-                                class="inline-flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-full text-[13px] sm:text-[13.5px] whitespace-nowrap transition-all duration-200 cursor-pointer border select-none active:scale-95 shadow-2xs bg-white/95 text-gray-700 hover:text-primary hover:bg-white border-gray-200/90 hover:border-primary/40 font-semibold">
-                            <span class="material-symbols-outlined text-[17px] text-amber-700">restaurant_menu</span>
+                                class="filter-pill-btn bg-white/95 text-gray-700 hover:text-primary hover:bg-white border-gray-200/90 hover:border-primary/40 font-semibold"
+                                style="height: 38px; min-height: 38px; box-sizing: border-box;">
+                            <span class="material-symbols-outlined text-[18px] flex-shrink-0 text-amber-700">restaurant_menu</span>
                             <span>Danh mục quán</span>
-                            <span class="material-symbols-outlined text-[18px] text-gray-400">arrow_drop_down</span>
+                            <span class="material-symbols-outlined text-[18px] flex-shrink-0 text-gray-400">arrow_drop_down</span>
                         </button>
                     @endif
 
                     {{-- [Video review 🎬] --}}
                     <a href="{{ $isVideoActive ? request()->fullUrlWithQuery(['co_video' => null]) : request()->fullUrlWithQuery(['co_video' => 1]) }}" 
-                       class="inline-flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-full text-[13px] sm:text-[13.5px] whitespace-nowrap transition-all duration-200 cursor-pointer border select-none active:scale-95 shadow-2xs {{ $isVideoActive ? 'bg-purple-600 text-white border-purple-600 shadow-sm font-bold' : 'bg-white/95 text-gray-700 hover:text-purple-600 hover:bg-white border-gray-200/90 hover:border-purple-300 font-semibold' }}">
-                        <span class="material-symbols-outlined text-[17px] {{ $isVideoActive ? 'text-white' : 'text-purple-600' }}">play_circle</span>
+                       class="filter-pill-btn {{ $isVideoActive ? 'bg-purple-600 text-white border-purple-600 shadow-sm font-bold' : 'bg-white/95 text-gray-700 hover:text-purple-600 hover:bg-white border-gray-200/90 hover:border-purple-300 font-semibold' }}"
+                       style="height: 38px; min-height: 38px; box-sizing: border-box;">
+                        <span class="material-symbols-outlined text-[18px] flex-shrink-0 {{ $isVideoActive ? 'text-white' : 'text-purple-600' }}">play_circle</span>
                         <span>Video review</span>
                     </a>
 
                     {{-- [Tích xanh ✅] --}}
                     <a href="{{ $isXacThucActive ? request()->fullUrlWithQuery(['is_xac_thuc' => null]) : request()->fullUrlWithQuery(['is_xac_thuc' => 1]) }}" 
-                       class="inline-flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-full text-[13px] sm:text-[13.5px] whitespace-nowrap transition-all duration-200 cursor-pointer border select-none active:scale-95 shadow-2xs {{ $isXacThucActive ? 'bg-sky-600 text-white border-sky-600 shadow-sm font-bold' : 'bg-white/95 text-gray-700 hover:text-sky-600 hover:bg-white border-gray-200/90 hover:border-sky-300 font-semibold' }}">
-                        <span class="material-symbols-outlined text-[17px] {{ $isXacThucActive ? 'text-white' : 'text-sky-500' }}" style="font-variation-settings: 'FILL' 1;">verified</span>
+                       class="filter-pill-btn {{ $isXacThucActive ? 'bg-sky-600 text-white border-sky-600 shadow-sm font-bold' : 'bg-white/95 text-gray-700 hover:text-sky-600 hover:bg-white border-gray-200/90 hover:border-sky-300 font-semibold' }}"
+                       style="height: 38px; min-height: 38px; box-sizing: border-box;">
+                        <span class="material-symbols-outlined text-[18px] flex-shrink-0 {{ $isXacThucActive ? 'text-white' : 'text-sky-500' }}" style="font-variation-settings: 'FILL' 1;">verified</span>
                         <span>Tích xanh</span>
                     </a>
 
                     {{-- [ShopeeFood] --}}
                     <a href="{{ $isShopeeActive ? request()->fullUrlWithQuery(['co_shopeefood' => null]) : request()->fullUrlWithQuery(['co_shopeefood' => 1]) }}" 
-                       class="inline-flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-full text-[13px] sm:text-[13.5px] whitespace-nowrap transition-all duration-200 cursor-pointer border select-none active:scale-95 shadow-2xs {{ $isShopeeActive ? 'bg-[#EE4D2D] text-white border-[#EE4D2D] shadow-sm font-bold' : 'bg-white/95 text-gray-700 hover:text-[#EE4D2D] hover:bg-white border-gray-200/90 hover:border-orange-300 font-semibold' }}">
-                        <span class="material-symbols-outlined text-[17px] {{ $isShopeeActive ? 'text-white' : 'text-[#EE4D2D]' }}">moped</span>
+                       class="filter-pill-btn {{ $isShopeeActive ? 'bg-[#EE4D2D] text-white border-[#EE4D2D] shadow-sm font-bold' : 'bg-white/95 text-gray-700 hover:text-[#EE4D2D] hover:bg-white border-gray-200/90 hover:border-orange-300 font-semibold' }}"
+                       style="height: 38px; min-height: 38px; box-sizing: border-box;">
+                        <span class="material-symbols-outlined text-[18px] flex-shrink-0 {{ $isShopeeActive ? 'text-white' : 'text-[#EE4D2D]' }}">moped</span>
                         <span>ShopeeFood</span>
                     </a>
                 </div>
+            </div>
 
                 {{-- Popover Dropdown Mức giá (Nằm ngoài overflow-x-auto) --}}
                 <div id="price-dropdown-menu" class="hidden fixed z-[99999] w-64 bg-white rounded-2xl shadow-[0_16px_50px_rgba(0,0,0,0.2)] border border-gray-100 p-2 text-left">
@@ -373,7 +428,7 @@
                     <a href="{{ request()->fullUrlWithQuery(['quan_huyen_id' => null]) }}" 
                        class="inline-flex items-center gap-1.5 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/25 rounded-full px-3 py-1 text-[13px] font-bold transition-all group"
                        title="Bỏ lọc quận huyện">
-                        <span>{{ $quanHuyenId }}</span>
+                        <span>{{ ($tenQuanHuyen ?? '') ?: $quanHuyenId }}</span>
                         <span class="material-symbols-outlined text-[15px] group-hover:rotate-90 transition-transform">close</span>
                     </a>
                 @endif
@@ -592,6 +647,13 @@
                                             <span class="material-symbols-outlined text-[15px] text-amber-500" style="font-variation-settings: 'FILL' 1;">star</span> 4.9
                                         </div>
 
+                                        @if(isset($quan->khoang_cach_km) && $quan->khoang_cach_km !== null)
+                                            <div class="absolute bottom-3 left-3 z-10 bg-primary/95 text-white backdrop-blur-md px-2.5 py-1 rounded-xl font-bold text-xs flex items-center gap-1 shadow-sm" title="Cách vị trí của bạn {{ $quan->khoang_cach_km }} km">
+                                                <span class="material-symbols-outlined text-[14px]">near_me</span>
+                                                {{ $quan->khoang_cach_km }} km
+                                            </div>
+                                        @endif
+
                                         @if($quan->is_noi_bat)
                                             <div class="absolute top-3 right-3 bg-amber-500 text-white font-bold text-[11px] px-2 py-0.5 rounded-lg shadow-sm flex items-center gap-1">
                                                 <span class="material-symbols-outlined text-[13px]" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
@@ -640,18 +702,20 @@
                         <div class="relative h-48 w-full overflow-hidden flex-shrink-0">
                             <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="{{ $quan->anh_bia_url ?: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=600&q=80' }}" alt="{{ $quan->ten_quan }}"/>
                             
-                            {{-- Rating badge & Distance badge --}}
-                            <div class="absolute top-3 left-3 flex items-center gap-1.5 z-10">
+                            {{-- Rating badge --}}
+                            <div class="absolute top-3 left-3 z-10">
                                 <div class="bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-xl text-primary font-bold text-xs flex items-center gap-1 shadow-sm">
                                     <span class="material-symbols-outlined text-[15px] text-amber-500" style="font-variation-settings: 'FILL' 1;">star</span> 4.9
                                 </div>
-                                @if(isset($quan->khoang_cach_km) && $quan->khoang_cach_km !== null)
-                                    <div class="bg-primary/95 text-white backdrop-blur-md px-2.5 py-1 rounded-xl font-bold text-xs flex items-center gap-1 shadow-sm" title="Cách vị trí của bạn {{ $quan->khoang_cach_km }} km">
-                                        <span class="material-symbols-outlined text-[14px]">near_me</span>
-                                        {{ $quan->khoang_cach_km }} km
-                                    </div>
-                                @endif
                             </div>
+
+                            {{-- Distance badge (Góc trái ở dưới) --}}
+                            @if(isset($quan->khoang_cach_km) && $quan->khoang_cach_km !== null)
+                                <div class="absolute bottom-3 left-3 z-10 bg-primary/95 text-white backdrop-blur-md px-2.5 py-1 rounded-xl font-bold text-xs flex items-center gap-1 shadow-sm" title="Cách vị trí của bạn {{ $quan->khoang_cach_km }} km">
+                                    <span class="material-symbols-outlined text-[14px]">near_me</span>
+                                    {{ $quan->khoang_cach_km }} km
+                                </div>
+                            @endif
 
                             {{-- Badges: Video Review, Open, Hot --}}
                             <div class="absolute top-3 right-3 flex items-center gap-1 z-10">
@@ -735,6 +799,10 @@
                 if (radius) {
                     url.searchParams.set('ban_kinh', radius);
                 }
+                // Tách biệt hoàn toàn: Tìm kiếm gần bạn thì xóa bỏ bộ lọc tỉnh thành / quận huyện
+                url.searchParams.delete('tinh_thanh_id');
+                url.searchParams.delete('quan_huyen_id');
+                url.searchParams.delete('page');
                 window.location.href = url.toString();
             },
             function(err) {
@@ -854,5 +922,111 @@
             if (catMenu) catMenu.classList.add('hidden');
         }
     });
+
+    // ==========================================
+    // Kéo cuộn chuột ngang như trên mobile cho Quick Filter Pills
+    // ==========================================
+    (function initPillsDragScroll() {
+        const slider = document.getElementById('quick-filter-pills');
+        if (!slider) return;
+
+        let isDown = false;
+        let startX = 0;
+        let scrollStart = 0;
+        let isDragging = false;
+        let moved = 0;
+        let lastX = 0;
+        let lastTime = 0;
+        let velocity = 0;
+
+        // Chống kéo liên kết/hình ảnh mặc định của trình duyệt
+        slider.addEventListener('dragstart', function(e) {
+            e.preventDefault();
+        });
+        slider.querySelectorAll('a, button, span, img').forEach(function(el) {
+            el.setAttribute('draggable', 'false');
+        });
+
+        // Nhấn chuột xuống (mousedown)
+        slider.addEventListener('mousedown', function(e) {
+            if (e.button !== 0) return; // Chỉ nhận click chuột trái
+            isDown = true;
+            isDragging = false;
+            moved = 0;
+            startX = e.pageX;
+            scrollStart = slider.scrollLeft;
+            lastX = e.pageX;
+            lastTime = performance.now();
+            velocity = 0;
+
+            slider.classList.add('cursor-grabbing');
+            slider.classList.remove('cursor-grab', 'scroll-smooth');
+
+            // Đóng menu dropdown nếu đang mở khi bắt đầu kéo
+            const priceMenu = document.getElementById('price-dropdown-menu');
+            const catMenu = document.getElementById('category-dropdown-menu');
+            if (priceMenu) priceMenu.classList.add('hidden');
+            if (catMenu) catMenu.classList.add('hidden');
+        });
+
+        // Di chuyển chuột (mousemove) trên window để mượt mà kể cả khi trỏ chuột ra ngoài thanh
+        window.addEventListener('mousemove', function(e) {
+            if (!isDown) return;
+            const dx = e.pageX - startX;
+            moved = Math.abs(dx);
+            if (moved > 4) {
+                isDragging = true;
+            }
+
+            slider.scrollLeft = scrollStart - dx;
+
+            const now = performance.now();
+            const dt = now - lastTime;
+            if (dt > 8) {
+                velocity = (e.pageX - lastX) / dt;
+                lastX = e.pageX;
+                lastTime = now;
+            }
+        });
+
+        // Nhả chuột (mouseup)
+        window.addEventListener('mouseup', function(e) {
+            if (!isDown) return;
+            isDown = false;
+            slider.classList.remove('cursor-grabbing');
+            slider.classList.add('cursor-grab', 'scroll-smooth');
+
+            // Quán tính lướt (momentum glide) mượt mà như trên mobile
+            if (isDragging && Math.abs(velocity) > 0.15) {
+                const glideDistance = -velocity * 160;
+                slider.scrollBy({ left: glideDistance, behavior: 'smooth' });
+            }
+
+            // Chặn kích hoạt click thẻ <a> hoặc <button> nếu người dùng vừa thực hiện kéo chuột
+            if (isDragging) {
+                const blockClick = function(ev) {
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                    window.removeEventListener('click', blockClick, true);
+                };
+                window.addEventListener('click', blockClick, true);
+                setTimeout(function() {
+                    window.removeEventListener('click', blockClick, true);
+                }, 100);
+            }
+
+            isDragging = false;
+        });
+
+        // Lăn con lăn chuột dọc -> tự động cuộn ngang mượt mà
+        slider.addEventListener('wheel', function(e) {
+            if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+                if (slider.scrollWidth > slider.clientWidth) {
+                    e.preventDefault();
+                    slider.scrollLeft += e.deltaY;
+                }
+            }
+        }, { passive: false });
+    })();
 </script>
 @endpush

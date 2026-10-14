@@ -28,6 +28,23 @@ class MonTrongMenu extends Model
 
     protected $appends = ['hinh_anh_url'];
 
+    /**
+     * Đồng bộ lại index tìm kiếm của quán khi món ăn thay đổi
+     * (trường mon_an trong Elasticsearch phụ thuộc vào danh sách món).
+     */
+    protected static function booted(): void
+    {
+        $sync = static function (MonTrongMenu $mon): void {
+            $quan = $mon->danhMuc?->quan;
+            if ($quan && $quan->shouldBeSearchable()) {
+                $quan->searchable();
+            }
+        };
+
+        static::saved($sync);
+        static::deleted($sync);
+    }
+
     public function getHinhAnhUrlAttribute(): ?string
     {
         $value = trim((string) $this->getRawOriginal('hinh_anh'));

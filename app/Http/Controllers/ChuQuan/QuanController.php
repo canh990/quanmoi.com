@@ -187,16 +187,34 @@ class QuanController extends Controller
     {
         $uploadDisk = config('filesystems.upload_disk', 'r2');
         try {
-            Storage::disk($uploadDisk)->put($objectKey, $contents);
-            $url = Storage::disk($uploadDisk)->url($objectKey);
-            $storedKey = ($uploadDisk === 'uploads' || $uploadDisk === 'public' || $uploadDisk === 'local') ? 'local:'.$objectKey : $objectKey;
-            return [$url, $storedKey];
+            $saved = Storage::disk($uploadDisk)->put($objectKey, $contents);
+            if ($saved) {
+                $url = Storage::disk($uploadDisk)->url($objectKey);
+                $storedKey = ($uploadDisk === 'uploads' || $uploadDisk === 'public' || $uploadDisk === 'local') ? 'local:'.$objectKey : $objectKey;
+                return [$url, $storedKey];
+            }
+            throw new \RuntimeException("Disk {$uploadDisk} returned false on put.");
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('Venue image upload failed.', [
+            \Illuminate\Support\Facades\Log::warning('Venue image upload failed on primary disk, falling back to local uploads.', [
                 'disk' => $uploadDisk,
                 'key' => $objectKey,
                 'error' => $e->getMessage(),
+                'previous' => $e->getPrevious()?->getMessage(),
             ]);
+
+            // Tự động fallback sang disk 'uploads' (local) nếu cloud storage (R2) gặp sự cố mạng hoặc lỗi
+            if ($uploadDisk !== 'uploads') {
+                try {
+                    Storage::disk('uploads')->put($objectKey, $contents);
+                    $url = Storage::disk('uploads')->url($objectKey);
+                    return [$url, 'local:'.$objectKey];
+                } catch (\Throwable $fallbackEx) {
+                    \Illuminate\Support\Facades\Log::error('Venue image local fallback also failed.', [
+                        'error' => $fallbackEx->getMessage(),
+                    ]);
+                }
+            }
+
             throw new \RuntimeException('Lỗi lưu ảnh lên Cloud Storage. Vui lòng thử lại sau.');
         }
     }

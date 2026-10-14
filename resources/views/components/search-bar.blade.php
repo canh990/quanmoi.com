@@ -48,11 +48,9 @@
                 >
                     <span class="material-symbols-outlined text-primary text-[20px] flex-shrink-0" style="color: #a04100; font-variation-settings: 'FILL' 1;">location_on</span>
                     <span id="{{ $prefix }}-location-label" class="truncate max-w-[130px] md:max-w-[140px]">
-                        @if(request('quan_huyen_id'))
-                            {{ request('quan_huyen_id') }}
-                        @elseif(request('tinh_thanh_id'))
-                            {{ request('tinh_thanh_id') }}
-                        @elseif(request('lat') && request('lng'))
+                        @if(request('quan_huyen_id') || request('tinh_thanh_id'))
+                            Đang tải...
+                        @elseif(request('lat') && (request('lng') || request('lon')))
                             Gần bạn
                         @else
                             Chọn khu vực
@@ -202,43 +200,42 @@
         {{-- ╚══════════════════════════════════════════════════════════════╝ --}}
         <div 
             id="{{ $prefix }}-location-panel" 
-            class="absolute top-[calc(100%+10px)] right-0 md:right-16 bg-white rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.22)] border border-gray-100 p-5 hidden z-50 w-full sm:w-[360px] text-left transition-all duration-200"
+            class="absolute top-[calc(100%+10px)] right-0 md:right-16 bg-white rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.22)] border border-gray-100 p-5 hidden z-50 w-full sm:w-[380px] text-left transition-all duration-200"
         >
-            <h4 class="font-black text-[16px] text-gray-800 text-center pb-3 border-b border-gray-100 mb-4">Khu vực</h4>
-            
-            <div class="space-y-4">
-                {{-- Chọn tỉnh thành * --}}
+            <h4 class="font-black text-[16px] text-gray-800 text-center pb-3 border-b border-gray-100 mb-4">Khu vực tìm kiếm</h4>
+
+            {{-- Tabs: 2 chế độ loại trừ nhau --}}
+            <div class="grid grid-cols-2 gap-1 p-1 bg-gray-100 rounded-xl mb-4" role="tablist">
+                <button type="button" role="tab" id="{{ $prefix }}-tab-area" data-mode="area"
+                        class="loc-tab flex items-center justify-center gap-1.5 py-2 rounded-lg text-[13px] font-bold transition-all cursor-pointer">
+                    <span class="material-symbols-outlined text-[18px]">map</span>
+                    Chọn khu vực
+                </button>
+                <button type="button" role="tab" id="{{ $prefix }}-tab-gps" data-mode="gps"
+                        class="loc-tab flex items-center justify-center gap-1.5 py-2 rounded-lg text-[13px] font-bold transition-all cursor-pointer">
+                    <span class="material-symbols-outlined text-[18px]">near_me</span>
+                    Gần bạn
+                </button>
+            </div>
+
+            {{-- Pane 1: Chọn tỉnh thành / quận huyện --}}
+            <div id="{{ $prefix }}-pane-area" role="tabpanel" class="space-y-4">
                 <div>
-                    <label class="block text-[13px] font-bold text-gray-700 mb-1.5">
-                        Chọn tỉnh thành <span class="text-red-500">*</span>
-                    </label>
+                    <label for="{{ $prefix }}-province-select" class="block text-[13px] font-bold text-gray-700 mb-1.5">Tỉnh / thành phố</label>
                     <div class="relative">
                         <select 
                             id="{{ $prefix }}-province-select" 
                             class="province-select-el w-full h-11 px-3.5 pr-9 rounded-xl border border-gray-200 bg-white text-[14px] font-medium text-gray-800 appearance-none focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition-all cursor-pointer"
                         >
                             <option value="">Toàn quốc</option>
-                            <option value="HCM">Hồ Chí Minh</option>
-                            <option value="HN">Hà Nội</option>
-                            <option value="DN">Đà Nẵng</option>
-                            <option value="CT">Cần Thơ</option>
-                            <option value="BD">Bình Dương</option>
-                            <option value="DNai">Đồng Nai</option>
-                            <option value="VT">Bà Rịa - Vũng Tàu</option>
-                            <option value="HUE">Thừa Thiên Huế</option>
-                            <option value="HP">Hải Phòng</option>
-                            <option value="KH">Khánh Hòa</option>
-                            <option value="LD">Lâm Đồng</option>
+                            {{-- Nạp động từ provinces.open-api.vn qua /api/dia-chi/tinh-thanh --}}
                         </select>
                         <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-[20px]">arrow_drop_down</span>
                     </div>
                 </div>
 
-                {{-- Chọn quận huyện * --}}
                 <div>
-                    <label class="block text-[13px] font-bold text-gray-700 mb-1.5">
-                        Chọn quận huyện <span class="text-red-500">*</span>
-                    </label>
+                    <label for="{{ $prefix }}-district-select" class="block text-[13px] font-bold text-gray-700 mb-1.5">Quận / huyện</label>
                     <div class="relative">
                         <select 
                             id="{{ $prefix }}-district-select" 
@@ -249,55 +246,52 @@
                         <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-[20px]">arrow_drop_down</span>
                     </div>
                 </div>
+            </div>
 
-                {{-- Tìm kiếm gần bạn (Vị trí & GPS) --}}
-                <div class="pt-2 border-t border-gray-100">
-                    <button 
-                        type="button" 
-                        id="{{ $prefix }}-gps-toggle-btn" 
-                        class="w-full flex items-center justify-between text-left py-1 text-gray-800 hover:text-primary transition-colors cursor-pointer"
+            {{-- Pane 2: Tìm kiếm gần bạn (GPS) --}}
+            <div id="{{ $prefix }}-pane-gps" role="tabpanel" class="hidden space-y-3.5">
+                <div id="{{ $prefix }}-gps-status" class="flex items-center gap-2.5 p-3 rounded-xl border border-gray-200 bg-gray-50 text-[12.5px] text-gray-600">
+                    <span class="material-symbols-outlined text-[20px] text-gray-400" id="{{ $prefix }}-gps-status-icon">location_searching</span>
+                    <span id="{{ $prefix }}-gps-status-text">Chưa lấy vị trí của bạn</span>
+                </div>
+
+                <button 
+                    type="button" 
+                    id="{{ $prefix }}-gps-action-btn" 
+                    class="w-full py-2.5 px-3 bg-white border border-primary/30 rounded-lg text-primary font-bold text-[13px] hover:bg-primary/10 flex items-center justify-center gap-1.5 shadow-2xs transition-all active:scale-98 cursor-pointer"
+                    style="color: #a04100;"
+                >
+                    <span class="material-symbols-outlined text-[17px]" style="color: #a04100;">my_location</span>
+                    <span id="{{ $prefix }}-gps-btn-text">Lấy vị trí GPS hiện tại</span>
+                </button>
+
+                <div class="space-y-1.5">
+                    <div class="flex items-center justify-between text-[12px] font-semibold text-gray-600">
+                        <label for="{{ $prefix }}-radius-input">Bán kính tìm kiếm:</label>
+                        <span id="{{ $prefix }}-radius-display" class="font-extrabold" style="color: #a04100;">3 km</span>
+                    </div>
+                    <input 
+                        type="range" 
+                        min="1" 
+                        max="15" 
+                        value="3" 
+                        id="{{ $prefix }}-radius-input" 
+                        style="accent-color: #a04100;"
+                        class="w-full h-1.5 bg-gray-200 rounded-lg cursor-pointer"
                     >
-                        <span class="flex items-center gap-1.5 font-bold text-[14px]">
-                            <span class="material-symbols-outlined text-primary text-[19px]" style="color: #a04100;">near_me</span>
-                            Tìm kiếm gần bạn
-                        </span>
-                        <span class="material-symbols-outlined text-[19px] text-gray-400 transition-transform duration-200" id="{{ $prefix }}-gps-chevron">expand_more</span>
-                    </button>
-                    
-                    <div id="{{ $prefix }}-gps-controls" class="hidden mt-2.5 p-3.5 bg-primary/5 rounded-xl border border-primary/15 space-y-3">
-                        <button 
-                            type="button" 
-                            id="{{ $prefix }}-gps-action-btn" 
-                            class="w-full py-2.5 px-3 bg-white border border-primary/30 rounded-lg text-primary font-bold text-[12.5px] hover:bg-primary/10 flex items-center justify-center gap-1.5 shadow-2xs transition-all active:scale-98 cursor-pointer"
-                            style="color: #a04100;"
-                        >
-                            <span class="material-symbols-outlined text-[17px] text-primary" style="color: #a04100;">my_location</span>
-                            <span id="{{ $prefix }}-gps-btn-text">Lấy vị trí GPS hiện tại</span>
-                        </button>
-                        
-                        <div class="space-y-1.5">
-                            <div class="flex items-center justify-between text-[12px] font-semibold text-gray-600">
-                                <span>Bán kính tìm kiếm:</span>
-                                <span id="{{ $prefix }}-radius-display" class="font-extrabold text-primary" style="color: #a04100;">3 km</span>
-                            </div>
-                            <input 
-                                type="range" 
-                                min="1" 
-                                max="15" 
-                                value="3" 
-                                id="{{ $prefix }}-radius-input" 
-                                style="accent-color: #a04100;"
-                                class="w-full h-1.5 bg-gray-200 rounded-lg cursor-pointer"
-                            >
-                            <div class="flex justify-between text-[10px] text-gray-400 font-medium">
-                                <span>1 km</span>
-                                <span>5 km</span>
-                                <span>10 km</span>
-                                <span>15 km</span>
-                            </div>
-                        </div>
+                    <div class="flex items-center justify-between gap-1 pt-1">
+                        <button type="button" class="radius-preset-pill px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-[#a04100]/10 hover:text-primary text-[11px] font-semibold text-gray-600 transition-all cursor-pointer" data-km="1">1 km</button>
+                        <button type="button" class="radius-preset-pill px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-[#a04100]/10 hover:text-primary text-[11px] font-semibold text-gray-600 transition-all cursor-pointer" data-km="3">3 km</button>
+                        <button type="button" class="radius-preset-pill px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-[#a04100]/10 hover:text-primary text-[11px] font-semibold text-gray-600 transition-all cursor-pointer" data-km="5">5 km</button>
+                        <button type="button" class="radius-preset-pill px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-[#a04100]/10 hover:text-primary text-[11px] font-semibold text-gray-600 transition-all cursor-pointer" data-km="10">10 km</button>
+                        <button type="button" class="radius-preset-pill px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-[#a04100]/10 hover:text-primary text-[11px] font-semibold text-gray-600 transition-all cursor-pointer" data-km="15">15 km</button>
                     </div>
                 </div>
+
+                <p class="text-[11.5px] text-gray-400 leading-relaxed flex gap-1.5">
+                    <span class="material-symbols-outlined text-[15px] flex-shrink-0">info</span>
+                    Kết quả được sắp xếp từ gần đến xa. Bộ lọc tỉnh/quận sẽ không áp dụng ở chế độ này.
+                </p>
             </div>
 
             {{-- Buttons Action Footer --}}
@@ -330,19 +324,12 @@
         const wrapper = document.getElementById(prefix + '-wrapper');
         if (!wrapper) return;
 
-        const districtsMap = {
-            'HCM': ['Quận 1', 'Quận 3', 'Quận 4', 'Quận 5', 'Quận 7', 'Quận 10', 'Quận Bình Thạnh', 'Quận Tân Bình', 'Quận Gò Vấp', 'TP. Thủ Đức'],
-            'HN': ['Quận Hoàn Kiếm', 'Quận Ba Đình', 'Quận Đống Đa', 'Quận Cầu Giấy', 'Quận Hai Bà Trưng', 'Quận Tây Hồ', 'Quận Thanh Xuân'],
-            'DN': ['Quận Hải Châu', 'Quận Thanh Khê', 'Quận Sơn Trà', 'Quận Ngũ Hành Sơn', 'Quận Liên Chiểu'],
-            'CT': ['Quận Ninh Kiều', 'Quận Cái Răng', 'Quận Bình Thủy'],
-            'BD': ['TP. Thủ Dầu Một', 'TP. Thuận An', 'TP. Dĩ An'],
-            'DNai': ['TP. Biên Hòa', 'Huyện Long Thành'],
-            'VT': ['TP. Vũng Tàu', 'TP. Bà Rịa'],
-            'HUE': ['TP. Huế', 'Huyện Hương Thủy'],
-            'HP': ['Quận Hồng Bàng', 'Quận Ngô Quyền', 'Quận Lê Chân'],
-            'KH': ['TP. Nha Trang', 'TP. Cam Ranh'],
-            'LD': ['TP. Đà Lạt', 'TP. Bảo Lộc']
-        };
+        // Mã hành chính lấy từ provinces.open-api.vn (v1) qua API nội bộ có cache
+        const API_TINH_THANH = '/api/dia-chi/tinh-thanh';
+        const API_QUAN_HUYEN = (code) => `/api/dia-chi/quan-huyen/${encodeURIComponent(code)}`;
+        const LEGACY_TINH = { HN: '1', HCM: '79', DN: '48', CT: '92', BD: '74', DNAI: '75', VT: '77', HUE: '46', HP: '31', KH: '56', LD: '68' };
+        const districtCache = {};
+        let provincesPromise = null;
 
         const form = document.getElementById(prefix + '-form');
         const searchInput = document.getElementById(prefix + '-input');
@@ -366,9 +353,13 @@
         const provinceSelect = document.getElementById(prefix + '-province-select');
         const districtSelect = document.getElementById(prefix + '-district-select');
         
-        const gpsToggleBtn = document.getElementById(prefix + '-gps-toggle-btn');
-        const gpsControls = document.getElementById(prefix + '-gps-controls');
-        const gpsChevron = document.getElementById(prefix + '-gps-chevron');
+        const tabArea = document.getElementById(prefix + '-tab-area');
+        const tabGps = document.getElementById(prefix + '-tab-gps');
+        const paneArea = document.getElementById(prefix + '-pane-area');
+        const paneGps = document.getElementById(prefix + '-pane-gps');
+        const gpsStatus = document.getElementById(prefix + '-gps-status');
+        const gpsStatusIcon = document.getElementById(prefix + '-gps-status-icon');
+        const gpsStatusText = document.getElementById(prefix + '-gps-status-text');
         const gpsActionBtn = document.getElementById(prefix + '-gps-action-btn');
         const gpsBtnText = document.getElementById(prefix + '-gps-btn-text');
         const radiusInput = document.getElementById(prefix + '-radius-input');
@@ -378,6 +369,39 @@
         const applyLocationBtn = document.getElementById(prefix + '-apply-location-btn');
 
         let debounceTimer = null;
+        let activeTab = 'area';
+        let currentLat = null;
+        let currentLng = null;
+
+        function switchTab(mode) {
+            activeTab = mode;
+            if (mode === 'area') {
+                if (tabArea) {
+                    tabArea.className = 'loc-tab flex items-center justify-center gap-1.5 py-2 rounded-lg text-[13px] transition-all cursor-pointer bg-white text-primary shadow-xs font-extrabold border border-gray-200/60';
+                    tabArea.style.color = '#a04100';
+                }
+                if (tabGps) {
+                    tabGps.className = 'loc-tab flex items-center justify-center gap-1.5 py-2 rounded-lg text-[13px] transition-all cursor-pointer text-gray-500 hover:text-gray-900 font-semibold border border-transparent';
+                    tabGps.style.color = '';
+                }
+                if (paneArea) paneArea.classList.remove('hidden');
+                if (paneGps) paneGps.classList.add('hidden');
+            } else {
+                if (tabGps) {
+                    tabGps.className = 'loc-tab flex items-center justify-center gap-1.5 py-2 rounded-lg text-[13px] transition-all cursor-pointer bg-white text-rose-600 shadow-xs font-extrabold border border-gray-200/60';
+                    tabGps.style.color = '';
+                }
+                if (tabArea) {
+                    tabArea.className = 'loc-tab flex items-center justify-center gap-1.5 py-2 rounded-lg text-[13px] transition-all cursor-pointer text-gray-500 hover:text-gray-900 font-semibold border border-transparent';
+                    tabArea.style.color = '';
+                }
+                if (paneGps) paneGps.classList.remove('hidden');
+                if (paneArea) paneArea.classList.add('hidden');
+            }
+        }
+
+        if (tabArea) tabArea.addEventListener('click', () => switchTab('area'));
+        if (tabGps) tabGps.addEventListener('click', () => switchTab('gps'));
 
         function closeSuggestions() {
             suggestionsDropdown.classList.add('hidden');
@@ -536,102 +560,272 @@
         }
 
         // Location events
-        locationBtn.addEventListener('click', toggleLocation);
+        locationBtn.addEventListener('click', function(e) {
+            toggleLocation(e);
+            loadProvinces();
+        });
+
+        function setOptions(select, placeholder, items, selected) {
+            select.innerHTML = '';
+            const first = document.createElement('option');
+            first.value = '';
+            first.textContent = placeholder;
+            select.appendChild(first);
+            items.forEach(item => {
+                const opt = document.createElement('option');
+                opt.value = String(item.code);
+                opt.textContent = item.name;
+                if (selected !== undefined && selected !== '' && Number(selected) === Number(item.code)) {
+                    opt.selected = true;
+                }
+                select.appendChild(opt);
+            });
+        }
+
+        function loadProvinces(selected) {
+            if (!provincesPromise) {
+                provinceSelect.disabled = true;
+                provincesPromise = fetch(API_TINH_THANH)
+                    .then(res => res.json())
+                    .then(res => (res.success && Array.isArray(res.data)) ? res.data : [])
+                    .catch(() => [])
+                    .finally(() => { provinceSelect.disabled = false; });
+            }
+            return provincesPromise.then(list => {
+                if (provinceSelect.options.length <= 1 && list.length) {
+                    setOptions(provinceSelect, 'Toàn quốc', list, selected ?? hiddenTinhThanh.value);
+                }
+                return list;
+            });
+        }
+
+        function loadDistricts(provCode, selected) {
+            if (!provCode) {
+                setOptions(districtSelect, 'Tất cả quận/huyện', []);
+                return Promise.resolve([]);
+            }
+            districtSelect.disabled = true;
+            districtSelect.innerHTML = '<option value="">Đang tải...</option>';
+            if (!districtCache[provCode]) {
+                districtCache[provCode] = fetch(API_QUAN_HUYEN(provCode))
+                    .then(res => res.json())
+                    .then(res => (res.success && Array.isArray(res.data)) ? res.data : [])
+                    .catch(() => { delete districtCache[provCode]; return []; });
+            }
+            return districtCache[provCode].then(list => {
+                setOptions(districtSelect, 'Tất cả quận/huyện', list, selected);
+                districtSelect.disabled = false;
+                return list;
+            });
+        }
 
         provinceSelect.addEventListener('change', function() {
-            const provCode = this.value;
-            districtSelect.innerHTML = '<option value="">Tất cả quận/huyện</option>';
-            if (provCode && districtsMap[provCode]) {
-                districtsMap[provCode].forEach(dist => {
-                    const opt = document.createElement('option');
-                    opt.value = dist;
-                    opt.textContent = dist;
-                    districtSelect.appendChild(opt);
-                });
-            }
+            loadDistricts(this.value);
         });
 
-        gpsToggleBtn.addEventListener('click', function() {
-            const isHidden = gpsControls.classList.contains('hidden');
-            if (isHidden) {
-                gpsControls.classList.remove('hidden');
-                gpsChevron.classList.add('rotate-180');
-            } else {
-                gpsControls.classList.add('hidden');
-                gpsChevron.classList.remove('rotate-180');
-            }
-        });
+        // Khôi phục lựa chọn + nhãn khi trang được tải với bộ lọc khu vực
+        (function restoreLocation() {
+            const hasGps = hiddenLat.value && (hiddenLng.value || '{{ request('lon') }}');
+            let tinh = hiddenTinhThanh.value;
+            const huyen = hiddenQuanHuyen.value;
 
-        radiusInput.addEventListener('input', function() {
-            radiusDisplay.textContent = this.value + ' km';
-        });
+            if (hasGps) {
+                currentLat = hiddenLat.value;
+                currentLng = hiddenLng.value || '{{ request('lon') }}';
+                const r = hiddenBanKinh?.value || '3';
+                locationLabel.textContent = `Gần bạn (< ${r}km)`;
 
-        gpsActionBtn.addEventListener('click', function() {
-            if (!navigator.geolocation) {
-                alert('Trình duyệt không hỗ trợ định vị GPS');
-                return;
-            }
-
-            gpsBtnText.textContent = 'Đang lấy vị trí...';
-            navigator.geolocation.getCurrentPosition(
-                (pos) => {
-                    hiddenLat.value = pos.coords.latitude;
-                    hiddenLng.value = pos.coords.longitude;
-                    hiddenSapXep.value = 'near_me';
-                    
-                    const radius = radiusInput.value;
-                    if (hiddenBanKinh) hiddenBanKinh.value = radius;
-                    locationLabel.textContent = `Gần bạn (${radius}km)`;
-                    gpsBtnText.textContent = '✓ Đã định vị thành công';
-                },
-                (err) => {
-                    gpsBtnText.textContent = 'Lấy vị trí GPS hiện tại';
-                    alert('Vui lòng bật quyền truy cập vị trí trên thiết bị của bạn');
+                if (gpsStatus) gpsStatus.className = 'flex items-center gap-2.5 p-3 rounded-xl border border-emerald-200 bg-emerald-50 text-[12.5px] text-emerald-800 font-medium';
+                if (gpsStatusIcon) {
+                    gpsStatusIcon.className = 'material-symbols-outlined text-[20px] text-emerald-600';
+                    gpsStatusIcon.textContent = 'my_location';
                 }
-            );
-        });
+                if (gpsBtnText) gpsBtnText.textContent = 'Lấy lại vị trí';
 
-        resetLocationBtn.addEventListener('click', function() {
-            provinceSelect.value = '';
-            districtSelect.innerHTML = '<option value="">Tất cả quận/huyện</option>';
-            hiddenTinhThanh.value = '';
-            hiddenQuanHuyen.value = '';
-            hiddenLat.value = '';
-            hiddenLng.value = '';
-            if (hiddenBanKinh) hiddenBanKinh.value = '';
-            hiddenSapXep.value = '';
-            locationLabel.textContent = 'Chọn khu vực';
-            gpsBtnText.textContent = 'Lấy vị trí GPS hiện tại';
-            closeLocation();
-        });
-
-        applyLocationBtn.addEventListener('click', function() {
-            const provVal = provinceSelect.value;
-            const distVal = districtSelect.value;
-            const hasGps = hiddenLat.value && hiddenLng.value;
-
-            if (distVal) {
-                hiddenQuanHuyen.value = distVal;
-                hiddenTinhThanh.value = provVal;
-                locationLabel.textContent = distVal;
-            } else if (provVal) {
-                hiddenTinhThanh.value = provVal;
-                hiddenQuanHuyen.value = '';
-                const selectedText = provinceSelect.options[provinceSelect.selectedIndex]?.text || provVal;
-                locationLabel.textContent = selectedText;
-            } else if (hasGps) {
-                const radius = radiusInput.value;
-                if (hiddenBanKinh) hiddenBanKinh.value = radius;
-                locationLabel.textContent = `Gần bạn (${radius}km)`;
+                syncGpsRadius(r);
+                switchTab('gps');
+            } else if (tinh) {
+                if (LEGACY_TINH[tinh.toUpperCase()]) {
+                    tinh = LEGACY_TINH[tinh.toUpperCase()];
+                    hiddenTinhThanh.value = tinh;
+                }
+                loadProvinces(tinh).then(list => {
+                    const p = list.find(x => Number(x.code) === Number(tinh));
+                    if (!huyen) {
+                        locationLabel.textContent = p ? p.name : 'Khu vực đã chọn';
+                        return loadDistricts(tinh);
+                    }
+                    return loadDistricts(tinh, huyen).then(dl => {
+                        const d = dl.find(x => Number(x.code) === Number(huyen));
+                        locationLabel.textContent = d ? d.name : (p ? p.name : 'Khu vực đã chọn');
+                    });
+                });
+                switchTab('area');
             } else {
+                syncGpsRadius('3');
+                switchTab('area');
+            }
+        })();
+
+        // Hàm đồng bộ bán kính tìm kiếm: slider, số hiển thị, nút chọn nhanh và hộp trạng thái GPS
+        function syncGpsRadius(val) {
+            const r = String(val);
+            if (radiusInput && radiusInput.value !== r) {
+                radiusInput.value = r;
+            }
+            if (radiusDisplay) {
+                radiusDisplay.textContent = r + ' km';
+            }
+
+            // Đồng bộ trực tiếp dòng trạng thái GPS: "Đang lọc gần bạn (X km)"
+            const hasCoords = currentLat || (hiddenLat && hiddenLat.value);
+            if (hasCoords && gpsStatusText) {
+                gpsStatusText.textContent = `Đang lọc gần bạn (${r} km)`;
+            }
+
+            // Đồng bộ trạng thái active của các nút chọn nhanh 1km, 3km, 5km...
+            wrapper.querySelectorAll('.radius-preset-pill').forEach(btn => {
+                if (btn.getAttribute('data-km') === r) {
+                    btn.classList.add('bg-[#a04100]', 'text-white', 'font-extrabold', 'shadow-xs');
+                    btn.classList.remove('bg-gray-100', 'text-gray-600');
+                } else {
+                    btn.classList.remove('bg-[#a04100]', 'text-white', 'font-extrabold', 'shadow-xs');
+                    btn.classList.add('bg-gray-100', 'text-gray-600');
+                }
+            });
+        }
+
+        // Bắt sự kiện kéo thanh trượt bán kính
+        if (radiusInput) {
+            radiusInput.addEventListener('input', function() {
+                syncGpsRadius(this.value);
+            });
+        }
+
+        // Bắt sự kiện bấm các nút chọn nhanh 1km, 3km, 5km, 10km, 15km
+        wrapper.querySelectorAll('.radius-preset-pill').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const km = this.getAttribute('data-km');
+                if (km) {
+                    syncGpsRadius(km);
+                }
+            });
+        });
+
+        if (gpsActionBtn) {
+            gpsActionBtn.addEventListener('click', function() {
+                if (!navigator.geolocation) {
+                    alert('Trình duyệt không hỗ trợ định vị GPS');
+                    return;
+                }
+
+                if (gpsBtnText) gpsBtnText.textContent = 'Đang lấy vị trí GPS...';
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        currentLat = pos.coords.latitude;
+                        currentLng = pos.coords.longitude;
+                        if (gpsStatus) gpsStatus.className = 'flex items-center gap-2.5 p-3 rounded-xl border border-emerald-200 bg-emerald-50 text-[12.5px] text-emerald-800 font-medium';
+                        if (gpsStatusIcon) {
+                            gpsStatusIcon.className = 'material-symbols-outlined text-[20px] text-emerald-600';
+                            gpsStatusIcon.textContent = 'my_location';
+                        }
+                        if (gpsBtnText) gpsBtnText.textContent = 'Lấy lại vị trí';
+                        syncGpsRadius(radiusInput ? radiusInput.value : '3');
+                    },
+                    (err) => {
+                        if (gpsBtnText) gpsBtnText.textContent = 'Lấy vị trí GPS hiện tại';
+                        alert('Vui lòng bật quyền truy cập vị trí trên thiết bị của bạn');
+                    },
+                    { enableHighAccuracy: true, timeout: 10000 }
+                );
+            });
+        }
+
+        if (resetLocationBtn) {
+            resetLocationBtn.addEventListener('click', function() {
+                // Xoá toàn bộ cả 2 chế độ
+                provinceSelect.value = '';
+                districtSelect.innerHTML = '<option value="">Tất cả quận/huyện</option>';
                 hiddenTinhThanh.value = '';
                 hiddenQuanHuyen.value = '';
-                if (hiddenBanKinh) hiddenBanKinh.value = '';
-                locationLabel.textContent = 'Chọn khu vực';
-            }
 
-            closeLocation();
-        });
+                hiddenLat.value = '';
+                hiddenLng.value = '';
+                if (hiddenBanKinh) hiddenBanKinh.value = '';
+                if (hiddenSapXep.value === 'near_me') hiddenSapXep.value = '';
+                currentLat = null;
+                currentLng = null;
+
+                if (gpsStatus) gpsStatus.className = 'flex items-center gap-2.5 p-3 rounded-xl border border-gray-200 bg-gray-50 text-[12.5px] text-gray-600';
+                if (gpsStatusIcon) {
+                    gpsStatusIcon.className = 'material-symbols-outlined text-[20px] text-gray-400';
+                    gpsStatusIcon.textContent = 'location_searching';
+                }
+                if (gpsStatusText) gpsStatusText.textContent = 'Chưa lấy vị trí của bạn';
+                if (gpsBtnText) gpsBtnText.textContent = 'Lấy vị trí GPS hiện tại';
+                syncGpsRadius('3');
+
+                locationLabel.textContent = 'Chọn khu vực';
+                switchTab('area');
+                closeLocation();
+            });
+        }
+
+        if (applyLocationBtn) {
+            applyLocationBtn.addEventListener('click', function() {
+                if (activeTab === 'area') {
+                    // ÁP DỤNG KHU VỰC HÀNH CHÍNH -> XÓA SẠCH GPS ĐỂ TÁCH BIỆT HOÀN TOÀN
+                    const provVal = provinceSelect.value;
+                    const distVal = districtSelect.value;
+
+                    hiddenLat.value = '';
+                    hiddenLng.value = '';
+                    if (hiddenBanKinh) hiddenBanKinh.value = '';
+                    if (hiddenSapXep.value === 'near_me') hiddenSapXep.value = '';
+                    currentLat = null;
+                    currentLng = null;
+
+                    if (distVal) {
+                        hiddenQuanHuyen.value = distVal;
+                        hiddenTinhThanh.value = provVal;
+                        locationLabel.textContent = districtSelect.options[districtSelect.selectedIndex]?.text || distVal;
+                    } else if (provVal) {
+                        hiddenTinhThanh.value = provVal;
+                        hiddenQuanHuyen.value = '';
+                        locationLabel.textContent = provinceSelect.options[provinceSelect.selectedIndex]?.text || provVal;
+                    } else {
+                        hiddenTinhThanh.value = '';
+                        hiddenQuanHuyen.value = '';
+                        locationLabel.textContent = 'Chọn khu vực';
+                    }
+                } else {
+                    // ÁP DỤNG GPS GẦN BẠN -> XÓA SẠCH TỈNH / HUYỆN ĐỂ TÁCH BIỆT HOÀN TOÀN
+                    const lat = currentLat || hiddenLat.value;
+                    const lng = currentLng || hiddenLng.value;
+
+                    if (!lat || !lng) {
+                        alert('Vui lòng bấm "Lấy vị trí GPS hiện tại" trước khi áp dụng');
+                        return;
+                    }
+
+                    hiddenTinhThanh.value = '';
+                    hiddenQuanHuyen.value = '';
+                    provinceSelect.value = '';
+                    districtSelect.innerHTML = '<option value="">Tất cả quận/huyện</option>';
+
+                    hiddenLat.value = lat;
+                    hiddenLng.value = lng;
+                    const radius = radiusInput?.value || '3';
+                    if (hiddenBanKinh) hiddenBanKinh.value = radius;
+                    hiddenSapXep.value = 'near_me';
+
+                    locationLabel.textContent = `Gần bạn (< ${radius}km)`;
+                }
+
+                closeLocation();
+            });
+        }
 
         // Click outside listener
         document.addEventListener('click', function(e) {

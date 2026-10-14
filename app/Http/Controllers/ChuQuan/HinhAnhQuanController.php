@@ -63,19 +63,40 @@ class HinhAnhQuanController extends Controller
                 $objectKey = 'quan/gallery/'.$quan->id.'/'.$filename;
                 $uploadDisk = config('filesystems.upload_disk', 'r2');
                 try {
-                    Storage::disk($uploadDisk)->put($objectKey, (string) $encoded);
+                    $saved = Storage::disk($uploadDisk)->put($objectKey, (string) $encoded);
+                    if (! $saved) {
+                        throw new \RuntimeException("Disk {$uploadDisk} returned false on put.");
+                    }
                     $imageUrl = Storage::disk($uploadDisk)->url($objectKey);
-                    $storedKey = ($uploadDisk === 'public' || $uploadDisk === 'local') ? 'local:'.$objectKey : $objectKey;
+                    $storedKey = ($uploadDisk === 'uploads' || $uploadDisk === 'public' || $uploadDisk === 'local') ? 'local:'.$objectKey : $objectKey;
                 } catch (\Throwable $e) {
-                    Log::error('Venue gallery upload failed.', [
+                    Log::warning('Venue gallery upload failed on primary disk, falling back to local.', [
                         'disk' => $uploadDisk,
                         'key' => $objectKey,
                         'error' => $e->getMessage(),
+                        'previous' => $e->getPrevious()?->getMessage(),
                     ]);
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Lỗi lưu ảnh lên Cloud Storage. Vui lòng thử lại sau.',
-                    ], 500);
+
+                    if ($uploadDisk !== 'uploads') {
+                        try {
+                            Storage::disk('uploads')->put($objectKey, (string) $encoded);
+                            $imageUrl = Storage::disk('uploads')->url($objectKey);
+                            $storedKey = 'local:'.$objectKey;
+                        } catch (\Throwable $fallbackEx) {
+                            Log::error('Venue gallery local fallback also failed.', [
+                                'error' => $fallbackEx->getMessage(),
+                            ]);
+                            return response()->json([
+                                'success' => false,
+                                'message' => 'Lỗi lưu ảnh. Vui lòng thử lại sau.',
+                            ], 500);
+                        }
+                    } else {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Lỗi lưu ảnh lên Cloud Storage. Vui lòng thử lại sau.',
+                        ], 500);
+                    }
                 }
 
                 $img = HinhAnhQuan::create([

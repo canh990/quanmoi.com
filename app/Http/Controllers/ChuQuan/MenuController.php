@@ -130,15 +130,32 @@ class MenuController extends Controller
                                 
                                 $uploadDisk = config('filesystems.upload_disk', 'r2');
                                 try {
-                                    Storage::disk($uploadDisk)->put($fileName, $imageContents);
+                                    $saved = Storage::disk($uploadDisk)->put($fileName, $imageContents);
+                                    if (! $saved) {
+                                        throw new \RuntimeException("Disk {$uploadDisk} returned false on put.");
+                                    }
                                     $imagePath = Storage::disk($uploadDisk)->url($fileName);
                                 } catch (\Throwable $e) {
-                                    \Illuminate\Support\Facades\Log::error('Menu image upload failed.', [
+                                    \Illuminate\Support\Facades\Log::warning('Menu image upload failed on primary disk, falling back to local.', [
                                         'disk' => $uploadDisk,
                                         'key' => $fileName,
                                         'error' => $e->getMessage(),
+                                        'previous' => $e->getPrevious()?->getMessage(),
                                     ]);
-                                    throw new \RuntimeException('Lỗi lưu ảnh món ăn lên Cloud Storage. Vui lòng thử lại sau.');
+
+                                    if ($uploadDisk !== 'uploads') {
+                                        try {
+                                            Storage::disk('uploads')->put($fileName, $imageContents);
+                                            $imagePath = Storage::disk('uploads')->url($fileName);
+                                        } catch (\Throwable $fallbackEx) {
+                                            \Illuminate\Support\Facades\Log::error('Menu image local fallback also failed.', [
+                                                'error' => $fallbackEx->getMessage(),
+                                            ]);
+                                            throw new \RuntimeException('Lỗi lưu ảnh món ăn. Vui lòng thử lại sau.');
+                                        }
+                                    } else {
+                                        throw new \RuntimeException('Lỗi lưu ảnh món ăn lên Cloud Storage. Vui lòng thử lại sau.');
+                                    }
                                 }
                             }
 

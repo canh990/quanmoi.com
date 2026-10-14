@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             DanhMucQuanSeeder::class,
             QuanSeeder::class,
             MonAnSeeder::class,
+            PhoSeeder::class,
             VideoShortSeeder::class,
             BlogSeeder::class,
             QuanDanhGiaSeeder::class,
