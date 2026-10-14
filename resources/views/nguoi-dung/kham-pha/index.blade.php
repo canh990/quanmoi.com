@@ -544,16 +544,32 @@
         {{-- Món ăn được tìm thấy (khi có từ khóa tìm kiếm) --}}
         @if(isset($monAns) && $monAns->isNotEmpty())
             <section class="mb-12" id="ket-qua-mon-an">
-                <div class="flex items-end justify-between mb-5">
+                <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-5">
                     <div>
                         <h2 class="text-xl md:text-2xl font-black text-on-surface flex items-center gap-2">
                             <span class="material-symbols-outlined text-primary text-[26px]">restaurant_menu</span>
                             Món ăn được tìm thấy
                         </h2>
                         <p class="text-text-muted text-[14px] mt-1">
-                            {{ $monAns->count() }} món khớp với "<span class="font-semibold text-on-surface">{{ $tuKhoa }}</span>"
+                            @if(isset($totalMonAns) && $totalMonAns > 12)
+                                Hiển thị món <span class="font-bold text-on-surface">{{ ($quans->currentPage() - 1) * 12 + 1 }} - {{ min($quans->currentPage() * 12, $totalMonAns) }}</span> trên tổng số <span class="font-bold text-on-surface">{{ $totalMonAns }}</span> món khớp với "<span class="font-semibold text-on-surface">{{ $tuKhoa }}</span>"
+                            @else
+                                {{ $monAns->count() }} món khớp với "<span class="font-semibold text-on-surface">{{ $tuKhoa }}</span>"
+                            @endif
                         </p>
                     </div>
+
+                    @if(isset($totalMonAnPages) && $totalMonAnPages > 1)
+                        <div class="flex items-center gap-1.5 self-start sm:self-auto bg-gray-50 p-1.5 rounded-2xl border border-gray-200 shadow-2xs">
+                            <span class="text-[12px] text-gray-500 font-semibold px-2">Trang:</span>
+                            @for($p = 1; $p <= $totalMonAnPages; $p++)
+                                <a href="{{ request()->fullUrlWithQuery(['page' => $p]) }}#ket-qua-mon-an" 
+                                   class="min-w-7 h-7 px-2 rounded-lg flex items-center justify-center text-[12px] font-bold transition-all {{ $quans->currentPage() === $p ? 'bg-primary text-white shadow-xs' : 'text-gray-600 hover:bg-gray-200' }}">
+                                    {{ $p }}
+                                </a>
+                            @endfor
+                        </div>
+                    @endif
                 </div>
 
                 <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">

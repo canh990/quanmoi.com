@@ -162,14 +162,16 @@ class KhamPhaController extends Controller
 
         [$tenTinhThanh, $tenQuanHuyen] = $this->resolveTenKhuVuc($tinhThanhId, $quanHuyenId);
 
-        // Tìm các món ăn khớp với từ khóa (chỉ hiển thị ở trang đầu).
+        // Tìm các món ăn khớp với từ khóa theo từng trang phân trang.
         // Chỉ lấy món thuộc các quán thỏa TOÀN BỘ bộ lọc hiện tại (dùng lại truy vấn ES của danh sách quán).
         $monAns = collect();
-        if ($tuKhoa !== '' && $quans->currentPage() === 1 && $quans->total() > 0) {
+        $totalMonAns = 0;
+        $totalMonAnPages = 0;
+        if ($tuKhoa !== '' && $quans->total() > 0) {
             $quanIds = (clone $query)->take(500)->keys()->map(fn ($id) => (string) $id)->values();
             $thuTuQuan = $quanIds->flip();
 
-            $monAns = \App\Models\MonTrongMenu::query()
+            $allMatchingMonAns = \App\Models\MonTrongMenu::query()
                 ->where('ten_mon', 'like', '%' . $tuKhoa . '%')
                 ->whereHas('danhMuc', fn ($q) => $q->whereIn('quan_id', $quanIds->all()))
                 ->with(['danhMuc.quan:id,slug,ten_quan,ten_quan_huyen,ten_tinh_thanh,anh_bia'])
@@ -177,17 +179,24 @@ class KhamPhaController extends Controller
                 ->sortBy([
                     fn ($a, $b) => (int) $b->con_hang <=> (int) $a->con_hang,
                     fn ($a, $b) => ($thuTuQuan[$a->danhMuc?->quan_id] ?? PHP_INT_MAX) <=> ($thuTuQuan[$b->danhMuc?->quan_id] ?? PHP_INT_MAX),
-                ])
-                ->take(12)
-                ->values();
+                ]);
+
+            $totalMonAns = $allMatchingMonAns->count();
+            $perPageMonAn = 12;
+            $totalMonAnPages = (int) ceil($totalMonAns / $perPageMonAn);
+            $currentPage = (int) $request->input('page', 1);
+
+            $monAns = $allMatchingMonAns->forPage($currentPage, $perPageMonAn)->values();
         }
 
         return view('nguoi-dung.kham-pha.index', [
-            'quans'        => $quans,
-            'quansGoiY'    => $quansGoiY,
-            'monAns'       => $monAns,
-            'danhMuc'      => $danhMuc,
-            'tuKhoa'       => $tuKhoa,
+            'quans'           => $quans,
+            'quansGoiY'       => $quansGoiY,
+            'monAns'          => $monAns,
+            'totalMonAns'     => $totalMonAns,
+            'totalMonAnPages' => $totalMonAnPages,
+            'danhMuc'         => $danhMuc,
+            'tuKhoa'          => $tuKhoa,
             'tinhThanhId'  => $tinhThanhId,
             'tenTinhThanh' => $tenTinhThanh,
             'quanHuyenId'  => $quanHuyenId,
