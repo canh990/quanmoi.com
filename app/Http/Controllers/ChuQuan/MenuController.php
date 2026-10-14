@@ -143,7 +143,6 @@ class MenuController extends Controller
                                 $targetDisk = ($uploadDisk === 'r2' && ! $r2Configured) ? 'uploads' : $uploadDisk;
 
                                 try {
-                                try {
                                     $saved = Storage::disk($uploadDisk)->put($fileName, $imageContents);
                                     if (! $saved) {
                                         throw new \RuntimeException("Disk {$uploadDisk} returned false on put.");

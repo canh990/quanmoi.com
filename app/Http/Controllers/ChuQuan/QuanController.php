@@ -194,7 +194,6 @@ class QuanController extends Controller
         $targetDisk = ($uploadDisk === 'r2' && ! $r2Configured) ? 'uploads' : $uploadDisk;
 
         try {
-        try {
             $saved = Storage::disk($uploadDisk)->put($objectKey, $contents);
             if ($saved) {
                 $url = Storage::disk($uploadDisk)->url($objectKey);
