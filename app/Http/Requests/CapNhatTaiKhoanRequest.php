@@ -20,6 +20,7 @@ class CapNhatTaiKhoanRequest extends FormRequest
             'dia_chi'       => 'nullable|string|max:255',
             'ngay_sinh'     => 'nullable|date|before_or_equal:today',
             'gioi_tinh'     => 'nullable|in:nam,nữ,khác',
+            'last_updated_at' => 'nullable|string',
 
             // --- Ảnh đại diện (upload file) ---
             // Chỉ hiện diện khi user gửi file từ tab ảnh đại diện

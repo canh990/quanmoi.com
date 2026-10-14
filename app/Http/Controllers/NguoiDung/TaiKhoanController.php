@@ -26,7 +26,23 @@ class TaiKhoanController extends Controller
     public function update(CapNhatTaiKhoanRequest $request, \App\Services\UploadAnhService $uploadService)
     {
         $user = Auth::user();
+
+        // 1. Khóa lạc quan (Optimistic Locking): Kiểm tra nếu dữ liệu đã được cập nhật ở tab khác
+        $lastUpdatedAt = $request->input('last_updated_at');
+        if ($lastUpdatedAt && $user->updated_at) {
+            try {
+                $clientTime = \Carbon\Carbon::parse($lastUpdatedAt);
+                if ($user->updated_at->timestamp > $clientTime->timestamp) {
+                    return redirect()->route('tai-khoan.index')
+                        ->with('error_conflict', 'Dữ liệu đã được cập nhật ở tab khác, vui lòng tải lại trang để thấy dữ liệu mới nhất.');
+                }
+            } catch (\Throwable $e) {
+                // Bỏ qua nếu parse không hợp lệ
+            }
+        }
+
         $validated = $request->validated();
+        unset($validated['last_updated_at']);
 
         if ($request->hasFile('anh_dai_dien')) {
             $result = $uploadService->uploadAvatar(

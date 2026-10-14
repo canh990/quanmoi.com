@@ -8,6 +8,7 @@
                 @csrf
                 @method('PUT')
                 <input type="hidden" name="ho_ten" value="{{ $user->ho_ten }}">
+                <input type="hidden" name="last_updated_at" value="{{ $user->updated_at?->toISOString() }}">
                 <div class="w-20 h-20 rounded-full overflow-hidden border-2 border-primary-container p-0.5">
                     <img class="w-full h-full object-cover rounded-full" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name={{ urlencode($user->ho_ten) }}&background=ffdbcc&color=a04100&bold=true&size=256';" src="{{ $user->anh_dai_dien ?? 'https://ui-avatars.com/api/?name=' . urlencode($user->ho_ten) . '&background=ffdbcc&color=a04100&bold=true&size=256' }}" />
                 </div>
