@@ -13,17 +13,76 @@
 @section('content')
 <main class="max-w-[1200px] mx-auto px-container-margin py-stack-lg min-h-[819px] pt-6">
     @if(session('success'))
-    <div id="toast-success" class="mb-6 flex items-center gap-3 bg-white border border-green-200 rounded-2xl px-5 py-4 shadow-lg shadow-green-100/50">
+    <div id="toast-success" class="relative overflow-hidden mb-6 flex items-center gap-3 bg-white border border-green-200 rounded-2xl px-5 py-4 shadow-lg shadow-green-100/50 transition-all duration-500 ease-out">
         <div class="w-9 h-9 rounded-xl bg-green-100 flex items-center justify-center shrink-0">
             <span class="material-symbols-outlined text-green-600" style="font-variation-settings:'FILL' 1">check_circle</span>
         </div>
-        <div class="flex-1">
-            <p class="font-bold text-gray-900 text-sm">Cập nhật thành công!</p>
+        <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2">
+                <p class="font-bold text-gray-900 text-sm">Cập nhật thành công!</p>
+                <span id="toast-countdown-badge" class="text-[11px] font-semibold text-green-700 bg-green-50 px-2 py-0.5 rounded-full border border-green-200/70 inline-flex items-center gap-1" title="Tự động đóng sau 10 giây">
+                    <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                    <span id="toast-countdown-seconds">10s</span>
+                </span>
+            </div>
             <p class="text-gray-500 text-xs mt-0.5">{{ session('success') }}</p>
         </div>
-        <button onclick="document.getElementById('toast-success').remove()" class="text-gray-400 hover:text-gray-600 transition-colors">
+        <button onclick="dismissToastSuccess()" class="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-lg hover:bg-gray-100 cursor-pointer" title="Đóng ngay">
             <span class="material-symbols-outlined text-[20px]">close</span>
         </button>
+
+        {{-- Thanh tiến trình đếm ngược 10 giây --}}
+        <div class="absolute bottom-0 left-0 right-0 h-1 bg-green-100 overflow-hidden">
+            <div id="toast-progress-bar" class="h-full bg-green-500 transition-all duration-1000 ease-linear" style="width: 100%;"></div>
+        </div>
+    </div>
+
+    <script>
+        function dismissToastSuccess() {
+            const toast = document.getElementById('toast-success');
+            if (!toast) return;
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(-10px)';
+            setTimeout(() => {
+                toast.remove();
+            }, 500);
+        }
+
+        (function() {
+            let timeLeft = 10;
+            const secondsEl = document.getElementById('toast-countdown-seconds');
+            const progressEl = document.getElementById('toast-progress-bar');
+
+            const timer = setInterval(() => {
+                timeLeft--;
+                if (secondsEl) {
+                    secondsEl.textContent = timeLeft + 's';
+                }
+                if (progressEl) {
+                    progressEl.style.width = (timeLeft * 10) + '%';
+                }
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    dismissToastSuccess();
+                }
+            }, 1000);
+        })();
+    </script>
+    @endif
+
+    @if(session('error_conflict') || session('error'))
+    <div id="toast-conflict" class="mb-6 flex items-start sm:items-center gap-3 bg-amber-50 border border-amber-200 rounded-2xl px-5 py-4 shadow-lg shadow-amber-100/50">
+        <div class="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0 text-amber-600">
+            <span class="material-symbols-outlined text-[22px]">warning</span>
+        </div>
+        <div class="flex-1 min-w-0">
+            <p class="font-bold text-amber-900 text-sm">Xung đột dữ liệu!</p>
+            <p class="text-amber-800 text-xs mt-0.5">{{ session('error_conflict') ?? session('error') }}</p>
+        </div>
+        <a href="{{ route('tai-khoan.index') }}" class="shrink-0 px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-xs transition-all flex items-center gap-1.5 cursor-pointer">
+            <span class="material-symbols-outlined text-[16px]">refresh</span>
+            <span>Tải lại trang</span>
+        </a>
     </div>
     @endif
 
@@ -35,12 +94,15 @@
         <div class="md:col-span-9 space-y-stack-lg">
             <!-- Profile Information Section -->
             <section class="bg-surface-card p-stack-lg rounded-xl shadow-[0px_4px_20px_rgba(0,0,0,0.05)] border border-surface-container">
-                <form action="{{ route('tai-khoan.update') }}" method="POST">
+                <form id="form-update-profile" action="{{ route('tai-khoan.update') }}" method="POST">
                     @csrf
                     @method('PUT')
+                    <input type="hidden" name="last_updated_at" value="{{ $user->updated_at?->toISOString() }}">
                     <div class="flex justify-between items-center mb-stack-lg">
                         <h3 class="font-headline-lg text-headline-lg text-on-surface">Thông tin cá nhân</h3>
-                        <button type="submit" class="bg-primary text-white px-6 py-2 rounded-xl font-label-md text-label-md active:scale-95 transition-all shadow-lg hover:shadow-primary/20">LƯU THAY ĐỔI</button>
+                        <button type="submit" class="bg-primary text-white px-6 py-2.5 rounded-xl font-label-md text-label-md active:scale-95 transition-all shadow-lg hover:shadow-primary/20 flex items-center justify-center gap-2 min-w-[140px]">
+                            <span class="btn-text">LƯU THAY ĐỔI</span>
+                        </button>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-stack-md">
                         <div class="space-y-1">
@@ -85,12 +147,14 @@
 
             <!-- Password Update Section -->
             <section class="bg-surface-card p-stack-lg rounded-xl shadow-[0px_4px_20px_rgba(0,0,0,0.05)] border border-surface-container">
-                <form action="{{ route('tai-khoan.update-password') }}" method="POST">
+                <form id="form-update-password" action="{{ route('tai-khoan.update-password') }}" method="POST">
                     @csrf
                     @method('PUT')
                     <div class="flex justify-between items-center mb-stack-lg">
                         <h3 class="font-headline-lg text-headline-lg text-on-surface">Bảo mật & Mật khẩu</h3>
-                        <button type="submit" class="bg-surface-container-highest text-on-surface-variant hover:text-primary px-6 py-2 rounded-xl font-label-md text-label-md active:scale-95 transition-all shadow-sm">CẬP NHẬT MẬT KHẨU</button>
+                        <button type="submit" class="bg-surface-container-highest text-on-surface-variant hover:text-primary px-6 py-2.5 rounded-xl font-label-md text-label-md active:scale-95 transition-all shadow-sm flex items-center justify-center gap-2 min-w-[180px]">
+                            <span class="btn-text">CẬP NHẬT MẬT KHẨU</span>
+                        </button>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-stack-md">
                         <div class="md:col-span-2 space-y-1">
@@ -210,4 +274,41 @@
         </div>
     </div>
 </main>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        ['form-update-profile', 'form-update-password'].forEach(function(formId) {
+            const form = document.getElementById(formId);
+            if (!form) return;
+
+            form.addEventListener('submit', function(e) {
+                if (!form.checkValidity()) {
+                    return;
+                }
+
+                const submitBtn = form.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    if (submitBtn.dataset.submitting === 'true') {
+                        e.preventDefault();
+                        return false;
+                    }
+                    submitBtn.dataset.submitting = 'true';
+                    submitBtn.style.pointerEvents = 'none';
+
+                    submitBtn.innerHTML = `
+                        <svg class="animate-spin h-4 w-4 text-current inline-block mr-1.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span>Đang lưu...</span>
+                    `;
+
+                    setTimeout(function() {
+                        submitBtn.disabled = true;
+                    }, 50);
+                }
+            });
+        });
+    });
+</script>
 @endsection
