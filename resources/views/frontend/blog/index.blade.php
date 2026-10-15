@@ -101,7 +101,7 @@
                 </div>
                 <div class="text-white">
                     <p class="font-label-md text-label-md font-semibold">Bởi {{ $heroBlog->user->ho_ten }}</p>
-                    <p class="text-xs opacity-75">{{ $heroBlog->published_at ? $heroBlog->published_at->format('d/m/Y') : '' }} • {{ number_format($heroBlog->view_count ?? 0) }} lượt xem</p>
+                    <p class="text-xs opacity-75">{{ $heroBlog->published_at ? $heroBlog->published_at->format('d/m/Y') : '' }} • {{ number_format($heroBlog->view_count ?? 0) }} lượt xem • {{ number_format($heroBlog->comment_count ?? 0) }} bình luận</p>
                 </div>
             </div>
         </div>
@@ -201,9 +201,10 @@
                                 </a>
                                 <div class="mt-auto pt-4 border-t border-outline-variant flex justify-between items-center">
                                     <span class="font-label-sm text-label-sm text-text-muted">{{ Str::limit($blog->user->ho_ten ?? 'Tác giả', 15) }} • {{ $blog->published_at ? $blog->published_at->format('d/m/Y') : '' }}</span>
-                                    <span class="font-label-sm text-label-sm text-text-muted flex items-center gap-1">
-                                        <span class="material-symbols-outlined text-[14px]">visibility</span> {{ number_format($blog->view_count ?? 0) }} lượt xem
-                                    </span>
+                                    <div class="font-label-sm text-label-sm text-text-muted flex items-center gap-2.5">
+                                        <span class="flex items-center gap-0.5" title="Lượt xem"><span class="material-symbols-outlined text-[14px]">visibility</span> {{ number_format($blog->view_count ?? 0) }}</span>
+                                        <span class="flex items-center gap-0.5" title="Bình luận"><span class="material-symbols-outlined text-[14px]">forum</span> {{ number_format($blog->comment_count ?? 0) }}</span>
+                                    </div>
                                 </div>
                             </div>
                         </article>
