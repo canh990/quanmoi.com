@@ -120,7 +120,7 @@
         </nav>
         
         <div class="flex items-center gap-3 w-full md:w-auto shrink-0 justify-end">
-            <form action="{{ route('blog.index') }}" method="GET" class="relative flex-grow md:w-72" id="blog-search-form">
+            <form action="{{ route('blog.index') }}" method="GET" class="relative flex-grow md:w-80 lg:w-96" id="blog-search-form">
                 @if(request()->has('category'))
                     <input type="hidden" name="category" value="{{ request('category') }}">
                 @endif
@@ -134,12 +134,12 @@
                        placeholder="Tìm kiếm bài viết..." 
                        autocomplete="off"
                        oninput="handleBlogSearchInput(this)"
-                       class="w-full pl-10 pr-9 py-2 bg-surface-container rounded-full text-body-sm focus:ring-2 focus:ring-primary focus:bg-white focus:border-primary outline-none border border-transparent shadow-inner transition-all">
-                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[20px] pointer-events-none">search</span>
+                       class="w-full pl-10 pr-9 py-2.5 bg-surface-container rounded-full text-body-sm focus:ring-2 focus:ring-primary focus:bg-white focus:border-primary outline-none border border-slate-200/50 shadow-inner transition-all">
+                <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted text-[20px] pointer-events-none">search</span>
                 
                 @if(request('search'))
                     <a href="{{ route('blog.index', array_filter(['category' => request('category'), 'tag' => request('tag')])) }}" 
-                       class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 p-0.5 rounded-full hover:bg-slate-200/60 transition-colors"
+                       class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 p-0.5 rounded-full hover:bg-slate-200/60 transition-colors"
                        title="Xóa tìm kiếm">
                         <span class="material-symbols-outlined text-[18px]">cancel</span>
                     </a>
@@ -276,7 +276,7 @@
                     <button type="submit" class="w-full py-3 bg-primary-container text-on-primary font-title-md text-title-md rounded-xl shadow-sm hover:opacity-90 active:scale-[0.98] transition-all">Đăng ký ngay</button>
                 </form>
             </div>
-            
+
             <!-- Popular Posts -->
             <div class="level-1-card p-6">
                 <h4 class="font-title-md text-title-md text-on-surface mb-4 pb-2 border-b border-outline-variant flex items-center gap-2 font-bold">

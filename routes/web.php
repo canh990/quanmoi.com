@@ -26,6 +26,10 @@ Route::post('/blog/{slug}/luot-xem', [FrontendBlogController::class, 'recordView
 Route::post('/blog/{slug}/binh-luan', [FrontendBlogController::class, 'storeComment'])->middleware(['auth', 'throttle:30,1'])->name('blog.comment.store');
 Route::delete('/blog/{slug}/binh-luan/{commentId}', [FrontendBlogController::class, 'deleteComment'])->middleware('auth')->name('blog.comment.destroy');
 Route::post('/blog/{slug}/binh-luan/{commentId}/thich', [FrontendBlogController::class, 'toggleLikeComment'])->middleware('auth')->name('blog.comment.like');
+Route::post('/blog/{slug}/ai-tom-tat', [FrontendBlogController::class, 'summarize'])->name('blog.ai.summarize');
+Route::get('/api/blog/ai-search', [FrontendBlogController::class, 'aiSearch'])->name('blog.ai.search');
+Route::post('/api/blog/ai-chat', [FrontendBlogController::class, 'aiChat'])->name('blog.ai.chat');
+Route::get('/api/blog/recommendations', [FrontendBlogController::class, 'recommendations'])->name('blog.ai.recommendations');
 Route::get('/video-review', [\App\Http\Controllers\NguoiDung\VideoShortController::class, 'index'])->name('video-review.index');
 Route::view('/gioi-thieu', 'pages.about')->name('about');
 Route::get('/media/venue/{path}', [HinhAnhQuanController::class, 'localImage'])

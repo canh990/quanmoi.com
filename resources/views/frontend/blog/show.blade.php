@@ -100,6 +100,117 @@
                 </a>
             </div>
 
+            <!-- AI Summarizer Feature Section -->
+            <div class="mb-stack-lg border border-primary/25 bg-gradient-to-br from-amber-500/5 via-primary/5 to-purple-500/5 rounded-2xl p-4 md:p-5 transition-all shadow-xs relative overflow-hidden" id="ai-summarizer-card">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm" style="background: linear-gradient(135deg, #a04100 0%, #ea580c 100%); color: #ffffff;">
+                            <span class="material-symbols-outlined text-xl" style="color: #ffffff;">auto_awesome</span>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h3 class="font-title-md text-sm md:text-base font-bold text-on-background">AI Tóm tắt bài viết</h3>
+                                <span class="bg-primary/10 text-primary text-[10px] font-extrabold px-2 py-0.5 rounded-full border border-primary/20">5s nắm trọn cốt lõi</span>
+                            </div>
+                            <p class="text-xs text-on-surface-variant mt-0.5">Rút gọn 4 ý chính: Địa chỉ, món nên thử, mức giá & ưu/nhược điểm trong 5 giây.</p>
+                        </div>
+                    </div>
+                    <button type="button" onclick="toggleAiSummary()" id="ai-summary-btn" class="px-4 py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-white text-xs font-bold shadow-xs hover:shadow-md transition-all flex items-center justify-center gap-2 shrink-0 cursor-pointer active:scale-95">
+                        <span class="material-symbols-outlined text-[18px]">bolt</span>
+                        <span id="ai-summary-btn-text">Tóm tắt bằng AI</span>
+                    </button>
+                </div>
+
+                <!-- AI Summary Loading Spinner / Shimmer -->
+                <div id="ai-summary-loading" class="hidden mt-4 pt-4 border-t border-primary/10 space-y-3">
+                    <div class="flex items-center gap-2 text-xs font-bold text-primary animate-pulse">
+                        <span class="material-symbols-outlined text-base animate-spin">progress_activity</span>
+                        <span>AI đang đọc và tổng hợp nội dung bài viết...</span>
+                    </div>
+                    <div class="h-3.5 bg-slate-200/80 rounded-full animate-pulse w-3/4"></div>
+                    <div class="h-3.5 bg-slate-200/80 rounded-full animate-pulse w-5/6"></div>
+                </div>
+
+                <!-- AI Summary Content Details (Expands smoothly) -->
+                <div id="ai-summary-content" class="hidden mt-4 pt-4 border-t border-primary/15">
+                    <!-- Card Overview TL;DR -->
+                    <div class="p-3.5 bg-white/90 backdrop-blur-sm rounded-xl border border-primary/10 mb-3.5 shadow-2xs">
+                        <div class="flex items-center justify-between mb-1.5">
+                            <span class="text-[11px] font-extrabold text-primary flex items-center gap-1 uppercase tracking-wider">
+                                <span class="material-symbols-outlined text-[14px]">psychology</span> Tóm lược nhanh (TL;DR)
+                            </span>
+                            <div class="flex items-center gap-2">
+                                <button type="button" onclick="speakAiSummary()" id="ai-tts-btn" class="text-[11px] font-semibold text-slate-500 hover:text-primary flex items-center gap-1 px-2 py-0.5 rounded-md hover:bg-slate-100 transition-colors cursor-pointer" title="Đọc to tóm tắt">
+                                    <span class="material-symbols-outlined text-[14px]" id="ai-tts-icon">volume_up</span>
+                                    <span id="ai-tts-text">Nghe đọc</span>
+                                </button>
+                                <button type="button" onclick="copyAiSummary()" class="text-[11px] font-semibold text-slate-500 hover:text-primary flex items-center gap-1 px-2 py-0.5 rounded-md hover:bg-slate-100 transition-colors cursor-pointer" title="Sao chép tóm tắt">
+                                    <span class="material-symbols-outlined text-[14px]">content_copy</span>
+                                    <span>Sao chép</span>
+                                </button>
+                            </div>
+                        </div>
+                        <p class="text-xs text-on-surface leading-relaxed font-medium" id="ai-summary-overview"></p>
+                    </div>
+
+                    <!-- 4 Key Pillars Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <!-- Pillar 1: Địa chỉ -->
+                        <div class="p-3 bg-white/95 rounded-xl border border-outline-variant/30 flex items-start gap-2.5">
+                            <div class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
+                                <span class="material-symbols-outlined text-[16px]">location_on</span>
+                            </div>
+                            <div>
+                                <span class="text-[11px] font-bold text-slate-500 uppercase tracking-tight block">1. Địa chỉ & Khu vực</span>
+                                <p class="text-xs font-bold text-slate-800 mt-0.5 leading-snug" id="ai-summary-address"></p>
+                            </div>
+                        </div>
+
+                        <!-- Pillar 2: Món nên thử -->
+                        <div class="p-3 bg-white/95 rounded-xl border border-outline-variant/30 flex items-start gap-2.5">
+                            <div class="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 mt-0.5">
+                                <span class="material-symbols-outlined text-[16px]">restaurant_menu</span>
+                            </div>
+                            <div>
+                                <span class="text-[11px] font-bold text-slate-500 uppercase tracking-tight block">2. Món nên thử (Must-try)</span>
+                                <div class="flex flex-wrap gap-1 mt-1" id="ai-summary-musttry"></div>
+                            </div>
+                        </div>
+
+                        <!-- Pillar 3: Mức giá -->
+                        <div class="p-3 bg-white/95 rounded-xl border border-outline-variant/30 flex items-start gap-2.5">
+                            <div class="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 mt-0.5">
+                                <span class="material-symbols-outlined text-[16px]">payments</span>
+                            </div>
+                            <div>
+                                <span class="text-[11px] font-bold text-slate-500 uppercase tracking-tight block">3. Mức giá & Phân khúc</span>
+                                <p class="text-xs font-bold text-slate-800 mt-0.5 leading-snug" id="ai-summary-price"></p>
+                            </div>
+                        </div>
+
+                        <!-- Pillar 4: Ưu & Nhược điểm -->
+                        <div class="p-3 bg-white/95 rounded-xl border border-outline-variant/30 flex items-start gap-2.5">
+                            <div class="w-7 h-7 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center shrink-0 mt-0.5">
+                                <span class="material-symbols-outlined text-[16px]">balance</span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <span class="text-[11px] font-bold text-slate-500 uppercase tracking-tight block">4. Ưu & Nhược điểm</span>
+                                <ul class="text-xs space-y-1 mt-1 text-slate-700" id="ai-summary-proscons"></ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Summary Footer -->
+                    <div class="mt-3 flex items-center justify-between text-[11px] text-slate-400 pt-2 border-t border-slate-100">
+                        <span id="ai-summary-saved-time">Tiết kiệm 95% thời gian đọc (nắm trọn trong 5 giây)</span>
+                        <button type="button" onclick="toggleAiSummary(true)" class="hover:text-primary font-medium flex items-center gap-0.5 cursor-pointer">
+                            <span>Thu gọn</span>
+                            <span class="material-symbols-outlined text-[14px]">expand_less</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <!-- Hero Image -->
             @if($blog->cover_image)
             <div class="w-full h-[300px] md:h-[400px] rounded-xl overflow-hidden mb-stack-lg shadow-[0_4px_20px_rgba(0,0,0,0.05)]">
@@ -374,22 +485,27 @@
             </div>
         </div>
         
-        <!-- Related Articles (if any) -->
+        <!-- Related Articles -->
         @if($relatedBlogs->count() > 0)
-        <section class="mt-8">
-            <h3 class="font-display-lg text-2xl text-on-background mb-6">Bài viết liên quan</h3>
+        <section class="mt-10">
+            <h3 class="font-display-lg text-2xl text-on-background mb-6 font-bold">Bài viết liên quan</h3>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 @foreach($relatedBlogs->take(4) as $related)
-                    <a href="{{ route('blog.show', $related->slug) }}" class="bg-surface-card rounded-xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] border border-outline-variant/30 group flex flex-col">
+                    <a href="{{ route('blog.show', $related->slug) }}" class="bg-surface-card rounded-xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] border border-outline-variant/30 group flex flex-col hover:border-primary/50 transition-all hover:-translate-y-1">
                         <div class="relative aspect-[4/3] overflow-hidden">
                             <img src="{{ $related->cover_image ? (Str::startsWith($related->cover_image, 'http') ? $related->cover_image : asset('storage/'.$related->cover_image)) : 'https://placehold.co/600x400/png' }}" 
                                  class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" alt="{{ $related->title }}">
+                            @if($related->category)
+                                <div class="absolute bottom-3 left-3 bg-black/60 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-md uppercase">
+                                    {{ $related->category->name }}
+                                </div>
+                            @endif
                         </div>
                         <div class="p-4 flex flex-col flex-1">
-                            <h4 class="font-title-md text-[15px] leading-[22px] text-on-background mb-2 line-clamp-2 group-hover:text-primary transition-colors flex-1">{{ $related->title }}</h4>
+                            <h4 class="font-title-md text-[15px] leading-[22px] text-on-background mb-2 line-clamp-2 group-hover:text-primary transition-colors flex-1 font-bold">{{ $related->title }}</h4>
                             <div class="text-[12px] text-on-surface-variant flex items-center justify-between mt-auto pt-2 border-t border-surface-dim">
-                                <span>{{ $related->user->ho_ten }}</span>
-                                <span>{{ $related->published_at->format('d/m/Y') }}</span>
+                                <span>{{ $related->user->ho_ten ?? 'Tác giả' }}</span>
+                                <span>{{ $related->published_at ? $related->published_at->format('d/m/Y') : '' }}</span>
                             </div>
                         </div>
                     </a>
@@ -897,5 +1013,132 @@
             }
         }
     });
+
+    // ─── AI Summarizer Logic ───────────────────────────────────────────────
+    let currentSummaryData = null;
+    let isSpeaking = false;
+
+    function toggleAiSummary(forceClose = false) {
+        const card = document.getElementById('ai-summary-content');
+        const btnText = document.getElementById('ai-summary-btn-text');
+        const loading = document.getElementById('ai-summary-loading');
+
+        if (forceClose || !card.classList.contains('hidden')) {
+            card.classList.add('hidden');
+            btnText.textContent = 'Tóm tắt bằng AI';
+            if (window.speechSynthesis) window.speechSynthesis.cancel();
+            return;
+        }
+
+        if (currentSummaryData) {
+            card.classList.remove('hidden');
+            btnText.textContent = 'Thu gọn tóm tắt';
+            return;
+        }
+
+        // Fetch summary via AJAX
+        loading.classList.remove('hidden');
+        btnText.textContent = 'Đang tóm tắt...';
+
+        fetch("{{ route('blog.ai.summarize', $blog->slug) }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            loading.classList.add('hidden');
+            if (data.success) {
+                currentSummaryData = data;
+                renderAiSummary(data);
+                card.classList.remove('hidden');
+                btnText.textContent = 'Thu gọn tóm tắt';
+            } else {
+                alert('Không thể tạo tóm tắt lúc này. Vui lòng thử lại sau.');
+                btnText.textContent = 'Tóm tắt bằng AI';
+            }
+        })
+        .catch(err => {
+            loading.classList.add('hidden');
+            btnText.textContent = 'Tóm tắt bằng AI';
+            console.error('Error fetching AI summary:', err);
+        });
+    }
+
+    function renderAiSummary(data) {
+        document.getElementById('ai-summary-overview').textContent = data.overview || '';
+        document.getElementById('ai-summary-address').textContent = data.address || 'Đang cập nhật địa chỉ';
+        document.getElementById('ai-summary-price').textContent = data.price_range || 'Mức giá hợp lý';
+
+        // Must try dishes
+        const mustTryContainer = document.getElementById('ai-summary-musttry');
+        mustTryContainer.innerHTML = '';
+        (data.must_try || []).forEach(dish => {
+            const span = document.createElement('span');
+            span.className = 'px-2 py-0.5 bg-amber-50 text-amber-900 border border-amber-200 text-[11px] font-bold rounded-md';
+            span.textContent = dish;
+            mustTryContainer.appendChild(span);
+        });
+
+        // Pros & Cons
+        const prosConsList = document.getElementById('ai-summary-proscons');
+        prosConsList.innerHTML = '';
+        (data.pros || []).forEach(pro => {
+            const li = document.createElement('li');
+            li.className = 'flex items-start gap-1 text-emerald-700 font-medium';
+            li.innerHTML = `<span class="material-symbols-outlined text-[14px] text-emerald-600 shrink-0 mt-0.5">check_circle</span> <span>${pro}</span>`;
+            prosConsList.appendChild(li);
+        });
+        (data.cons || []).forEach(con => {
+            const li = document.createElement('li');
+            li.className = 'flex items-start gap-1 text-slate-500 font-medium';
+            li.innerHTML = `<span class="material-symbols-outlined text-[14px] text-amber-500 shrink-0 mt-0.5">info</span> <span>${con}</span>`;
+            prosConsList.appendChild(li);
+        });
+
+        document.getElementById('ai-summary-saved-time').textContent = data.reading_time_saved || 'Tiết kiệm 95% thời gian đọc (nắm trọn trong 5 giây)';
+    }
+
+    function copyAiSummary() {
+        if (!currentSummaryData) return;
+        const text = `✨ TÓM TẮT BÀI VIẾT BẰNG AI: ${currentSummaryData.title}\n\n` +
+                     `📍 Địa chỉ: ${currentSummaryData.address}\n` +
+                     `🍲 Món nên thử: ${(currentSummaryData.must_try || []).join(', ')}\n` +
+                     `💵 Mức giá: ${currentSummaryData.price_range}\n` +
+                     `📝 Tóm lược: ${currentSummaryData.overview}`;
+        navigator.clipboard.writeText(text).then(() => {
+            showAlert('success', 'Đã sao chép', 'Đã sao chép tóm tắt bài viết vào bộ nhớ tạm!');
+        });
+    }
+
+    function speakAiSummary() {
+        if (!('speechSynthesis' in window) || !currentSummaryData) return;
+        if (isSpeaking) {
+            window.speechSynthesis.cancel();
+            isSpeaking = false;
+            document.getElementById('ai-tts-icon').textContent = 'volume_up';
+            document.getElementById('ai-tts-text').textContent = 'Nghe đọc';
+            return;
+        }
+
+        const textToRead = `${currentSummaryData.title}. Tóm tắt nhanh: ${currentSummaryData.overview}. Địa chỉ: ${currentSummaryData.address}. Món nên thử: ${(currentSummaryData.must_try || []).join(', ')}. Mức giá: ${currentSummaryData.price_range}.`;
+        const utterance = new SpeechSynthesisUtterance(textToRead);
+        utterance.lang = 'vi-VN';
+        utterance.rate = 1.0;
+        utterance.onstart = () => {
+            isSpeaking = true;
+            document.getElementById('ai-tts-icon').textContent = 'stop_circle';
+            document.getElementById('ai-tts-text').textContent = 'Dừng đọc';
+        };
+        utterance.onend = utterance.onerror = () => {
+            isSpeaking = false;
+            document.getElementById('ai-tts-icon').textContent = 'volume_up';
+            document.getElementById('ai-tts-text').textContent = 'Nghe đọc';
+        };
+        window.speechSynthesis.speak(utterance);
+    }
 </script>
 @endpush

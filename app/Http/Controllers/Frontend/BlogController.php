@@ -110,7 +110,22 @@ class BlogController extends Controller
         
         $tags = BlogTag::has('blogs')->limit(15)->get();
 
-        return view('frontend.blog.index', compact('blogs', 'heroBlog', 'categories', 'tags'));
+        // Gợi ý thông minh cho bạn trên trang Blog (AI Recommendation Engine)
+        $aiRecommendations = $this->blogAiService->getSmartRecommendations(
+            Auth::user(),
+            null,
+            $request->session()->getId(),
+            $request->ip(),
+            4
+        );
+
+        // Trợ lý AI Tìm kiếm & Phân tích ngữ nghĩa nếu có từ khóa
+        $aiSearchData = null;
+        if ($request->filled('search')) {
+            $aiSearchData = $this->blogAiService->semanticSearch($request->search, 6);
+        }
+
+        return view('frontend.blog.index', compact('blogs', 'heroBlog', 'categories', 'tags', 'aiRecommendations', 'aiSearchData'));
     }
 
     public function show(Request $request, string $slug)
@@ -158,10 +173,19 @@ class BlogController extends Controller
             ->latest('published_at')
             ->limit(3)
             ->get();
+
+        // Hệ thống Gợi ý bài viết thông minh bằng AI (AI Recommendation Engine)
+        $aiRecommendations = $this->blogAiService->getSmartRecommendations(
+            Auth::user(),
+            $blog,
+            $request->session()->getId(),
+            $request->ip(),
+            4
+        );
             
         $tags = BlogTag::has('blogs')->limit(15)->get();
 
-        return view('frontend.blog.show', compact('blog', 'relatedBlogs', 'tags'));
+        return view('frontend.blog.show', compact('blog', 'relatedBlogs', 'aiRecommendations', 'tags'));
     }
 
     /**
@@ -389,6 +413,71 @@ class BlogController extends Controller
             'success' => true,
             'liked' => $liked,
             'likes_count' => max(0, (int) $comment->fresh()->likes_count),
+        ]);
+    }
+
+    /**
+     * AI Tóm tắt bài viết (AI Summarizer API):
+     * Đọc toàn bộ nội dung và trả về 4 ý chính: Địa chỉ, Món nên thử, Mức giá, Ưu/Nhược điểm.
+     */
+    public function summarize(Request $request, string $slug)
+    {
+        $blog = Blog::with(['category'])->where('slug', $slug)->firstOrFail();
+        $force = $request->boolean('refresh', false);
+        $summary = $this->blogAiService->summarizeBlog($blog, $force);
+
+        return response()->json($summary);
+    }
+
+    /**
+     * Trợ lý AI Tìm kiếm & Ngữ nghĩa (Semantic Search API)
+     */
+    public function aiSearch(Request $request)
+    {
+        $query = $request->input('q') ?? $request->input('search') ?? '';
+        $result = $this->blogAiService->semanticSearch($query, 6);
+
+        return response()->json($result);
+    }
+
+    /**
+     * Trợ lý AI Trò chuyện / Chatbot ẩm thực (Chat Assistant API)
+     */
+    public function aiChat(Request $request)
+    {
+        $message = trim($request->input('message', ''));
+        if ($message === '') {
+            return response()->json([
+                'success' => false,
+                'reply' => 'Vui lòng nhập câu hỏi để trò chuyện cùng trợ lý AI ẩm thực.',
+            ], 422);
+        }
+
+        $history = $request->input('history', []);
+        $result = $this->blogAiService->chatAssistant($message, $history);
+
+        return response()->json($result);
+    }
+
+    /**
+     * Gợi ý bài viết thông minh (AI Recommendations API)
+     */
+    public function recommendations(Request $request)
+    {
+        $currentSlug = $request->input('current_slug');
+        $currentBlog = $currentSlug ? Blog::where('slug', $currentSlug)->first() : null;
+
+        $recommendations = $this->blogAiService->getSmartRecommendations(
+            Auth::user(),
+            $currentBlog,
+            $request->session()->getId(),
+            $request->ip(),
+            (int) $request->input('limit', 4)
+        );
+
+        return response()->json([
+            'success' => true,
+            'recommendations' => $recommendations,
         ]);
     }
 }
