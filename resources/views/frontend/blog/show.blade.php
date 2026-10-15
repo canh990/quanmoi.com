@@ -559,13 +559,35 @@
             <!-- Decorative abstract background pattern -->
             <div class="absolute inset-0 opacity-10 pointer-events-none" style="background-image: radial-gradient(circle at 2px 2px, currentColor 1px, transparent 0); background-size: 16px 16px;"></div>
             <span class="material-symbols-outlined text-[40px] mb-2 z-10 relative text-white">mail</span>
-            <h3 class="font-title-md text-title-md mb-2 z-10 relative text-white">Đừng bỏ lỡ quán ngon!</h3>
+            <h3 class="font-title-md text-title-md mb-2 z-10 relative text-white font-bold">Đừng bỏ lỡ quán ngon!</h3>
             <p class="font-body-sm text-body-sm mb-4 z-10 relative opacity-90 text-white/90">Đăng ký để nhận danh sách review ẩm thực mới nhất mỗi tuần từ Quán Mới.</p>
-            <form class="flex flex-col gap-2 z-10 relative">
-                <input class="w-full rounded-lg border-none bg-surface-container-lowest focus:ring-2 focus:ring-on-primary-container px-4 py-3 font-body-sm text-body-sm text-on-background placeholder:text-text-muted outline-none" placeholder="Email của bạn" type="email" required/>
-                <button class="w-full bg-on-primary-container text-surface-container-lowest rounded-lg py-3 font-label-md text-label-md font-bold hover:opacity-90 transition-opacity active:scale-[0.98]" type="submit" onclick="event.preventDefault(); alert('Cảm ơn bạn đã đăng ký!');">
-                     Đăng ký ngay
-                 </button>
+
+            @if(session('newsletter_success'))
+                <div class="mb-3 p-3 bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-xl text-xs font-bold flex items-center gap-2 text-left z-10 relative shadow-2xs">
+                    <span class="material-symbols-outlined text-base text-emerald-600">check_circle</span>
+                    <span>{{ session('newsletter_success') }}</span>
+                </div>
+            @elseif(session('newsletter_info'))
+                <div class="mb-3 p-3 bg-amber-100 text-amber-900 border border-amber-300 rounded-xl text-xs font-bold flex items-center gap-2 text-left z-10 relative shadow-2xs">
+                    <span class="material-symbols-outlined text-base text-amber-600">info</span>
+                    <span>{{ session('newsletter_info') }}</span>
+                </div>
+            @endif
+
+            <form id="blog-show-newsletter-form" action="{{ route('blog.newsletter.subscribe') }}" method="POST" onsubmit="handleNewsletterSubmit(event, this)" class="flex flex-col gap-2.5 z-10 relative">
+                @csrf
+                <input type="hidden" name="source" value="blog_show">
+                <input class="w-full rounded-lg border-none bg-surface-container-lowest focus:ring-2 focus:ring-white px-4 py-3 font-body-sm text-body-sm text-on-background placeholder:text-text-muted outline-none text-slate-800" 
+                       name="email" 
+                       value="{{ auth()->check() ? auth()->user()->email : old('email') }}" 
+                       placeholder="Email của bạn..." 
+                       type="email" 
+                       required/>
+                <button class="w-full bg-white text-primary rounded-lg py-3 font-label-md text-label-md font-bold hover:bg-slate-100 transition-all active:scale-[0.98] shadow-sm flex items-center justify-center gap-1.5 cursor-pointer" type="submit">
+                     <span class="btn-text">Đăng ký ngay</span>
+                     <span class="material-symbols-outlined text-base">send</span>
+                </button>
+                <div class="newsletter-feedback hidden text-xs font-semibold p-2.5 rounded-xl text-left"></div>
             </form>
         </div>
         
@@ -1139,6 +1161,74 @@
             document.getElementById('ai-tts-text').textContent = 'Nghe đọc';
         };
         window.speechSynthesis.speak(utterance);
+    }
+
+    // Newsletter Ajax Submit
+    function handleNewsletterSubmit(event, form) {
+        event.preventDefault();
+        const btn = form.querySelector('button[type="submit"]');
+        const btnText = btn ? btn.querySelector('.btn-text') : null;
+        const originalText = btnText ? btnText.textContent : 'Đăng ký ngay';
+        const feedback = form.querySelector('.newsletter-feedback');
+        const emailInput = form.querySelector('input[name="email"]');
+        const email = emailInput ? emailInput.value.trim() : '';
+
+        if (!email) {
+            if (feedback) {
+                feedback.className = 'newsletter-feedback block text-xs font-bold p-2.5 rounded-xl bg-rose-100 text-rose-800 border border-rose-300 shadow-2xs mt-2';
+                feedback.innerHTML = '<span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-sm">error</span>Vui lòng nhập email của bạn.</span>';
+            }
+            return;
+        }
+
+        if (btn) {
+            btn.disabled = true;
+            if (btnText) btnText.textContent = 'Đang xử lý...';
+        }
+
+        const formData = new FormData(form);
+
+        fetch(form.action, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+            },
+            body: formData
+        })
+        .then(async res => {
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                throw new Error(data.message || 'Có lỗi xảy ra, vui lòng thử lại.');
+            }
+            return data;
+        })
+        .then(data => {
+            if (feedback) {
+                if (data.already_subscribed) {
+                    feedback.className = 'newsletter-feedback block text-xs font-bold p-3 rounded-xl bg-amber-50 text-amber-900 border border-amber-300 shadow-2xs mt-2 text-left';
+                    feedback.innerHTML = `<span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-base text-amber-600">info</span><span>${data.message}</span></span>`;
+                } else {
+                    feedback.className = 'newsletter-feedback block text-xs font-bold p-3 rounded-xl bg-emerald-50 text-emerald-900 border border-emerald-300 shadow-2xs mt-2 text-left';
+                    feedback.innerHTML = `<span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-base text-emerald-600">check_circle</span><span>${data.message}</span></span>`;
+                    @guest
+                    if (emailInput) emailInput.value = '';
+                    @endguest
+                }
+            }
+        })
+        .catch(err => {
+            if (feedback) {
+                feedback.className = 'newsletter-feedback block text-xs font-bold p-3 rounded-xl bg-rose-50 text-rose-800 border border-rose-300 shadow-2xs mt-2 text-left';
+                feedback.innerHTML = `<span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-base text-rose-600">error</span><span>${err.message}</span></span>`;
+            }
+        })
+        .finally(() => {
+            if (btn) {
+                btn.disabled = false;
+                if (btnText) btnText.textContent = originalText;
+            }
+        });
     }
 </script>
 @endpush
