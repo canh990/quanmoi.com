@@ -95,15 +95,18 @@
                 <h1 class="font-display-lg text-white text-3xl md:text-4xl lg:text-5xl mb-4 leading-tight hover:text-primary-fixed transition-colors font-extrabold">{{ $heroBlog->title }}</h1>
             </a>
             <p class="text-white/90 font-body-lg text-body-lg mb-6 line-clamp-2">{{ $heroBlog->excerpt }}</p>
-            <div class="flex items-center gap-4">
-                <div class="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center overflow-hidden border border-white/30">
-                    <img class="w-full h-full object-cover" src="{{ $heroBlog->user->anh_dai_dien_url ?? 'https://ui-avatars.com/api/?name='.urlencode($heroBlog->user->ho_ten).'&background=random' }}"/>
+            <a href="{{ $heroBlog->user ? route('blog.author', $heroBlog->user->id) : '#' }}" class="flex items-center gap-4 group/hero-author hover:opacity-95 transition-opacity inline-flex" title="Xem thông tin tác giả {{ $heroBlog->user?->ho_ten }}">
+                <div class="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center overflow-hidden border border-white/30 ring-2 ring-transparent group-hover/hero-author:ring-white transition-all">
+                    <img class="w-full h-full object-cover group-hover/hero-author:scale-105 transition-transform" src="{{ $heroBlog->user->anh_dai_dien_url ?? 'https://ui-avatars.com/api/?name='.urlencode($heroBlog->user->ho_ten ?? 'User').'&background=random' }}"/>
                 </div>
                 <div class="text-white">
-                    <p class="font-label-md text-label-md font-semibold">Bởi {{ $heroBlog->user->ho_ten }}</p>
+                    <p class="font-label-md text-label-md font-semibold flex items-center gap-1 group-hover/hero-author:underline">
+                        <span>Bởi {{ $heroBlog->user->ho_ten ?? 'Tác giả' }}</span>
+                        <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                    </p>
                     <p class="text-xs opacity-75">{{ $heroBlog->published_at ? $heroBlog->published_at->format('d/m/Y') : '' }} • {{ number_format($heroBlog->view_count ?? 0) }} lượt xem • {{ number_format($heroBlog->comment_count ?? 0) }} bình luận</p>
                 </div>
-            </div>
+            </a>
         </div>
     </section>
     @endif
@@ -200,7 +203,17 @@
                                     <p class="text-text-muted font-body-sm text-body-sm mb-4 line-clamp-3">{{ $blog->excerpt ?? Str::limit(strip_tags($blog->content), 120) }}</p>
                                 </a>
                                 <div class="mt-auto pt-4 border-t border-outline-variant flex justify-between items-center">
-                                    <span class="font-label-sm text-label-sm text-text-muted">{{ Str::limit($blog->user->ho_ten ?? 'Tác giả', 15) }} • {{ $blog->published_at ? $blog->published_at->format('d/m/Y') : '' }}</span>
+                                    <span class="font-label-sm text-label-sm text-text-muted flex items-center gap-1">
+                                        @if($blog->user)
+                                            <a href="{{ route('blog.author', $blog->user->id) }}" class="hover:text-primary transition-colors font-medium hover:underline" title="Xem bài viết của tác giả {{ $blog->user->ho_ten }}">
+                                                {{ Str::limit($blog->user->ho_ten, 15) }}
+                                            </a>
+                                        @else
+                                            <span>Tác giả</span>
+                                        @endif
+                                        <span>•</span>
+                                        <span>{{ $blog->published_at ? $blog->published_at->format('d/m/Y') : '' }}</span>
+                                    </span>
                                     <div class="font-label-sm text-label-sm text-text-muted flex items-center gap-2.5">
                                         <span class="flex items-center gap-0.5" title="Lượt xem"><span class="material-symbols-outlined text-[14px]">visibility</span> {{ number_format($blog->view_count ?? 0) }}</span>
                                         <span class="flex items-center gap-0.5" title="Bình luận"><span class="material-symbols-outlined text-[14px]">forum</span> {{ number_format($blog->comment_count ?? 0) }}</span>

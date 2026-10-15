@@ -22,6 +22,7 @@ Route::get('/quan-moi', [KhamPhaController::class, 'quanMoi'])->name('quan-moi')
 Route::get('/quan-noi-bat', [KhamPhaController::class, 'quanNoiBat'])->name('quan-noi-bat');
 Route::get('/blog', [FrontendBlogController::class, 'index'])->name('blog.index');
 Route::post('/blog/dang-ky-nhan-tin', [FrontendBlogController::class, 'subscribeNewsletter'])->middleware('throttle:15,1')->name('blog.newsletter.subscribe');
+Route::get('/blog/tac-gia/{id}', [FrontendBlogController::class, 'author'])->name('blog.author');
 Route::get('/blog/{slug}', [FrontendBlogController::class, 'show'])->name('blog.show');
 Route::post('/blog/{slug}/luot-xem', [FrontendBlogController::class, 'recordView'])->name('blog.view.record');
 Route::post('/blog/{slug}/binh-luan', [FrontendBlogController::class, 'storeComment'])->middleware(['auth', 'throttle:30,1'])->name('blog.comment.store');
