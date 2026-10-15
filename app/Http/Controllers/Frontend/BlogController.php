@@ -5,12 +5,15 @@ namespace App\Http\Controllers\Frontend;
 use App\Http\Controllers\Controller;
 use App\Models\Blog;
 use App\Models\BlogCategory;
+use App\Models\BlogSubscriber;
 use App\Models\BlogTag;
 use App\Models\User;
 use App\Services\BlogAiService;
 use App\Services\BlogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class BlogController extends Controller
 {
@@ -479,5 +482,85 @@ class BlogController extends Controller
             'success' => true,
             'recommendations' => $recommendations,
         ]);
+    }
+
+    /**
+     * Đăng ký nhận tin ẩm thực Blog (Newsletter Subscription)
+     */
+    public function subscribeNewsletter(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => ['required', 'string', 'email', 'max:255'],
+            'source' => ['nullable', 'string', 'max:50'],
+        ], [
+            'email.required' => 'Vui lòng nhập địa chỉ email của bạn.',
+            'email.email' => 'Địa chỉ email không đúng định dạng.',
+            'email.max' => 'Địa chỉ email không được vượt quá 255 ký tự.',
+        ]);
+
+        if ($validator->fails()) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $validator->errors()->first('email'),
+                ], 422);
+            }
+            return back()->withErrors($validator)->withInput();
+        }
+
+        $email = strtolower(trim($request->input('email')));
+        $source = $request->input('source', 'blog_sidebar');
+        $userId = Auth::id();
+        $ip = $request->ip();
+
+        $subscriber = BlogSubscriber::where('email', $email)->first();
+
+        if ($subscriber) {
+            if ($subscriber->status === 'active') {
+                $msg = 'Email này đã đăng ký nhận tin ẩm thực từ Quán Mới rồi nhé! Cảm ơn bạn.';
+                if ($request->ajax() || $request->wantsJson()) {
+                    return response()->json([
+                        'success' => true,
+                        'already_subscribed' => true,
+                        'message' => $msg,
+                    ]);
+                }
+                return back()->with('newsletter_info', $msg);
+            } else {
+                $subscriber->status = 'active';
+                $subscriber->source = $source;
+                if ($userId) $subscriber->user_id = $userId;
+                $subscriber->ip_address = $ip;
+                $subscriber->save();
+
+                $msg = 'Chào mừng bạn đã kích hoạt lại đăng ký nhận tin ẩm thực từ Quán Mới!';
+                if ($request->ajax() || $request->wantsJson()) {
+                    return response()->json([
+                        'success' => true,
+                        'message' => $msg,
+                    ]);
+                }
+                return back()->with('newsletter_success', $msg);
+            }
+        }
+
+        BlogSubscriber::create([
+            'email' => $email,
+            'user_id' => $userId,
+            'ip_address' => $ip,
+            'source' => $source,
+            'status' => 'active',
+            'token' => Str::random(32),
+        ]);
+
+        $msg = 'Đăng ký nhận tin ẩm thực thành công! Quán Mới sẽ gửi đến bạn những review và ưu đãi mới nhất.';
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => $msg,
+            ]);
+        }
+
+        return back()->with('newsletter_success', $msg);
     }
 }
