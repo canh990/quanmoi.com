@@ -43,7 +43,7 @@
 
     <!-- Scroll to Top Button -->
     <button id="scrollToTopBtn" 
-        class="fixed bottom-6 right-6 z-50 p-3 bg-primary text-white rounded-full shadow-[0_4px_14px_rgba(160,65,0,0.25)] opacity-0 translate-y-10 pointer-events-none transition-all duration-300 hover:bg-primary/90 hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(160,65,0,0.35)] focus:outline-none flex items-center justify-center group"
+        class="fixed bottom-6 right-6 z-40 p-3 bg-primary text-white rounded-full shadow-[0_4px_14px_rgba(160,65,0,0.25)] opacity-0 translate-y-10 pointer-events-none transition-all duration-300 hover:bg-primary/90 hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(160,65,0,0.35)] focus:outline-none flex items-center justify-center group"
         title="Lên đầu trang"
         aria-label="Lên đầu trang">
         <span class="material-symbols-outlined text-[24px] group-hover:-translate-y-0.5 transition-transform">arrow_upward</span>
@@ -54,7 +54,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const scrollToTopBtn = document.getElementById('scrollToTopBtn');
-            
+
             if (scrollToTopBtn) {
                 window.addEventListener('scroll', () => {
                     if (window.scrollY > 300) {

@@ -39,7 +39,10 @@ class BlogService
                 ]);
                 $blog->increment('view_count');
             });
+            return true;
         }
+
+        return false;
     }
 
     /**
