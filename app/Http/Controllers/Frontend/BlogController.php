@@ -563,4 +563,76 @@ class BlogController extends Controller
 
         return back()->with('newsletter_success', $msg);
     }
+
+    /**
+     * Xem thông tin tác giả và danh sách bài viết của tác giả (Author Profile)
+     */
+    public function author($id, Request $request)
+    {
+        $author = User::where('id', $id)->firstOrFail();
+
+        $blogsQuery = Blog::with(['category', 'tags'])
+            ->where('user_id', $author->id)
+            ->where('status', 'published');
+
+        if ($request->filled('category')) {
+            $blogsQuery->whereHas('category', function ($q) use ($request) {
+                $q->where('slug', $request->category);
+            });
+        }
+
+        if ($request->filled('search')) {
+            $searchTerm = trim($request->search);
+            $blogsQuery->where(function($q) use ($searchTerm) {
+                $q->where('title', 'like', "%{$searchTerm}%")
+                  ->orWhere('excerpt', 'like', "%{$searchTerm}%")
+                  ->orWhere('content', 'like', "%{$searchTerm}%");
+            });
+        }
+
+        // Stats
+        $totalBlogs = Blog::where('user_id', $author->id)->where('status', 'published')->count();
+        $totalViews = Blog::where('user_id', $author->id)->where('status', 'published')->sum('view_count');
+        $totalComments = Blog::where('user_id', $author->id)->where('status', 'published')->sum('comment_count');
+
+        // Sorting
+        $sort = $request->input('sort', 'latest');
+        switch ($sort) {
+            case 'views':
+                $blogsQuery->orderByDesc('view_count');
+                break;
+            case 'comments':
+                $blogsQuery->orderByDesc('comment_count');
+                break;
+            case 'oldest':
+                $blogsQuery->oldest('published_at');
+                break;
+            case 'latest':
+            default:
+                $blogsQuery->latest('published_at');
+                break;
+        }
+
+        $blogs = $blogsQuery->paginate(9)->withQueryString();
+
+        // Danh mục các bài viết tác giả đã viết
+        $categories = BlogCategory::whereHas('blogs', function($q) use ($author) {
+            $q->where('user_id', $author->id)->where('status', 'published');
+        })->withCount(['blogs' => function($q) use ($author) {
+            $q->where('user_id', $author->id)->where('status', 'published');
+        }])->get();
+
+        $topCategory = $categories->sortByDesc('blogs_count')->first();
+
+        return view('frontend.blog.author', compact(
+            'author',
+            'blogs',
+            'totalBlogs',
+            'totalViews',
+            'totalComments',
+            'categories',
+            'topCategory',
+            'sort'
+        ));
+    }
 }
