@@ -35,6 +35,7 @@ class StoreBlogRequest extends FormRequest
             'seo_title' => ['nullable', 'string', 'max:255'],
             'seo_description' => ['nullable', 'string', 'max:500'],
             'meta_keywords' => ['nullable', 'string', 'max:255'],
+            'allow_comments' => ['nullable', 'boolean'],
             // Action can be 'draft' or 'pending' (submit for review)
             'action' => ['required', 'string', Rule::in(['draft', 'pending'])],
         ];
