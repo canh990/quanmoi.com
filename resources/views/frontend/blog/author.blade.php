@@ -50,11 +50,27 @@
         width: 180px;
         min-width: 180px;
     }
-    .article-zoom-card img {
+    .article-cover-frame {
+        position: relative;
+        width: 100%;
+        height: 205px;
+        overflow: hidden;
+        display: block;
+        background-color: #f1f5f9;
+        border-radius: 1rem 1rem 0 0;
+    }
+    .article-cover-frame img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
         transition: transform 0.4s ease;
     }
-    .article-zoom-card:hover img {
-        transform: scale(1.05);
+    .article-zoom-card:hover .article-cover-frame img {
+        transform: scale(1.06);
     }
     @media (max-width: 1024px) {
         .author-hero-flex {
@@ -79,6 +95,9 @@
         }
         .author-master-card {
             padding: 1.25rem;
+        }
+        .article-cover-frame {
+            height: 185px;
         }
     }
 </style>
@@ -327,7 +346,7 @@
                             <article class="article-zoom-card flex flex-col h-full bg-white rounded-2xl border border-slate-200/90 hover:border-primary/40 shadow-xs hover:shadow-xl transition-all duration-300 overflow-hidden group">
                                 
                                 <!-- Cover Image with Glass Tag Overlay -->
-                                <a href="{{ route('blog.show', $blog->slug) }}" class="relative aspect-[16/10] overflow-hidden block bg-slate-100">
+                                <a href="{{ route('blog.show', $blog->slug) }}" class="article-cover-frame">
                                     @if($blog->category)
                                         <div class="absolute top-3 left-3 z-10 px-2.5 py-1 rounded-lg bg-white/90 backdrop-blur-md text-slate-900 font-extrabold text-[10px] uppercase tracking-wider border border-white/50 shadow-sm">
                                             {{ $blog->category->name }}
@@ -339,8 +358,7 @@
                                         <span>{{ $blog->reading_time ?? '3' }} phút</span>
                                     </div>
 
-                                    <img class="w-full h-full object-cover" 
-                                         src="{{ $blog->cover_image_url ?? 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=600&q=80' }}" 
+                                    <img src="{{ $blog->cover_image_url ?? 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=600&q=80' }}" 
                                          alt="{{ $blog->title }}"/>
                                 </a>
 
