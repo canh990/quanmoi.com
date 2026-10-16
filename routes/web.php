@@ -85,6 +85,9 @@ Route::prefix('api')->group(function () {
 
 Route::middleware('auth')->group(function () {
     Route::get('/tai-khoan', [TaiKhoanController::class, 'index'])->name('tai-khoan.index');
+    Route::get('/tai-khoan/cai-dat', [TaiKhoanController::class, 'settings'])->name('tai-khoan.cai-dat');
+    Route::put('/tai-khoan/cai-dat', [TaiKhoanController::class, 'updateSettings'])->name('tai-khoan.cai-dat.update');
+    Route::get('/cai-dat', fn () => redirect()->route('tai-khoan.cai-dat'))->name('cai-dat');
     Route::get('/quan-da-luu', [\App\Http\Controllers\NguoiDung\QuanDaLuuController::class, 'index'])->name('quan-da-luu.index');
     Route::post('/quan-da-luu/{quanId}/toggle', [\App\Http\Controllers\NguoiDung\QuanDaLuuController::class, 'toggle'])->name('quan-da-luu.toggle');
     Route::put('/tai-khoan', [TaiKhoanController::class, 'update'])->name('tai-khoan.update');

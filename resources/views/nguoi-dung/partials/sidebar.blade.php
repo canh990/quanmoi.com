@@ -25,7 +25,7 @@
             <p class="font-body-sm text-body-sm text-text-muted">Thành viên từ {{ $user->created_at ? \Carbon\Carbon::parse($user->created_at)->format('m/Y') : 'N/A' }}</p>
         </div>
         <nav class="flex flex-col gap-1">
-            <a class="flex items-center gap-3 px-4 py-3 rounded-lg {{ request()->routeIs('tai-khoan.*') ? 'bg-primary-container/10 text-primary font-bold' : 'text-on-surface-variant hover:bg-surface-container' }} transition-all" href="{{ route('tai-khoan.index') }}">
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg {{ request()->routeIs('tai-khoan.index') ? 'bg-primary-container/10 text-primary font-bold' : 'text-on-surface-variant hover:bg-surface-container' }} transition-all" href="{{ route('tai-khoan.index') }}">
                 <span class="material-symbols-outlined">person</span>
                 <span class="font-body-lg text-body-lg">Hồ sơ cá nhân</span>
             </a>
@@ -33,7 +33,7 @@
                 <span class="material-symbols-outlined">article</span>
                 <span class="font-body-lg text-body-lg">Quản lý bài viết</span>
             </a>
-            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container transition-all" href="#">
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg {{ request()->routeIs('tai-khoan.cai-dat*') ? 'bg-primary-container/10 text-primary font-bold' : 'text-on-surface-variant hover:bg-surface-container' }} transition-all" href="{{ route('tai-khoan.cai-dat') }}">
                 <span class="material-symbols-outlined">settings</span>
                 <span class="font-body-lg text-body-lg">Cài đặt</span>
             </a>

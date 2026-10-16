@@ -5,7 +5,11 @@ namespace App\Http\Controllers\NguoiDung;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CapNhatTaiKhoanRequest;
 use App\Http\Requests\DoiMatKhauRequest;
+use App\Services\DiaChiService;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -18,10 +22,147 @@ class TaiKhoanController extends Controller
     public function index()
     {
         $user = Auth::user();
-        return view('nguoi-dung.tai-khoan.index', compact('user'));
+        $savedQuan = $user->savedQuan()
+            ->with(['hinhAnh' => function ($q) {
+                $q->limit(1);
+            }])
+            ->withCount('danhGia')
+            ->withAvg('danhGia', 'so_sao')
+            ->orderByPivot('created_at', 'desc')
+            ->get();
+
+        return view('nguoi-dung.tai-khoan.index', compact('user', 'savedQuan'));
     }
 
+    public function settings(DiaChiService $diaChiService)
+    {
+        $user = Auth::user();
+        $tinhThanhs = $diaChiService->getTinhThanh();
 
+        // Lấy danh sách phiên đăng nhập gần đây từ bảng sessions
+        $currentSessionId = session()->getId();
+        $sessions = DB::table('sessions')
+            ->where('user_id', $user->id)
+            ->orderBy('last_activity', 'desc')
+            ->take(5)
+            ->get()
+            ->map(function ($s) use ($currentSessionId) {
+                $device = $this->parseUserAgent($s->user_agent);
+                return [
+                    'id' => $s->id,
+                    'is_current' => $s->id === $currentSessionId,
+                    'ip_address' => $s->ip_address,
+                    'device_name' => $device['name'],
+                    'device_icon' => $device['icon'],
+                    'platform' => $device['platform'],
+                    'last_activity' => Carbon::createFromTimestamp($s->last_activity)->diffForHumans(),
+                ];
+            });
+
+        return view('nguoi-dung.tai-khoan.cai-dat', compact('user', 'tinhThanhs', 'sessions'));
+    }
+
+    public function updateSettings(Request $request)
+    {
+        $user = Auth::user();
+
+        // 1. Khóa lạc quan (Optimistic Locking): Tránh xung đột nhiều tab
+        $lastUpdatedAt = $request->input('last_updated_at');
+        if ($lastUpdatedAt && $user->updated_at) {
+            try {
+                $clientTime = Carbon::parse($lastUpdatedAt);
+                if ($user->updated_at->timestamp > $clientTime->timestamp) {
+                    return redirect()->route('tai-khoan.cai-dat')
+                        ->with('error_conflict', 'Cài đặt đã được cập nhật ở tab hoặc thiết bị khác, vui lòng tải lại trang.');
+                }
+            } catch (\Throwable $e) {
+                // Bỏ qua nếu thời gian không hợp lệ
+            }
+        }
+
+        $validated = $request->validate([
+            'khu_vuc_mac_dinh' => 'nullable|string|max:100',
+            'ban_kinh_tim_kiem' => 'nullable|integer|min:1|max:50',
+            'so_thich_am_thuc' => 'nullable|array',
+            'so_thich_am_thuc.*' => 'string|max:50',
+            'thong_bao_email_quan_moi' => 'nullable|boolean',
+            'thong_bao_email_tuong_tac' => 'nullable|boolean',
+            'thong_bao_khuyen_mai' => 'nullable|boolean',
+            'che_do_danh_gia' => 'nullable|in:cong_khai,an_danh',
+            'cong_khai_quan_da_luu' => 'nullable|boolean',
+            'giao_dien_che_do' => 'nullable|in:light,dark,system',
+        ]);
+
+        $settings = $user->cai_dat ?? [];
+
+        // Gộp các cấu hình mới
+        $settings['khu_vuc_mac_dinh'] = $validated['khu_vuc_mac_dinh'] ?? $settings['khu_vuc_mac_dinh'] ?? '';
+        $settings['ban_kinh_tim_kiem'] = isset($validated['ban_kinh_tim_kiem']) ? (int) $validated['ban_kinh_tim_kiem'] : ($settings['ban_kinh_tim_kiem'] ?? 5);
+        $settings['so_thich_am_thuc'] = $validated['so_thich_am_thuc'] ?? [];
+
+        $settings['thong_bao_email_quan_moi'] = $request->boolean('thong_bao_email_quan_moi');
+        $settings['thong_bao_email_tuong_tac'] = $request->boolean('thong_bao_email_tuong_tac');
+        $settings['thong_bao_khuyen_mai'] = $request->boolean('thong_bao_khuyen_mai');
+
+        $settings['che_do_danh_gia'] = $validated['che_do_danh_gia'] ?? ($settings['che_do_danh_gia'] ?? 'cong_khai');
+        $settings['cong_khai_quan_da_luu'] = $request->boolean('cong_khai_quan_da_luu');
+        $settings['giao_dien_che_do'] = $validated['giao_dien_che_do'] ?? 'light';
+
+        $user->cai_dat = $settings;
+        $user->save();
+
+        return redirect()->route('tai-khoan.cai-dat')->with('success', 'Lưu tùy chọn cài đặt thành công.');
+    }
+
+    private function parseUserAgent(?string $userAgent): array
+    {
+        if (empty($userAgent)) {
+            return [
+                'name' => 'Thiết bị không xác định',
+                'icon' => 'devices',
+                'platform' => 'Không rõ',
+            ];
+        }
+
+        $platform = 'Máy tính';
+        $icon = 'desktop_windows';
+
+        if (preg_match('/(iPhone|iPad|iPod)/i', $userAgent)) {
+            $platform = 'iOS';
+            $icon = 'phone_iphone';
+        } elseif (preg_match('/Android/i', $userAgent)) {
+            $platform = 'Android';
+            $icon = 'smartphone';
+        } elseif (preg_match('/Macintosh|Mac OS X/i', $userAgent)) {
+            $platform = 'macOS';
+            $icon = 'laptop_mac';
+        } elseif (preg_match('/Windows/i', $userAgent)) {
+            $platform = 'Windows';
+            $icon = 'desktop_windows';
+        } elseif (preg_match('/Linux/i', $userAgent)) {
+            $platform = 'Linux';
+            $icon = 'terminal';
+        }
+
+        $browser = 'Trình duyệt web';
+        if (preg_match('/Edg/i', $userAgent)) {
+            $browser = 'Microsoft Edge';
+        } elseif (preg_match('/Chrome/i', $userAgent)) {
+            $browser = 'Google Chrome';
+        } elseif (preg_match('/Safari/i', $userAgent)) {
+            $browser = 'Safari';
+        } elseif (preg_match('/Firefox/i', $userAgent)) {
+            $browser = 'Mozilla Firefox';
+        } elseif (preg_match('/Opera|OPR/i', $userAgent)) {
+            $browser = 'Opera';
+        }
+
+        return [
+            'name' => "{$browser} ({$platform})",
+            'icon' => $icon,
+            'platform' => $platform,
+        ];
+    }
 
     public function update(CapNhatTaiKhoanRequest $request, \App\Services\UploadAnhService $uploadService)
     {
