@@ -8,6 +8,28 @@
 <style>
     .level-1-card { background: white; border-radius: 12px; box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.05); transition: transform 0.2s ease, box-shadow 0.2s ease; }
     .level-1-card:hover { transform: translateY(-4px); box-shadow: 0px 8px 30px rgba(0, 0, 0, 0.08); }
+    .blog-card-cover-frame {
+        position: relative;
+        width: 100%;
+        height: 205px;
+        overflow: hidden;
+        display: block;
+        border-radius: 12px 12px 0 0;
+        background-color: #f1f5f9;
+    }
+    .blog-card-cover-frame img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+        transition: transform 0.5s ease;
+    }
+    .level-1-card:hover .blog-card-cover-frame img {
+        transform: scale(1.05);
+    }
     .active-tab { color: #a04100; font-weight: 700; border-bottom: 2px solid #a04100; padding-bottom: 4px; }
     
     /* Scrollbar hide for categories */
@@ -190,12 +212,11 @@
                     @foreach($blogs as $blog)
                         <!-- Blog Card -->
                         <article class="level-1-card flex flex-col h-full group">
-                            <a href="{{ route('blog.show', $blog->slug) }}" class="relative aspect-[4/3] rounded-t-xl overflow-hidden block">
+                            <a href="{{ route('blog.show', $blog->slug) }}" class="blog-card-cover-frame">
                                 @if($blog->category)
                                     <div class="absolute top-3 left-3 z-10 bg-primary-container text-on-primary px-2 py-0.5 rounded-md font-label-md text-label-md uppercase font-bold">{{ $blog->category->name }}</div>
                                 @endif
-                                <img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
-                                     src="{{ $blog->cover_image_url ?? 'https://placehold.co/600x400/png' }}" alt="{{ $blog->title }}"/>
+                                <img src="{{ $blog->cover_image_url ?? 'https://placehold.co/600x400/png' }}" alt="{{ $blog->title }}"/>
                             </a>
                             <div class="p-4 flex flex-col flex-grow">
                                 <a href="{{ route('blog.show', $blog->slug) }}" class="flex-grow block">
