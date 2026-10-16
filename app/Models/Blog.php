@@ -73,6 +73,25 @@ class Blog extends Model
     }
 
     /**
+     * Get only top-level (root) comments that are active.
+     */
+    public function rootComments(): HasMany
+    {
+        return $this->hasMany(BlogComment::class)
+            ->whereNull('parent_id')
+            ->where('status', 'active')
+            ->orderBy('created_at', 'desc');
+    }
+
+    /**
+     * Get all active comments.
+     */
+    public function activeComments(): HasMany
+    {
+        return $this->hasMany(BlogComment::class)->where('status', 'active');
+    }
+
+    /**
      * Get the views for the blog.
      */
     public function views(): HasMany

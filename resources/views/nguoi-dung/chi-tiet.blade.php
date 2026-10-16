@@ -292,11 +292,22 @@
             <div class="min-w-0">
                 <!-- Business Info Header -->
                 <div class="mb-6">
-                    <div class="flex min-w-0 items-start gap-2 mb-1">
-                        <h1 class="min-w-0 font-headline-lg text-headline-lg text-on-background font-black break-words [overflow-wrap:anywhere]">{{ $quan->ten_quan }}</h1>
-                        @if($quan->is_xac_thuc)
-                            <span class="material-symbols-outlined shrink-0 text-tick-xanh fill-icon text-xl" title="Verified">verified</span>
-                        @endif
+                    <div class="flex flex-wrap sm:flex-nowrap items-start justify-between gap-3 mb-1">
+                        <div class="flex min-w-0 items-start gap-2">
+                            <h1 class="min-w-0 font-headline-lg text-headline-lg text-on-background font-black break-words [overflow-wrap:anywhere]">{{ $quan->ten_quan }}</h1>
+                            @if($quan->is_xac_thuc)
+                                <span class="material-symbols-outlined shrink-0 text-tick-xanh fill-icon text-xl" title="Verified">verified</span>
+                            @endif
+                        </div>
+                        <button type="button" 
+                            id="detail-save-btn" 
+                            data-quan-id="{{ $quan->id }}" 
+                            onclick="toggleSaveDetail(this, '{{ $quan->id }}')" 
+                            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 font-bold text-xs sm:text-sm shadow-xs transition-all active:scale-95 group shrink-0"
+                            title="{{ $isSaved ? 'Bỏ lưu quán' : 'Lưu quán' }}">
+                            <span class="material-symbols-outlined text-[20px] text-red-500 transition-transform group-hover:scale-110" style="font-variation-settings: 'FILL' {{ $isSaved ? '1' : '0' }};">favorite</span>
+                            <span id="detail-save-text">{{ $isSaved ? 'Đã lưu' : 'Lưu quán' }}</span>
+                        </button>
                     </div>
                     <p class="text-on-surface-variant flex items-start gap-1 mb-3 text-xs sm:text-sm">
                         <span class="material-symbols-outlined text-lg">location_on</span>
@@ -633,5 +644,119 @@
             }
         `;
         document.head.appendChild(style);
+
+        window.toggleSaveDetail = async function(btn, quanId) {
+            const detailQuanName = @json($quan->ten_quan);
+            const detailQuanImg = @json($quan->hinhAnh->first()->url ?? ($quan->anh_bia_url ?: null));
+
+            @guest
+                if (window.showToast) {
+                    window.showToast({
+                        eyebrow: 'Lưu địa điểm yêu thích',
+                        title: 'Đăng nhập để lưu quán',
+                        message: `Đăng nhập ngay để lưu "${detailQuanName}" vào bộ sưu tập của bạn.`,
+                        type: 'warning',
+                        image: detailQuanImg,
+                        actionText: 'Đăng nhập ngay',
+                        actionUrl: "{{ route('login') }}"
+                    });
+                } else {
+                    window.location.href = "{{ route('login') }}";
+                }
+                return;
+            @endguest
+
+            if (btn.dataset.loading === 'true') return;
+
+            const icon = btn.querySelector('.material-symbols-outlined');
+            const textEl = document.getElementById('detail-save-text');
+            const currentlySaved = icon ? icon.style.fontVariationSettings.includes("'FILL' 1") : false;
+            const targetSaved = !currentlySaved;
+
+            // 1. Optimistic visual update (0ms delay)
+            if (icon) {
+                icon.style.fontVariationSettings = targetSaved ? "'FILL' 1" : "'FILL' 0";
+            }
+            if (textEl) {
+                textEl.textContent = targetSaved ? 'Đã lưu' : 'Lưu quán';
+            }
+            btn.title = targetSaved ? 'Bỏ lưu quán' : 'Lưu quán';
+            btn.style.transform = 'scale(1.15)';
+            setTimeout(() => { btn.style.transform = 'scale(1)'; }, 180);
+
+            // 2. Immediate Toast
+            if (window.showToast) {
+                if (targetSaved) {
+                    window.showToast({
+                        eyebrow: 'Bộ sưu tập yêu thích',
+                        title: `Đã lưu "${detailQuanName}"`,
+                        message: 'Địa điểm đã được thêm vào danh sách quán yêu thích của bạn.',
+                        type: 'saved',
+                        image: detailQuanImg,
+                        actionText: 'Xem quán đã lưu',
+                        actionUrl: "{{ route('quan-da-luu.index') }}"
+                    });
+                } else {
+                    window.showToast({
+                        eyebrow: 'Đã cập nhật danh sách',
+                        title: `Đã bỏ lưu "${detailQuanName}"`,
+                        message: 'Địa điểm đã được gỡ khỏi danh sách yêu thích.',
+                        type: 'unsaved',
+                        image: detailQuanImg
+                    });
+                }
+            }
+
+            btn.dataset.loading = 'true';
+
+            try {
+                const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                const res = await fetch(`/quan-da-luu/${quanId}/toggle`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': token,
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (res.status === 401) {
+                    if (icon) icon.style.fontVariationSettings = currentlySaved ? "'FILL' 1" : "'FILL' 0";
+                    if (textEl) textEl.textContent = currentlySaved ? 'Đã lưu' : 'Lưu quán';
+                    window.location.href = "{{ route('login') }}";
+                    return;
+                }
+
+                const data = await res.json();
+                if (data.success) {
+                    const finalSaved = data.status === 'saved';
+                    if (icon) icon.style.fontVariationSettings = finalSaved ? "'FILL' 1" : "'FILL' 0";
+                    if (textEl) textEl.textContent = finalSaved ? 'Đã lưu' : 'Lưu quán';
+                } else {
+                    if (icon) icon.style.fontVariationSettings = currentlySaved ? "'FILL' 1" : "'FILL' 0";
+                    if (textEl) textEl.textContent = currentlySaved ? 'Đã lưu' : 'Lưu quán';
+                    if (window.showToast) {
+                        window.showToast({
+                            title: 'Không thể thực hiện',
+                            message: data.message || 'Đã có lỗi xảy ra, vui lòng thử lại.',
+                            type: 'error'
+                        });
+                    }
+                }
+            } catch (err) {
+                console.error(err);
+                if (icon) icon.style.fontVariationSettings = currentlySaved ? "'FILL' 1" : "'FILL' 0";
+                if (textEl) textEl.textContent = currentlySaved ? 'Đã lưu' : 'Lưu quán';
+                if (window.showToast) {
+                    window.showToast({
+                        title: 'Lỗi kết nối',
+                        message: 'Không thể gửi yêu cầu đến máy chủ, vui lòng thử lại.',
+                        type: 'error'
+                    });
+                }
+            } finally {
+                btn.dataset.loading = 'false';
+            }
+        };
     </script>
 @endpush

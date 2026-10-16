@@ -12,27 +12,78 @@ use Illuminate\Support\Str;
 class BlogAiService
 {
     /**
-     * Common Vietnamese profanity & toxic terms blacklist for moderation.
+     * Vietnamese terms that are strictly vulgar when accented (must NOT match unaccented isolated homophones like lon coca, pho bo, di an, cac ban, buoi toi).
      */
-    protected array $profanityKeywords = [
-        'đụ', 'đụ má', 'đụ mẹ', 'du ma', 'duma', 'địt', 'địt mẹ', 'dit me', 'ditme', 
-        'lồn', 'lon', 'cặc', 'buồi', 'cac', 'buoi', 'dcm', 'đcm', 'vcl', 'vl', 
-        'dkm', 'đkm', 'đmm', 'dmm', 'chó đẻ', 'cho de', 'mẹ mày', 'me may', 
-        'thằng ngu', 'con chó', 'óc chó', 'oc cho', 'biến thái', 'mat day', 'mất dạy', 
-        'khốn nạn', 'đồ chó', 'con điếm', 'phò', 'cave', 'đĩ', 'suc vat', 'súc vật',
-        'thang cho', 'con me may', 'clmm', 'cc'
+    protected array $accentStrictVi = [
+        'lồn', 'lồz', 'lỗ lồn', 'cặc', 'buồi', 'dái', 'chim cặc', 'đĩ', 'phò', 'đụ', 'địt'
     ];
 
     /**
-     * Common gambling, black-hat advertising and scam keywords.
+     * Comprehensive Vietnamese profanity, compounds & toxic terms blacklist.
+     */
+    protected array $profanityKeywordsVi = [
+        // Chửi thề, tình dục thô bạo, bộ phận sinh dục
+        'đụ má', 'đụ mẹ', 'du ma', 'duma', 'du me', 'dume', 'địt mẹ', 'dit me', 'ditme', 'địt cụ', 'dit cu', 'địt con mẹ', 'dit con me', 'dit me may', 'dit ba may',
+        'loz', 'l0n', 'c4c', 'chịch', 'xoạc', 'nện nhau', 'thủ dâm', 'dâm đãng', 'dâm tặc', 'bú cu', 'bu cu', 'bú cặc', 'bu cac', 'liếm lồn', 'liem lon', 'bú lồn', 'bu lon', 'xuất tinh', 'ấu dâm',
+        'con cặc', 'con cac', 'cái cặc', 'cai cac', 'ăn cặc', 'an cac', 'ngậm cặc', 'ngam cac', 'thằng cặc', 'thang cac', 'hãm cặc', 'ham cac',
+        'con lồn', 'con lon', 'cái lồn', 'cai lon', 'ngu lồn', 'ngu lon', 'hãm lồn', 'ham lon', 'buồi lồn', 'buoi lon', 'lồn mẹ', 'lon me', 'lồn mẹ mày', 'lon me may',
+        'như buồi', 'nhu buoi', 'con buồi', 'con buoi', 'cái buồi', 'cai buoi', 'ăn buồi', 'an buoi',
+        
+        // Viết tắt / Teencode chửi tục
+        'đm', 'dm', 'đcm', 'dcm', 'dcmm', 'đcmm', 'đkm', 'dkm', 'đmm', 'dmm', 'vcl', 'vl', 'vkl', 'vlon', 'vloz', 'clgt', 'clmm', 'cc', 'cl',
+        'đb', 'db', 'đéo', 'deo', 'đéch', 'dech', 'đách', 'dach', 'đíu', 'diu',
+        
+        // Xúc phạm, sỉ nhục nhân phẩm cá nhân
+        'chó đẻ', 'cho de', 'mẹ mày', 'me may', 'bố mày', 'bo may', 'con mẹ mày', 'con me may', 'thằng ngu', 'thang ngu', 'con ngu',
+        'đồ ngu', 'do ngu', 'ngu vl', 'ngu vcl', 'ngu vkl', 'ngu lol', 'ngu như chó', 'ngu nhu cho', 'ngu như bò', 'óc chó', 'oc cho',
+        'óc lợn', 'oc lon', 'não tàn', 'nao tan', 'biến thái', 'bien thai', 'mất dạy', 'mat day', 'khốn nạn', 'khon nan', 'thằng khốn', 'thang khon',
+        'đồ chó', 'do cho', 'con chó', 'con cho', 'súc vật', 'suc vat', 'súc sinh', 'suc sinh', 'đồ súc sinh', 'đồ rác rưởi', 'rác rưởi',
+        'con điếm', 'con diem', 'con phò', 'con pho', 'đồ phò', 'do pho', 'gái phò', 'gai pho', 'làm phò', 'lam pho', 'thằng phò', 'thang pho', 'cave',
+        'con đĩ', 'con di', 'đồ đĩ', 'do di', 'đĩ mẹ', 'di me', 'di me may', 'đĩ thoã', 'di thoa', 'gái đĩ', 'gai di', 'làm đĩ', 'lam di',
+        'thằng điên', 'con điên', 'đồ điên', 'thằng khùng', 'thằng ranh', 'con ranh', 'mạt hạng',
+        'câm mồm', 'cam mom', 'câm họng', 'cam hong', 'cút đi', 'cut di', 'cút ngay', 'cut ngay', 'biến đi', 'bien di',
+        
+        // Căm thù, nguyền rủa, bạo lực
+        'ăn cứt', 'an cut', 'ăn cức', 'an cuc', 'chết tiệt', 'chet tiet', 'mẹ kiếp', 'me kiep', 'chết đi', 'chet di', 'chết mẹ mày đi',
+        'giết chết', 'giet chet', 'chém chết', 'chem chet', 'đập chết', 'bắn chết', 'tự tử đi', 'bị xe cán',
+        'như hạch', 'như cứt', 'nhu cut', 'như cc', 'nhu cc', 'như ccc', 'nhu ccc', 'như cl', 'nhu cl'
+    ];
+
+    /**
+     * Comprehensive English profanity, slurs & toxic terms blacklist.
+     */
+    protected array $profanityKeywordsEn = [
+        // Swear words & vulgarities
+        'fuck', 'fucking', 'fucked', 'fucker', 'fuckers', 'fuckoff', 'fck', 'fuk', 'motherfucker', 'motherfucking', 'muthafucka', 'mf',
+        'shit', 'shitty', 'bullshit', 'bitch', 'bitches', 'bitching', 'son of a bitch',
+        'bastard', 'bastards', 'asshole', 'assholes', 'dumbass', 'jackass',
+        'dick', 'dickhead', 'dicks', 'cunt', 'cunts', 'pussy', 'pussies', 'cock', 'cocks', 'cocksucker', 'twat', 'wanker',
+        'blowjob', 'handjob', 'cumshot', 'ejaculate', 'porn', 'porno', 'xxx', 'nude', 'nudes',
+        
+        // Slurs, hate speech & insults
+        'nigger', 'nigga', 'faggot', 'fag', 'chink', 'gook', 'retard', 'retarded', 'retards',
+        'whore', 'whores', 'slut', 'sluts', 'slutty', 'idiot', 'idiots', 'moron', 'morons', 'scumbag', 'scum',
+        
+        // Harassment, threats & self-harm
+        'kill yourself', 'kys', 'go die', 'die bitch', 'murder you', 'rape', 'rapist', 'terrorist', 'stfu'
+    ];
+
+    /**
+     * Common gambling, black-hat advertising and scam keywords (English & Vietnamese).
      */
     protected array $spamGamblingKeywords = [
         'kubet', 'thabet', 'sunwin', 'go88', 'b52', '789club', 'hitclub', 
         'tài xỉu', 'tai xiu', 'cá cược', 'ca cuoc', 'lô đề', 'lo de', 'so de', 
         'kèo bóng', 'soi kèo', 'soi cau', 'soi cầu', 'kiếm tiền online', 'kiem tien online',
         'vay tiền', 'vay nong', 'vay nặng lãi', 'hack nick', 'hack tài khoản',
-        'nạp thẻ x2', 'nhận code tân thủ', 'bắn cá đổi thưởng', 'nohu', 'nổ hũ'
+        'nạp thẻ x2', 'nhận code tân thủ', 'bắn cá đổi thưởng', 'nohu', 'nổ hũ',
+        'free bitcoin', 'crypto profit', 'make money fast', 'get rich quick', 'casino bonus'
     ];
+
+    /**
+     * Backward-compatible merged profanity list.
+     */
+    protected array $profanityKeywords = [];
 
     /**
      * Common foreign loan words & culinary terms used in Vietnamese food reviews.
@@ -661,6 +712,7 @@ HTML;
 
     /**
      * 5. AUTOMATED COMMENT MODERATION (AI MODERATION)
+     * Catches English & Vietnamese profanities, toxic insults, leetspeak, unaccented variations, gambling, and spam.
      */
     public function moderateComment(string $content, ?User $user = null): array
     {
@@ -685,51 +737,203 @@ HTML;
             return [
                 'is_safe' => false,
                 'flag' => 'spam_link',
-                'reason' => 'Bình luận bị AI chặn do chứa liên kết hoặc đường dẫn URL ngoài không an toàn.',
+                'reason' => 'Từ không hợp lệ.',
             ];
         }
 
-        // 3. Check for Gambling, Betting, Fraudulent Spam
+        // 3. Check for Gambling, Betting, Fraudulent Scam (English & Vietnamese)
         foreach ($this->spamGamblingKeywords as $keyword) {
-            if (mb_strpos($lower, $keyword) !== false) {
+            $kwPattern = '/\b' . preg_quote($keyword, '/') . '\b/iu';
+            if (preg_match($kwPattern, $lower) || mb_strpos($lower, $keyword) !== false) {
                 Log::info('AI Moderation flagged gambling/scam keyword:', ['keyword' => $keyword, 'user_id' => $user?->id]);
                 return [
                     'is_safe' => false,
                     'flag' => 'gambling_scam',
-                    'reason' => 'Bình luận bị AI chặn do chứa nội dung quảng cáo cờ bạc, cá cược hoặc lừa đảo.',
+                    'reason' => 'Từ không hợp lệ.',
                 ];
             }
         }
 
-        // 4. Check for Profanity, Vulgarities and Toxic Harassment
-        foreach ($this->profanityKeywords as $badWord) {
-            // Check word boundary or substring match
-            $badPattern = '/\b' . preg_quote($badWord, '/') . '\b/iu';
-            if (preg_match($badPattern, $lower) || mb_strpos($lower, ' ' . $badWord . ' ') !== false) {
-                Log::info('AI Moderation flagged profanity:', ['word' => $badWord, 'user_id' => $user?->id]);
-                return [
-                    'is_safe' => false,
-                    'flag' => 'profanity',
-                    'reason' => 'Bình luận chứa từ ngữ thô tục hoặc thiếu chuẩn mực, đã bị hệ thống AI tự động chặn.',
-                ];
-            }
-        }
-
-        // 5. Check for Repetitive Character Spam (e.g., "aaaaaaaaaaaa", "11111111111")
+        // 4. Check for Repetitive Character Spam (e.g., "aaaaaaaaaaaa", "11111111111")
         if (preg_match('/(.)\1{7,}/u', $raw)) {
             return [
                 'is_safe' => false,
                 'flag' => 'repetitive_spam',
-                'reason' => 'Bình luận chứa chuỗi ký tự lặp vô nghĩa (spam).',
+                'reason' => 'Từ không hợp lệ.',
             ];
+        }
+
+        // 5. Normalization for Profanity Detection (Accents, Leetspeak, Compacted)
+        $unaccented = $this->removeVietnameseAccents($lower);
+        $deLeet = $this->normalizeLeetspeak($unaccented);
+        // Compacted version removing dots/hyphens/spaces/underscores/stars between letters to catch f.u.c.k, d-m, l*n
+        $compacted = preg_replace('/[\s\.\-_*#~]/u', '', $deLeet);
+
+        // Safe culinary/context exceptions whitelist (never flag these even if substring matches)
+        $safeWords = [
+            'cocktail', 'cocktails', 'peacock', 'pass', 'passed', 'passion', 'passionate',
+            'classic', 'class', 'classes', 'classify', 'assistant', 'assist',
+            'bass', 'grass', 'glass', 'shampoo', 'shitake', 'mass', 'massive',
+            'cucumber', 'document', 'circumstance',
+            'cá', 'bác', 'nhạc', 'thác', 'gác', 'ngọt', 'bình', 'hồ', 'bò',
+            'lon bia', 'lon nuoc', 'lon coca', 'lon pepsi', 'lon sua', 'lon nuoc ngot', 'lon 333', 'lon tiger',
+            'quan pho', 'an pho', 'to pho', 'bat pho', 'pho bo', 'pho ga',
+            'di an', 'di choi', 'di lam', 'di ve', 'di dau', 'di cung',
+            'cac ban', 'cac mon', 'cac loai', 'cac quan', 'cac anh', 'cac chi', 'cac em'
+        ];
+
+        // Prepare compacted string with safe words stripped out to prevent false matches like cocktail -> cock
+        $safeCompacted = $compacted;
+        foreach ($safeWords as $safeWord) {
+            $normalizedSafe = preg_replace('/[\s\.\-_*#~]/u', '', strtolower($this->removeVietnameseAccents($safeWord)));
+            if (!empty($normalizedSafe)) {
+                $safeCompacted = str_replace($normalizedSafe, '', $safeCompacted);
+            }
+        }
+
+        // 6. Check Accent-Strict Vietnamese Profanities (words like 'lồn', 'cặc', 'phò', 'đĩ', 'buồi', 'đụ', 'địt')
+        foreach ($this->accentStrictVi as $strictTerm) {
+            $pattern = '/(?<![a-zA-Z0-9\p{L}])' . preg_quote($strictTerm, '/') . '(?![a-zA-Z0-9\p{L}])/iu';
+            if (preg_match($pattern, $lower)) {
+                Log::info('AI Moderation flagged VI accent-strict profanity:', ['word' => $strictTerm, 'user_id' => $user?->id]);
+                return [
+                    'is_safe' => false,
+                    'flag' => 'profanity_vi',
+                    'reason' => 'Từ không hợp lệ.',
+                ];
+            }
+        }
+
+        // 7. Check Vietnamese Profanity Compounds & Toxic Slurs
+        foreach ($this->profanityKeywordsVi as $badWord) {
+            $badLower = mb_strtolower($badWord, 'UTF-8');
+            $badUnaccented = $this->removeVietnameseAccents($badLower);
+
+            // Short abbreviations like cc, cl, vl, db require strict word boundary
+            $isShort = (mb_strlen($badWord) <= 3);
+
+            if ($isShort) {
+                $pattern = '/(?<![a-zA-Z0-9\p{L}])' . preg_quote($badLower, '/') . '(?![a-zA-Z0-9\p{L}])/iu';
+                $unaccentedPattern = '/(?<![a-zA-Z0-9])' . preg_quote($badUnaccented, '/') . '(?![a-zA-Z0-9])/i';
+                if (preg_match($pattern, $lower) || preg_match($unaccentedPattern, $unaccented)) {
+                    Log::info('AI Moderation flagged VI profanity (short):', ['word' => $badWord, 'user_id' => $user?->id]);
+                    return [
+                        'is_safe' => false,
+                        'flag' => 'profanity_vi',
+                        'reason' => 'Từ không hợp lệ.',
+                    ];
+                }
+            } else {
+                // Phrase or longer word
+                $pattern = '/(?<![a-zA-Z0-9\p{L}])' . preg_quote($badLower, '/') . '(?![a-zA-Z0-9\p{L}])/iu';
+                $unaccentedPattern = '/(?<![a-zA-Z0-9])' . preg_quote($badUnaccented, '/') . '(?![a-zA-Z0-9])/i';
+
+                if (preg_match($pattern, $lower) || preg_match($unaccentedPattern, $unaccented) || mb_strpos($unaccented, $badUnaccented) !== false) {
+                    Log::info('AI Moderation flagged VI profanity:', ['word' => $badWord, 'user_id' => $user?->id]);
+                    return [
+                        'is_safe' => false,
+                        'flag' => 'profanity_vi',
+                        'reason' => 'Từ không hợp lệ.',
+                    ];
+                }
+            }
+
+            // Masked Vietnamese abbreviations (e.g. v.c.l, d.c.m, d.k.m, v.k.l, d.u.m.a)
+            if (in_array($badUnaccented, ['vcl', 'dcm', 'dkm', 'dmm', 'vkl', 'clgt', 'duma'])) {
+                if (str_contains($safeCompacted, $badUnaccented)) {
+                    return [
+                        'is_safe' => false,
+                        'flag' => 'profanity_vi',
+                        'reason' => 'Từ không hợp lệ.',
+                    ];
+                }
+            }
+        }
+
+        // 8. Check English Profanities & Toxic Harassment
+        foreach ($this->profanityKeywordsEn as $badWord) {
+            $badLower = strtolower($badWord);
+            
+            // Check word boundary in raw lower, unaccented, and deLeet
+            $enPattern = '/(?<![a-zA-Z0-9])' . preg_quote($badLower, '/') . '(?![a-zA-Z0-9])/i';
+            if (preg_match($enPattern, $lower) || preg_match($enPattern, $deLeet)) {
+                // Verify not a safe word (e.g., cocktail containing cock)
+                $isSafeMatch = false;
+                foreach ($safeWords as $safeWord) {
+                    if (str_contains($lower, $safeWord) && !preg_match($enPattern, str_replace($safeWord, '', $lower))) {
+                        $isSafeMatch = true;
+                        break;
+                    }
+                }
+                if (!$isSafeMatch) {
+                    Log::info('AI Moderation flagged EN profanity:', ['word' => $badWord, 'user_id' => $user?->id]);
+                    return [
+                        'is_safe' => false,
+                        'flag' => 'profanity_en',
+                        'reason' => 'Từ không hợp lệ.',
+                    ];
+                }
+            }
+
+            // Compacted check for masked words like f.u.c.k, s-h-i-t, b*t*c*h using safeCompacted
+            $cleanBad = str_replace(['*', ' ', '.', '-'], '', $badLower);
+            if (strlen($cleanBad) >= 4 && str_contains($safeCompacted, $cleanBad)) {
+                return [
+                    'is_safe' => false,
+                    'flag' => 'profanity_en',
+                    'reason' => 'Từ không hợp lệ.',
+                ];
+            }
         }
 
         // Clean & Verified
         return [
             'is_safe' => true,
             'flag' => 'clean',
-            'reason' => 'Bình luận hợp lệ và đã qua kiểm duyệt an toàn.',
+            'reason' => 'Hợp lệ.',
         ];
+    }
+
+    /**
+     * Helper to strip Vietnamese accents for accent-blind moderation
+     */
+    public function removeVietnameseAccents(string $str): string
+    {
+        $accents = [
+            'a' => '/[áàảãạăắằẳẵặâấầẩẫậ]/u',
+            'd' => '/[đ]/u',
+            'e' => '/[éèẻẽẹêếềểễệ]/u',
+            'i' => '/[íìỉĩị]/u',
+            'o' => '/[óòỏõọôốồổỗộơớờởỡợ]/u',
+            'u' => '/[úùủũụưứừửữự]/u',
+            'y' => '/[ýỳỷỹỵ]/u',
+        ];
+
+        foreach ($accents as $nonAccent => $pattern) {
+            $str = preg_replace($pattern, $nonAccent, $str);
+        }
+
+        return $str;
+    }
+
+    /**
+     * Helper to normalize common leetspeak substitutions
+     */
+    public function normalizeLeetspeak(string $str): string
+    {
+        $leets = [
+            '0' => 'o',
+            '1' => 'i',
+            '!' => 'i',
+            '3' => 'e',
+            '4' => 'a',
+            '@' => 'a',
+            '5' => 's',
+            '$' => 's',
+            '7' => 't',
+            '+' => 't',
+        ];
+        return strtr($str, $leets);
     }
 
     /**

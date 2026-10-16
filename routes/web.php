@@ -23,7 +23,9 @@ Route::get('/quan-noi-bat', [KhamPhaController::class, 'quanNoiBat'])->name('qua
 Route::get('/blog', [FrontendBlogController::class, 'index'])->name('blog.index');
 Route::get('/blog/{slug}', [FrontendBlogController::class, 'show'])->name('blog.show');
 Route::post('/blog/{slug}/luot-xem', [FrontendBlogController::class, 'recordView'])->name('blog.view.record');
-Route::post('/blog/{slug}/binh-luan', [FrontendBlogController::class, 'storeComment'])->middleware(['auth', 'throttle:20,1'])->name('blog.comment.store');
+Route::post('/blog/{slug}/binh-luan', [FrontendBlogController::class, 'storeComment'])->middleware(['auth', 'throttle:30,1'])->name('blog.comment.store');
+Route::delete('/blog/{slug}/binh-luan/{commentId}', [FrontendBlogController::class, 'deleteComment'])->middleware('auth')->name('blog.comment.destroy');
+Route::post('/blog/{slug}/binh-luan/{commentId}/thich', [FrontendBlogController::class, 'toggleLikeComment'])->middleware('auth')->name('blog.comment.like');
 Route::get('/video-review', [\App\Http\Controllers\NguoiDung\VideoShortController::class, 'index'])->name('video-review.index');
 Route::view('/gioi-thieu', 'pages.about')->name('about');
 Route::get('/media/venue/{path}', [HinhAnhQuanController::class, 'localImage'])
@@ -83,6 +85,9 @@ Route::prefix('api')->group(function () {
 
 Route::middleware('auth')->group(function () {
     Route::get('/tai-khoan', [TaiKhoanController::class, 'index'])->name('tai-khoan.index');
+    Route::get('/tai-khoan/cai-dat', [TaiKhoanController::class, 'settings'])->name('tai-khoan.cai-dat');
+    Route::put('/tai-khoan/cai-dat', [TaiKhoanController::class, 'updateSettings'])->name('tai-khoan.cai-dat.update');
+    Route::get('/cai-dat', fn () => redirect()->route('tai-khoan.cai-dat'))->name('cai-dat');
     Route::get('/quan-da-luu', [\App\Http\Controllers\NguoiDung\QuanDaLuuController::class, 'index'])->name('quan-da-luu.index');
     Route::post('/quan-da-luu/{quanId}/toggle', [\App\Http\Controllers\NguoiDung\QuanDaLuuController::class, 'toggle'])->name('quan-da-luu.toggle');
     Route::put('/tai-khoan', [TaiKhoanController::class, 'update'])->name('tai-khoan.update');

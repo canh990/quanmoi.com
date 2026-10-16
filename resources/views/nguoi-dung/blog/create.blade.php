@@ -237,6 +237,21 @@
                     {!! old('content') !!}
                 </div>
             </div>
+
+            <!-- Settings: Allow Comments -->
+            <div class="pt-4 border-t border-surface-dim flex items-center justify-between">
+                <div>
+                    <label for="allow_comments" class="text-sm font-bold text-on-surface flex items-center gap-2 cursor-pointer">
+                        <span class="material-symbols-outlined text-primary text-xl">forum</span>
+                        <span>Cho phép độc giả bình luận</span>
+                    </label>
+                    <p class="text-xs text-on-surface-variant mt-0.5">Bật tính năng này để cho phép độc giả trao đổi và để lại nhận xét dưới bài viết (được bảo vệ bởi AI Moderation).</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" name="allow_comments" id="allow_comments" value="1" {{ old('allow_comments', '1') == '1' ? 'checked' : '' }} class="sr-only peer">
+                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                </label>
+            </div>
         </div>
 
         <div class="flex items-center justify-end gap-4 sticky bottom-6 p-4 bg-white/90 backdrop-blur-md rounded-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.05)] border border-outline-variant z-50">

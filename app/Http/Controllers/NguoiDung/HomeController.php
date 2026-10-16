@@ -86,6 +86,10 @@ class HomeController extends Controller
             ? $quan->danhGia->firstWhere('nguoi_dung_id', $user->id)
             : null;
 
-        return view('nguoi-dung.chi-tiet', compact('quan', 'danhGiaCuaToi'));
+        $isSaved = $user instanceof User
+            ? $user->savedQuan()->where('quan_id', $quan->id)->exists()
+            : false;
+
+        return view('nguoi-dung.chi-tiet', compact('quan', 'danhGiaCuaToi', 'isSaved'));
     }
 }

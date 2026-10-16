@@ -93,6 +93,11 @@
                     <span class="material-symbols-outlined text-[16px] text-primary">visibility</span>
                     <span><strong id="blog-view-count" class="font-semibold text-on-surface">{{ number_format($blog->view_count ?? 0) }}</strong> lượt xem</span>
                 </div>
+                <div class="w-px h-6 bg-surface-dim"></div>
+                <a href="#comments-section" class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors flex items-center gap-1.5 bg-surface-container/60 px-2.5 py-1 rounded-full">
+                    <span class="material-symbols-outlined text-[16px] text-primary">forum</span>
+                    <span><strong id="blog-header-comment-count" class="font-semibold text-on-surface">{{ number_format($blog->comment_count) }}</strong> bình luận</span>
+                </a>
             </div>
 
             <!-- Hero Image -->
@@ -123,87 +128,251 @@
             @endif
         </article>
         
-        <!-- Comments Section with AI Moderation -->
-        <section class="mt-8 bg-surface-card rounded-xl p-6 md:p-stack-lg shadow-[0_4px_20px_rgba(0,0,0,0.05)] border border-outline-variant/30">
+        <!-- Comments Section -->
+        <section id="comments-section" class="mt-8 bg-surface-card rounded-2xl p-6 md:p-stack-lg shadow-[0_4px_24px_rgba(0,0,0,0.06)] border border-outline-variant/30">
             <div class="flex items-center justify-between mb-6 flex-wrap gap-3 pb-4 border-b border-surface-dim">
                 <h3 class="font-title-md text-title-md text-on-background flex items-center gap-2">
-                    <span class="material-symbols-outlined text-primary">forum</span>
-                    <span>Bình luận (<span id="comments-count-badge">{{ $blog->comments->count() }}</span>)</span>
+                    <span class="material-symbols-outlined text-primary text-2xl">forum</span>
+                    <span>Bình luận (<span id="comments-count-badge">{{ number_format($blog->comment_count) }}</span>)</span>
                 </h3>
-                
-                {{-- AI Moderation Shield Badge --}}
-                <div class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-bold shadow-2xs">
-                    <span class="material-symbols-outlined text-sm text-emerald-600">verified_user</span>
-                    <span>Bảo vệ bởi AI Moderation (Tự động lọc spam & ngôn từ độc hại)</span>
-                </div>
             </div>
 
-            {{-- Dynamic AI Moderation Alert Banner --}}
+            {{-- Dynamic Alert Banner --}}
             <div id="comment-alert-box" class="hidden mb-6 p-4 rounded-2xl text-xs font-bold transition-all flex items-start gap-3 shadow-2xs">
                 <span class="material-symbols-outlined text-xl shrink-0" id="comment-alert-icon">info</span>
                 <div class="flex-1">
-                    <h5 class="font-extrabold text-sm mb-0.5" id="comment-alert-title">Thông báo kiểm duyệt</h5>
+                    <h5 class="font-extrabold text-sm mb-0.5" id="comment-alert-title">Thông báo</h5>
                     <p id="comment-alert-msg" class="leading-relaxed"></p>
                 </div>
-                <button type="button" onclick="document.getElementById('comment-alert-box').classList.add('hidden')" class="text-slate-400 hover:text-slate-600">
+                <button type="button" onclick="document.getElementById('comment-alert-box').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 transition-colors">
                     <span class="material-symbols-outlined text-base">close</span>
                 </button>
             </div>
             
-            @auth
-                <!-- Comment Form -->
-                <form id="blog-comment-form" action="{{ route('blog.comment.store', $blog->slug) }}" method="POST" onsubmit="handleCommentSubmit(event)" class="mb-8 flex gap-4 items-start">
-                    @csrf
-                    <img src="{{ auth()->user()->anh_dai_dien_url ?? 'https://ui-avatars.com/api/?name='.urlencode(auth()->user()->ho_ten).'&background=random' }}" class="w-10 h-10 rounded-full flex-shrink-0 shadow-sm border border-gray-100 object-cover">
-                    <div class="flex-1 space-y-2">
-                        <textarea id="comment-content-input" name="content" rows="3" required placeholder="Chia sẻ suy nghĩ hoặc đánh giá của bạn về bài viết này..." class="w-full rounded-xl border border-surface-dim bg-surface-container-lowest focus:ring-2 focus:ring-primary focus:border-primary resize-none text-sm p-3.5 outline-none transition-all"></textarea>
-                        <div class="flex items-center justify-between flex-wrap gap-2">
-                            <span class="text-[11px] text-text-muted flex items-center gap-1">
-                                <span class="material-symbols-outlined text-xs text-emerald-600">smart_toy</span>
-                                Bình luận được quét & kiểm duyệt tự động trước khi hiển thị
-                            </span>
-                            <button type="submit" id="comment-submit-btn" class="px-6 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-full font-label-md text-label-md transition-all shadow-xs flex items-center gap-1.5 cursor-pointer">
-                                <span class="material-symbols-outlined text-base">send</span>
-                                <span id="comment-submit-text">Gửi bình luận</span>
-                            </button>
-                        </div>
-                    </div>
-                </form>
-            @else
-                <div class="p-6 bg-surface-container rounded-2xl mb-8 text-center border border-outline-variant/30">
-                    <p class="text-on-surface-variant font-label-md mb-3">Vui lòng đăng nhập tài khoản để tham gia bình luận bài viết.</p>
-                    <a href="{{ route('login') }}" class="inline-flex px-6 py-2 bg-primary text-white rounded-full font-label-md hover:opacity-90 transition-opacity">Đăng nhập</a>
+            @if(! $blog->allow_comments)
+                <div class="p-6 bg-surface-container rounded-2xl mb-6 text-center border border-outline-variant/30">
+                    <span class="material-symbols-outlined text-3xl text-text-muted mb-2">lock</span>
+                    <p class="text-on-surface-variant font-medium text-sm">Tác giả đã tạm khóa tính năng bình luận cho bài viết này.</p>
                 </div>
-            @endauth
+            @else
+                @auth
+                    <!-- Main Comment Form -->
+                    <form id="blog-comment-form" action="{{ route('blog.comment.store', $blog->slug) }}" method="POST" onsubmit="handleCommentSubmit(event, 'blog-comment-form')" class="mb-8 flex gap-4 items-start">
+                        @csrf
+                        <img src="{{ auth()->user()->anh_dai_dien_url }}" class="w-10 h-10 rounded-full flex-shrink-0 shadow-sm border border-gray-100 object-cover" alt="{{ auth()->user()->ho_ten }}">
+                        <div class="flex-1 space-y-2">
+                            <div class="relative">
+                                <textarea id="comment-content-input" name="content" rows="3" required placeholder="Chia sẻ suy nghĩ hoặc nhận xét của bạn về bài viết này..." oninput="updateCharCount(this, 'main-char-count')" class="w-full rounded-2xl border border-surface-dim bg-surface-container-lowest focus:ring-2 focus:ring-primary focus:border-primary resize-none text-sm p-3.5 outline-none transition-all"></textarea>
+                            </div>
+                            <div class="flex items-center justify-between flex-wrap gap-2 text-xs">
+                                <div class="flex items-center gap-3 text-[11px] text-text-muted">
+                                    <span id="main-char-count" class="text-slate-400">0/1000 ký tự</span>
+                                    <span class="hidden sm:inline text-slate-400">• Ctrl + Enter để gửi</span>
+                                </div>
+                                <button type="submit" id="comment-submit-btn" class="px-6 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-full font-label-md text-label-md transition-all shadow-xs flex items-center gap-1.5 cursor-pointer">
+                                    <span class="material-symbols-outlined text-base">send</span>
+                                    <span id="comment-submit-text">Gửi bình luận</span>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                @else
+                    <div class="p-6 bg-surface-container rounded-2xl mb-8 text-center border border-outline-variant/30">
+                        <span class="material-symbols-outlined text-3xl text-primary mb-2">account_circle</span>
+                        <p class="text-on-surface-variant font-medium text-sm mb-3">Vui lòng đăng nhập tài khoản để tham gia bình luận bài viết.</p>
+                        <a href="{{ route('login') }}" class="inline-flex items-center gap-1.5 px-6 py-2.5 bg-primary text-white rounded-full font-label-md hover:bg-primary/90 transition-all shadow-xs">
+                            <span class="material-symbols-outlined text-base">login</span>
+                            Đăng nhập ngay
+                        </a>
+                    </div>
+                @endauth
+            @endif
             
             <!-- Comment List -->
             <div id="comments-list-container" class="space-y-4">
-                @forelse($blog->comments as $comment)
-                    <div class="comment-item flex gap-4 p-4 rounded-2xl bg-white hover:bg-surface-container/40 transition-colors border border-surface-dim/50">
-                        <img src="{{ $comment->user->anh_dai_dien_url ?? 'https://ui-avatars.com/api/?name='.urlencode($comment->user->ho_ten).'&background=random' }}" class="w-10 h-10 rounded-full flex-shrink-0 object-cover border border-gray-100 shadow-2xs">
-                        <div class="flex-1">
-                            <div class="flex items-center justify-between gap-2 mb-1">
-                                <div class="flex items-center gap-2">
-                                    <span class="font-title-md text-[14px] font-bold text-on-background">{{ $comment->user->ho_ten }}</span>
-                                    <span class="text-xs text-on-surface-variant">• {{ $comment->created_at->diffForHumans() }}</span>
+                @forelse($blog->rootComments as $comment)
+                    <div id="comment-block-{{ $comment->id }}" class="comment-item p-4 rounded-2xl bg-white hover:bg-surface-container/20 transition-all border border-surface-dim/60 shadow-2xs">
+                        <div class="flex gap-3.5 items-start">
+                            <img src="{{ $comment->user->anh_dai_dien_url }}" class="w-10 h-10 rounded-full flex-shrink-0 object-cover border border-gray-100 shadow-2xs" alt="{{ $comment->user->ho_ten }}">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center justify-between gap-2 mb-1 flex-wrap">
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <span class="font-title-md text-[14px] font-bold text-on-background">{{ $comment->user->ho_ten }}</span>
+                                        
+                                        @if($comment->user_id === $blog->user_id)
+                                            <span class="bg-primary/10 text-primary text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-0.5 border border-primary/20">
+                                                <span class="material-symbols-outlined text-[12px]">edit_note</span>
+                                                Tác giả
+                                            </span>
+                                        @endif
+
+                                        @if($comment->user->isAdmin())
+                                            <span class="bg-purple-50 text-purple-700 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-0.5 border border-purple-200">
+                                                <span class="material-symbols-outlined text-[12px]">shield_person</span>
+                                                Quản trị viên
+                                            </span>
+                                        @endif
+
+                                        <span class="text-xs text-on-surface-variant">• {{ $comment->created_at->diffForHumans() }}</span>
+                                    </div>
                                 </div>
-                                <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full flex items-center gap-0.5 shadow-2xs">
-                                    <span class="material-symbols-outlined text-[12px] text-emerald-600">verified</span>
-                                    <span>AI Đã Kiểm Duyệt</span>
-                                </span>
+                                <p class="text-on-surface font-body-sm whitespace-pre-line text-sm leading-relaxed">{{ $comment->content }}</p>
+                                
+                                <!-- Comment Actions: Like, Reply, Delete -->
+                                <div class="flex items-center gap-4 mt-2.5 pt-2 text-xs text-on-surface-variant font-medium">
+                                    @auth
+                                        @php $isLiked = $comment->isLikedBy(auth()->user()); @endphp
+                                        <button type="button" onclick="handleLikeComment({{ $comment->id }})" id="like-btn-{{ $comment->id }}" class="flex items-center gap-1 transition-colors {{ $isLiked ? 'text-rose-600 font-bold' : 'text-slate-500 hover:text-rose-600' }}">
+                                            <span class="material-symbols-outlined text-[16px] {{ $isLiked ? 'fill-current' : '' }}" id="like-icon-{{ $comment->id }}">{{ $isLiked ? 'favorite' : 'favorite_border' }}</span>
+                                            <span id="like-count-{{ $comment->id }}">{{ $comment->likes_count > 0 ? $comment->likes_count : 'Thích' }}</span>
+                                        </button>
+
+                                        @if($blog->allow_comments)
+                                            <button type="button" onclick="toggleReplyBox({{ $comment->id }}, '{{ addslashes($comment->user->ho_ten) }}')" class="flex items-center gap-1 text-slate-500 hover:text-primary transition-colors">
+                                                <span class="material-symbols-outlined text-[16px]">reply</span>
+                                                <span>Trả lời</span>
+                                            </button>
+                                        @endif
+
+                                        @if(auth()->id() === $comment->user_id || auth()->id() === $blog->user_id || auth()->user()->isAdmin())
+                                            <button type="button" onclick="openDeleteModal({{ $comment->id }})" class="flex items-center gap-1 text-slate-400 hover:text-rose-600 transition-colors ml-auto">
+                                                <span class="material-symbols-outlined text-[15px]">delete</span>
+                                                <span>Xóa</span>
+                                            </button>
+                                        @endif
+                                    @else
+                                        <a href="{{ route('login') }}" class="flex items-center gap-1 text-slate-500 hover:text-rose-600 transition-colors">
+                                            <span class="material-symbols-outlined text-[16px]">favorite_border</span>
+                                            <span>{{ $comment->likes_count > 0 ? $comment->likes_count : 'Thích' }}</span>
+                                        </a>
+                                        <a href="{{ route('login') }}" class="flex items-center gap-1 text-slate-500 hover:text-primary transition-colors">
+                                            <span class="material-symbols-outlined text-[16px]">reply</span>
+                                            <span>Trả lời</span>
+                                        </a>
+                                    @endauth
+                                </div>
                             </div>
-                            <p class="text-on-surface font-body-sm whitespace-pre-line text-sm leading-relaxed">{{ $comment->content }}</p>
+                        </div>
+
+                        <!-- Inline Reply Box for this Comment -->
+                        @auth
+                            <div id="reply-box-{{ $comment->id }}" class="hidden mt-3 pl-10 pr-2 pt-2 border-t border-surface-dim">
+                                <form id="reply-form-{{ $comment->id }}" action="{{ route('blog.comment.store', $blog->slug) }}" method="POST" onsubmit="handleCommentSubmit(event, 'reply-form-{{ $comment->id }}', {{ $comment->id }})" class="flex gap-3 items-start">
+                                    @csrf
+                                    <input type="hidden" name="parent_id" value="{{ $comment->id }}">
+                                    <img src="{{ auth()->user()->anh_dai_dien_url }}" class="w-8 h-8 rounded-full flex-shrink-0 object-cover border border-gray-100 shadow-2xs" alt="{{ auth()->user()->ho_ten }}">
+                                    <div class="flex-1 space-y-2">
+                                        <textarea id="reply-input-{{ $comment->id }}" name="content" rows="2" required placeholder="Trả lời @{{ $comment->user->ho_ten }}..." oninput="updateCharCount(this, 'char-count-{{ $comment->id }}')" class="w-full rounded-xl border border-surface-dim bg-surface-container-lowest focus:ring-2 focus:ring-primary focus:border-primary resize-none text-xs p-3 outline-none transition-all"></textarea>
+                                        <div class="flex items-center justify-between flex-wrap gap-2 text-xs">
+                                            <span id="char-count-{{ $comment->id }}" class="text-[11px] text-slate-400">0/1000 ký tự</span>
+                                            <div class="flex items-center gap-2">
+                                                <button type="button" onclick="toggleReplyBox({{ $comment->id }})" class="px-3 py-1.5 rounded-full text-slate-500 hover:bg-slate-100 font-medium transition-colors cursor-pointer text-xs">
+                                                    Hủy
+                                                </button>
+                                                <button type="submit" id="reply-btn-{{ $comment->id }}" class="px-4 py-1.5 bg-primary hover:bg-primary/90 text-white rounded-full font-label-sm transition-all shadow-xs flex items-center gap-1 cursor-pointer text-xs">
+                                                    <span class="material-symbols-outlined text-sm">send</span>
+                                                    <span id="reply-btn-text-{{ $comment->id }}">Gửi phản hồi</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        @endauth
+
+                        <!-- Nested Replies List -->
+                        <div id="replies-list-{{ $comment->id }}" class="space-y-3 mt-3 pl-8 sm:pl-10 {{ $comment->replies->count() > 0 ? 'pt-2' : '' }}">
+                            @foreach($comment->replies as $reply)
+                                <div id="comment-block-{{ $reply->id }}" class="reply-item p-3.5 rounded-xl bg-surface-container/30 border border-surface-dim/70 flex gap-3 items-start transition-all">
+                                    <img src="{{ $reply->user->anh_dai_dien_url }}" class="w-8 h-8 rounded-full flex-shrink-0 object-cover border border-gray-100 shadow-2xs" alt="{{ $reply->user->ho_ten }}">
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center justify-between gap-2 mb-1 flex-wrap">
+                                            <div class="flex items-center gap-2 flex-wrap">
+                                                <span class="font-title-md text-[13px] font-bold text-on-background">{{ $reply->user->ho_ten }}</span>
+                                                
+                                                @if($reply->user_id === $blog->user_id)
+                                                    <span class="bg-primary/10 text-primary text-[9px] font-bold px-1.5 py-0.2 rounded-full flex items-center gap-0.5 border border-primary/20">
+                                                        <span class="material-symbols-outlined text-[11px]">edit_note</span>
+                                                        Tác giả
+                                                    </span>
+                                                @endif
+
+                                                @if($reply->user->isAdmin())
+                                                    <span class="bg-purple-50 text-purple-700 text-[9px] font-bold px-1.5 py-0.2 rounded-full flex items-center gap-0.5 border border-purple-200">
+                                                        <span class="material-symbols-outlined text-[11px]">shield_person</span>
+                                                        Quản trị viên
+                                                    </span>
+                                                @endif
+
+                                                <span class="text-[11px] text-on-surface-variant">• {{ $reply->created_at->diffForHumans() }}</span>
+                                            </div>
+                                        </div>
+                                        <p class="text-on-surface font-body-sm whitespace-pre-line text-xs leading-relaxed">{{ $reply->content }}</p>
+                                        
+                                        <!-- Reply Actions -->
+                                        <div class="flex items-center gap-3 mt-2 text-[11px] text-on-surface-variant font-medium">
+                                            @auth
+                                                @php $isReplyLiked = $reply->isLikedBy(auth()->user()); @endphp
+                                                <button type="button" onclick="handleLikeComment({{ $reply->id }})" id="like-btn-{{ $reply->id }}" class="flex items-center gap-0.5 transition-colors {{ $isReplyLiked ? 'text-rose-600 font-bold' : 'text-slate-500 hover:text-rose-600' }}">
+                                                    <span class="material-symbols-outlined text-[14px] {{ $isReplyLiked ? 'fill-current' : '' }}" id="like-icon-{{ $reply->id }}">{{ $isReplyLiked ? 'favorite' : 'favorite_border' }}</span>
+                                                    <span id="like-count-{{ $reply->id }}">{{ $reply->likes_count > 0 ? $reply->likes_count : 'Thích' }}</span>
+                                                </button>
+
+                                                @if($blog->allow_comments)
+                                                    <button type="button" onclick="toggleReplyBox({{ $comment->id }}, '{{ addslashes($reply->user->ho_ten) }}')" class="flex items-center gap-0.5 text-slate-500 hover:text-primary transition-colors">
+                                                        <span class="material-symbols-outlined text-[14px]">reply</span>
+                                                        <span>Trả lời</span>
+                                                    </button>
+                                                @endif
+
+                                                @if(auth()->id() === $reply->user_id || auth()->id() === $blog->user_id || auth()->user()->isAdmin())
+                                                    <button type="button" onclick="openDeleteModal({{ $reply->id }})" class="flex items-center gap-0.5 text-slate-400 hover:text-rose-600 transition-colors ml-auto">
+                                                        <span class="material-symbols-outlined text-[14px]">delete</span>
+                                                        <span>Xóa</span>
+                                                    </button>
+                                                @endif
+                                            @else
+                                                <a href="{{ route('login') }}" class="flex items-center gap-0.5 text-slate-500 hover:text-rose-600 transition-colors">
+                                                    <span class="material-symbols-outlined text-[14px]">favorite_border</span>
+                                                    <span>{{ $reply->likes_count > 0 ? $reply->likes_count : 'Thích' }}</span>
+                                                </a>
+                                            @endauth
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
                         </div>
                     </div>
                 @empty
                     <div id="comments-empty-state" class="p-8 text-center rounded-2xl bg-surface-container/20 border border-dashed border-outline-variant/40">
-                        <span class="material-symbols-outlined text-3xl text-text-muted mb-2">forum</span>
-                        <p class="text-xs font-bold text-slate-600">Chưa có bình luận nào cho bài viết này</p>
-                        <p class="text-[11px] text-text-muted mt-0.5">Hãy là người đầu tiên chia sẻ cảm nghĩ và nhận xét của bạn!</p>
+                        <span class="material-symbols-outlined text-4xl text-text-muted mb-2">forum</span>
+                        <p class="text-sm font-bold text-slate-700">Chưa có bình luận nào cho bài viết này</p>
+                        <p class="text-xs text-text-muted mt-1">Hãy là người đầu tiên chia sẻ cảm nghĩ và nhận xét của bạn!</p>
                     </div>
                 @endforelse
             </div>
         </section>
+
+        <!-- Delete Comment Confirmation Modal -->
+        <div id="delete-comment-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs hidden transition-all">
+            <div class="bg-surface-card rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-outline-variant/40 animate-in fade-in zoom-in-95 duration-200">
+                <div class="w-12 h-12 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mb-4 mx-auto">
+                    <span class="material-symbols-outlined text-2xl">delete_forever</span>
+                </div>
+                <h4 class="font-title-md text-center text-on-background text-lg font-bold mb-2">Xác nhận xóa bình luận?</h4>
+                <p class="text-xs text-on-surface-variant text-center mb-6 leading-relaxed">
+                    Bình luận này sẽ bị xóa vĩnh viễn khỏi bài viết cùng với các phản hồi liên quan. Hành động này không thể hoàn tác.
+                </p>
+                <div class="flex items-center gap-3">
+                    <button type="button" onclick="closeDeleteModal()" class="flex-1 py-2.5 rounded-full border border-surface-dim font-label-md text-xs font-semibold text-slate-700 hover:bg-surface-container transition-colors cursor-pointer">
+                        Hủy bỏ
+                    </button>
+                    <button type="button" id="confirm-delete-btn" onclick="executeDeleteComment()" class="flex-1 py-2.5 rounded-full bg-rose-600 hover:bg-rose-700 text-white font-label-md text-xs font-semibold transition-all shadow-xs cursor-pointer">
+                        Xóa bình luận
+                    </button>
+                </div>
+            </div>
+        </div>
         
         <!-- Related Articles (if any) -->
         @if($relatedBlogs->count() > 0)
@@ -290,27 +459,268 @@
 
 @push('scripts')
 <script>
-    function handleCommentSubmit(e) {
-        e.preventDefault();
-        const form = document.getElementById('blog-comment-form');
-        const textarea = document.getElementById('comment-content-input');
-        const btn = document.getElementById('comment-submit-btn');
-        const btnText = document.getElementById('comment-submit-text');
+    let activeDeleteCommentId = null;
+
+    // Character counter helper
+    function updateCharCount(el, targetId) {
+        const len = el.value.length;
+        const target = document.getElementById(targetId);
+        if (target) {
+            target.textContent = `${len}/1000 ký tự`;
+            if (len > 900) {
+                target.classList.add('text-amber-600', 'font-bold');
+            } else {
+                target.classList.remove('text-amber-600', 'font-bold');
+            }
+        }
+    }
+
+    // Toggle reply form visibility
+    function toggleReplyBox(commentId, authorName = '') {
+        const box = document.getElementById(`reply-box-${commentId}`);
+        if (!box) return;
+        
+        const isHidden = box.classList.contains('hidden');
+        // Hide all other open reply boxes
+        document.querySelectorAll('[id^="reply-box-"]').forEach(b => {
+            if (b.id !== `reply-box-${commentId}`) b.classList.add('hidden');
+        });
+
+        if (isHidden) {
+            hideAlertBox();
+            box.classList.remove('hidden');
+            const input = document.getElementById(`reply-input-${commentId}`);
+            if (input) {
+                if (authorName && !input.value.trim()) {
+                    input.value = `@${authorName} `;
+                }
+                input.focus();
+                // Move cursor to end
+                input.setSelectionRange(input.value.length, input.value.length);
+            }
+        } else {
+            box.classList.add('hidden');
+        }
+    }
+
+    // Auto-dismiss alert banner when user focuses or types new input
+    function hideAlertBox() {
+        const alertBox = document.getElementById('comment-alert-box');
+        if (alertBox && !alertBox.classList.contains('hidden')) {
+            alertBox.classList.add('hidden');
+        }
+    }
+
+    // Dismiss old notifications immediately when typing or clicking into any comment/reply input
+    document.addEventListener('input', function(e) {
+        if (e.target && e.target.tagName === 'TEXTAREA') {
+            hideAlertBox();
+        }
+    });
+
+    document.addEventListener('focusin', function(e) {
+        if (e.target && e.target.tagName === 'TEXTAREA') {
+            hideAlertBox();
+        }
+    });
+
+    // Open & Close Delete Confirmation Modal
+    function openDeleteModal(commentId) {
+        hideAlertBox();
+        activeDeleteCommentId = commentId;
+        const modal = document.getElementById('delete-comment-modal');
+        if (modal) modal.classList.remove('hidden');
+    }
+
+    function closeDeleteModal() {
+        activeDeleteCommentId = null;
+        const modal = document.getElementById('delete-comment-modal');
+        if (modal) modal.classList.add('hidden');
+    }
+
+    // Execute Delete
+    function executeDeleteComment() {
+        if (!activeDeleteCommentId) return;
+        const targetCommentId = activeDeleteCommentId;
+
+        const btn = document.getElementById('confirm-delete-btn');
+        if (btn) {
+            btn.disabled = true;
+            btn.textContent = 'Đang xóa...';
+        }
+
+        const deleteUrl = "{{ url('/blog/' . $blog->slug . '/binh-luan') }}/" + targetCommentId;
+
+        fetch(deleteUrl, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = 'Xóa bình luận';
+            }
+            closeDeleteModal();
+
+            if (data.success) {
+                const el = document.getElementById(`comment-block-${targetCommentId}`);
+                if (el) {
+                    el.style.transition = 'all 0.35s cubic-bezier(0.4, 0, 0.2, 1)';
+                    el.style.opacity = '0';
+                    el.style.transform = 'translateY(-8px) scale(0.96)';
+                    el.style.maxHeight = el.scrollHeight + 'px';
+                    setTimeout(() => {
+                        el.style.maxHeight = '0px';
+                        el.style.paddingTop = '0px';
+                        el.style.paddingBottom = '0px';
+                        el.style.marginTop = '0px';
+                        el.style.marginBottom = '0px';
+                        el.style.overflow = 'hidden';
+                    }, 50);
+                    setTimeout(() => {
+                        el.remove();
+                        // Check if list is empty
+                        const list = document.getElementById('comments-list-container');
+                        if (list && list.querySelectorAll('.comment-item').length === 0) {
+                            list.innerHTML = `
+                                <div id="comments-empty-state" class="p-8 text-center rounded-2xl bg-surface-container/20 border border-dashed border-outline-variant/40 animate-in fade-in duration-300">
+                                    <span class="material-symbols-outlined text-4xl text-text-muted mb-2">forum</span>
+                                    <p class="text-sm font-bold text-slate-700">Chưa có bình luận nào cho bài viết này</p>
+                                    <p class="text-xs text-text-muted mt-1">Hãy là người đầu tiên chia sẻ cảm nghĩ và nhận xét của bạn!</p>
+                                </div>
+                            `;
+                        }
+                    }, 350);
+                }
+
+                const badge = document.getElementById('comments-count-badge');
+                if (badge && data.comment_count !== undefined) {
+                    badge.textContent = data.comment_count;
+                }
+                const headerBadge = document.getElementById('blog-header-comment-count');
+                if (headerBadge && data.comment_count !== undefined) {
+                    headerBadge.textContent = data.comment_count;
+                }
+
+                showAlert('info', 'Thông báo', 'Đã xóa bình luận thành công.');
+            } else {
+                showAlert('error', 'Lỗi xóa bình luận', data.message || 'Không thể xóa bình luận.');
+            }
+        })
+        .catch(err => {
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = 'Xóa bình luận';
+            }
+            closeDeleteModal();
+            showAlert('error', 'Lỗi hệ thống', 'Không thể kết nối đến máy chủ. Vui lòng thử lại sau.');
+        });
+    }
+
+    // Toggle Like on Comment
+    function handleLikeComment(commentId) {
+        const likeUrl = "{{ url('/blog/' . $blog->slug . '/binh-luan') }}/" + commentId + "/thich";
+        const btn = document.getElementById(`like-btn-${commentId}`);
+        const icon = document.getElementById(`like-icon-${commentId}`);
+        const countSpan = document.getElementById(`like-count-${commentId}`);
+
+        fetch(likeUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                if (data.liked) {
+                    btn.className = 'flex items-center gap-1 transition-colors text-rose-600 font-bold';
+                    icon.textContent = 'favorite';
+                    icon.classList.add('fill-current');
+                } else {
+                    btn.className = 'flex items-center gap-1 transition-colors text-slate-500 hover:text-rose-600';
+                    icon.textContent = 'favorite_border';
+                    icon.classList.remove('fill-current');
+                }
+                countSpan.textContent = data.likes_count > 0 ? data.likes_count : 'Thích';
+            }
+        })
+        .catch(err => {
+            console.error('Like error:', err);
+        });
+    }
+
+    // Alert display helper
+    // Alert display helper
+    function showAlert(type, title, message) {
         const alertBox = document.getElementById('comment-alert-box');
         const alertTitle = document.getElementById('comment-alert-title');
         const alertMsg = document.getElementById('comment-alert-msg');
         const alertIcon = document.getElementById('comment-alert-icon');
-        const listContainer = document.getElementById('comments-list-container');
-        const emptyState = document.getElementById('comments-empty-state');
+        if (!alertBox) return;
+
+        if (type === 'success') {
+            alertBox.className = 'mb-6 p-4 rounded-2xl text-xs font-bold transition-all flex items-start gap-3 shadow-2xs bg-emerald-50 border border-emerald-200 text-emerald-800 animate-in fade-in duration-300';
+            alertIcon.className = 'material-symbols-outlined text-xl text-emerald-600 shrink-0';
+            alertIcon.textContent = 'check_circle';
+        } else if (type === 'moderated') {
+            alertBox.className = 'mb-6 p-4 rounded-2xl text-xs font-bold transition-all flex items-start gap-3 shadow-2xs bg-rose-50 border border-rose-200 text-rose-800 animate-in shake duration-300';
+            alertIcon.className = 'material-symbols-outlined text-xl text-rose-600 shrink-0';
+            alertIcon.textContent = 'error';
+        } else {
+            alertBox.className = 'mb-6 p-4 rounded-2xl text-xs font-bold transition-all flex items-start gap-3 shadow-2xs bg-amber-50 border border-amber-200 text-amber-800 animate-in fade-in duration-300';
+            alertIcon.className = 'material-symbols-outlined text-xl text-amber-600 shrink-0';
+            alertIcon.textContent = 'info';
+        }
+
+        alertTitle.textContent = title;
+        alertMsg.textContent = message;
+        alertBox.classList.remove('hidden');
+
+        alertBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    // Handle Comment / Reply Submission
+    function handleCommentSubmit(e, formId, parentId = null) {
+        e.preventDefault();
+        hideAlertBox();
+        const form = document.getElementById(formId);
+        if (!form) return;
+
+        const isReply = (parentId !== null);
+        const textarea = isReply 
+            ? document.getElementById(`reply-input-${parentId}`)
+            : document.getElementById('comment-content-input');
+        const btn = isReply 
+            ? document.getElementById(`reply-btn-${parentId}`)
+            : document.getElementById('comment-submit-btn');
+        const btnText = isReply 
+            ? document.getElementById(`reply-btn-text-${parentId}`)
+            : document.getElementById('comment-submit-text');
         const counterBadge = document.getElementById('comments-count-badge');
+        const emptyState = document.getElementById('comments-empty-state');
+        const listContainer = document.getElementById('comments-list-container');
 
         const content = textarea.value.trim();
         if (!content) return;
 
         // Loading state
         btn.disabled = true;
-        btnText.textContent = 'AI đang quét kiểm duyệt...';
+        const originalText = btnText.textContent;
+        btnText.textContent = 'Đang gửi...';
         btn.classList.add('opacity-75');
+
+        const payload = { content: content };
+        if (parentId) {
+            payload.parent_id = parentId;
+        }
 
         fetch(form.action, {
             method: 'POST',
@@ -319,75 +729,173 @@
                 'Accept': 'application/json',
                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
             },
-            body: JSON.stringify({ content: content })
+            body: JSON.stringify(payload)
         })
-        .then(res => res.json().then(data => ({ status: res.status, body: data })))
+        .then(res => {
+            return res.json().then(data => ({ status: res.status, body: data })).catch(() => ({
+                status: res.status,
+                body: { success: false, message: 'Phản hồi từ máy chủ không hợp lệ (' + res.status + ')' }
+            }));
+        })
         .then(({ status, body }) => {
             btn.disabled = false;
-            btnText.textContent = 'Gửi bình luận';
+            btnText.textContent = originalText;
             btn.classList.remove('opacity-75');
 
             if (status === 200 && body.success) {
-                // Success: clean & verified
-                alertBox.className = 'mb-6 p-4 rounded-2xl text-xs font-bold transition-all flex items-start gap-3 shadow-2xs bg-emerald-50 border border-emerald-200 text-emerald-800';
-                alertIcon.className = 'material-symbols-outlined text-xl text-emerald-600 shrink-0';
-                alertIcon.textContent = 'verified_user';
-                alertTitle.textContent = 'Kiểm duyệt an toàn thành công!';
-                alertMsg.textContent = body.message;
-                alertBox.classList.remove('hidden');
-
-                // Clear textarea
+                showAlert('success', 'Thành công', body.message || 'Bình luận đã được đăng thành công!');
                 textarea.value = '';
 
-                // Remove empty state if present
+                // Reset char counter
+                if (!isReply) {
+                    const charSpan = document.getElementById('main-char-count');
+                    if (charSpan) charSpan.textContent = '0/1000 ký tự';
+                }
+
+                // Remove empty state if visible
                 if (emptyState) emptyState.remove();
 
-                // Prepend new comment
-                const newCommentHtml = `
-                    <div class="comment-item flex gap-4 p-4 rounded-2xl bg-white hover:bg-surface-container/40 transition-colors border border-emerald-200/80 shadow-xs">
-                        <img src="${body.comment.user_avatar}" class="w-10 h-10 rounded-full flex-shrink-0 object-cover border border-gray-100 shadow-2xs">
-                        <div class="flex-1">
-                            <div class="flex items-center justify-between gap-2 mb-1">
-                                <div class="flex items-center gap-2">
-                                    <span class="font-title-md text-[14px] font-bold text-on-background">${body.comment.user_name}</span>
-                                    <span class="text-xs text-on-surface-variant">• ${body.comment.created_at_human}</span>
+                const c = body.comment;
+                const authorBadge = c.is_author 
+                    ? `<span class="bg-primary/10 text-primary text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-0.5 border border-primary/20"><span class="material-symbols-outlined text-[12px]">edit_note</span>Tác giả</span>`
+                    : '';
+                const adminBadge = c.is_admin 
+                    ? `<span class="bg-purple-50 text-purple-700 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-0.5 border border-purple-200"><span class="material-symbols-outlined text-[12px]">shield_person</span>Quản trị viên</span>`
+                    : '';
+
+                if (isReply) {
+                    // Hide reply form
+                    const replyBox = document.getElementById(`reply-box-${parentId}`);
+                    if (replyBox) replyBox.classList.add('hidden');
+
+                    // Append reply
+                    const repliesList = document.getElementById(`replies-list-${parentId}`);
+                    const newReplyHtml = `
+                        <div id="comment-block-${c.id}" class="reply-item p-3.5 rounded-xl bg-surface-container/30 border border-surface-dim/70 flex gap-3 items-start transition-all animate-in fade-in duration-300">
+                            <img src="${c.user_avatar}" class="w-8 h-8 rounded-full flex-shrink-0 object-cover border border-gray-100 shadow-2xs" alt="${c.user_name}">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center justify-between gap-2 mb-1 flex-wrap">
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <span class="font-title-md text-[13px] font-bold text-on-background">${c.user_name}</span>
+                                        ${authorBadge}
+                                        ${adminBadge}
+                                        <span class="text-[11px] text-on-surface-variant">• ${c.created_at_human}</span>
+                                    </div>
                                 </div>
-                                <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full flex items-center gap-0.5 shadow-2xs">
-                                    <span class="material-symbols-outlined text-[12px] text-emerald-600">verified</span>
-                                    <span>AI Đã Kiểm Duyệt</span>
-                                </span>
+                                <p class="text-on-surface font-body-sm whitespace-pre-line text-xs leading-relaxed">${c.content}</p>
+                                <div class="flex items-center gap-3 mt-2 text-[11px] text-on-surface-variant font-medium">
+                                    <button type="button" onclick="handleLikeComment(${c.id})" id="like-btn-${c.id}" class="flex items-center gap-0.5 transition-colors text-slate-500 hover:text-rose-600">
+                                        <span class="material-symbols-outlined text-[14px]" id="like-icon-${c.id}">favorite_border</span>
+                                        <span id="like-count-${c.id}">Thích</span>
+                                    </button>
+                                    <button type="button" onclick="toggleReplyBox(${parentId}, '${c.user_name}')" class="flex items-center gap-0.5 text-slate-500 hover:text-primary transition-colors">
+                                        <span class="material-symbols-outlined text-[14px]">reply</span>
+                                        <span>Trả lời</span>
+                                    </button>
+                                    <button type="button" onclick="openDeleteModal(${c.id})" class="flex items-center gap-0.5 text-slate-400 hover:text-rose-600 transition-colors ml-auto">
+                                        <span class="material-symbols-outlined text-[14px]">delete</span>
+                                        <span>Xóa</span>
+                                    </button>
+                                </div>
                             </div>
-                            <p class="text-on-surface font-body-sm whitespace-pre-line text-sm leading-relaxed">${body.comment.content}</p>
                         </div>
-                    </div>
-                `;
-                listContainer.insertAdjacentHTML('afterbegin', newCommentHtml);
+                    `;
+                    if (repliesList) {
+                        repliesList.insertAdjacentHTML('beforeend', newReplyHtml);
+                    }
+                } else {
+                    // Prepend root comment
+                    const newCommentHtml = `
+                        <div id="comment-block-${c.id}" class="comment-item p-4 rounded-2xl bg-white hover:bg-surface-container/20 transition-all border border-surface-dim/60 shadow-2xs animate-in fade-in duration-300">
+                            <div class="flex gap-3.5 items-start">
+                                <img src="${c.user_avatar}" class="w-10 h-10 rounded-full flex-shrink-0 object-cover border border-gray-100 shadow-2xs" alt="${c.user_name}">
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center justify-between gap-2 mb-1 flex-wrap">
+                                        <div class="flex items-center gap-2 flex-wrap">
+                                            <span class="font-title-md text-[14px] font-bold text-on-background">${c.user_name}</span>
+                                            ${authorBadge}
+                                            ${adminBadge}
+                                            <span class="text-xs text-on-surface-variant">• ${c.created_at_human}</span>
+                                        </div>
+                                    </div>
+                                    <p class="text-on-surface font-body-sm whitespace-pre-line text-sm leading-relaxed">${c.content}</p>
+                                    <div class="flex items-center gap-4 mt-2.5 pt-2 text-xs text-on-surface-variant font-medium">
+                                        <button type="button" onclick="handleLikeComment(${c.id})" id="like-btn-${c.id}" class="flex items-center gap-1 transition-colors text-slate-500 hover:text-rose-600">
+                                            <span class="material-symbols-outlined text-[16px]" id="like-icon-${c.id}">favorite_border</span>
+                                            <span id="like-count-${c.id}">Thích</span>
+                                        </button>
+                                        <button type="button" onclick="toggleReplyBox(${c.id}, '${c.user_name}')" class="flex items-center gap-1 text-slate-500 hover:text-primary transition-colors">
+                                            <span class="material-symbols-outlined text-[16px]">reply</span>
+                                            <span>Trả lời</span>
+                                        </button>
+                                        <button type="button" onclick="openDeleteModal(${c.id})" class="flex items-center gap-1 text-slate-400 hover:text-rose-600 transition-colors ml-auto">
+                                            <span class="material-symbols-outlined text-[15px]">delete</span>
+                                            <span>Xóa</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Inline Reply Box -->
+                            <div id="reply-box-${c.id}" class="hidden mt-3 pl-10 pr-2 pt-2 border-t border-surface-dim">
+                                <form id="reply-form-${c.id}" action="{{ route('blog.comment.store', $blog->slug) }}" method="POST" onsubmit="handleCommentSubmit(event, 'reply-form-${c.id}', ${c.id})" class="flex gap-3 items-start">
+                                    <input type="hidden" name="parent_id" value="${c.id}">
+                                    <img src="${c.user_avatar}" class="w-8 h-8 rounded-full flex-shrink-0 object-cover border border-gray-100 shadow-2xs">
+                                    <div class="flex-1 space-y-2">
+                                        <textarea id="reply-input-${c.id}" name="content" rows="2" required placeholder="Trả lời @${c.user_name}..." oninput="updateCharCount(this, 'char-count-${c.id}')" class="w-full rounded-xl border border-surface-dim bg-surface-container-lowest focus:ring-2 focus:ring-primary focus:border-primary resize-none text-xs p-3 outline-none transition-all"></textarea>
+                                        <div class="flex items-center justify-between flex-wrap gap-2 text-xs">
+                                            <span id="char-count-${c.id}" class="text-[11px] text-slate-400">0/1000 ký tự</span>
+                                            <div class="flex items-center gap-2">
+                                                <button type="button" onclick="toggleReplyBox(${c.id})" class="px-3 py-1.5 rounded-full text-slate-500 hover:bg-slate-100 font-medium transition-colors cursor-pointer text-xs">
+                                                    Hủy
+                                                </button>
+                                                <button type="submit" id="reply-btn-${c.id}" class="px-4 py-1.5 bg-primary hover:bg-primary/90 text-white rounded-full font-label-sm transition-all shadow-xs flex items-center gap-1 cursor-pointer text-xs">
+                                                    <span class="material-symbols-outlined text-sm">send</span>
+                                                    <span id="reply-btn-text-${c.id}">Gửi phản hồi</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <div id="replies-list-${c.id}" class="space-y-3 mt-3 pl-8 sm:pl-10"></div>
+                        </div>
+                    `;
+                    listContainer.insertAdjacentHTML('afterbegin', newCommentHtml);
+                }
 
                 if (counterBadge && body.comment_count !== undefined) {
                     counterBadge.textContent = body.comment_count;
                 }
+                const headerBadge = document.getElementById('blog-header-comment-count');
+                if (headerBadge && body.comment_count !== undefined) {
+                    headerBadge.textContent = body.comment_count;
+                }
             } else {
-                // Moderation blocked or error
-                alertBox.className = 'mb-6 p-4 rounded-2xl text-xs font-bold transition-all flex items-start gap-3 shadow-2xs bg-rose-50 border border-rose-200 text-rose-800';
-                alertIcon.className = 'material-symbols-outlined text-xl text-rose-600 shrink-0';
-                alertIcon.textContent = 'gpp_bad';
-                alertTitle.textContent = 'Bình luận bị AI chặn kiểm duyệt!';
-                alertMsg.textContent = body.message || 'Bình luận của bạn không đáp ứng tiêu chuẩn an toàn cộng đồng.';
-                alertBox.classList.remove('hidden');
+                showAlert('moderated', 'Từ không hợp lệ', body.message || 'Từ không hợp lệ.');
             }
         })
         .catch(err => {
             btn.disabled = false;
-            btnText.textContent = 'Gửi bình luận';
+            btnText.textContent = originalText;
             btn.classList.remove('opacity-75');
-
-            alertBox.className = 'mb-6 p-4 rounded-2xl text-xs font-bold transition-all flex items-start gap-3 shadow-2xs bg-rose-50 border border-rose-200 text-rose-800';
-            alertIcon.className = 'material-symbols-outlined text-xl text-rose-600 shrink-0';
-            alertIcon.textContent = 'error';
-            alertTitle.textContent = 'Lỗi gửi bình luận';
-            alertMsg.textContent = 'Không thể kết nối đến máy chủ. Vui lòng thử lại sau.';
-            alertBox.classList.remove('hidden');
+            showAlert('error', 'Lỗi gửi bình luận', 'Không thể kết nối đến máy chủ. Vui lòng thử lại sau.');
         });
     }
+
+    // Ctrl + Enter shortcut to quickly submit comment
+    document.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+            const activeEl = document.activeElement;
+            if (activeEl && activeEl.tagName === 'TEXTAREA') {
+                const form = activeEl.closest('form');
+                if (form) {
+                    e.preventDefault();
+                    form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+                }
+            }
+        }
+    });
 </script>
 @endpush
