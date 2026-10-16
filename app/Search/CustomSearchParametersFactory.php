@@ -19,7 +19,7 @@ class CustomSearchParametersFactory extends SearchParametersFactory
             $query['bool']['must'] = [
                 'multi_match' => [
                     'query' => $builder->query,
-                    'fields' => ['ten_quan^3', 'mon_an^2', 'dia_chi', 'loai_hinh_kinh_doanh'],
+                    'fields' => ['ten_quan^3', 'mon_an^2', 'loai_hinh_kinh_doanh^1.5', 'dia_chi', 'mo_ta'],
                     'type' => 'cross_fields',
                     'operator' => 'AND',
                 ],

@@ -160,7 +160,7 @@
                     @forelse($quanNoiBat as $quan)
                     <a href="{{ route('quan.detail', $quan->slug) }}" class="block bg-white rounded-2xl shadow-sm overflow-hidden group cursor-pointer hover:shadow-xl transition-all border border-gray-100 flex flex-col h-full">
                         <div class="relative h-52 w-full overflow-hidden flex-shrink-0">
-                            <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="{{ $quan->anh_bia ? $quan->anh_bia : 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=600&q=80' }}"/>
+                            <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="{{ $quan->anh_bia_url ?: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=600&q=80' }}" alt="{{ $quan->ten_quan }}"/>
                             <div class="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-xl text-primary font-bold text-xs flex items-center gap-1 shadow-sm">
                                 <span class="material-symbols-outlined text-[15px]" style="font-variation-settings: 'FILL' 1;">star</span> 4.9 (520+)
                             </div>
@@ -333,7 +333,7 @@
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="relative h-64 rounded-2xl overflow-hidden group cursor-pointer border border-white/10">
+                    <a href="{{ route('kham-pha', ['tu_khoa' => 'Cà phê muối']) }}" class="block relative h-64 rounded-2xl overflow-hidden group cursor-pointer border border-white/10">
                         <img src="https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&w=600&q=80" alt="BST Cà Phê Muối" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                         <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
                         <div class="absolute bottom-5 inset-x-5 space-y-1">
@@ -341,9 +341,9 @@
                             <h3 class="font-bold text-[18px] text-white">BST Cà phê muối béo ngậy khó cưỡng</h3>
                             <p class="text-white/70 text-[13px]">Khám phá các quán cà phê muối ngon nhất thành phố</p>
                         </div>
-                    </div>
+                    </a>
 
-                    <div class="relative h-64 rounded-2xl overflow-hidden group cursor-pointer border border-white/10">
+                    <a href="{{ route('kham-pha', ['danh_muc' => 'Lẩu & Nướng']) }}" class="block relative h-64 rounded-2xl overflow-hidden group cursor-pointer border border-white/10">
                         <img src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=600&q=80" alt="BST Quán Nướng" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                         <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
                         <div class="absolute bottom-5 inset-x-5 space-y-1">
@@ -351,9 +351,9 @@
                             <h3 class="font-bold text-[18px] text-white">Top Quán lẩu nướng sân vườn thoáng mát</h3>
                             <p class="text-white/70 text-[13px]">Lý tưởng cho những buổi tụ họp bạn bè cuối tuần</p>
                         </div>
-                    </div>
+                    </a>
 
-                    <div class="relative h-64 rounded-2xl overflow-hidden group cursor-pointer border border-white/10">
+                    <a href="{{ route('kham-pha', ['danh_muc' => 'Quán Đêm 24/7']) }}" class="block relative h-64 rounded-2xl overflow-hidden group cursor-pointer border border-white/10">
                         <img src="https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80" alt="BST Đồ Ăn Đêm" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                         <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
                         <div class="absolute bottom-5 inset-x-5 space-y-1">
@@ -361,7 +361,7 @@
                             <h3 class="font-bold text-[18px] text-white">Quán ăn đêm 24/7 cho các "cú đêm"</h3>
                             <p class="text-white/70 text-[13px]">Tổng hợp quán ăn ngon mở muộn sau 00:00</p>
                         </div>
-                    </div>
+                    </a>
                 </div>
             </div>
         </section>
@@ -457,7 +457,7 @@
                     <h2 class="font-bold text-[16px] text-on-surface">Quán gợi ý nổi bật</h2>
                     <p class="text-[12px] text-gray-500">Địa điểm đánh giá cao gần bạn</p>
                 </div>
-                <a class="text-xs text-primary font-bold flex items-center gap-0.5" href="#">Xem tất cả <span class="material-symbols-outlined text-[14px]">chevron_right</span></a>
+                <a class="text-xs text-primary font-bold flex items-center gap-0.5" href="{{ route('quan-noi-bat') }}">Xem tất cả <span class="material-symbols-outlined text-[14px]">chevron_right</span></a>
             </div>
                         <div class="flex flex-col gap-3">
                 @forelse($quanNoiBat as $quan)
@@ -529,34 +529,34 @@
             </div>
             <div class="flex overflow-x-auto no-scrollbar gap-3 snap-x snap-mandatory -mx-4 px-4 pb-2">
                 {{-- Collection 1 --}}
-                <div class="min-w-[240px] w-[70%] snap-center relative h-44 rounded-2xl overflow-hidden group cursor-pointer shadow-sm border border-gray-100 flex-shrink-0">
+                <a href="{{ route('kham-pha', ['tu_khoa' => 'Cà phê muối']) }}" class="block min-w-[240px] w-[70%] snap-center relative h-44 rounded-2xl overflow-hidden group cursor-pointer shadow-sm border border-gray-100 flex-shrink-0">
                     <img src="https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&w=400&q=80" alt="BST Cà Phê Muối" class="absolute inset-0 w-full h-full object-cover" />
                     <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
                     <div class="absolute bottom-3 inset-x-3 space-y-0.5">
                         <span class="bg-primary/80 backdrop-blur-sm text-white text-[9px] font-bold px-2 py-0.5 rounded">15 Địa điểm</span>
                         <h3 class="font-bold text-[14px] text-white leading-tight">BST Cà phê muối béo ngậy</h3>
                     </div>
-                </div>
+                </a>
 
                 {{-- Collection 2 --}}
-                <div class="min-w-[240px] w-[70%] snap-center relative h-44 rounded-2xl overflow-hidden group cursor-pointer shadow-sm border border-gray-100 flex-shrink-0">
+                <a href="{{ route('kham-pha', ['danh_muc' => 'Lẩu & Nướng']) }}" class="block min-w-[240px] w-[70%] snap-center relative h-44 rounded-2xl overflow-hidden group cursor-pointer shadow-sm border border-gray-100 flex-shrink-0">
                     <img src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=400&q=80" alt="BST Quán Nướng" class="absolute inset-0 w-full h-full object-cover" />
                     <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
                     <div class="absolute bottom-3 inset-x-3 space-y-0.5">
                         <span class="bg-secondary/80 backdrop-blur-sm text-white text-[9px] font-bold px-2 py-0.5 rounded">24 Địa điểm</span>
                         <h3 class="font-bold text-[14px] text-white leading-tight">Top Lẩu nướng sân vườn</h3>
                     </div>
-                </div>
+                </a>
 
                 {{-- Collection 3 --}}
-                <div class="min-w-[240px] w-[70%] snap-center relative h-44 rounded-2xl overflow-hidden group cursor-pointer shadow-sm border border-gray-100 flex-shrink-0">
+                <a href="{{ route('kham-pha', ['danh_muc' => 'Quán Đêm 24/7']) }}" class="block min-w-[240px] w-[70%] snap-center relative h-44 rounded-2xl overflow-hidden group cursor-pointer shadow-sm border border-gray-100 flex-shrink-0">
                     <img src="https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=400&q=80" alt="BST Ăn Đêm" class="absolute inset-0 w-full h-full object-cover" />
                     <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
                     <div class="absolute bottom-3 inset-x-3 space-y-0.5">
                         <span class="bg-tertiary/80 backdrop-blur-sm text-white text-[9px] font-bold px-2 py-0.5 rounded">18 Địa điểm</span>
                         <h3 class="font-bold text-[14px] text-white leading-tight">Quán ăn đêm 24/7 ngon mịt</h3>
                     </div>
-                </div>
+                </a>
             </div>
         </section>
 

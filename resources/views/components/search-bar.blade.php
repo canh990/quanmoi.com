@@ -14,9 +14,16 @@
         <input type="hidden" name="tinh_thanh_id" id="{{ $prefix }}-tinh-thanh-id" value="{{ request('tinh_thanh_id') }}">
         <input type="hidden" name="quan_huyen_id" id="{{ $prefix }}-quan-huyen-id" value="{{ request('quan_huyen_id') }}">
         <input type="hidden" name="lat" id="{{ $prefix }}-lat" value="{{ request('lat') }}">
-        <input type="hidden" name="lng" id="{{ $prefix }}-lng" value="{{ request('lng') }}">
+        <input type="hidden" name="lng" id="{{ $prefix }}-lng" value="{{ request('lng', request('lon')) }}">
         <input type="hidden" name="ban_kinh" id="{{ $prefix }}-ban-kinh" value="{{ request('ban_kinh') }}">
         <input type="hidden" name="sap_xep" id="{{ $prefix }}-sap-xep" value="{{ request('sap_xep') }}">
+
+        {{-- Giữ lại các bộ lọc nhanh đang bật khi tìm thêm từ khóa trên trang Khám phá --}}
+        @foreach(['danh_muc', 'muc_gia', 'dang_mo_cua', 'co_video', 'is_xac_thuc', 'co_shopeefood', 'is_noi_bat'] as $extraFilter)
+            @if(request()->filled($extraFilter))
+                <input type="hidden" name="{{ $extraFilter }}" value="{{ request($extraFilter) }}">
+            @endif
+        @endforeach
 
         {{-- Main Container Bar --}}
         <div class="bg-white rounded-2xl md:rounded-full p-1.5 md:p-2 shadow-[0_8px_30px_rgba(0,0,0,0.15)] border border-gray-100 flex flex-col md:flex-row items-center gap-2 md:gap-0 transition-all duration-300 hover:shadow-[0_12px_40px_rgba(0,0,0,0.2)]">
@@ -33,7 +40,7 @@
                     class="w-full bg-transparent border-none focus:ring-0 text-gray-800 text-[15px] md:text-[16px] font-medium outline-none placeholder:text-gray-400 py-2.5" 
                     placeholder="{{ $placeholder }}" 
                 />
-                <button type="button" id="{{ $prefix }}-clear-btn" class="hidden text-gray-300 hover:text-gray-500 mr-2 flex-shrink-0 cursor-pointer">
+                <button type="button" id="{{ $prefix }}-clear-btn" class="{{ request()->filled('tu_khoa') ? '' : 'hidden' }} text-gray-300 hover:text-gray-500 mr-2 flex-shrink-0 cursor-pointer">
                     <span class="material-symbols-outlined text-[18px]">cancel</span>
                 </button>
             </div>
@@ -88,14 +95,14 @@
                 </div>
 
                 <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                    {{-- 1. Phở bò (Có badge Đã xem gần đây) --}}
+                    {{-- 1. Phở bò --}}
                     <div data-dish="Phở bò" class="suggestion-item flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-[#a04100]/5 border border-gray-100 hover:border-[#a04100]/30 transition-all cursor-pointer group bg-white shadow-2xs">
                         <div class="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 group-hover:scale-105 transition-transform bg-gray-100">
                             <img src="https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=120&q=80" alt="Phở bò" class="w-full h-full object-cover">
                         </div>
                         <div class="overflow-hidden min-w-0">
                             <div class="font-bold text-[13px] md:text-[13.5px] text-gray-800 group-hover:text-primary truncate" style="--tw-text-opacity: 1;">Phở bò</div>
-                            <div class="text-[10px] text-red-500 font-bold flex items-center gap-1 truncate"><span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>Đã xem gần đây</div>
+                            <div class="text-[11px] text-gray-400 truncate">Nước dùng truyền thống</div>
                         </div>
                     </div>
 
@@ -458,6 +465,32 @@
             searchInput.focus();
         });
 
+        function escapeHtml(str) {
+            return String(str ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function cleanEmptyInputs() {
+            form.querySelectorAll('input[type="hidden"], input[name="tu_khoa"]').forEach(inp => {
+                if (!inp.value || inp.value.trim() === '') {
+                    inp.disabled = true;
+                }
+            });
+        }
+
+        form.addEventListener('submit', function() {
+            cleanEmptyInputs();
+        });
+
+        function submitSearchForm() {
+            cleanEmptyInputs();
+            form.submit();
+        }
+
         // Click on 9 dishes in Gợi ý cho bạn
         wrapper.querySelectorAll('.suggestion-item').forEach(item => {
             item.addEventListener('click', function() {
@@ -465,7 +498,7 @@
                 if (dish) {
                     searchInput.value = dish;
                     closeSuggestions();
-                    form.submit();
+                    submitSearchForm();
                 }
             });
         });
@@ -473,7 +506,14 @@
         function fetchSuggestions(keyword) {
             livePanel.innerHTML = '<div class="py-4 text-center text-gray-400 text-[13px] flex items-center justify-center gap-2"><span class="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" style="border-color: #a04100; border-top-color: transparent;"></span>Đang tìm gợi ý...</div>';
 
-            fetch(`/api/search/suggest?q=${encodeURIComponent(keyword)}`)
+            const params = new URLSearchParams({ q: keyword });
+            if (hiddenTinhThanh && hiddenTinhThanh.value) params.set('tinh_thanh_id', hiddenTinhThanh.value);
+            if (hiddenQuanHuyen && hiddenQuanHuyen.value) params.set('quan_huyen_id', hiddenQuanHuyen.value);
+            if (hiddenLat && hiddenLat.value) params.set('lat', hiddenLat.value);
+            if (hiddenLng && hiddenLng.value) params.set('lng', hiddenLng.value);
+            if (hiddenBanKinh && hiddenBanKinh.value) params.set('ban_kinh', hiddenBanKinh.value);
+
+            fetch(`/api/search/suggest?${params.toString()}`)
                 .then(res => res.json())
                 .then(res => {
                     if (!res.success) return;
@@ -486,6 +526,7 @@
 
         function renderLiveSuggestions(data, keyword) {
             let html = '';
+            const safeKeyword = escapeHtml(keyword);
 
             // 1. Món ăn gợi ý
             if (data.mons && data.mons.length > 0) {
@@ -497,15 +538,19 @@
                 `;
                 data.mons.forEach(mon => {
                     const priceFormatted = mon.gia ? new Intl.NumberFormat('vi-VN').format(mon.gia) + 'đ' : '';
+                    const tenMon = escapeHtml(mon.ten_mon);
+                    const tenQuan = escapeHtml(mon.ten_quan);
+                    const quanSlug = encodeURIComponent(mon.quan_slug || '');
+                    const img = escapeHtml(mon.hinh_anh || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=80&q=80');
                     html += `
-                        <a href="/quan/${mon.quan_slug}" class="flex items-center justify-between p-2.5 rounded-xl hover:bg-[#a04100]/5 border border-transparent hover:border-[#a04100]/20 transition-all group">
+                        <a href="/quan/${quanSlug}" class="flex items-center justify-between p-2.5 rounded-xl hover:bg-[#a04100]/5 border border-transparent hover:border-[#a04100]/20 transition-all group">
                             <div class="flex items-center gap-2.5 min-w-0">
                                 <div class="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
-                                    <img src="${mon.hinh_anh || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=80&q=80'}" alt="${mon.ten_mon}" class="w-full h-full object-cover">
+                                    <img src="${img}" alt="${tenMon}" class="w-full h-full object-cover">
                                 </div>
                                 <div class="truncate">
-                                    <div class="text-[13.5px] font-bold text-gray-800 group-hover:text-primary truncate" style="--tw-text-opacity: 1;">${mon.ten_mon}</div>
-                                    <div class="text-[11.5px] text-gray-400 truncate">${mon.ten_quan}</div>
+                                    <div class="text-[13.5px] font-bold text-gray-800 group-hover:text-primary truncate" style="--tw-text-opacity: 1;">${tenMon}</div>
+                                    <div class="text-[11.5px] text-gray-400 truncate">${tenQuan}</div>
                                 </div>
                             </div>
                             ${priceFormatted ? `<span class="text-[12px] font-extrabold text-primary ml-2 flex-shrink-0 bg-primary/10 px-2 py-0.5 rounded-md" style="color: #a04100; background-color: rgba(160,65,0,0.1);">${priceFormatted}</span>` : ''}
@@ -523,15 +568,18 @@
                     </div>
                 `;
                 data.quans.forEach(quan => {
-                    const img = quan.anh_bia || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=120&q=80';
+                    const img = escapeHtml(quan.anh_bia || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=120&q=80');
+                    const tenQuan = escapeHtml(quan.ten_quan);
+                    const subInfo = escapeHtml(quan.dia_chi || quan.loai_hinh_kinh_doanh || '');
+                    const slug = encodeURIComponent(quan.slug || '');
                     html += `
-                        <a href="/quan/${quan.slug}" class="flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-[#a04100]/5 border border-transparent hover:border-[#a04100]/20 transition-all group">
-                            <img src="${img}" class="w-10 h-10 rounded-lg object-cover flex-shrink-0 bg-gray-100 border border-gray-100" alt="${quan.ten_quan}">
+                        <a href="/quan/${slug}" class="flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-[#a04100]/5 border border-transparent hover:border-[#a04100]/20 transition-all group">
+                            <img src="${img}" class="w-10 h-10 rounded-lg object-cover flex-shrink-0 bg-gray-100 border border-gray-100" alt="${tenQuan}">
                             <div class="overflow-hidden min-w-0">
-                                <div class="text-[13.5px] font-bold text-gray-800 group-hover:text-primary truncate">${quan.ten_quan}</div>
+                                <div class="text-[13.5px] font-bold text-gray-800 group-hover:text-primary truncate">${tenQuan}</div>
                                 <div class="text-[11.5px] text-gray-400 truncate flex items-center gap-1">
                                     <span class="material-symbols-outlined text-[13px]">location_on</span>
-                                    ${quan.dia_chi || quan.loai_hinh_kinh_doanh || ''}
+                                    ${subInfo}
                                 </div>
                             </div>
                         </a>
@@ -542,7 +590,7 @@
             if (!data.mons?.length && !data.quans?.length) {
                 html += `
                     <div class="py-6 text-center text-gray-500 text-[13.5px]">
-                        Không tìm thấy món ăn hoặc quán nào khớp với "<strong>${keyword}</strong>"
+                        Không tìm thấy món ăn hoặc quán nào khớp với "<strong>${safeKeyword}</strong>"
                     </div>
                 `;
             }
@@ -551,7 +599,7 @@
             html += `
                 <div class="pt-2 border-t border-gray-100 mt-2">
                     <button type="submit" class="w-full py-2.5 text-center text-[13px] font-bold text-primary hover:bg-[#a04100]/5 rounded-xl transition-all cursor-pointer" style="color: #a04100;">
-                        Xem tất cả kết quả cho "${keyword}" →
+                        Xem tất cả kết quả cho "${safeKeyword}" →
                     </button>
                 </div>
             `;
@@ -769,6 +817,10 @@
                 locationLabel.textContent = 'Chọn khu vực';
                 switchTab('area');
                 closeLocation();
+
+                if (prefix === 'kp') {
+                    submitSearchForm();
+                }
             });
         }
 
@@ -824,6 +876,10 @@
                 }
 
                 closeLocation();
+
+                if (prefix === 'kp') {
+                    submitSearchForm();
+                }
             });
         }
 

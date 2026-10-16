@@ -2,8 +2,11 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Http;
+use App\Models\DanhMucMenu;
+use App\Models\MonTrongMenu;
+use App\Models\Quan;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -12,6 +15,8 @@ use Tests\TestCase;
  */
 class TimKiemKhuVucVaGanBanTest extends TestCase
 {
+    use RefreshDatabase;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -37,6 +42,76 @@ class TimKiemKhuVucVaGanBanTest extends TestCase
                 return [];
             });
         });
+
+        $owner = User::factory()->create();
+
+        // Quán ở Hà Nội (mã lưu '01' có số 0 ở đầu)
+        $quanHaNoi = Quan::create([
+            'chu_quan_id'          => $owner->id,
+            'ten_quan'             => 'Bún Đậu Hàng Khay',
+            'slug'                 => 'bun-dau-hang-khay',
+            'loai_hinh_kinh_doanh' => 'Đồ ăn vặt',
+            'dia_chi_chi_tiet'     => '10 Hàng Khay',
+            'tinh_thanh_id'        => '01',
+            'ten_tinh_thanh'       => 'Thành phố Hà Nội',
+            'quan_huyen_id'        => '001',
+            'ten_quan_huyen'       => 'Quận Ba Đình',
+            'vi_do'                => 21.0285,
+            'kinh_do'              => 105.8542,
+            'gia_nho_nhat'         => 35000,
+            'gia_lon_nhat'         => 80000,
+            'trang_thai'           => 'da_duyet',
+        ]);
+
+        $dmHaNoi = DanhMucMenu::create([
+            'quan_id'      => $quanHaNoi->id,
+            'ten_danh_muc' => 'Món chính',
+            'thu_tu'       => 1,
+        ]);
+
+        MonTrongMenu::create([
+            'danh_muc_id' => $dmHaNoi->id,
+            'ten_mon'     => 'Bún đậu mắm tôm đặc biệt',
+            'gia'         => 55000,
+            'hinh_anh'    => 'https://images.unsplash.com/photo-1564834724105-918b73d1b9e0',
+            'con_hang'    => true,
+        ]);
+
+        // Quán 1 ở Quận 1, TP.HCM (cách Phố đi bộ Nguyễn Huệ ~0.2km)
+        Quan::create([
+            'chu_quan_id'          => $owner->id,
+            'ten_quan'             => 'Cà Phê Nguyễn Huệ',
+            'slug'                 => 'ca-phe-nguyen-hue',
+            'loai_hinh_kinh_doanh' => 'Cà phê & Trà',
+            'dia_chi_chi_tiet'     => '68 Nguyễn Huệ',
+            'tinh_thanh_id'        => '79',
+            'ten_tinh_thanh'       => 'Thành phố Hồ Chí Minh',
+            'quan_huyen_id'        => '760',
+            'ten_quan_huyen'       => 'Quận 1',
+            'vi_do'                => 10.7748,
+            'kinh_do'              => 106.7035,
+            'gia_nho_nhat'         => 40000,
+            'gia_lon_nhat'         => 90000,
+            'trang_thai'           => 'da_duyet',
+        ]);
+
+        // Quán 2 ở Quận 3, TP.HCM (cách Phố đi bộ Nguyễn Huệ ~2.2km)
+        Quan::create([
+            'chu_quan_id'          => $owner->id,
+            'ten_quan'             => 'Nhà Hàng Võ Văn Tần',
+            'slug'                 => 'nha-hang-vo-van-tan',
+            'loai_hinh_kinh_doanh' => 'Nhà hàng',
+            'dia_chi_chi_tiet'     => '120 Võ Văn Tần',
+            'tinh_thanh_id'        => '79',
+            'ten_tinh_thanh'       => 'Thành phố Hồ Chí Minh',
+            'quan_huyen_id'        => '770',
+            'ten_quan_huyen'       => 'Quận 3',
+            'vi_do'                => 10.7765,
+            'kinh_do'              => 106.6860,
+            'gia_nho_nhat'         => 100000,
+            'gia_lon_nhat'         => 300000,
+            'trang_thai'           => 'da_duyet',
+        ]);
     }
 
     public function test_tim_kiem_theo_ma_tinh_ha_noi_khop_ca_ma_co_so_0(): void
@@ -114,5 +189,29 @@ class TimKiemKhuVucVaGanBanTest extends TestCase
         foreach ($quans as $quan) {
             $this->assertLessThanOrEqual(3.05, (float) $quan->khoang_cach_km);
         }
+    }
+
+    public function test_loc_danh_muc_an_vat_va_do_an_vat_dong_bo(): void
+    {
+        $res1 = $this->get('/kham-pha?danh_muc=' . urlencode('Ăn vặt'));
+        $res1->assertStatus(200);
+        $this->assertSame(1, $res1->viewData('quans')->total());
+
+        $res2 = $this->get('/kham-pha?danh_muc=' . urlencode('Đồ ăn vặt'));
+        $res2->assertStatus(200);
+        $this->assertSame(1, $res2->viewData('quans')->total());
+    }
+
+    public function test_goi_y_tim_kiem_tra_ve_hinh_anh_mon_an_va_loc_theo_tinh(): void
+    {
+        $res = $this->getJson('/api/search/suggest?q=' . urlencode('Bún đậu') . '&tinh_thanh_id=1');
+        $res->assertStatus(200)
+            ->assertJsonPath('success', true)
+            ->assertJsonCount(1, 'data.quans')
+            ->assertJsonCount(1, 'data.mons');
+
+        $mon = $res->json('data.mons.0');
+        $this->assertNotEmpty($mon['hinh_anh']);
+        $this->assertSame('bun-dau-hang-khay', $mon['quan_slug']);
     }
 }

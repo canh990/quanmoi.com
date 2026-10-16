@@ -35,6 +35,8 @@ class KhamPhaController extends Controller
         if (!empty($danhMuc) && !in_array($danhMuc, ['Quán Nổi Bật', 'Quán Mới'])) {
             if ($danhMuc === 'Cà phê' || $danhMuc === 'Cà phê & Trà') {
                 $query->whereIn('loai_hinh_kinh_doanh.keyword', ['Cà phê & Trà', 'Cà phê']);
+            } elseif ($danhMuc === 'Ăn vặt' || $danhMuc === 'Đồ ăn vặt') {
+                $query->whereIn('loai_hinh_kinh_doanh.keyword', ['Đồ ăn vặt', 'Ăn vặt']);
             } else {
                 $query->whereIn('loai_hinh_kinh_doanh.keyword', [$danhMuc]);
             }
@@ -130,7 +132,57 @@ class KhamPhaController extends Controller
             }
         }
 
-        $quans = $query->paginate(12);
+        $usedEloquentFallback = false;
+        $fallbackQuanIds = collect();
+        $useSqliteTesting = app()->environment('testing') && config('database.default') === 'sqlite';
+
+        if (!$useSqliteTesting && config('scout.driver') === 'elastic') {
+            try {
+                $quans = $query->paginate(12);
+            } catch (\Throwable $e) {
+                report($e);
+                $usedEloquentFallback = true;
+                [$quans, $fallbackQuanIds] = $this->paginateWithEloquentFallback(
+                    $request,
+                    $tuKhoa,
+                    $danhMuc,
+                    $tinhCodes,
+                    $huyenCodes,
+                    $isXacThuc,
+                    $isNoiBat,
+                    $coShopee,
+                    $coVideo,
+                    $dangMoCua,
+                    $mucGia,
+                    $hasGps,
+                    $lat,
+                    $lon,
+                    $banKinh,
+                    $sapXep
+                );
+            }
+        } else {
+            $usedEloquentFallback = true;
+            [$quans, $fallbackQuanIds] = $this->paginateWithEloquentFallback(
+                $request,
+                $tuKhoa,
+                $danhMuc,
+                $tinhCodes,
+                $huyenCodes,
+                $isXacThuc,
+                $isNoiBat,
+                $coShopee,
+                $coVideo,
+                $dangMoCua,
+                $mucGia,
+                $hasGps,
+                $lat,
+                $lon,
+                $banKinh,
+                $sapXep
+            );
+        }
+
         $quans->appends($request->all());
 
         // Tính toán khoảng cách hiển thị km nếu có toạ độ người dùng
@@ -168,14 +220,26 @@ class KhamPhaController extends Controller
         $totalMonAns = 0;
         $totalMonAnPages = 0;
         if ($tuKhoa !== '' && $quans->total() > 0) {
-            $quanIds = (clone $query)->take(500)->keys()->map(fn ($id) => (string) $id)->values();
+            $quanIds = $usedEloquentFallback
+                ? $fallbackQuanIds
+                : (clone $query)->take(500)->keys()->map(fn ($id) => (string) $id)->values();
             $thuTuQuan = $quanIds->flip();
 
+            $tuKhoaAscii = \Illuminate\Support\Str::lower(\Illuminate\Support\Str::ascii($tuKhoa));
+            $tuKhoaLower = mb_strtolower($tuKhoa, 'UTF-8');
+
             $allMatchingMonAns = \App\Models\MonTrongMenu::query()
-                ->where('ten_mon', 'like', '%' . $tuKhoa . '%')
                 ->whereHas('danhMuc', fn ($q) => $q->whereIn('quan_id', $quanIds->all()))
-                ->with(['danhMuc.quan:id,slug,ten_quan,ten_quan_huyen,ten_tinh_thanh,anh_bia'])
+                ->with(['danhMuc.quan:id,slug,ten_quan,ten_quan_huyen,ten_tinh_thanh,anh_bia,anh_bia_key'])
                 ->get()
+                ->filter(function ($mon) use ($tuKhoaLower, $tuKhoaAscii) {
+                    $tenLower = mb_strtolower((string) $mon->ten_mon, 'UTF-8');
+                    if (str_contains($tenLower, $tuKhoaLower)) {
+                        return true;
+                    }
+                    $tenAscii = \Illuminate\Support\Str::lower(\Illuminate\Support\Str::ascii((string) $mon->ten_mon));
+                    return $tuKhoaAscii !== '' && str_contains($tenAscii, $tuKhoaAscii);
+                })
                 ->sortBy([
                     fn ($a, $b) => (int) $b->con_hang <=> (int) $a->con_hang,
                     fn ($a, $b) => ($thuTuQuan[$a->danhMuc?->quan_id] ?? PHP_INT_MAX) <=> ($thuTuQuan[$b->danhMuc?->quan_id] ?? PHP_INT_MAX),
@@ -356,5 +420,134 @@ class KhamPhaController extends Controller
         }
 
         return [$tenTinh, $tenHuyen];
+    }
+
+    /**
+     * Fallback truy vấn bằng Eloquent khi Elasticsearch không khả dụng hoặc chạy test SQLite.
+     *
+     * @return array{0: \Illuminate\Pagination\LengthAwarePaginator, 1: \Illuminate\Support\Collection}
+     */
+    protected function paginateWithEloquentFallback(
+        Request $request,
+        string $tuKhoa,
+        string $danhMuc,
+        array $tinhCodes,
+        array $huyenCodes,
+        bool $isXacThuc,
+        bool $isNoiBat,
+        bool $coShopee,
+        bool $coVideo,
+        bool $dangMoCua,
+        string $mucGia,
+        bool $hasGps,
+        mixed $lat,
+        mixed $lon,
+        mixed $banKinh,
+        string $sapXep
+    ): array {
+        $q = Quan::query()->where('trang_thai', 'da_duyet');
+
+        if (!empty($danhMuc) && !in_array($danhMuc, ['Quán Nổi Bật', 'Quán Mới'])) {
+            if ($danhMuc === 'Cà phê' || $danhMuc === 'Cà phê & Trà') {
+                $q->whereIn('loai_hinh_kinh_doanh', ['Cà phê & Trà', 'Cà phê']);
+            } elseif ($danhMuc === 'Ăn vặt' || $danhMuc === 'Đồ ăn vặt') {
+                $q->whereIn('loai_hinh_kinh_doanh', ['Đồ ăn vặt', 'Ăn vặt']);
+            } else {
+                $q->where('loai_hinh_kinh_doanh', $danhMuc);
+            }
+        }
+
+        if (!empty($tinhCodes)) {
+            $q->whereIn('tinh_thanh_id', $tinhCodes);
+        }
+
+        if (!empty($huyenCodes)) {
+            $q->whereIn('quan_huyen_id', $huyenCodes);
+        }
+
+        if ($isXacThuc) {
+            $q->where('is_xac_thuc', true);
+        }
+
+        if ($isNoiBat) {
+            $q->where('is_noi_bat', true);
+        }
+
+        if ($coShopee) {
+            $q->whereNotNull('shopeefood_url')->where('shopeefood_url', '!=', '');
+        }
+
+        if ($coVideo) {
+            $q->whereHas('videos', fn ($v) => $v->where('trang_thai', 'da_duyet'));
+        }
+
+        if ($mucGia === 'duoi_50k') {
+            $q->where('gia_nho_nhat', '<=', 50000);
+        } elseif ($mucGia === '50k_150k') {
+            $q->where('gia_nho_nhat', '<=', 150000)->where('gia_lon_nhat', '>=', 50000);
+        } elseif ($mucGia === '150k_300k') {
+            $q->where('gia_nho_nhat', '<=', 300000)->where('gia_lon_nhat', '>=', 150000);
+        } elseif ($mucGia === 'tren_300k') {
+            $q->where('gia_lon_nhat', '>=', 300000);
+        }
+
+        if ($tuKhoa !== '') {
+            $q->where(function ($sub) use ($tuKhoa) {
+                $sub->where('ten_quan', 'like', "%{$tuKhoa}%")
+                    ->orWhere('dia_chi_chi_tiet', 'like', "%{$tuKhoa}%")
+                    ->orWhere('ten_quan_huyen', 'like', "%{$tuKhoa}%")
+                    ->orWhere('ten_tinh_thanh', 'like', "%{$tuKhoa}%")
+                    ->orWhere('loai_hinh_kinh_doanh', 'like', "%{$tuKhoa}%")
+                    ->orWhere('mo_ta', 'like', "%{$tuKhoa}%")
+                    ->orWhereHas('danhMucMenu.monAn', fn ($m) => $m->where('ten_mon', 'like', "%{$tuKhoa}%"));
+            });
+        }
+
+        $items = $q->get();
+
+        if ($dangMoCua) {
+            $items = $items->filter(fn (Quan $quan) => $quan->isDangMoCua())->values();
+        }
+
+        if ($hasGps) {
+            $items = $items->map(function (Quan $quan) use ($lat, $lon) {
+                if ($quan->vi_do !== null && $quan->kinh_do !== null && is_numeric($quan->vi_do) && is_numeric($quan->kinh_do)) {
+                    $quan->khoang_cach_km = $this->calculateDistance((float) $lat, (float) $lon, (float) $quan->vi_do, (float) $quan->kinh_do);
+                } else {
+                    $quan->khoang_cach_km = null;
+                }
+                return $quan;
+            });
+
+            if (!empty($banKinh) && is_numeric($banKinh)) {
+                $maxKm = (float) $banKinh;
+                $items = $items->filter(fn (Quan $quan) => $quan->khoang_cach_km !== null && $quan->khoang_cach_km <= $maxKm)->values();
+            }
+
+            if ($sapXep === 'near_me') {
+                $items = $items->sortBy(fn (Quan $quan) => $quan->khoang_cach_km ?? PHP_FLOAT_MAX)->values();
+            }
+        }
+
+        if ($sapXep === 'view_desc') {
+            $items = $items->sortByDesc('luot_xem')->values();
+        } elseif ($sapXep === 'created_desc' || ($sapXep !== 'near_me' && $tuKhoa === '')) {
+            $items = $items->sortByDesc('created_at')->values();
+        }
+
+        $quanIds = $items->pluck('id')->map(fn ($id) => (string) $id)->values();
+        $perPage = 12;
+        $currentPage = max(1, (int) $request->input('page', 1));
+        $pagedItems = $items->forPage($currentPage, $perPage)->values();
+
+        $paginator = new \Illuminate\Pagination\LengthAwarePaginator(
+            $pagedItems,
+            $items->count(),
+            $perPage,
+            $currentPage,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+
+        return [$paginator, $quanIds];
     }
 }

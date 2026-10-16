@@ -68,6 +68,7 @@ class SetupElasticsearchIndexes extends Command
                         ],
                         'loai_hinh_kinh_doanh' => [
                             'type' => 'text',
+                            'analyzer' => 'vietnamese_analyzer',
                             'fields' => ['keyword' => ['type' => 'keyword']],
                         ],
                         'mo_ta' => [

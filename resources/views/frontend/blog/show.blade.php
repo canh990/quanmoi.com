@@ -67,22 +67,23 @@
             </h1>
             
             <div class="flex items-center gap-4 mb-stack-lg border-b border-surface-dim pb-stack-sm">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full bg-surface-container overflow-hidden border border-gray-100">
-                        <img class="w-full h-full object-cover" src="{{ $blog->user->anh_dai_dien_url ?? 'https://ui-avatars.com/api/?name='.urlencode($blog->user->ho_ten).'&background=random' }}" alt="{{ $blog->user->ho_ten }}"/>
+                <a href="{{ $blog->user ? route('blog.author', $blog->user->id) : '#' }}" class="flex items-center gap-3 group/author hover:opacity-95 transition-opacity" title="Xem thông tin tác giả {{ $blog->user?->ho_ten }}">
+                    <div class="w-10 h-10 rounded-full bg-surface-container overflow-hidden border border-gray-100 ring-2 ring-transparent group-hover/author:ring-primary/40 transition-all">
+                        <img class="w-full h-full object-cover group-hover/author:scale-105 transition-transform" src="{{ $blog->user->anh_dai_dien_url ?? 'https://ui-avatars.com/api/?name='.urlencode($blog->user->ho_ten ?? 'User').'&background=random' }}" alt="{{ $blog->user->ho_ten ?? 'Tác giả' }}"/>
                     </div>
                     <div>
-                        <div class="font-title-md text-[14px] leading-[20px] text-on-background flex items-center gap-1 font-bold">
-                            {{ $blog->user->ho_ten }}
-                            @if($blog->user->hasRole('chu_quan'))
+                        <div class="font-title-md text-[14px] leading-[20px] text-on-background flex items-center gap-1 font-bold group-hover/author:text-primary transition-colors">
+                            {{ $blog->user->ho_ten ?? 'Tác giả' }}
+                            @if($blog->user && ($blog->user->hasRole('chu_quan') || $blog->user->isAdmin()))
                                 <span class="material-symbols-outlined text-tick-xanh text-[16px]" style="font-variation-settings: 'FILL' 1;">verified</span>
                             @endif
                         </div>
-                        <div class="font-label-sm text-label-sm text-on-surface-variant">
-                            Tác giả
+                        <div class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-0.5 group-hover/author:text-primary transition-colors">
+                            <span>Tác giả</span>
+                            <span class="material-symbols-outlined text-[13px]">arrow_forward</span>
                         </div>
                     </div>
-                </div>
+                </a>
                 <div class="w-px h-6 bg-surface-dim"></div>
                 <div class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1">
                     <span class="material-symbols-outlined text-[16px]">calendar_today</span>
@@ -98,6 +99,117 @@
                     <span class="material-symbols-outlined text-[16px] text-primary">forum</span>
                     <span><strong id="blog-header-comment-count" class="font-semibold text-on-surface">{{ number_format($blog->comment_count) }}</strong> bình luận</span>
                 </a>
+            </div>
+
+            <!-- AI Summarizer Feature Section -->
+            <div class="mb-stack-lg border border-primary/25 bg-gradient-to-br from-amber-500/5 via-primary/5 to-purple-500/5 rounded-2xl p-4 md:p-5 transition-all shadow-xs relative overflow-hidden" id="ai-summarizer-card">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm" style="background: linear-gradient(135deg, #a04100 0%, #ea580c 100%); color: #ffffff;">
+                            <span class="material-symbols-outlined text-xl" style="color: #ffffff;">auto_awesome</span>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h3 class="font-title-md text-sm md:text-base font-bold text-on-background">AI Tóm tắt bài viết</h3>
+                                <span class="bg-primary/10 text-primary text-[10px] font-extrabold px-2 py-0.5 rounded-full border border-primary/20">5s nắm trọn cốt lõi</span>
+                            </div>
+                            <p class="text-xs text-on-surface-variant mt-0.5">Rút gọn 4 ý chính: Địa chỉ, món nên thử, mức giá & ưu/nhược điểm trong 5 giây.</p>
+                        </div>
+                    </div>
+                    <button type="button" onclick="toggleAiSummary()" id="ai-summary-btn" class="px-4 py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-white text-xs font-bold shadow-xs hover:shadow-md transition-all flex items-center justify-center gap-2 shrink-0 cursor-pointer active:scale-95">
+                        <span class="material-symbols-outlined text-[18px]">bolt</span>
+                        <span id="ai-summary-btn-text">Tóm tắt bằng AI</span>
+                    </button>
+                </div>
+
+                <!-- AI Summary Loading Spinner / Shimmer -->
+                <div id="ai-summary-loading" class="hidden mt-4 pt-4 border-t border-primary/10 space-y-3">
+                    <div class="flex items-center gap-2 text-xs font-bold text-primary animate-pulse">
+                        <span class="material-symbols-outlined text-base animate-spin">progress_activity</span>
+                        <span>AI đang đọc và tổng hợp nội dung bài viết...</span>
+                    </div>
+                    <div class="h-3.5 bg-slate-200/80 rounded-full animate-pulse w-3/4"></div>
+                    <div class="h-3.5 bg-slate-200/80 rounded-full animate-pulse w-5/6"></div>
+                </div>
+
+                <!-- AI Summary Content Details (Expands smoothly) -->
+                <div id="ai-summary-content" class="hidden mt-4 pt-4 border-t border-primary/15">
+                    <!-- Card Overview TL;DR -->
+                    <div class="p-3.5 bg-white/90 backdrop-blur-sm rounded-xl border border-primary/10 mb-3.5 shadow-2xs">
+                        <div class="flex items-center justify-between mb-1.5">
+                            <span class="text-[11px] font-extrabold text-primary flex items-center gap-1 uppercase tracking-wider">
+                                <span class="material-symbols-outlined text-[14px]">psychology</span> Tóm lược nhanh (TL;DR)
+                            </span>
+                            <div class="flex items-center gap-2">
+                                <button type="button" onclick="speakAiSummary()" id="ai-tts-btn" class="text-[11px] font-semibold text-slate-500 hover:text-primary flex items-center gap-1 px-2 py-0.5 rounded-md hover:bg-slate-100 transition-colors cursor-pointer" title="Đọc to tóm tắt">
+                                    <span class="material-symbols-outlined text-[14px]" id="ai-tts-icon">volume_up</span>
+                                    <span id="ai-tts-text">Nghe đọc</span>
+                                </button>
+                                <button type="button" onclick="copyAiSummary()" class="text-[11px] font-semibold text-slate-500 hover:text-primary flex items-center gap-1 px-2 py-0.5 rounded-md hover:bg-slate-100 transition-colors cursor-pointer" title="Sao chép tóm tắt">
+                                    <span class="material-symbols-outlined text-[14px]">content_copy</span>
+                                    <span>Sao chép</span>
+                                </button>
+                            </div>
+                        </div>
+                        <p class="text-xs text-on-surface leading-relaxed font-medium" id="ai-summary-overview"></p>
+                    </div>
+
+                    <!-- 4 Key Pillars Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <!-- Pillar 1: Địa chỉ -->
+                        <div class="p-3 bg-white/95 rounded-xl border border-outline-variant/30 flex items-start gap-2.5">
+                            <div class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
+                                <span class="material-symbols-outlined text-[16px]">location_on</span>
+                            </div>
+                            <div>
+                                <span class="text-[11px] font-bold text-slate-500 uppercase tracking-tight block">1. Địa chỉ & Khu vực</span>
+                                <p class="text-xs font-bold text-slate-800 mt-0.5 leading-snug" id="ai-summary-address"></p>
+                            </div>
+                        </div>
+
+                        <!-- Pillar 2: Món nên thử -->
+                        <div class="p-3 bg-white/95 rounded-xl border border-outline-variant/30 flex items-start gap-2.5">
+                            <div class="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 mt-0.5">
+                                <span class="material-symbols-outlined text-[16px]">restaurant_menu</span>
+                            </div>
+                            <div>
+                                <span class="text-[11px] font-bold text-slate-500 uppercase tracking-tight block">2. Món nên thử (Must-try)</span>
+                                <div class="flex flex-wrap gap-1 mt-1" id="ai-summary-musttry"></div>
+                            </div>
+                        </div>
+
+                        <!-- Pillar 3: Mức giá -->
+                        <div class="p-3 bg-white/95 rounded-xl border border-outline-variant/30 flex items-start gap-2.5">
+                            <div class="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 mt-0.5">
+                                <span class="material-symbols-outlined text-[16px]">payments</span>
+                            </div>
+                            <div>
+                                <span class="text-[11px] font-bold text-slate-500 uppercase tracking-tight block">3. Mức giá & Phân khúc</span>
+                                <p class="text-xs font-bold text-slate-800 mt-0.5 leading-snug" id="ai-summary-price"></p>
+                            </div>
+                        </div>
+
+                        <!-- Pillar 4: Ưu & Nhược điểm -->
+                        <div class="p-3 bg-white/95 rounded-xl border border-outline-variant/30 flex items-start gap-2.5">
+                            <div class="w-7 h-7 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center shrink-0 mt-0.5">
+                                <span class="material-symbols-outlined text-[16px]">balance</span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <span class="text-[11px] font-bold text-slate-500 uppercase tracking-tight block">4. Ưu & Nhược điểm</span>
+                                <ul class="text-xs space-y-1 mt-1 text-slate-700" id="ai-summary-proscons"></ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Summary Footer -->
+                    <div class="mt-3 flex items-center justify-between text-[11px] text-slate-400 pt-2 border-t border-slate-100">
+                        <span id="ai-summary-saved-time">Tiết kiệm 95% thời gian đọc (nắm trọn trong 5 giây)</span>
+                        <button type="button" onclick="toggleAiSummary(true)" class="hover:text-primary font-medium flex items-center gap-0.5 cursor-pointer">
+                            <span>Thu gọn</span>
+                            <span class="material-symbols-outlined text-[14px]">expand_less</span>
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <!-- Hero Image -->
@@ -124,6 +236,86 @@
                         #{{ $tag->name }}
                     </a>
                 @endforeach
+            </div>
+            @endif
+
+            <!-- Author Profile Card (Về tác giả - Luxury Creator Box) -->
+            @if($blog->user)
+            <div class="mt-stack-lg pt-6 border-t border-surface-dim">
+                <div class="relative bg-gradient-to-br from-white via-amber-50/30 to-orange-50/20 p-6 sm:p-7 rounded-3xl border border-primary/20 shadow-[0_10px_30px_rgba(160,65,0,0.06)] overflow-hidden">
+                    <!-- Subtle Glow -->
+                    <div class="absolute -right-16 -bottom-16 w-48 h-48 bg-primary/10 rounded-full blur-2xl pointer-events-none"></div>
+
+                    <div class="relative z-10 flex flex-col sm:flex-row items-start sm:items-center gap-5">
+                        <!-- Avatar -->
+                        <a href="{{ route('blog.author', $blog->user->id) }}" class="relative shrink-0 group">
+                            <div class="w-18 h-18 sm:w-20 sm:h-20 rounded-2xl overflow-hidden ring-4 ring-white shadow-md bg-gradient-to-tr from-amber-100 to-orange-100">
+                                <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                                     src="{{ $blog->user->anh_dai_dien_url }}" 
+                                     alt="{{ $blog->user->ho_ten }}">
+                            </div>
+                            @if($blog->user->hasRole('chu_quan') || $blog->user->isAdmin())
+                                <div class="absolute -bottom-1 -right-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full p-1 shadow-sm ring-2 ring-white" title="Tác giả uy tín đã xác thực">
+                                    <span class="material-symbols-outlined text-[15px] block" style="font-variation-settings: 'FILL' 1;">verified</span>
+                                </div>
+                            @else
+                                <div class="absolute -bottom-1 -right-1 bg-gradient-to-r from-amber-500 to-primary text-white rounded-full p-1 shadow-sm ring-2 ring-white" title="Cây bút ẩm thực">
+                                    <span class="material-symbols-outlined text-[15px] block" style="font-variation-settings: 'FILL' 1;">editor_choice</span>
+                                </div>
+                            @endif
+                        </a>
+
+                        <div class="flex-1 min-w-0">
+                            <div class="flex flex-wrap items-center gap-2 mb-1.5">
+                                <span class="text-[10px] font-black uppercase tracking-wider text-white bg-gradient-to-r from-primary to-orange-500 px-2.5 py-0.5 rounded-full shadow-2xs">
+                                    {{ $blog->user->ten_vai_tro_hien_thi ?? 'Tác giả Ẩm thực' }}
+                                </span>
+                                <span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2.5 py-0.5 rounded-full">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                    <span>Tác giả thường trực</span>
+                                </span>
+                                <span class="text-xs text-text-muted">
+                                    • Tham gia {{ $blog->user->created_at ? $blog->user->created_at->format('m/Y') : '2026' }}
+                                </span>
+                            </div>
+
+                            <a href="{{ route('blog.author', $blog->user->id) }}" class="inline-block group/author-title">
+                                <h4 class="text-lg font-extrabold text-slate-900 group-hover/author-title:text-primary transition-colors flex items-center gap-1.5">
+                                    <span>{{ $blog->user->ho_ten }}</span>
+                                    <span class="material-symbols-outlined text-base text-slate-400 group-hover/author-title:text-primary group-hover/author-title:translate-x-1 transition-all">arrow_forward</span>
+                                </h4>
+                            </a>
+
+                            <p class="text-xs sm:text-sm text-slate-600 mt-1 line-clamp-2 leading-relaxed">
+                                @if($blog->user->isAdmin())
+                                    Quản trị viên & Tác giả biên tập tại Quán Mới. Chuyên chia sẻ các cẩm nang quán xá độc lập, khách quan và đáng tin cậy.
+                                @elseif($blog->user->hasRole('chu_quan'))
+                                    Đối tác ẩm thực tại Quán Mới. Đam mê văn hóa hương vị địa phương và chia sẻ những trải nghiệm nấu nướng chân thực.
+                                @else
+                                    Cây bút ẩm thực nhiệt huyết tại Quán Mới, đam mê săn lùng những quán cà phê yên tĩnh, những món ngon đường phố và chia sẻ trải nghiệm chân thực đến cộng đồng.
+                                @endif
+                            </p>
+
+                            <div class="mt-4 pt-3.5 border-t border-slate-200/60 flex items-center justify-between flex-wrap gap-3">
+                                <div class="flex items-center gap-4 text-xs font-bold text-slate-500">
+                                    <span class="flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-xl border border-slate-200/80 shadow-2xs">
+                                        <span class="material-symbols-outlined text-[16px] text-primary">edit_note</span>
+                                        <span>{{ $blog->user->blogs()->where('status', 'published')->count() }} bài viết</span>
+                                    </span>
+                                    <span class="flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-xl border border-slate-200/80 shadow-2xs">
+                                        <span class="material-symbols-outlined text-[16px] text-amber-500">visibility</span>
+                                        <span>{{ number_format($blog->user->blogs()->where('status', 'published')->sum('view_count')) }} lượt đọc</span>
+                                    </span>
+                                </div>
+
+                                <a href="{{ route('blog.author', $blog->user->id) }}" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary hover:bg-primary/90 text-white text-xs font-bold shadow-xs hover:shadow-md transition-all active:scale-98">
+                                    <span>Xem hồ sơ & bài viết của tác giả</span>
+                                    <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
             @endif
         </article>
@@ -374,22 +566,27 @@
             </div>
         </div>
         
-        <!-- Related Articles (if any) -->
+        <!-- Related Articles -->
         @if($relatedBlogs->count() > 0)
-        <section class="mt-8">
-            <h3 class="font-display-lg text-2xl text-on-background mb-6">Bài viết liên quan</h3>
+        <section class="mt-10">
+            <h3 class="font-display-lg text-2xl text-on-background mb-6 font-bold">Bài viết liên quan</h3>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 @foreach($relatedBlogs->take(4) as $related)
-                    <a href="{{ route('blog.show', $related->slug) }}" class="bg-surface-card rounded-xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] border border-outline-variant/30 group flex flex-col">
+                    <a href="{{ route('blog.show', $related->slug) }}" class="bg-surface-card rounded-xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] border border-outline-variant/30 group flex flex-col hover:border-primary/50 transition-all hover:-translate-y-1">
                         <div class="relative aspect-[4/3] overflow-hidden">
                             <img src="{{ $related->cover_image ? (Str::startsWith($related->cover_image, 'http') ? $related->cover_image : asset('storage/'.$related->cover_image)) : 'https://placehold.co/600x400/png' }}" 
                                  class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" alt="{{ $related->title }}">
+                            @if($related->category)
+                                <div class="absolute bottom-3 left-3 bg-black/60 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-md uppercase">
+                                    {{ $related->category->name }}
+                                </div>
+                            @endif
                         </div>
                         <div class="p-4 flex flex-col flex-1">
-                            <h4 class="font-title-md text-[15px] leading-[22px] text-on-background mb-2 line-clamp-2 group-hover:text-primary transition-colors flex-1">{{ $related->title }}</h4>
+                            <h4 class="font-title-md text-[15px] leading-[22px] text-on-background mb-2 line-clamp-2 group-hover:text-primary transition-colors flex-1 font-bold">{{ $related->title }}</h4>
                             <div class="text-[12px] text-on-surface-variant flex items-center justify-between mt-auto pt-2 border-t border-surface-dim">
-                                <span>{{ $related->user->ho_ten }}</span>
-                                <span>{{ $related->published_at->format('d/m/Y') }}</span>
+                                <span>{{ $related->user->ho_ten ?? 'Tác giả' }}</span>
+                                <span>{{ $related->published_at ? $related->published_at->format('d/m/Y') : '' }}</span>
                             </div>
                         </div>
                     </a>
@@ -443,13 +640,35 @@
             <!-- Decorative abstract background pattern -->
             <div class="absolute inset-0 opacity-10 pointer-events-none" style="background-image: radial-gradient(circle at 2px 2px, currentColor 1px, transparent 0); background-size: 16px 16px;"></div>
             <span class="material-symbols-outlined text-[40px] mb-2 z-10 relative text-white">mail</span>
-            <h3 class="font-title-md text-title-md mb-2 z-10 relative text-white">Đừng bỏ lỡ quán ngon!</h3>
+            <h3 class="font-title-md text-title-md mb-2 z-10 relative text-white font-bold">Đừng bỏ lỡ quán ngon!</h3>
             <p class="font-body-sm text-body-sm mb-4 z-10 relative opacity-90 text-white/90">Đăng ký để nhận danh sách review ẩm thực mới nhất mỗi tuần từ Quán Mới.</p>
-            <form class="flex flex-col gap-2 z-10 relative">
-                <input class="w-full rounded-lg border-none bg-surface-container-lowest focus:ring-2 focus:ring-on-primary-container px-4 py-3 font-body-sm text-body-sm text-on-background placeholder:text-text-muted outline-none" placeholder="Email của bạn" type="email" required/>
-                <button class="w-full bg-on-primary-container text-surface-container-lowest rounded-lg py-3 font-label-md text-label-md font-bold hover:opacity-90 transition-opacity active:scale-[0.98]" type="submit" onclick="event.preventDefault(); alert('Cảm ơn bạn đã đăng ký!');">
-                     Đăng ký ngay
-                 </button>
+
+            @if(session('newsletter_success'))
+                <div class="mb-3 p-3 bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-xl text-xs font-bold flex items-center gap-2 text-left z-10 relative shadow-2xs">
+                    <span class="material-symbols-outlined text-base text-emerald-600">check_circle</span>
+                    <span>{{ session('newsletter_success') }}</span>
+                </div>
+            @elseif(session('newsletter_info'))
+                <div class="mb-3 p-3 bg-amber-100 text-amber-900 border border-amber-300 rounded-xl text-xs font-bold flex items-center gap-2 text-left z-10 relative shadow-2xs">
+                    <span class="material-symbols-outlined text-base text-amber-600">info</span>
+                    <span>{{ session('newsletter_info') }}</span>
+                </div>
+            @endif
+
+            <form id="blog-show-newsletter-form" action="{{ route('blog.newsletter.subscribe') }}" method="POST" onsubmit="handleNewsletterSubmit(event, this)" class="flex flex-col gap-2.5 z-10 relative">
+                @csrf
+                <input type="hidden" name="source" value="blog_show">
+                <input class="w-full rounded-lg border-none bg-surface-container-lowest focus:ring-2 focus:ring-white px-4 py-3 font-body-sm text-body-sm text-on-background placeholder:text-text-muted outline-none text-slate-800" 
+                       name="email" 
+                       value="{{ auth()->check() ? auth()->user()->email : old('email') }}" 
+                       placeholder="Email của bạn..." 
+                       type="email" 
+                       required/>
+                <button class="w-full bg-white text-primary rounded-lg py-3 font-label-md text-label-md font-bold hover:bg-slate-100 transition-all active:scale-[0.98] shadow-sm flex items-center justify-center gap-1.5 cursor-pointer" type="submit">
+                     <span class="btn-text">Đăng ký ngay</span>
+                     <span class="material-symbols-outlined text-base">send</span>
+                </button>
+                <div class="newsletter-feedback hidden text-xs font-semibold p-2.5 rounded-xl text-left"></div>
             </form>
         </div>
         
@@ -897,5 +1116,200 @@
             }
         }
     });
+
+    // ─── AI Summarizer Logic ───────────────────────────────────────────────
+    let currentSummaryData = null;
+    let isSpeaking = false;
+
+    function toggleAiSummary(forceClose = false) {
+        const card = document.getElementById('ai-summary-content');
+        const btnText = document.getElementById('ai-summary-btn-text');
+        const loading = document.getElementById('ai-summary-loading');
+
+        if (forceClose || !card.classList.contains('hidden')) {
+            card.classList.add('hidden');
+            btnText.textContent = 'Tóm tắt bằng AI';
+            if (window.speechSynthesis) window.speechSynthesis.cancel();
+            return;
+        }
+
+        if (currentSummaryData) {
+            card.classList.remove('hidden');
+            btnText.textContent = 'Thu gọn tóm tắt';
+            return;
+        }
+
+        // Fetch summary via AJAX
+        loading.classList.remove('hidden');
+        btnText.textContent = 'Đang tóm tắt...';
+
+        fetch("{{ route('blog.ai.summarize', $blog->slug) }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            loading.classList.add('hidden');
+            if (data.success) {
+                currentSummaryData = data;
+                renderAiSummary(data);
+                card.classList.remove('hidden');
+                btnText.textContent = 'Thu gọn tóm tắt';
+            } else {
+                alert('Không thể tạo tóm tắt lúc này. Vui lòng thử lại sau.');
+                btnText.textContent = 'Tóm tắt bằng AI';
+            }
+        })
+        .catch(err => {
+            loading.classList.add('hidden');
+            btnText.textContent = 'Tóm tắt bằng AI';
+            console.error('Error fetching AI summary:', err);
+        });
+    }
+
+    function renderAiSummary(data) {
+        document.getElementById('ai-summary-overview').textContent = data.overview || '';
+        document.getElementById('ai-summary-address').textContent = data.address || 'Đang cập nhật địa chỉ';
+        document.getElementById('ai-summary-price').textContent = data.price_range || 'Mức giá hợp lý';
+
+        // Must try dishes
+        const mustTryContainer = document.getElementById('ai-summary-musttry');
+        mustTryContainer.innerHTML = '';
+        (data.must_try || []).forEach(dish => {
+            const span = document.createElement('span');
+            span.className = 'px-2 py-0.5 bg-amber-50 text-amber-900 border border-amber-200 text-[11px] font-bold rounded-md';
+            span.textContent = dish;
+            mustTryContainer.appendChild(span);
+        });
+
+        // Pros & Cons
+        const prosConsList = document.getElementById('ai-summary-proscons');
+        prosConsList.innerHTML = '';
+        (data.pros || []).forEach(pro => {
+            const li = document.createElement('li');
+            li.className = 'flex items-start gap-1 text-emerald-700 font-medium';
+            li.innerHTML = `<span class="material-symbols-outlined text-[14px] text-emerald-600 shrink-0 mt-0.5">check_circle</span> <span>${pro}</span>`;
+            prosConsList.appendChild(li);
+        });
+        (data.cons || []).forEach(con => {
+            const li = document.createElement('li');
+            li.className = 'flex items-start gap-1 text-slate-500 font-medium';
+            li.innerHTML = `<span class="material-symbols-outlined text-[14px] text-amber-500 shrink-0 mt-0.5">info</span> <span>${con}</span>`;
+            prosConsList.appendChild(li);
+        });
+
+        document.getElementById('ai-summary-saved-time').textContent = data.reading_time_saved || 'Tiết kiệm 95% thời gian đọc (nắm trọn trong 5 giây)';
+    }
+
+    function copyAiSummary() {
+        if (!currentSummaryData) return;
+        const text = `✨ TÓM TẮT BÀI VIẾT BẰNG AI: ${currentSummaryData.title}\n\n` +
+                     `📍 Địa chỉ: ${currentSummaryData.address}\n` +
+                     `🍲 Món nên thử: ${(currentSummaryData.must_try || []).join(', ')}\n` +
+                     `💵 Mức giá: ${currentSummaryData.price_range}\n` +
+                     `📝 Tóm lược: ${currentSummaryData.overview}`;
+        navigator.clipboard.writeText(text).then(() => {
+            showAlert('success', 'Đã sao chép', 'Đã sao chép tóm tắt bài viết vào bộ nhớ tạm!');
+        });
+    }
+
+    function speakAiSummary() {
+        if (!('speechSynthesis' in window) || !currentSummaryData) return;
+        if (isSpeaking) {
+            window.speechSynthesis.cancel();
+            isSpeaking = false;
+            document.getElementById('ai-tts-icon').textContent = 'volume_up';
+            document.getElementById('ai-tts-text').textContent = 'Nghe đọc';
+            return;
+        }
+
+        const textToRead = `${currentSummaryData.title}. Tóm tắt nhanh: ${currentSummaryData.overview}. Địa chỉ: ${currentSummaryData.address}. Món nên thử: ${(currentSummaryData.must_try || []).join(', ')}. Mức giá: ${currentSummaryData.price_range}.`;
+        const utterance = new SpeechSynthesisUtterance(textToRead);
+        utterance.lang = 'vi-VN';
+        utterance.rate = 1.0;
+        utterance.onstart = () => {
+            isSpeaking = true;
+            document.getElementById('ai-tts-icon').textContent = 'stop_circle';
+            document.getElementById('ai-tts-text').textContent = 'Dừng đọc';
+        };
+        utterance.onend = utterance.onerror = () => {
+            isSpeaking = false;
+            document.getElementById('ai-tts-icon').textContent = 'volume_up';
+            document.getElementById('ai-tts-text').textContent = 'Nghe đọc';
+        };
+        window.speechSynthesis.speak(utterance);
+    }
+
+    // Newsletter Ajax Submit
+    function handleNewsletterSubmit(event, form) {
+        event.preventDefault();
+        const btn = form.querySelector('button[type="submit"]');
+        const btnText = btn ? btn.querySelector('.btn-text') : null;
+        const originalText = btnText ? btnText.textContent : 'Đăng ký ngay';
+        const feedback = form.querySelector('.newsletter-feedback');
+        const emailInput = form.querySelector('input[name="email"]');
+        const email = emailInput ? emailInput.value.trim() : '';
+
+        if (!email) {
+            if (feedback) {
+                feedback.className = 'newsletter-feedback block text-xs font-bold p-2.5 rounded-xl bg-rose-100 text-rose-800 border border-rose-300 shadow-2xs mt-2';
+                feedback.innerHTML = '<span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-sm">error</span>Vui lòng nhập email của bạn.</span>';
+            }
+            return;
+        }
+
+        if (btn) {
+            btn.disabled = true;
+            if (btnText) btnText.textContent = 'Đang xử lý...';
+        }
+
+        const formData = new FormData(form);
+
+        fetch(form.action, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+            },
+            body: formData
+        })
+        .then(async res => {
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                throw new Error(data.message || 'Có lỗi xảy ra, vui lòng thử lại.');
+            }
+            return data;
+        })
+        .then(data => {
+            if (feedback) {
+                if (data.already_subscribed) {
+                    feedback.className = 'newsletter-feedback block text-xs font-bold p-3 rounded-xl bg-amber-50 text-amber-900 border border-amber-300 shadow-2xs mt-2 text-left';
+                    feedback.innerHTML = `<span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-base text-amber-600">info</span><span>${data.message}</span></span>`;
+                } else {
+                    feedback.className = 'newsletter-feedback block text-xs font-bold p-3 rounded-xl bg-emerald-50 text-emerald-900 border border-emerald-300 shadow-2xs mt-2 text-left';
+                    feedback.innerHTML = `<span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-base text-emerald-600">check_circle</span><span>${data.message}</span></span>`;
+                    @guest
+                    if (emailInput) emailInput.value = '';
+                    @endguest
+                }
+            }
+        })
+        .catch(err => {
+            if (feedback) {
+                feedback.className = 'newsletter-feedback block text-xs font-bold p-3 rounded-xl bg-rose-50 text-rose-800 border border-rose-300 shadow-2xs mt-2 text-left';
+                feedback.innerHTML = `<span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-base text-rose-600">error</span><span>${err.message}</span></span>`;
+            }
+        })
+        .finally(() => {
+            if (btn) {
+                btn.disabled = false;
+                if (btnText) btnText.textContent = originalText;
+            }
+        });
+    }
 </script>
 @endpush

@@ -95,15 +95,18 @@
                 <h1 class="font-display-lg text-white text-3xl md:text-4xl lg:text-5xl mb-4 leading-tight hover:text-primary-fixed transition-colors font-extrabold">{{ $heroBlog->title }}</h1>
             </a>
             <p class="text-white/90 font-body-lg text-body-lg mb-6 line-clamp-2">{{ $heroBlog->excerpt }}</p>
-            <div class="flex items-center gap-4">
-                <div class="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center overflow-hidden border border-white/30">
-                    <img class="w-full h-full object-cover" src="{{ $heroBlog->user->anh_dai_dien_url ?? 'https://ui-avatars.com/api/?name='.urlencode($heroBlog->user->ho_ten).'&background=random' }}"/>
+            <a href="{{ $heroBlog->user ? route('blog.author', $heroBlog->user->id) : '#' }}" class="flex items-center gap-4 group/hero-author hover:opacity-95 transition-opacity inline-flex" title="Xem thông tin tác giả {{ $heroBlog->user?->ho_ten }}">
+                <div class="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center overflow-hidden border border-white/30 ring-2 ring-transparent group-hover/hero-author:ring-white transition-all">
+                    <img class="w-full h-full object-cover group-hover/hero-author:scale-105 transition-transform" src="{{ $heroBlog->user->anh_dai_dien_url ?? 'https://ui-avatars.com/api/?name='.urlencode($heroBlog->user->ho_ten ?? 'User').'&background=random' }}"/>
                 </div>
                 <div class="text-white">
-                    <p class="font-label-md text-label-md font-semibold">Bởi {{ $heroBlog->user->ho_ten }}</p>
+                    <p class="font-label-md text-label-md font-semibold flex items-center gap-1 group-hover/hero-author:underline">
+                        <span>Bởi {{ $heroBlog->user->ho_ten ?? 'Tác giả' }}</span>
+                        <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                    </p>
                     <p class="text-xs opacity-75">{{ $heroBlog->published_at ? $heroBlog->published_at->format('d/m/Y') : '' }} • {{ number_format($heroBlog->view_count ?? 0) }} lượt xem • {{ number_format($heroBlog->comment_count ?? 0) }} bình luận</p>
                 </div>
-            </div>
+            </a>
         </div>
     </section>
     @endif
@@ -120,7 +123,7 @@
         </nav>
         
         <div class="flex items-center gap-3 w-full md:w-auto shrink-0 justify-end">
-            <form action="{{ route('blog.index') }}" method="GET" class="relative flex-grow md:w-72" id="blog-search-form">
+            <form action="{{ route('blog.index') }}" method="GET" class="relative flex-grow md:w-80 lg:w-96" id="blog-search-form">
                 @if(request()->has('category'))
                     <input type="hidden" name="category" value="{{ request('category') }}">
                 @endif
@@ -134,12 +137,12 @@
                        placeholder="Tìm kiếm bài viết..." 
                        autocomplete="off"
                        oninput="handleBlogSearchInput(this)"
-                       class="w-full pl-10 pr-9 py-2 bg-surface-container rounded-full text-body-sm focus:ring-2 focus:ring-primary focus:bg-white focus:border-primary outline-none border border-transparent shadow-inner transition-all">
-                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[20px] pointer-events-none">search</span>
+                       class="w-full pl-10 pr-9 py-2.5 bg-surface-container rounded-full text-body-sm focus:ring-2 focus:ring-primary focus:bg-white focus:border-primary outline-none border border-slate-200/50 shadow-inner transition-all">
+                <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted text-[20px] pointer-events-none">search</span>
                 
                 @if(request('search'))
                     <a href="{{ route('blog.index', array_filter(['category' => request('category'), 'tag' => request('tag')])) }}" 
-                       class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 p-0.5 rounded-full hover:bg-slate-200/60 transition-colors"
+                       class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 p-0.5 rounded-full hover:bg-slate-200/60 transition-colors"
                        title="Xóa tìm kiếm">
                         <span class="material-symbols-outlined text-[18px]">cancel</span>
                     </a>
@@ -200,7 +203,17 @@
                                     <p class="text-text-muted font-body-sm text-body-sm mb-4 line-clamp-3">{{ $blog->excerpt ?? Str::limit(strip_tags($blog->content), 120) }}</p>
                                 </a>
                                 <div class="mt-auto pt-4 border-t border-outline-variant flex justify-between items-center">
-                                    <span class="font-label-sm text-label-sm text-text-muted">{{ Str::limit($blog->user->ho_ten ?? 'Tác giả', 15) }} • {{ $blog->published_at ? $blog->published_at->format('d/m/Y') : '' }}</span>
+                                    <span class="font-label-sm text-label-sm text-text-muted flex items-center gap-1">
+                                        @if($blog->user)
+                                            <a href="{{ route('blog.author', $blog->user->id) }}" class="hover:text-primary transition-colors font-medium hover:underline" title="Xem bài viết của tác giả {{ $blog->user->ho_ten }}">
+                                                {{ Str::limit($blog->user->ho_ten, 15) }}
+                                            </a>
+                                        @else
+                                            <span>Tác giả</span>
+                                        @endif
+                                        <span>•</span>
+                                        <span>{{ $blog->published_at ? $blog->published_at->format('d/m/Y') : '' }}</span>
+                                    </span>
                                     <div class="font-label-sm text-label-sm text-text-muted flex items-center gap-2.5">
                                         <span class="flex items-center gap-0.5" title="Lượt xem"><span class="material-symbols-outlined text-[14px]">visibility</span> {{ number_format($blog->view_count ?? 0) }}</span>
                                         <span class="flex items-center gap-0.5" title="Bình luận"><span class="material-symbols-outlined text-[14px]">forum</span> {{ number_format($blog->comment_count ?? 0) }}</span>
@@ -269,14 +282,43 @@
 
             <!-- Newsletter Signup -->
             <div class="bg-primary-fixed p-6 rounded-xl border border-primary-container/20">
-                <h4 class="font-title-md text-title-md text-on-primary-container mb-2">Nhận tin ẩm thực</h4>
+                <div class="flex items-center gap-2 mb-2 text-on-primary-container">
+                    <span class="material-symbols-outlined text-[22px]">mark_email_read</span>
+                    <h4 class="font-title-md text-title-md font-bold">Nhận tin ẩm thực</h4>
+                </div>
                 <p class="text-on-primary-fixed-variant font-body-sm text-body-sm mb-4">Đừng bỏ lỡ các review quán mới và công thức nấu ăn độc quyền hàng tuần.</p>
-                <form class="space-y-3" onsubmit="event.preventDefault(); alert('Cảm ơn bạn đã đăng ký!');">
-                    <input class="w-full px-4 py-3 bg-white border border-outline-variant rounded-xl text-body-sm focus:ring-primary focus:border-primary outline-none" placeholder="Email của bạn..." type="email" required/>
-                    <button type="submit" class="w-full py-3 bg-primary-container text-on-primary font-title-md text-title-md rounded-xl shadow-sm hover:opacity-90 active:scale-[0.98] transition-all">Đăng ký ngay</button>
+
+                @if(session('newsletter_success'))
+                    <div class="mb-3 p-3 bg-emerald-100/90 text-emerald-900 border border-emerald-300 rounded-xl text-xs font-bold flex items-center gap-2 shadow-2xs">
+                        <span class="material-symbols-outlined text-base text-emerald-600">check_circle</span>
+                        <span>{{ session('newsletter_success') }}</span>
+                    </div>
+                @elseif(session('newsletter_info'))
+                    <div class="mb-3 p-3 bg-amber-100/90 text-amber-900 border border-amber-300 rounded-xl text-xs font-bold flex items-center gap-2 shadow-2xs">
+                        <span class="material-symbols-outlined text-base text-amber-600">info</span>
+                        <span>{{ session('newsletter_info') }}</span>
+                    </div>
+                @endif
+
+                <form id="blog-index-newsletter-form" action="{{ route('blog.newsletter.subscribe') }}" method="POST" onsubmit="handleNewsletterSubmit(event, this)" class="space-y-3">
+                    @csrf
+                    <input type="hidden" name="source" value="blog_index">
+                    <div class="relative">
+                        <input class="w-full px-4 py-3 bg-white border border-outline-variant rounded-xl text-body-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all placeholder:text-text-muted text-slate-800" 
+                               name="email" 
+                               value="{{ auth()->check() ? auth()->user()->email : old('email') }}" 
+                               placeholder="Email của bạn..." 
+                               type="email" 
+                               required/>
+                    </div>
+                    <button type="submit" class="w-full py-3 bg-primary-container text-on-primary font-title-md text-title-md rounded-xl shadow-sm hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2 font-bold cursor-pointer">
+                        <span class="btn-text">Đăng ký ngay</span>
+                        <span class="material-symbols-outlined text-base">arrow_forward</span>
+                    </button>
+                    <div class="newsletter-feedback hidden text-xs font-semibold p-2.5 rounded-xl"></div>
                 </form>
             </div>
-            
+
             <!-- Popular Posts -->
             <div class="level-1-card p-6">
                 <h4 class="font-title-md text-title-md text-on-surface mb-4 pb-2 border-b border-outline-variant flex items-center gap-2 font-bold">
@@ -1060,5 +1102,73 @@
             window.location.reload();
         }
     });
+
+    // Newsletter Ajax Submit
+    function handleNewsletterSubmit(event, form) {
+        event.preventDefault();
+        const btn = form.querySelector('button[type="submit"]');
+        const btnText = btn ? btn.querySelector('.btn-text') : null;
+        const originalText = btnText ? btnText.textContent : 'Đăng ký ngay';
+        const feedback = form.querySelector('.newsletter-feedback');
+        const emailInput = form.querySelector('input[name="email"]');
+        const email = emailInput ? emailInput.value.trim() : '';
+
+        if (!email) {
+            if (feedback) {
+                feedback.className = 'newsletter-feedback block text-xs font-bold p-2.5 rounded-xl bg-rose-100 text-rose-800 border border-rose-300 shadow-2xs mt-2';
+                feedback.innerHTML = '<span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-sm">error</span>Vui lòng nhập email của bạn.</span>';
+            }
+            return;
+        }
+
+        if (btn) {
+            btn.disabled = true;
+            if (btnText) btnText.textContent = 'Đang xử lý...';
+        }
+
+        const formData = new FormData(form);
+
+        fetch(form.action, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+            },
+            body: formData
+        })
+        .then(async res => {
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                throw new Error(data.message || 'Có lỗi xảy ra, vui lòng thử lại.');
+            }
+            return data;
+        })
+        .then(data => {
+            if (feedback) {
+                if (data.already_subscribed) {
+                    feedback.className = 'newsletter-feedback block text-xs font-bold p-3 rounded-xl bg-amber-50 text-amber-900 border border-amber-300 shadow-2xs mt-2 text-left';
+                    feedback.innerHTML = `<span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-base text-amber-600">info</span><span>${data.message}</span></span>`;
+                } else {
+                    feedback.className = 'newsletter-feedback block text-xs font-bold p-3 rounded-xl bg-emerald-50 text-emerald-900 border border-emerald-300 shadow-2xs mt-2 text-left';
+                    feedback.innerHTML = `<span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-base text-emerald-600">check_circle</span><span>${data.message}</span></span>`;
+                    @guest
+                    if (emailInput) emailInput.value = '';
+                    @endguest
+                }
+            }
+        })
+        .catch(err => {
+            if (feedback) {
+                feedback.className = 'newsletter-feedback block text-xs font-bold p-3 rounded-xl bg-rose-50 text-rose-800 border border-rose-300 shadow-2xs mt-2 text-left';
+                feedback.innerHTML = `<span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-base text-rose-600">error</span><span>${err.message}</span></span>`;
+            }
+        })
+        .finally(() => {
+            if (btn) {
+                btn.disabled = false;
+                if (btnText) btnText.textContent = originalText;
+            }
+        });
+    }
 </script>
 @endpush
