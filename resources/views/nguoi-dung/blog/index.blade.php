@@ -177,9 +177,12 @@
                                     {{ $blog->title }}
                                 </h3>
                                 
-                                <div class="flex items-center justify-between text-xs text-on-surface-variant mb-4">
+                                <div class="flex items-center justify-between text-xs text-on-surface-variant mb-4 flex-wrap gap-2">
                                     <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">calendar_today</span> {{ $blog->created_at->format('d/m/Y') }}</span>
-                                    <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">visibility</span> {{ number_format($blog->view_count ?? 0) }} lượt xem</span>
+                                    <div class="flex items-center gap-3">
+                                        <span class="flex items-center gap-1" title="Lượt xem"><span class="material-symbols-outlined text-[16px]">visibility</span> {{ number_format($blog->view_count ?? 0) }}</span>
+                                        <span class="flex items-center gap-1" title="Bình luận"><span class="material-symbols-outlined text-[16px]">forum</span> {{ number_format($blog->comment_count ?? 0) }}</span>
+                                    </div>
                                 </div>
                                 
                                 <!-- Actions -->

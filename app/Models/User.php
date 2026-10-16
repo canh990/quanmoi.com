@@ -195,6 +195,18 @@ class User extends Authenticatable
         };
     }
 
+    public function getAnhDaiDienUrlAttribute(): string
+    {
+        if (!empty($this->anh_dai_dien)) {
+            if (\Illuminate\Support\Str::startsWith($this->anh_dai_dien, ['http://', 'https://'])) {
+                return $this->anh_dai_dien;
+            }
+            return asset('storage/' . $this->anh_dai_dien);
+        }
+
+        return 'https://ui-avatars.com/api/?name=' . urlencode($this->ho_ten ?? 'User') . '&background=ffdbcc&color=a04100&bold=true&size=128';
+    }
+
     public function blogs(): HasMany
     {
         return $this->hasMany(Blog::class);

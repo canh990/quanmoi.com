@@ -105,6 +105,7 @@ class BlogController extends Controller
             $blog->excerpt = $data['excerpt'] ?? null;
             $blog->content = function_exists('clean') ? clean($data['content']) : $data['content'];
             $blog->status = (isset($data['action']) && $data['action'] === 'pending') ? 'pending' : 'draft';
+            $blog->allow_comments = $request->boolean('allow_comments', true);
             
             if ($request->hasFile('cover_image')) {
                 $blog->cover_image = $this->blogService->uploadCoverImage($request->file('cover_image'));
@@ -209,6 +210,7 @@ class BlogController extends Controller
 
         $blog->excerpt = $data['excerpt'] ?? null;
         $blog->content = clean($data['content']);
+        $blog->allow_comments = $request->boolean('allow_comments', true);
         if ($oldStatus === 'published') {
             $blog->status = ($data['action'] === 'draft') ? 'draft' : 'published';
         } else {
