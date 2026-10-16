@@ -695,7 +695,7 @@
        GALLERY DELETE
     ========================================================= */
     async function deleteGalleryImage(imgId) {
-        if (!confirm('Bạn có chắc muốn xóa ảnh này không?')) return;
+        if (!confirm('Bạn có chắc chắn muốn xóa hình ảnh này không?')) return;
 
         const card = document.getElementById('img-' + imgId);
         if (card) {

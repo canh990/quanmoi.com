@@ -19,7 +19,10 @@
                 <span class="material-symbols-outlined text-[18px]">fact_check</span>
                 <span>Quán Chờ Duyệt</span>
             </div>
-            <span class="px-1.5 py-0.5 text-[10px] font-bold bg-amber-500/20 text-amber-300 rounded border border-amber-500/30">Cần duyệt</span>
+            <span class="sidebar-quan-pending-badge {{ ($sidebarPendingQuanCount ?? 0) > 0 ? '' : 'hidden' }} px-1.5 py-0.5 text-[10px] font-bold bg-amber-500/20 text-amber-300 rounded border border-amber-500/30 flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                <span class="badge-text">{{ ($sidebarPendingQuanCount ?? 0) > 0 ? ($sidebarPendingQuanCount . ' cần duyệt') : 'Cần duyệt' }}</span>
+            </span>
         </a>
         <a href="{{ route('admin.quan-noi-bat.index') }}" class="sidebar-item flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all {{ request()->routeIs('admin.quan-noi-bat.*') ? 'bg-[#F59E0B] text-white font-bold shadow-md' : 'text-slate-300 hover:bg-slate-800/80 hover:text-white' }}">
             <span class="material-symbols-outlined text-[18px]">auto_awesome</span>
@@ -40,9 +43,15 @@
             <span class="material-symbols-outlined text-[18px]">space_dashboard</span>
             <span>Tổng Quan Blog</span>
         </a>
-        <a href="{{ route('admin.blog.posts.pending') }}" class="sidebar-item flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all {{ request()->routeIs('admin.blog.posts.*') ? 'bg-[#F59E0B] text-white font-bold shadow-md' : 'text-slate-300 hover:bg-slate-800/80 hover:text-white' }}">
-            <span class="material-symbols-outlined text-[18px]">fact_check</span>
-            <span>Duyệt Bài Viết</span>
+        <a href="{{ route('admin.blog.posts.pending') }}" class="sidebar-item flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all {{ request()->routeIs('admin.blog.posts.*') ? 'bg-[#F59E0B] text-white font-bold shadow-md' : 'text-slate-300 hover:bg-slate-800/80 hover:text-white' }}">
+            <div class="flex items-center gap-2.5">
+                <span class="material-symbols-outlined text-[18px]">article</span>
+                <span>Duyệt Bài Viết</span>
+            </div>
+            <span class="sidebar-blog-pending-badge {{ ($sidebarPendingBlogCount ?? 0) > 0 ? '' : 'hidden' }} px-1.5 py-0.5 text-[10px] font-bold bg-amber-500/20 text-amber-300 rounded border border-amber-500/30 flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                <span class="badge-text">{{ ($sidebarPendingBlogCount ?? 0) > 0 ? ($sidebarPendingBlogCount . ' cần duyệt') : 'Cần duyệt' }}</span>
+            </span>
         </a>
         <a href="{{ route('admin.blog.categories.index') }}" class="sidebar-item flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all {{ request()->routeIs('admin.blog.categories.*') ? 'bg-[#F59E0B] text-white font-bold shadow-md' : 'text-slate-300 hover:bg-slate-800/80 hover:text-white' }}">
             <span class="material-symbols-outlined text-[18px]">category</span>
@@ -76,7 +85,7 @@
                 <span class="material-symbols-outlined text-[18px]">campaign</span>
                 <span>Thông Báo Hệ Thống</span>
             </div>
-            <span id="sidebar-notif-badge" class="hidden px-1.5 py-0.5 text-[10px] font-bold bg-rose-500 text-white rounded-full">0</span>
+            <span class="sidebar-notif-badge {{ ($sidebarTotalPending ?? 0) > 0 ? '' : 'hidden' }} px-1.5 py-0.5 text-[10px] font-bold bg-rose-500 text-white rounded-full">{{ $sidebarTotalPending ?? 0 }}</span>
         </a>
         <a href="{{ route('admin.audit-log.index') }}" class="sidebar-item flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all {{ request()->routeIs('admin.audit-log.*') ? 'bg-[#F59E0B] text-white font-bold shadow-md' : 'text-slate-300 hover:bg-slate-800/80 hover:text-white' }}">
             <span class="material-symbols-outlined text-[18px]">reorder</span>

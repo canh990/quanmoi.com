@@ -27,8 +27,9 @@ class BlogController extends Controller
 
     public function index(Request $request)
     {
-        $query = Blog::with(['category'])
-            ->where('user_id', Auth::id());
+        $query = Blog::with(['category', 'moderationLogs' => function($q) {
+            $q->latest();
+        }])->where('user_id', Auth::id());
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
@@ -59,6 +60,15 @@ class BlogController extends Controller
 
         $totalCount = array_sum($statusCounts);
             
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'total_count' => $totalCount,
+                'status_counts' => $statusCounts,
+                'blogs' => $blogs,
+            ]);
+        }
+
         return view('nguoi-dung.blog.index', compact('blogs', 'statusCounts', 'totalCount'));
     }
 

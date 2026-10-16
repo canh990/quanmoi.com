@@ -16,9 +16,9 @@
         </a>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+    <div id="owner-quan-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         @forelse ($quanList as $quan)
-            <article class="bg-white rounded-[28px] border border-gray-100 shadow-sm overflow-hidden flex flex-col h-full">
+            <article id="owner-quan-card-{{ $quan->id }}" class="bg-white rounded-[28px] border border-gray-100 shadow-sm overflow-hidden flex flex-col h-full transition-all duration-300">
                 <img src="{{ $quan->anh_bia_url ?: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=900&q=80' }}" alt="{{ $quan->ten_quan }}" class="w-full h-52 object-cover">
                 <div class="p-5 flex-1 flex flex-col">
                     <div class="flex items-start justify-between gap-3">
@@ -26,10 +26,12 @@
                             <h2 class="text-xl font-black text-on-surface break-words [overflow-wrap:anywhere]">{{ $quan->ten_quan }}</h2>
                             <p class="text-sm text-gray-500 mt-1 break-words [overflow-wrap:anywhere]">{{ $quan->ten_quan_huyen }}, {{ $quan->ten_tinh_thanh }}</p>
                         </div>
-                        <span class="whitespace-nowrap flex-shrink-0 px-3 py-1 rounded-full text-xs font-bold {{ $quan->trang_thai === 'da_duyet' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-800' }}">
-                            {{ $quan->trang_thai === 'da_duyet' ? 'Đã duyệt' : 'Chờ duyệt' }}
+                        <span id="owner-quan-badge-{{ $quan->id }}" class="whitespace-nowrap flex-shrink-0 px-3 py-1 rounded-full text-xs font-bold {{ $quan->trang_thai === 'da_duyet' ? 'bg-emerald-100 text-emerald-700' : ($quan->trang_thai === 'bi_khoa' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-800') }}">
+                            {{ $quan->trang_thai === 'da_duyet' ? 'Đã duyệt' : ($quan->trang_thai === 'bi_khoa' ? 'Từ chối / Khóa' : 'Chờ duyệt') }}
                         </span>
                     </div>
+
+                    <div id="owner-quan-note-{{ $quan->id }}"></div>
 
                     <p class="text-sm text-gray-500 mt-4 break-words [overflow-wrap:anywhere]">{{ $quan->mo_ta ?: 'Cập nhật mô tả để cửa hàng nổi bật hơn trên hệ thống.' }}</p>
 
@@ -58,4 +60,65 @@
         @endforelse
     </div>
 </main>
+
+<script>
+    // Realtime synchronization for Venue Owner workspace
+    window.addEventListener('quanmoi:quan-status-updated', function(e) {
+        const notif = e.detail;
+        if (!notif) return;
+
+        const quanId = notif.quan_id;
+        if (!quanId) return;
+
+        const card = document.getElementById(`owner-quan-card-${quanId}`);
+        const badge = document.getElementById(`owner-quan-badge-${quanId}`);
+        const noteBox = document.getElementById(`owner-quan-note-${quanId}`);
+
+        if (card) {
+            // Highlight card
+            card.classList.add('ring-2', 'ring-primary', 'shadow-lg');
+            setTimeout(() => card.classList.remove('ring-2', 'ring-primary', 'shadow-lg'), 5000);
+
+            // Update badge
+            if (badge) {
+                if (notif.action === 'approved' || notif.status === 'da_duyet') {
+                    badge.className = 'whitespace-nowrap flex-shrink-0 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 transition-all';
+                    badge.textContent = 'Đã duyệt';
+                } else if (notif.action === 'rejected' || notif.status === 'bi_khoa') {
+                    badge.className = 'whitespace-nowrap flex-shrink-0 px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-700 transition-all';
+                    badge.textContent = 'Từ chối / Khóa';
+                }
+            }
+
+            // Update note box
+            if (noteBox && notif.note) {
+                noteBox.innerHTML = `
+                    <div class="mt-3 p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 flex items-start gap-2">
+                        <span class="material-symbols-outlined text-[16px] text-amber-600 shrink-0 mt-0.5">feedback</span>
+                        <div class="flex-1 min-w-0">
+                            <span class="font-bold text-[11px] block">Ghi chú từ Ban quản trị:</span>
+                            <p class="mt-0.5">${notif.note}</p>
+                        </div>
+                    </div>
+                `;
+            }
+        } else {
+            // Background sync grid
+            fetch(window.location.href, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(res => res.text())
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const newGrid = doc.getElementById('owner-quan-grid');
+                const currentGrid = document.getElementById('owner-quan-grid');
+                if (newGrid && currentGrid) {
+                    currentGrid.innerHTML = newGrid.innerHTML;
+                }
+            })
+            .catch(() => {});
+        }
+    });
+</script>
 @endsection

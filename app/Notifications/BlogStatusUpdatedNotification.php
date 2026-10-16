@@ -8,13 +8,13 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class BlogStatusUpdatedNotification extends Notification implements ShouldQueue
+class BlogStatusUpdatedNotification extends Notification
 {
     use Queueable;
 
-    protected $blog;
-    protected $action;
-    protected $note;
+    public $blog;
+    public $action;
+    public $note;
 
     /**
      * Create a new notification instance.
@@ -43,20 +43,38 @@ class BlogStatusUpdatedNotification extends Notification implements ShouldQueue
      */
     public function toArray(object $notifiable): array
     {
-        $messages = [
-            'published' => 'Bài viết "' . $this->blog->title . '" của bạn đã được xuất bản.',
-            'rejected' => 'Bài viết "' . $this->blog->title . '" đã bị từ chối duyệt.',
-            'requested_revision' => 'Quản trị viên yêu cầu chỉnh sửa bài viết "' . $this->blog->title . '".',
+        $statusLabels = [
+            'published' => 'Đã xuất bản',
+            'rejected' => 'Bị từ chối',
+            'requested_revision' => 'Yêu cầu chỉnh sửa',
+            'hidden' => 'Đã ẩn',
+        ];
+
+        $defaultMessages = [
+            'published' => 'Bài viết "' . $this->blog->title . '" của bạn đã được quản trị viên duyệt và xuất bản thành công.',
+            'rejected' => 'Bài viết "' . $this->blog->title . '" đã bị từ chối duyệt.' . ($this->note ? ' Lý do: ' . $this->note : ''),
+            'requested_revision' => 'Quản trị viên yêu cầu chỉnh sửa bài viết "' . $this->blog->title . '".' . ($this->note ? ' Ghi chú: ' . $this->note : ''),
             'hidden' => 'Bài viết "' . $this->blog->title . '" của bạn đã bị ẩn.',
         ];
+
+        $targetLink = match ($this->action) {
+            'published' => route('blog.show', $this->blog->slug ?? $this->blog->id),
+            'rejected', 'requested_revision' => route('nguoi-dung.blog.edit', $this->blog->id),
+            default => route('nguoi-dung.blog.index'),
+        };
 
         return [
             'blog_id' => $this->blog->id,
             'title' => $this->blog->title,
+            'slug' => $this->blog->slug,
+            'cover_image_url' => $this->blog->cover_image_url,
             'action' => $this->action,
-            'message' => $messages[$this->action] ?? 'Trạng thái bài viết "' . $this->blog->title . '" đã thay đổi.',
+            'status' => $this->blog->status,
+            'status_label' => $statusLabels[$this->action] ?? 'Đã cập nhật',
+            'message' => $defaultMessages[$this->action] ?? 'Trạng thái bài viết "' . $this->blog->title . '" đã được cập nhật.',
             'note' => $this->note,
-            'link' => route('nguoi-dung.blog.index')
+            'link' => $targetLink,
+            'created_at' => now()->toIso8601String(),
         ];
     }
 }

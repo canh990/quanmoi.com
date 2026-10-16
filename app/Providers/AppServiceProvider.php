@@ -104,6 +104,24 @@ class AppServiceProvider extends ServiceProvider
                 'ownerNavUrl' => $ownerNavUrl,
             ]);
         });
+
+        View::composer(['admin.*', 'admin.partials.sidebar-nav'], function ($view): void {
+            if (Auth::check() && Auth::user()->isAdmin()) {
+                try {
+                    $pendingQuan = \App\Models\Quan::where('trang_thai', 'chua_duyet')->count();
+                    $pendingBlog = \App\Models\Blog::where('status', 'pending')->count();
+                    $unverifiedUser = \App\Models\User::where('da_xac_thuc', false)->count();
+                    $view->with([
+                        'sidebarPendingQuanCount' => $pendingQuan,
+                        'sidebarPendingBlogCount' => $pendingBlog,
+                        'sidebarUnverifiedUserCount' => $unverifiedUser,
+                        'sidebarTotalPending' => $pendingQuan + $pendingBlog + $unverifiedUser,
+                    ]);
+                } catch (\Throwable $e) {
+                    // Ignore during testing / setup
+                }
+            }
+        });
     }
 
     private function rateLimitKey(Request $request): string

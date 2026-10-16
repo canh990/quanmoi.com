@@ -117,6 +117,13 @@ Route::middleware('auth')->group(function () {
         Route::put('/{blog}', [UserBlogController::class, 'update'])->name('update');
         Route::delete('/{blog}', [UserBlogController::class, 'destroy'])->name('destroy');
     });
+
+    Route::prefix('thanh-vien/thong-bao')->name('nguoi-dung.thong-bao.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\NguoiDung\ThongBaoController::class, 'index'])->name('index');
+        Route::get('/realtime-check', [\App\Http\Controllers\NguoiDung\ThongBaoController::class, 'realtimeCheck'])->name('realtime-check');
+        Route::post('/{id}/danh-dau-da-doc', [\App\Http\Controllers\NguoiDung\ThongBaoController::class, 'markAsRead'])->name('mark-read');
+        Route::post('/danh-dau-tat-ca-da-doc', [\App\Http\Controllers\NguoiDung\ThongBaoController::class, 'markAllAsRead'])->name('mark-all-read');
+    });
 });
 
 Route::get('/quan/{slug}', [HomeController::class, 'show'])->name('quan.detail');

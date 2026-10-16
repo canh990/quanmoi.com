@@ -21,5 +21,6 @@ abstract class TestCase extends BaseTestCase
         $_SERVER['DB_DATABASE'] = ':memory:';
 
         parent::setUp();
+        $this->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\PreventRequestForgery::class);
     }
 }

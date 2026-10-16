@@ -200,15 +200,22 @@
                 </div>
             </div>
 
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-xs text-slate-700">
+            <div class="w-full overflow-x-auto custom-scrollbar">
+                <table class="w-full text-left text-xs text-slate-700 min-w-[850px] table-fixed-enterprise">
+                    <colgroup>
+                        <col class="w-[34%]">
+                        <col class="w-[18%]">
+                        <col class="w-[20%]">
+                        <col class="w-[10%]">
+                        <col class="w-[18%]">
+                    </colgroup>
                     <thead class="bg-slate-50/80 text-slate-600 font-bold uppercase tracking-wider border-b border-slate-200 text-[11px]">
                         <tr>
-                            <th class="p-3.5 min-w-[320px]">Hồ Sơ Quán & Hình Ảnh</th>
-                            <th class="p-3.5 min-w-[190px]">Chủ Quán / Liên Hệ</th>
-                            <th class="p-3.5 min-w-[180px] max-w-[240px]">Khu Vực & Địa Chỉ</th>
-                            <th class="p-3.5 whitespace-nowrap min-w-[110px] w-[110px]">Thời Gian</th>
-                            <th class="p-3.5 text-right whitespace-nowrap min-w-[210px] w-[210px]">Thao Tác Thẩm Định</th>
+                            <th class="px-3.5 py-3">Hồ Sơ Quán & Hình Ảnh</th>
+                            <th class="px-3.5 py-3">Chủ Quán / Liên Hệ</th>
+                            <th class="px-3.5 py-3">Khu Vực & Địa Chỉ</th>
+                            <th class="px-3.5 py-3 whitespace-nowrap">Thời Gian</th>
+                            <th class="px-3.5 py-3 text-right whitespace-nowrap">Thao Tác Thẩm Định</th>
                         </tr>
                     </thead>
                     <tbody id="pending-quan-tbody" class="divide-y divide-slate-100">
@@ -235,55 +242,52 @@
                                 ];
                             @endphp
                             <tr id="quan-row-{{ $q->id }}" class="duyet-table-row hover:bg-slate-50/80 transition-colors" data-search="{{ strtolower($q->ten_quan . ' ' . ($q->chuQuan->ho_ten ?? '') . ' ' . ($q->dia_chi_chi_tiet ?? '') . ' ' . ($q->loai_hinh_kinh_doanh ?? '')) }}">
-                                <td class="p-3.5 font-medium min-w-[320px] max-w-[360px] overflow-hidden">
-                                    <div class="flex items-center gap-3.5 min-w-0">
+                                <td class="px-3.5 py-3 font-medium overflow-hidden">
+                                    <div class="flex items-center gap-3 min-w-0">
                                         {{-- Thumbnail With Zoom --}}
-                                        <div onclick='openVenueMediaModal(@json($mediaPayload))' class="w-16 h-16 rounded-2xl overflow-hidden bg-slate-100 shrink-0 border border-slate-200/90 cursor-pointer group relative shadow-2xs hover:ring-2 hover:ring-amber-500 hover:border-amber-400 transition-all" title="Bấm để xem ảnh và thẩm định chi tiết">
+                                        <div onclick='openVenueMediaModal(@json($mediaPayload))' class="w-12 h-12 rounded-xl overflow-hidden bg-slate-100 shrink-0 border border-slate-200/90 cursor-pointer group relative shadow-2xs hover:ring-2 hover:ring-amber-500 hover:border-amber-400 transition-all" title="Bấm để xem ảnh và thẩm định chi tiết">
                                             <img src="{{ $q->anh_bia_url }}" alt="{{ $q->ten_quan }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&auto=format&fit=crop&q=80';">
                                             <div class="absolute inset-0 bg-black/35 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white">
-                                                <span class="material-symbols-outlined text-[20px]">zoom_in</span>
+                                                <span class="material-symbols-outlined text-[16px]">zoom_in</span>
                                             </div>
-                                            <span class="absolute bottom-1 right-1 bg-black/70 backdrop-blur-xs text-white text-[9px] font-bold px-1.5 py-0.2 rounded-md">
+                                            <span class="absolute bottom-0.5 right-0.5 bg-black/70 backdrop-blur-xs text-white text-[8px] font-bold px-1 py-0.2 rounded">
                                                 {{ count($galleryUrls) + 1 }}
                                             </span>
                                         </div>
 
-                                        <div class="min-w-0 flex-1 overflow-hidden space-y-1">
-                                            <div class="flex items-center gap-2 min-w-0">
-                                                <span class="font-bold text-slate-900 text-sm truncate max-w-[170px]" title="{{ $q->ten_quan }}">
+                                        <div class="min-w-0 flex-1 space-y-0.5">
+                                            <div class="flex items-center gap-1.5 min-w-0">
+                                                <span class="font-bold text-slate-900 text-xs cell-wrap-2line" title="{{ $q->ten_quan }}">
                                                     {{ $q->ten_quan }}
                                                 </span>
-                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-300 shrink-0 whitespace-nowrap">
+                                                <span class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-50 text-amber-800 border border-amber-300 shrink-0 whitespace-nowrap">
                                                     <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
                                                     <span>Chờ duyệt</span>
                                                 </span>
                                             </div>
                                             @if($q->loai_hinh_kinh_doanh)
-                                                <div class="mt-0.5">
-                                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-slate-100 text-slate-700 border border-slate-200 max-w-full truncate" title="{{ $q->loai_hinh_kinh_doanh }}">
-                                                        🏷️ {{ $q->loai_hinh_kinh_doanh }}
-                                                    </span>
+                                                <div class="truncate text-[10px] text-slate-500" title="{{ $q->loai_hinh_kinh_doanh }}">
+                                                    🏷️ {{ $q->loai_hinh_kinh_doanh }}
                                                 </div>
                                             @endif
-                                            <div class="flex items-center gap-1.5 pt-0.5 flex-wrap">
-                                                <button type="button" onclick='openVenueMediaModal(@json($mediaPayload))' class="btn-enterprise btn-enterprise-photo" title="Xem bộ sưu tập hình ảnh quán">
-                                                    <span class="material-symbols-outlined text-[15px]">photo_library</span>
-                                                    <span>Xem ảnh</span>
-                                                    <span class="btn-enterprise-photo-count">{{ count($galleryUrls) + 1 }}</span>
+                                            <div class="flex items-center gap-1 pt-0.5 flex-nowrap">
+                                                <button type="button" onclick='openVenueMediaModal(@json($mediaPayload))' class="btn-enterprise btn-enterprise-photo btn-action-compact" title="Xem bộ sưu tập hình ảnh quán">
+                                                    <span class="material-symbols-outlined text-[13px]">photo_library</span>
+                                                    <span>Ảnh ({{ count($galleryUrls) + 1 }})</span>
                                                 </button>
                                                 @if($q->slug)
-                                                    <a href="{{ route('quan.detail', $q->slug) }}" class="btn-enterprise btn-enterprise-secondary" title="Xem trang quán thực tế ngoài website">
+                                                    <a href="{{ route('quan.detail', $q->slug) }}" class="btn-enterprise btn-enterprise-secondary btn-action-compact" title="Xem trang quán thực tế ngoài website">
                                                         <span>Trang quán</span>
-                                                        <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+                                                        <span class="material-symbols-outlined text-[13px]">arrow_forward</span>
                                                     </a>
                                                 @endif
                                             </div>
                                         </div>
                                     </div>
                                 </td>
-                                <td class="p-3.5 min-w-[180px] max-w-[210px] overflow-hidden">
+                                <td class="px-3.5 py-3 overflow-hidden">
                                     <div class="flex items-center gap-2 min-w-0">
-                                        <div class="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center shrink-0">
+                                        <div class="w-7 h-7 rounded-full bg-slate-100 border border-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center shrink-0">
                                             {{ strtoupper(substr($q->chuQuan->ho_ten ?? 'U', 0, 1)) }}
                                         </div>
                                         <div class="min-w-0 flex-1 space-y-0.5 overflow-hidden">
@@ -296,33 +300,46 @@
                                         </div>
                                     </div>
                                 </td>
-                                <td class="p-3.5 text-slate-600 min-w-[180px] max-w-[240px] overflow-hidden">
-                                    <div class="space-y-1 min-w-0">
-                                        <div class="font-bold text-slate-800 text-xs leading-snug line-clamp-2 break-words" title="{{ $q->dia_chi_chi_tiet ?? $q->dia_chi }}">
+                                <td class="px-3.5 py-3 text-slate-600 overflow-hidden">
+                                    <div class="space-y-0.5 min-w-0">
+                                        <div class="font-semibold text-slate-800 text-xs cell-wrap-2line" title="{{ $q->dia_chi_chi_tiet ?? $q->dia_chi }}">
                                             {{ $q->dia_chi_chi_tiet ?? $q->dia_chi ?: 'Chưa cập nhật chi tiết' }}
                                         </div>
                                         @if($q->ten_tinh_thanh || $q->ten_quan_huyen)
-                                            <div class="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-700 bg-slate-50 border border-slate-200 px-2 py-0.5 rounded-md max-w-full overflow-hidden" title="{{ $q->ten_quan_huyen ? $q->ten_quan_huyen . ', ' : '' }}{{ $q->ten_tinh_thanh }}">
-                                                <span class="material-symbols-outlined text-[13px] text-slate-500 shrink-0">location_on</span>
+                                            <div class="inline-flex items-center gap-1 text-[10px] font-semibold text-slate-600 bg-slate-50 border border-slate-200 px-1.5 py-0.2 rounded max-w-full overflow-hidden" title="{{ $q->ten_quan_huyen ? $q->ten_quan_huyen . ', ' : '' }}{{ $q->ten_tinh_thanh }}">
+                                                <span class="material-symbols-outlined text-[12px] text-slate-400 shrink-0">location_on</span>
                                                 <span class="truncate">{{ $q->ten_quan_huyen ? $q->ten_quan_huyen . ', ' : '' }}{{ $q->ten_tinh_thanh }}</span>
                                             </div>
                                         @endif
                                     </div>
                                 </td>
-                                <td class="p-3.5 text-slate-500 whitespace-nowrap min-w-[110px] w-[110px] shrink-0">
-                                    <div class="font-bold text-slate-800 whitespace-nowrap text-xs">{{ $q->created_at ? $q->created_at->diffForHumans() : 'Vừa xong' }}</div>
-                                    <div class="text-[10px] text-slate-400 mt-0.5 whitespace-nowrap">{{ $q->created_at ? $q->created_at->format('d/m/Y H:i') : '' }}</div>
+                                <td class="px-3.5 py-3 text-slate-500 whitespace-nowrap overflow-hidden">
+                                    <div class="font-bold text-slate-800 text-xs truncate">{{ $q->created_at ? $q->created_at->diffForHumans() : 'Vừa xong' }}</div>
+                                    <div class="text-[10px] text-slate-400 mt-0.5 truncate">{{ $q->created_at ? $q->created_at->format('d/m/Y H:i') : '' }}</div>
                                 </td>
-                                <td class="p-3.5 text-right whitespace-nowrap min-w-[210px] w-[210px] shrink-0">
-                                    <div class="flex items-center justify-end gap-2 flex-nowrap shrink-0">
-                                        <button type="button" onclick="confirmApproveQuan('{{ $q->id }}', '{{ addslashes($q->ten_quan) }}')" class="btn-enterprise btn-enterprise-success" title="Phê duyệt hồ sơ quán này">
-                                            <span class="material-symbols-outlined text-[16px]">check_circle</span>
-                                            <span class="uppercase tracking-wider">Duyệt</span>
+                                <td class="px-3.5 py-3 text-right whitespace-nowrap">
+                                    <div class="flex items-center justify-end gap-1 flex-nowrap">
+                                        {{-- 1. Xem phần cần phê duyệt --}}
+                                        <button type="button" onclick='openVenueMediaModal(@json($mediaPayload))' class="btn-enterprise btn-enterprise-secondary btn-action-compact font-semibold" title="Xem chi tiết hồ sơ & thẩm định ảnh">
+                                            <span class="material-symbols-outlined text-[14px]">visibility</span>
+                                            <span>Xem</span>
                                         </button>
 
-                                        <button type="button" onclick="confirmRejectQuan('{{ $q->id }}', '{{ addslashes($q->ten_quan) }}')" class="btn-enterprise btn-enterprise-danger" title="Không duyệt hồ sơ quán này">
-                                            <span class="material-symbols-outlined text-[16px]">cancel</span>
+                                        {{-- 2. Phê duyệt --}}
+                                        <button type="button" onclick="confirmApproveQuan('{{ $q->id }}', '{{ addslashes($q->ten_quan) }}')" class="btn-enterprise btn-enterprise-success btn-action-compact font-bold shadow-2xs" title="Phê duyệt hồ sơ quán này">
+                                            <span class="material-symbols-outlined text-[14px]">check_circle</span>
+                                            <span>Duyệt</span>
+                                        </button>
+
+                                        {{-- 3. Không duyệt --}}
+                                        <button type="button" onclick="confirmRejectQuan('{{ $q->id }}', '{{ addslashes($q->ten_quan) }}')" class="btn-enterprise btn-enterprise-danger btn-action-compact font-semibold shadow-2xs" title="Không duyệt hồ sơ quán này">
+                                            <span class="material-symbols-outlined text-[14px]">cancel</span>
                                             <span>Không duyệt</span>
+                                        </button>
+
+                                        {{-- 4. Xóa quán chờ duyệt --}}
+                                        <button type="button" onclick="confirmDeletePendingQuan('{{ $q->id }}', '{{ addslashes($q->ten_quan) }}')" class="btn-enterprise btn-enterprise-secondary btn-action-compact text-gray-400 hover:text-rose-600 hover:bg-rose-50 border-gray-200" title="Xóa bỏ quán khỏi danh sách chờ duyệt">
+                                            <span class="material-symbols-outlined text-[14px]">delete</span>
                                         </button>
                                     </div>
                                 </td>
@@ -355,16 +372,24 @@
                 </div>
             </div>
 
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-xs text-slate-700">
+            <div class="w-full overflow-x-auto custom-scrollbar">
+                <table class="w-full text-left text-xs text-slate-700 min-w-[850px] table-fixed-enterprise">
+                    <colgroup>
+                        <col class="w-[30%]">
+                        <col class="w-[18%]">
+                        <col class="w-[17%]">
+                        <col class="w-[11%]">
+                        <col class="w-[9%]">
+                        <col class="w-[15%]">
+                    </colgroup>
                     <thead class="bg-rose-50/50 text-slate-600 font-bold uppercase tracking-wider border-b border-rose-100 text-[11px]">
                         <tr>
-                            <th class="p-3.5 min-w-[320px]">Hồ Sơ Quán & Hình Ảnh</th>
-                            <th class="p-3.5 min-w-[190px]">Chủ Quán / Liên Hệ</th>
-                            <th class="p-3.5 min-w-[180px] max-w-[240px]">Khu Vực & Địa Chỉ</th>
-                            <th class="p-3.5 whitespace-nowrap min-w-[140px]">Trạng Thái</th>
-                            <th class="p-3.5 whitespace-nowrap min-w-[110px] w-[110px]">Thời Gian Cập Nhật</th>
-                            <th class="p-3.5 text-right whitespace-nowrap min-w-[210px] w-[210px]">Thao Tác</th>
+                            <th class="px-3.5 py-3">Hồ Sơ Quán & Hình Ảnh</th>
+                            <th class="px-3.5 py-3">Chủ Quán / Liên Hệ</th>
+                            <th class="px-3.5 py-3">Khu Vực & Địa Chỉ</th>
+                            <th class="px-3.5 py-3 whitespace-nowrap">Trạng Thái</th>
+                            <th class="px-3.5 py-3 whitespace-nowrap">Thời Gian Cập Nhật</th>
+                            <th class="px-3.5 py-3 text-right whitespace-nowrap">Thao Tác</th>
                         </tr>
                     </thead>
                     <tbody id="rejected-quan-tbody" class="divide-y divide-slate-100">
@@ -391,41 +416,38 @@
                                 ];
                             @endphp
                             <tr id="rejected-row-{{ $q->id }}" class="duyet-table-row hover:bg-rose-50/20 transition-colors" data-search="{{ strtolower($q->ten_quan . ' ' . ($q->chuQuan->ho_ten ?? '') . ' ' . ($q->dia_chi_chi_tiet ?? '') . ' ' . ($q->loai_hinh_kinh_doanh ?? '')) }}">
-                                <td class="p-3.5 font-medium min-w-[320px] max-w-[360px] overflow-hidden">
-                                    <div class="flex items-center gap-3.5 min-w-0">
-                                        <div onclick='openVenueMediaModal(@json($mediaPayload))' class="w-16 h-16 rounded-2xl overflow-hidden bg-slate-100 shrink-0 border border-slate-200/90 cursor-pointer group relative shadow-2xs hover:ring-2 hover:ring-rose-400 transition-all" title="Bấm để xem ảnh quán">
+                                <td class="px-3.5 py-3 font-medium overflow-hidden">
+                                    <div class="flex items-center gap-3 min-w-0">
+                                        <div onclick='openVenueMediaModal(@json($mediaPayload))' class="w-12 h-12 rounded-xl overflow-hidden bg-slate-100 shrink-0 border border-slate-200/90 cursor-pointer group relative shadow-2xs hover:ring-2 hover:ring-rose-400 transition-all" title="Bấm để xem ảnh quán">
                                             <img src="{{ $q->anh_bia_url }}" alt="{{ $q->ten_quan }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&auto=format&fit=crop&q=80';">
                                             <div class="absolute inset-0 bg-black/35 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white">
-                                                <span class="material-symbols-outlined text-[20px]">zoom_in</span>
+                                                <span class="material-symbols-outlined text-[16px]">zoom_in</span>
                                             </div>
-                                            <span class="absolute bottom-1 right-1 bg-black/70 backdrop-blur-xs text-white text-[9px] font-bold px-1.5 py-0.2 rounded-md">
+                                            <span class="absolute bottom-0.5 right-0.5 bg-black/70 backdrop-blur-xs text-white text-[8px] font-bold px-1 py-0.2 rounded">
                                                 {{ count($galleryUrls) + 1 }}
                                             </span>
                                         </div>
-                                        <div class="min-w-0 flex-1 overflow-hidden space-y-1">
-                                            <div class="font-bold text-slate-900 text-sm truncate max-w-[200px]" title="{{ $q->ten_quan }}">{{ $q->ten_quan }}</div>
+                                        <div class="min-w-0 flex-1 space-y-0.5">
+                                            <div class="font-bold text-slate-900 text-xs cell-wrap-2line" title="{{ $q->ten_quan }}">{{ $q->ten_quan }}</div>
                                             @if($q->loai_hinh_kinh_doanh)
-                                                <div class="mt-0.5">
-                                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-slate-100 text-slate-700 border border-slate-200 max-w-full truncate" title="{{ $q->loai_hinh_kinh_doanh }}">🏷️ {{ $q->loai_hinh_kinh_doanh }}</span>
-                                                </div>
+                                                <div class="truncate text-[10px] text-slate-500" title="{{ $q->loai_hinh_kinh_doanh }}">🏷️ {{ $q->loai_hinh_kinh_doanh }}</div>
                                             @endif
-                                            <div class="flex items-center gap-1.5 pt-0.5 flex-wrap">
-                                                <button type="button" onclick='openVenueMediaModal(@json($mediaPayload))' class="btn-enterprise btn-enterprise-photo" title="Xem bộ sưu tập hình ảnh quán">
-                                                    <span class="material-symbols-outlined text-[16px]">photo_library</span>
-                                                    <span>Xem Ảnh</span>
-                                                    <span class="btn-enterprise-photo-count">{{ count($galleryUrls) + 1 }}</span>
+                                            <div class="flex items-center gap-1 pt-0.5 flex-nowrap">
+                                                <button type="button" onclick='openVenueMediaModal(@json($mediaPayload))' class="btn-enterprise btn-enterprise-photo btn-action-compact" title="Xem bộ sưu tập hình ảnh quán">
+                                                    <span class="material-symbols-outlined text-[13px]">photo_library</span>
+                                                    <span>Ảnh ({{ count($galleryUrls) + 1 }})</span>
                                                 </button>
-                                                <a href="{{ route('admin.quan.edit', $q->id) }}" class="btn-enterprise btn-enterprise-secondary" title="Chỉnh sửa hồ sơ quán">
-                                                    <span>Sửa hồ sơ</span>
-                                                    <span class="material-symbols-outlined text-[14px]">edit</span>
+                                                <a href="{{ route('admin.quan.edit', $q->id) }}" class="btn-enterprise btn-enterprise-secondary btn-action-compact" title="Chỉnh sửa hồ sơ quán">
+                                                    <span>Sửa</span>
+                                                    <span class="material-symbols-outlined text-[13px]">edit</span>
                                                 </a>
                                             </div>
                                         </div>
                                     </div>
                                 </td>
-                                <td class="p-3.5 min-w-[180px] max-w-[210px] overflow-hidden">
+                                <td class="px-3.5 py-3 overflow-hidden">
                                     <div class="flex items-center gap-2 min-w-0">
-                                        <div class="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center shrink-0">
+                                        <div class="w-7 h-7 rounded-full bg-slate-100 border border-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center shrink-0">
                                             {{ strtoupper(substr($q->chuQuan->ho_ten ?? 'U', 0, 1)) }}
                                         </div>
                                         <div class="min-w-0 flex-1 space-y-0.5 overflow-hidden">
@@ -438,38 +460,43 @@
                                         </div>
                                     </div>
                                 </td>
-                                <td class="p-3.5 text-slate-600 min-w-[180px] max-w-[240px] overflow-hidden">
-                                    <div class="space-y-1 min-w-0">
-                                        <div class="font-bold text-slate-800 text-xs leading-snug line-clamp-2 break-words" title="{{ $q->dia_chi_chi_tiet ?? $q->dia_chi }}">
+                                <td class="px-3.5 py-3 text-slate-600 overflow-hidden">
+                                    <div class="space-y-0.5 min-w-0">
+                                        <div class="font-semibold text-slate-800 text-xs cell-wrap-2line" title="{{ $q->dia_chi_chi_tiet ?? $q->dia_chi }}">
                                             {{ $q->dia_chi_chi_tiet ?? $q->dia_chi ?: 'Chưa cập nhật chi tiết' }}
                                         </div>
                                         @if($q->ten_tinh_thanh || $q->ten_quan_huyen)
-                                            <div class="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-700 bg-rose-50 border border-rose-200/70 px-2 py-0.5 rounded-lg max-w-full overflow-hidden" title="{{ $q->ten_quan_huyen ? $q->ten_quan_huyen . ', ' : '' }}{{ $q->ten_tinh_thanh }}">
-                                                <span class="material-symbols-outlined text-[13px] text-rose-500 shrink-0">location_on</span>
+                                            <div class="inline-flex items-center gap-1 text-[10px] font-semibold text-rose-700 bg-rose-50 border border-rose-200/70 px-1.5 py-0.2 rounded max-w-full overflow-hidden" title="{{ $q->ten_quan_huyen ? $q->ten_quan_huyen . ', ' : '' }}{{ $q->ten_tinh_thanh }}">
+                                                <span class="material-symbols-outlined text-[12px] text-rose-500 shrink-0">location_on</span>
                                                 <span class="truncate">{{ $q->ten_quan_huyen ? $q->ten_quan_huyen . ', ' : '' }}{{ $q->ten_tinh_thanh }}</span>
                                             </div>
                                         @endif
                                     </div>
                                 </td>
-                                <td class="p-3.5 whitespace-nowrap min-w-[140px] w-[140px] shrink-0">
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-50 text-rose-800 border border-rose-300 whitespace-nowrap shrink-0">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-rose-600 mr-1.5 shrink-0"></span>
-                                        <span>Bị từ chối / Khóa</span>
+                                <td class="px-3.5 py-3 whitespace-nowrap overflow-hidden">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-800 border border-rose-300 whitespace-nowrap shrink-0">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-rose-600 mr-1 shrink-0"></span>
+                                        <span>Bị từ chối</span>
                                     </span>
                                 </td>
-                                <td class="p-3.5 text-slate-500 whitespace-nowrap min-w-[110px] w-[110px]">
-                                    <div class="font-bold text-slate-800 whitespace-nowrap text-xs">{{ $q->updated_at ? $q->updated_at->diffForHumans() : '' }}</div>
-                                    <div class="text-[10px] text-slate-400 mt-0.5 whitespace-nowrap">{{ $q->updated_at ? $q->updated_at->format('d/m/Y H:i') : '' }}</div>
+                                <td class="px-3.5 py-3 text-slate-500 whitespace-nowrap overflow-hidden">
+                                    <div class="font-bold text-slate-800 text-xs truncate">{{ $q->updated_at ? $q->updated_at->diffForHumans() : '' }}</div>
+                                    <div class="text-[10px] text-slate-400 mt-0.5 truncate">{{ $q->updated_at ? $q->updated_at->format('d/m/Y H:i') : '' }}</div>
                                 </td>
-                                <td class="p-3.5 text-right whitespace-nowrap min-w-[210px] w-[210px]">
-                                    <div class="flex items-center justify-end gap-2 flex-nowrap shrink-0">
-                                        <button type="button" onclick="confirmReapproveQuan('{{ $q->id }}', '{{ addslashes($q->ten_quan) }}')" class="btn-enterprise btn-enterprise-success" title="Duyệt lại quán này">
-                                            <span class="material-symbols-outlined text-[16px]">published_with_changes</span>
+                                <td class="px-3.5 py-3 text-right whitespace-nowrap overflow-hidden">
+                                    <div class="flex items-center justify-end gap-1 flex-nowrap">
+                                        <button type="button" onclick='openVenueMediaModal(@json($mediaPayload))' class="btn-enterprise btn-enterprise-secondary btn-action-compact font-semibold" title="Xem lại chi tiết hồ sơ quán">
+                                            <span class="material-symbols-outlined text-[14px]">visibility</span>
+                                            <span>Xem</span>
+                                        </button>
+
+                                        <button type="button" onclick="confirmReapproveQuan('{{ $q->id }}', '{{ addslashes($q->ten_quan) }}')" class="btn-enterprise btn-enterprise-success btn-action-compact font-bold shadow-2xs" title="Duyệt lại quán này">
+                                            <span class="material-symbols-outlined text-[14px]">published_with_changes</span>
                                             <span>Duyệt Lại</span>
                                         </button>
 
-                                        <button type="button" onclick="confirmDeleteRejectedQuan('{{ $q->id }}', '{{ addslashes($q->ten_quan) }}')" class="btn-enterprise btn-enterprise-danger" title="Xóa bỏ quán khỏi hệ thống">
-                                            <span class="material-symbols-outlined text-[16px]">delete</span>
+                                        <button type="button" onclick="confirmDeleteRejectedQuan('{{ $q->id }}', '{{ addslashes($q->ten_quan) }}')" class="btn-enterprise btn-enterprise-danger btn-action-compact font-semibold shadow-2xs" title="Xóa bỏ quán khỏi hệ thống">
+                                            <span class="material-symbols-outlined text-[14px]">delete</span>
                                             <span>Xóa Bỏ</span>
                                         </button>
                                     </div>
@@ -507,16 +534,24 @@
                 </a>
             </div>
 
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-xs text-slate-700">
+            <div class="w-full overflow-x-auto custom-scrollbar">
+                <table class="w-full text-left text-xs text-slate-700 min-w-[850px] table-fixed-enterprise">
+                    <colgroup>
+                        <col class="w-[32%]">
+                        <col class="w-[18%]">
+                        <col class="w-[18%]">
+                        <col class="w-[12%]">
+                        <col class="w-[10%]">
+                        <col class="w-[10%]">
+                    </colgroup>
                     <thead class="bg-emerald-50/50 text-slate-600 font-bold uppercase tracking-wider border-b border-emerald-100 text-[11px]">
                         <tr>
-                            <th class="p-3.5 min-w-[320px]">Hồ Sơ Quán & Hình Ảnh</th>
-                            <th class="p-3.5 min-w-[190px]">Chủ Quán / Liên Hệ</th>
-                            <th class="p-3.5 min-w-[180px] max-w-[240px]">Khu Vực & Địa Chỉ</th>
-                            <th class="p-3.5 whitespace-nowrap min-w-[140px]">Trạng Thái</th>
-                            <th class="p-3.5 whitespace-nowrap min-w-[110px] w-[110px]">Thời Điểm Duyệt</th>
-                            <th class="p-3.5 text-right whitespace-nowrap min-w-[140px] w-[140px]">Xem & Quản Lý</th>
+                            <th class="px-3.5 py-3">Hồ Sơ Quán & Hình Ảnh</th>
+                            <th class="px-3.5 py-3">Chủ Quán / Liên Hệ</th>
+                            <th class="px-3.5 py-3">Khu Vực & Địa Chỉ</th>
+                            <th class="px-3.5 py-3 whitespace-nowrap">Trạng Thái</th>
+                            <th class="px-3.5 py-3 whitespace-nowrap">Thời Điểm Duyệt</th>
+                            <th class="px-3.5 py-3 text-right whitespace-nowrap">Quản Lý</th>
                         </tr>
                     </thead>
                     <tbody id="approved-quan-tbody" class="divide-y divide-slate-100">
@@ -543,78 +578,75 @@
                                 ];
                             @endphp
                             <tr class="duyet-table-row hover:bg-slate-50/80 transition-colors" data-search="{{ strtolower($q->ten_quan . ' ' . ($q->chuQuan->ho_ten ?? '') . ' ' . ($q->dia_chi_chi_tiet ?? '') . ' ' . ($q->loai_hinh_kinh_doanh ?? '')) }}">
-                                <td class="p-3.5 font-medium min-w-[320px] max-w-[360px] overflow-hidden">
-                                    <div class="flex items-center gap-3.5 min-w-0">
-                                        <div onclick='openVenueMediaModal(@json($mediaPayload))' class="w-16 h-16 rounded-2xl overflow-hidden bg-slate-100 shrink-0 border border-slate-200/90 cursor-pointer group relative shadow-2xs hover:ring-2 hover:ring-emerald-500 transition-all" title="Bấm để xem ảnh quán">
+                                <td class="px-3.5 py-3 font-medium overflow-hidden">
+                                    <div class="flex items-center gap-3 min-w-0">
+                                        <div onclick='openVenueMediaModal(@json($mediaPayload))' class="w-12 h-12 rounded-xl overflow-hidden bg-slate-100 shrink-0 border border-slate-200/90 cursor-pointer group relative shadow-2xs hover:ring-2 hover:ring-emerald-500 transition-all" title="Bấm để xem ảnh quán">
                                             <img src="{{ $q->anh_bia_url }}" alt="{{ $q->ten_quan }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&auto=format&fit=crop&q=80';">
                                             <div class="absolute inset-0 bg-black/35 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white">
-                                                <span class="material-symbols-outlined text-[20px]">zoom_in</span>
+                                                <span class="material-symbols-outlined text-[16px]">zoom_in</span>
                                             </div>
-                                            <span class="absolute bottom-1 right-1 bg-black/70 backdrop-blur-xs text-white text-[9px] font-bold px-1.5 py-0.2 rounded-md">
+                                            <span class="absolute bottom-0.5 right-0.5 bg-black/70 backdrop-blur-xs text-white text-[8px] font-bold px-1 py-0.2 rounded">
                                                 {{ count($galleryUrls) + 1 }}
                                             </span>
                                         </div>
-                                        <div class="min-w-0 flex-1 overflow-hidden space-y-1">
-                                            <div class="font-bold text-slate-900 text-sm truncate max-w-[200px]" title="{{ $q->ten_quan }}">{{ $q->ten_quan }}</div>
+                                        <div class="min-w-0 flex-1 space-y-0.5">
+                                            <div class="font-bold text-slate-900 text-xs cell-wrap-2line" title="{{ $q->ten_quan }}">{{ $q->ten_quan }}</div>
                                             @if($q->loai_hinh_kinh_doanh)
-                                                <div class="mt-0.5">
-                                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-slate-100 text-slate-700 border border-slate-200 max-w-full truncate" title="{{ $q->loai_hinh_kinh_doanh }}">🏷️ {{ $q->loai_hinh_kinh_doanh }}</span>
-                                                </div>
+                                                <div class="truncate text-[10px] text-slate-500" title="{{ $q->loai_hinh_kinh_doanh }}">🏷️ {{ $q->loai_hinh_kinh_doanh }}</div>
                                             @endif
-                                            <div class="flex items-center gap-1.5 pt-0.5 flex-wrap">
-                                                <button type="button" onclick='openVenueMediaModal(@json($mediaPayload))' class="btn-enterprise btn-enterprise-photo" title="Xem bộ sưu tập hình ảnh quán">
-                                                    <span class="material-symbols-outlined text-[16px]">photo_library</span>
-                                                    <span>Xem Ảnh</span>
-                                                    <span class="btn-enterprise-photo-count">{{ count($galleryUrls) + 1 }}</span>
+                                            <div class="flex items-center gap-1 pt-0.5 flex-nowrap">
+                                                <button type="button" onclick='openVenueMediaModal(@json($mediaPayload))' class="btn-enterprise btn-enterprise-photo btn-action-compact" title="Xem bộ sưu tập hình ảnh quán">
+                                                    <span class="material-symbols-outlined text-[13px]">photo_library</span>
+                                                    <span>Ảnh ({{ count($galleryUrls) + 1 }})</span>
                                                 </button>
                                                 @if($q->slug)
-                                                    <a href="{{ route('quan.detail', $q->slug) }}" class="btn-enterprise btn-enterprise-secondary" title="Xem trang quán thực tế ngoài website">
+                                                    <a href="{{ route('quan.detail', $q->slug) }}" class="btn-enterprise btn-enterprise-secondary btn-action-compact" title="Xem trang quán thực tế ngoài website">
                                                         <span>Trang quán</span>
-                                                        <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+                                                        <span class="material-symbols-outlined text-[13px]">arrow_forward</span>
                                                     </a>
                                                 @endif
                                             </div>
                                         </div>
                                     </div>
                                 </td>
-                                <td class="p-3.5 min-w-[180px] max-w-[210px] overflow-hidden">
+                                <td class="px-3.5 py-3 overflow-hidden">
                                     <div class="flex items-center gap-2 min-w-0">
-                                        <div class="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center shrink-0">
+                                        <div class="w-7 h-7 rounded-full bg-slate-100 border border-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center shrink-0">
                                             {{ strtoupper(substr($q->chuQuan->ho_ten ?? 'U', 0, 1)) }}
                                         </div>
                                         <div class="min-w-0 flex-1 space-y-0.5 overflow-hidden">
-                                            <div class="font-bold text-slate-900 truncate text-xs block" title="{{ $q->chuQuan->ho_ten ?? 'Chưa xác định' }}">{{ $q->chuQuan->ho_ten ?? 'Chưa xác định' }}</div>
+                                            <div class="font-bold text-slate-900 cell-wrap-1line text-xs block" title="{{ $q->chuQuan->ho_ten ?? 'Chưa xác định' }}">{{ $q->chuQuan->ho_ten ?? 'Chưa xác định' }}</div>
                                             <div class="text-[11px] text-slate-500 truncate" title="{{ $q->chuQuan->email ?? 'Chưa có email' }}">📧 {{ $q->chuQuan->email ?? 'Chưa có email' }}</div>
                                         </div>
                                     </div>
                                 </td>
-                                <td class="p-3.5 text-slate-600 min-w-[180px] max-w-[240px] overflow-hidden">
-                                    <div class="space-y-1 min-w-0">
-                                        <div class="font-bold text-slate-800 text-xs leading-snug line-clamp-2 break-words" title="{{ $q->dia_chi_chi_tiet ?? $q->dia_chi }}">
+                                <td class="px-3.5 py-3 text-slate-600 overflow-hidden">
+                                    <div class="space-y-0.5 min-w-0">
+                                        <div class="font-semibold text-slate-800 text-xs cell-wrap-2line" title="{{ $q->dia_chi_chi_tiet ?? $q->dia_chi }}">
                                             {{ $q->dia_chi_chi_tiet ?? $q->dia_chi ?: 'Chưa cập nhật chi tiết' }}
                                         </div>
                                         @if($q->ten_tinh_thanh || $q->ten_quan_huyen)
-                                            <div class="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-700 bg-rose-50 border border-rose-200/70 px-2 py-0.5 rounded-lg max-w-full overflow-hidden" title="{{ $q->ten_quan_huyen ? $q->ten_quan_huyen . ', ' : '' }}{{ $q->ten_tinh_thanh }}">
-                                                <span class="material-symbols-outlined text-[13px] text-rose-500 shrink-0">location_on</span>
+                                            <div class="inline-flex items-center gap-1 text-[10px] font-semibold text-rose-700 bg-rose-50 border border-rose-200/70 px-1.5 py-0.2 rounded max-w-full overflow-hidden" title="{{ $q->ten_quan_huyen ? $q->ten_quan_huyen . ', ' : '' }}{{ $q->ten_tinh_thanh }}">
+                                                <span class="material-symbols-outlined text-[12px] text-rose-500 shrink-0">location_on</span>
                                                 <span class="truncate">{{ $q->ten_tinh_thanh ?? 'Toàn quốc' }}</span>
                                             </div>
                                         @endif
                                     </div>
                                 </td>
-                                <td class="p-3.5 whitespace-nowrap min-w-[140px] w-[140px] shrink-0">
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-300 whitespace-nowrap shrink-0">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-600 mr-1.5 shrink-0"></span>
-                                        <span>Đang hoạt động</span>
+                                <td class="px-3.5 py-3 whitespace-nowrap overflow-hidden">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-300 whitespace-nowrap shrink-0">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-600 mr-1 shrink-0"></span>
+                                        <span>Hoạt động</span>
                                     </span>
                                 </td>
-                                <td class="p-3.5 text-slate-500 whitespace-nowrap min-w-[110px] w-[110px] shrink-0">
-                                    <div class="font-bold text-slate-800 whitespace-nowrap text-xs">{{ $q->updated_at ? $q->updated_at->diffForHumans() : '' }}</div>
-                                    <div class="text-[10px] text-slate-400 mt-0.5 whitespace-nowrap">{{ $q->updated_at ? $q->updated_at->format('d/m/Y H:i') : '' }}</div>
+                                <td class="px-3.5 py-3 text-slate-500 whitespace-nowrap overflow-hidden">
+                                    <div class="font-bold text-slate-800 text-xs truncate">{{ $q->updated_at ? $q->updated_at->diffForHumans() : '' }}</div>
+                                    <div class="text-[10px] text-slate-400 mt-0.5 truncate">{{ $q->updated_at ? $q->updated_at->format('d/m/Y H:i') : '' }}</div>
                                 </td>
-                                <td class="p-3.5 text-right whitespace-nowrap min-w-[140px] w-[140px]">
-                                    <div class="flex items-center justify-end gap-2 flex-nowrap shrink-0">
-                                        <a href="{{ route('admin.quan.edit', $q->id) }}" class="btn-enterprise btn-enterprise-dark" title="Chỉnh sửa và quản lý hồ sơ quán">
-                                            <span class="material-symbols-outlined text-[16px] text-emerald-400">edit</span>
+                                <td class="px-3.5 py-3 text-right whitespace-nowrap overflow-hidden">
+                                    <div class="flex items-center justify-end gap-1 flex-nowrap">
+                                        <a href="{{ route('admin.quan.edit', $q->id) }}" class="btn-enterprise btn-enterprise-dark btn-action-compact" title="Chỉnh sửa và quản lý hồ sơ quán">
+                                            <span class="material-symbols-outlined text-[14px] text-emerald-400">edit</span>
                                             <span>Quản Lý</span>
                                         </a>
                                     </div>
@@ -646,42 +678,49 @@
                 </div>
             </div>
 
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-xs text-slate-700">
+            <div class="w-full overflow-x-auto custom-scrollbar">
+                <table class="w-full text-left text-xs text-slate-700 min-w-[850px] table-fixed-enterprise">
+                    <colgroup>
+                        <col class="w-[24%]">
+                        <col class="w-[26%]">
+                        <col class="w-[18%]">
+                        <col class="w-[12%]">
+                        <col class="w-[20%]">
+                    </colgroup>
                     <thead class="bg-indigo-50/40 text-slate-600 font-bold uppercase tracking-wider border-b border-indigo-100 text-[11px]">
                         <tr>
-                            <th class="p-3.5 min-w-[180px] max-w-[220px]">Họ và Tên</th>
-                            <th class="p-3.5 min-w-[200px] max-w-[240px]">Email</th>
-                            <th class="p-3.5 min-w-[140px] whitespace-nowrap">Số Điện Thoại</th>
-                            <th class="p-3.5 whitespace-nowrap min-w-[130px] w-[130px]">Ngày Đăng Ký</th>
-                            <th class="p-3.5 text-right whitespace-nowrap min-w-[210px] w-[210px]">Thao Tác</th>
+                            <th class="px-3.5 py-3">Họ và Tên</th>
+                            <th class="px-3.5 py-3">Email</th>
+                            <th class="px-3.5 py-3 whitespace-nowrap">Số Điện Thoại</th>
+                            <th class="px-3.5 py-3 whitespace-nowrap">Ngày Đăng Ký</th>
+                            <th class="px-3.5 py-3 text-right whitespace-nowrap">Thao Tác</th>
                         </tr>
                     </thead>
                     <tbody id="unverified-users-tbody" class="divide-y divide-slate-100">
                         @forelse($unverifiedUsers as $u)
                             <tr id="user-row-{{ $u->id }}" class="duyet-table-row hover:bg-slate-50 transition-all duration-300" data-search="{{ strtolower(($u->ho_ten ?? '') . ' ' . ($u->email ?? '') . ' ' . ($u->so_dien_thoai ?? '')) }}">
-                                <td class="p-3.5 min-w-[180px] max-w-[220px] overflow-hidden">
-                                    <div class="flex items-center gap-2.5 min-w-0">
-                                        <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 font-bold flex items-center justify-center shrink-0 border border-indigo-200/50">
+                                <td class="px-3.5 py-3 overflow-hidden">
+                                    <div class="flex items-center gap-2 min-w-0">
+                                        <div class="w-7 h-7 rounded-full bg-indigo-100 text-indigo-700 font-bold flex items-center justify-center shrink-0 border border-indigo-200/50 text-xs">
                                             {{ strtoupper(substr($u->ho_ten ?? 'U', 0, 1)) }}
                                         </div>
-                                        <div class="font-bold text-slate-900 truncate text-xs block" title="{{ $u->ho_ten }}">{{ $u->ho_ten }}</div>
+                                        <div class="font-bold text-slate-900 cell-wrap-1line text-xs block" title="{{ $u->ho_ten }}">{{ $u->ho_ten }}</div>
                                     </div>
                                 </td>
-                                <td class="p-3.5 text-slate-600 font-medium min-w-[200px] max-w-[240px] overflow-hidden">
-                                    <div class="truncate text-xs block" title="{{ $u->email }}">{{ $u->email }}</div>
+                                <td class="px-3.5 py-3 text-slate-600 font-medium overflow-hidden">
+                                    <div class="cell-wrap-1line text-xs block" title="{{ $u->email }}">{{ $u->email }}</div>
                                 </td>
-                                <td class="p-3.5 text-slate-600 font-medium whitespace-nowrap min-w-[140px]">{{ $u->so_dien_thoai ?? 'Chưa cập nhật' }}</td>
-                                <td class="p-3.5 text-slate-500 whitespace-nowrap min-w-[130px] w-[130px] shrink-0">{{ $u->created_at ? $u->created_at->format('d/m/Y') : '' }}</td>
-                                <td class="p-3.5 text-right whitespace-nowrap min-w-[210px] w-[210px] shrink-0">
-                                    <div class="flex items-center justify-end gap-2 flex-nowrap shrink-0">
-                                        <button type="button" onclick="confirmVerifyUser('{{ $u->id }}', '{{ addslashes($u->ho_ten) }}')" class="btn-enterprise btn-enterprise-indigo" title="Xác thực người dùng">
-                                            <span class="material-symbols-outlined text-[16px]">verified</span>
+                                <td class="px-3.5 py-3 text-slate-600 font-medium whitespace-nowrap overflow-hidden">{{ $u->so_dien_thoai ?? 'Chưa cập nhật' }}</td>
+                                <td class="px-3.5 py-3 text-slate-500 whitespace-nowrap overflow-hidden">{{ $u->created_at ? $u->created_at->format('d/m/Y') : '' }}</td>
+                                <td class="px-3.5 py-3 text-right whitespace-nowrap overflow-hidden">
+                                    <div class="flex items-center justify-end gap-1 flex-nowrap">
+                                        <button type="button" onclick="confirmVerifyUser('{{ $u->id }}', '{{ addslashes($u->ho_ten) }}')" class="btn-enterprise btn-enterprise-indigo btn-action-compact" title="Xác thực người dùng">
+                                            <span class="material-symbols-outlined text-[14px]">verified</span>
                                             <span>Xác Thực</span>
                                         </button>
 
-                                        <button type="button" onclick="confirmRejectUser('{{ $u->id }}', '{{ addslashes($u->ho_ten) }}')" class="btn-enterprise btn-enterprise-danger" title="Từ chối duyệt tài khoản">
-                                            <span class="material-symbols-outlined text-[16px]">block</span>
+                                        <button type="button" onclick="confirmRejectUser('{{ $u->id }}', '{{ addslashes($u->ho_ten) }}')" class="btn-enterprise btn-enterprise-danger btn-action-compact" title="Từ chối duyệt tài khoản">
+                                            <span class="material-symbols-outlined text-[14px]">block</span>
                                             <span>Không Duyệt</span>
                                         </button>
                                     </div>
@@ -802,7 +841,51 @@
         }, 600);
     }
 
-    // Listen for realtime notifications update event to sync counters
+    // Realtime synchronization engine for Duyet Xac Thuc
+    let isSyncingPendingQuan = false;
+    let lastKnownPendingQuanCount = {{ $stats['pending_quan'] ?? 0 }};
+
+    function syncPendingQuanTable(highlightQuanId = null) {
+        if (isSyncingPendingQuan) return;
+        isSyncingPendingQuan = true;
+
+        fetch(window.location.href, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(res => res.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+
+            const newTbody = doc.getElementById('pending-quan-tbody');
+            const currentTbody = document.getElementById('pending-quan-tbody');
+            if (newTbody && currentTbody) {
+                currentTbody.innerHTML = newTbody.innerHTML;
+            }
+
+            const newPaneCount = doc.getElementById('pane-count-pending');
+            const currentPaneCount = document.getElementById('pane-count-pending');
+            if (newPaneCount && currentPaneCount) {
+                currentPaneCount.textContent = newPaneCount.textContent;
+            }
+
+            if (highlightQuanId) {
+                const row = document.getElementById(`quan-row-${highlightQuanId}`);
+                if (row) {
+                    row.classList.add('bg-amber-50', 'ring-2', 'ring-amber-400');
+                    setTimeout(() => {
+                        row.classList.remove('bg-amber-50', 'ring-2', 'ring-amber-400');
+                    }, 4000);
+                }
+            }
+        })
+        .catch(() => {})
+        .finally(() => {
+            isSyncingPendingQuan = false;
+        });
+    }
+
+    // Listen for realtime notifications update event to sync counters & table
     window.addEventListener('admin:notifications-updated', function(e) {
         if (!e.detail) return;
         const data = e.detail;
@@ -811,6 +894,17 @@
                 pending_quan: data.pending_quan,
                 unverified_users: data.unverified_user
             });
+        }
+
+        // Auto sync table if a new venue arrived or pending count changed
+        if (data.latest_quan && data.latest_quan.id) {
+            const existingRow = document.getElementById(`quan-row-${data.latest_quan.id}`);
+            if (!existingRow) {
+                syncPendingQuanTable(data.latest_quan.id);
+            }
+        } else if (data.pending_quan !== undefined && data.pending_quan !== lastKnownPendingQuanCount) {
+            lastKnownPendingQuanCount = data.pending_quan;
+            syncPendingQuanTable();
         }
     });
 

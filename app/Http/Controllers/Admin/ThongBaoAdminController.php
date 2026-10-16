@@ -142,8 +142,7 @@ class ThongBaoAdminController extends Controller
 
         // 2. Danh sách Blog chờ duyệt
         $pendingBlogs = Blog::where('status', 'pending')
-            ->with(['user:id,ho_ten,email'])
-            ->select('id', 'user_id', 'title', 'created_at', 'slug')
+            ->with(['user', 'category:id,name'])
             ->latest()
             ->take(15)
             ->get()
@@ -151,10 +150,16 @@ class ThongBaoAdminController extends Controller
                 return [
                     'id' => $b->id,
                     'title' => $b->title,
-                    'author' => $b->user?->ho_ten,
+                    'category_name' => $b->category?->name ?? 'Không phân loại',
+                    'cover_image_url' => $b->cover_image_url ?? 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80',
+                    'excerpt' => $b->excerpt ?? '',
+                    'author' => $b->user?->ho_ten ?? 'Ẩn danh',
+                    'author_avatar' => $b->user?->anh_dai_dien_url ?? ('https://ui-avatars.com/api/?name='.urlencode($b->user?->ho_ten ?? 'U')),
                     'created_at' => $b->created_at?->toIso8601String(),
+                    'created_at_formatted' => $b->created_at?->format('d/m/Y H:i'),
                     'time_ago' => $b->created_at?->diffForHumans(),
                     'url' => route('admin.blog.posts.pending'),
+                    'detail_url' => route('admin.blog.posts.show', $b->id),
                 ];
             });
 

@@ -30,15 +30,17 @@ class KhamPhaController extends Controller
         $coShopee    = $request->boolean('co_shopeefood');
         $coVideo     = $request->boolean('co_video');
         
-        $query = Quan::search($tuKhoa)->whereIn('trang_thai', ['da_duyet']);
+        $isElastic   = in_array(config('scout.driver'), ['elastic', 'elasticsearch']);
+        $query       = Quan::search($tuKhoa)->whereIn('trang_thai', ['da_duyet']);
 
         if (!empty($danhMuc) && !in_array($danhMuc, ['Quán Nổi Bật', 'Quán Mới'])) {
+            $categoryField = $isElastic ? 'loai_hinh_kinh_doanh.keyword' : 'loai_hinh_kinh_doanh';
             if ($danhMuc === 'Cà phê' || $danhMuc === 'Cà phê & Trà') {
-                $query->whereIn('loai_hinh_kinh_doanh.keyword', ['Cà phê & Trà', 'Cà phê']);
+                $query->whereIn($categoryField, ['Cà phê & Trà', 'Cà phê']);
             } elseif ($danhMuc === 'Ăn vặt' || $danhMuc === 'Đồ ăn vặt') {
-                $query->whereIn('loai_hinh_kinh_doanh.keyword', ['Đồ ăn vặt', 'Ăn vặt']);
+                $query->whereIn($categoryField, ['Đồ ăn vặt', 'Ăn vặt']);
             } else {
-                $query->whereIn('loai_hinh_kinh_doanh.keyword', [$danhMuc]);
+                $query->whereIn($categoryField, [$danhMuc]);
             }
         }
 
@@ -85,25 +87,34 @@ class KhamPhaController extends Controller
             $query->whereIn('co_video_review', [true]);
         }
 
-        if ($dangMoCua) {
+        if ($dangMoCua && $isElastic) {
             $query->where('_dang_mo_cua', true);
         }
 
         // 1. Khoảng giá thực tế (muc_gia)
-        $rangeGia = match ($mucGia) {
-            'duoi_50k' => ['range' => ['gia_nho_nhat' => ['lte' => 50000]]],
-            '50k_150k' => ['must' => [['gia_nho_nhat' => ['lte' => 150000]], ['gia_lon_nhat' => ['gte' => 50000]]]],
-            '150k_300k' => ['must' => [['gia_nho_nhat' => ['lte' => 300000]], ['gia_lon_nhat' => ['gte' => 150000]]]],
-            'tren_300k' => ['range' => ['gia_lon_nhat' => ['gte' => 300000]]],
-            default => null,
-        };
-        if ($rangeGia !== null) {
-            $query->where('_range_gia', $rangeGia);
+        if ($isElastic) {
+            $rangeGia = match ($mucGia) {
+                'duoi_50k' => ['range' => ['gia_nho_nhat' => ['lte' => 50000]]],
+                '50k_150k' => ['must' => [['gia_nho_nhat' => ['lte' => 150000]], ['gia_lon_nhat' => ['gte' => 50000]]]],
+                '150k_300k' => ['must' => [['gia_nho_nhat' => ['lte' => 300000]], ['gia_lon_nhat' => ['gte' => 150000]]]],
+                'tren_300k' => ['range' => ['gia_lon_nhat' => ['gte' => 300000]]],
+                default => null,
+            };
+            if ($rangeGia !== null) {
+                $query->where('_range_gia', $rangeGia);
+            }
+        } else {
+            match ($mucGia) {
+                'duoi_50k' => $query->query(fn ($q) => $q->where('gia_nho_nhat', '<=', 50000)),
+                '50k_150k' => $query->query(fn ($q) => $q->where('gia_nho_nhat', '<=', 150000)->where('gia_lon_nhat', '>=', 50000)),
+                '150k_300k' => $query->query(fn ($q) => $q->where('gia_nho_nhat', '<=', 300000)->where('gia_lon_nhat', '>=', 150000)),
+                'tren_300k' => $query->query(fn ($q) => $q->where('gia_lon_nhat', '>=', 300000)),
+                default => null,
+            };
         }
 
         // 2. Định vị GPS thực tế qua Elasticsearch
-        $hasGps = !empty($lat) && !empty($lon) && is_numeric($lat) && is_numeric($lon);
-        if ($hasGps) {
+        if ($hasGps && $isElastic) {
             if (!empty($banKinh) && is_numeric($banKinh)) {
                 $query->where('_geo_distance', [
                     'lat' => (float) $lat,
@@ -193,6 +204,19 @@ class KhamPhaController extends Controller
                 }
                 return $quan;
             });
+
+            if (!$isElastic) {
+                $collection = $quans->getCollection();
+                if (!empty($banKinh) && is_numeric($banKinh)) {
+                    $collection = $collection->filter(function ($quan) use ($banKinh) {
+                        return isset($quan->khoang_cach_km) && $quan->khoang_cach_km <= (float) $banKinh;
+                    });
+                }
+                if ($sapXep === 'near_me') {
+                    $collection = $collection->sortBy('khoang_cach_km');
+                }
+                $quans->setCollection($collection->values());
+            }
         }
 
         // Gợi ý quán nổi bật khi kết quả rỗng (Smart Empty State)

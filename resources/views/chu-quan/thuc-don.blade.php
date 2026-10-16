@@ -170,7 +170,7 @@
     }
 
     function removeCategory(catId) {
-        if (!confirm('Bạn có chắc muốn xóa danh mục này?')) return;
+        if (!confirm('Bạn có chắc chắn muốn xóa danh mục này không?')) return;
         menuCategories = menuCategories.filter(c => c.id !== catId);
         document.getElementById(`category-box-${catId}`).remove();
         if (menuCategories.length === 0) {
@@ -204,6 +204,7 @@
     }
 
     function removeMenuItem(catId, itemId) {
+        if (!confirm('Bạn có chắc chắn muốn xóa món ăn này không?')) return;
         const cat = menuCategories.find(c => c.id === catId);
         if (cat) {
             cat.items = cat.items.filter(i => i.id !== itemId);

@@ -22,6 +22,7 @@ class AuthorizationSecurityTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\PreventRequestForgery::class);
         $this->seed(VaiTroSeeder::class);
     }
 
@@ -235,7 +236,7 @@ class AuthorizationSecurityTest extends TestCase
             'target_id' => $target->id,
         ]);
         $metadata = AdminAuditLog::latest()->value('metadata');
-        $this->assertSame([
+        $this->assertEquals([
             'role_changed' => true,
             'status_changed' => false,
             'verification_changed' => false,

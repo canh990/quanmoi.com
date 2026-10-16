@@ -19,47 +19,77 @@
                 </a>
             </div>
 
-            <!-- Status Filter Tabs & Search Bar -->
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-outline-variant/40 mb-6">
-                <!-- Status Filter Tabs -->
-                <div class="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-hide">
-                    <a href="{{ route('nguoi-dung.blog.index', array_filter(['search' => request('search')])) }}" class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 {{ !request('status') ? 'bg-primary text-white shadow-sm' : 'bg-surface-container text-on-surface hover:bg-surface-container-high' }}">
-                        <span>Tất cả</span>
-                        <span class="px-2 py-0.5 rounded-full text-[10px] {{ !request('status') ? 'bg-white/20 text-white' : 'bg-black/5 text-on-surface-variant' }}">{{ $totalCount ?? 0 }}</span>
-                    </a>
-                    
-                    <a href="{{ route('nguoi-dung.blog.index', array_filter(['status' => 'draft', 'search' => request('search')])) }}" class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 {{ request('status') === 'draft' ? 'bg-primary text-white shadow-sm' : 'bg-surface-container text-on-surface hover:bg-surface-container-high' }}">
-                        <span class="material-symbols-outlined text-sm">edit_note</span>
-                        <span>Nháp</span>
-                        <span class="px-2 py-0.5 rounded-full text-[10px] {{ request('status') === 'draft' ? 'bg-white/20 text-white' : 'bg-black/5 text-on-surface-variant' }}">{{ $statusCounts['draft'] ?? 0 }}</span>
-                    </a>
-
-                    <a href="{{ route('nguoi-dung.blog.index', array_filter(['status' => 'pending', 'search' => request('search')])) }}" class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 {{ request('status') === 'pending' ? 'bg-primary text-white shadow-sm' : 'bg-surface-container text-on-surface hover:bg-surface-container-high' }}">
-                        <span class="material-symbols-outlined text-sm">hourglass_empty</span>
-                        <span>Chờ duyệt</span>
-                        <span class="px-2 py-0.5 rounded-full text-[10px] {{ request('status') === 'pending' ? 'bg-white/20 text-white' : 'bg-black/5 text-on-surface-variant' }}">{{ $statusCounts['pending'] ?? 0 }}</span>
-                    </a>
-
-                    <a href="{{ route('nguoi-dung.blog.index', array_filter(['status' => 'published', 'search' => request('search')])) }}" class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 {{ request('status') === 'published' ? 'bg-primary text-white shadow-sm' : 'bg-surface-container text-on-surface hover:bg-surface-container-high' }}">
-                        <span class="material-symbols-outlined text-sm">check_circle</span>
-                        <span>Đã xuất bản</span>
-                        <span class="px-2 py-0.5 rounded-full text-[10px] {{ request('status') === 'published' ? 'bg-white/20 text-white' : 'bg-black/5 text-on-surface-variant' }}">{{ $statusCounts['published'] ?? 0 }}</span>
-                    </a>
-                </div>
-
-                <!-- Search Input in User Blog -->
-                <form action="{{ route('nguoi-dung.blog.index') }}" method="GET" class="relative w-full sm:w-64 shrink-0">
+            <!-- Thanh Công Cụ: Thanh Tìm Kiếm Lên Trên & Các Nút Nằm Cùng 1 Hàng -->
+            <div class="bg-white p-3.5 sm:p-4.5 rounded-2xl border border-slate-200/90 shadow-xs mb-6 space-y-3">
+                {{-- Hàng 1: Thanh tìm kiếm nằm lên trên rộng rãi 100% --}}
+                <form action="{{ route('nguoi-dung.blog.index') }}" method="GET" class="relative w-full">
                     @if(request('status'))
                         <input type="hidden" name="status" value="{{ request('status') }}">
                     @endif
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Tìm trong bài của bạn..." class="w-full pl-9 pr-8 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-primary focus:border-primary outline-none shadow-2xs">
-                    <span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-lg pointer-events-none">search</span>
+                    <input type="text" 
+                           name="search" 
+                           value="{{ request('search') }}" 
+                           placeholder="Tìm trong bài của bạn..." 
+                           class="w-full pl-10 pr-9 py-2.5 bg-slate-50/80 hover:bg-white focus:bg-white border border-slate-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-primary focus:border-primary outline-none shadow-2xs transition-all">
+                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg pointer-events-none">search</span>
                     @if(request('search'))
-                        <a href="{{ route('nguoi-dung.blog.index', array_filter(['status' => request('status')])) }}" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5" title="Xóa tìm kiếm">
+                        <a href="{{ route('nguoi-dung.blog.index', array_filter(['status' => request('status')])) }}" 
+                           class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-rose-600 p-0.5 transition-colors" 
+                           title="Xóa tìm kiếm">
                             <span class="material-symbols-outlined text-base">cancel</span>
                         </a>
                     @endif
                 </form>
+
+                {{-- Hàng 2: Toàn bộ 6 nút trạng thái nằm cùng 1 hàng duy nhất (flex-nowrap không bao giờ rớt dòng) --}}
+                <div class="flex items-center gap-1.5 sm:gap-2 flex-nowrap overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden w-full pt-2.5 border-t border-slate-100 py-0.5">
+                    {{-- 1. Tất cả --}}
+                    <a href="{{ route('nguoi-dung.blog.index', array_filter(['search' => request('search')])) }}" 
+                       class="px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all inline-flex items-center gap-1.5 shrink-0 whitespace-nowrap {{ !request('status') ? 'bg-primary text-white shadow-sm ring-1 ring-primary' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}">
+                        <span>Tất cả</span>
+                        <span id="user-blog-count-total" class="px-1.5 py-0.5 rounded-full text-[10px] {{ !request('status') ? 'bg-white/20 text-white' : 'bg-white text-slate-700 shadow-2xs' }}">{{ $totalCount ?? 0 }}</span>
+                    </a>
+                    
+                    {{-- 2. Nháp --}}
+                    <a href="{{ route('nguoi-dung.blog.index', array_filter(['status' => 'draft', 'search' => request('search')])) }}" 
+                       class="px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all inline-flex items-center gap-1.5 shrink-0 whitespace-nowrap {{ request('status') === 'draft' ? 'bg-slate-800 text-white shadow-sm ring-1 ring-slate-800' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}">
+                        <span class="material-symbols-outlined text-[15px]">edit_note</span>
+                        <span>Nháp</span>
+                        <span id="user-blog-count-draft" class="px-1.5 py-0.5 rounded-full text-[10px] {{ request('status') === 'draft' ? 'bg-white/20 text-white' : 'bg-white text-slate-700 shadow-2xs' }}">{{ $statusCounts['draft'] ?? 0 }}</span>
+                    </a>
+
+                    {{-- 3. Chờ duyệt --}}
+                    <a href="{{ route('nguoi-dung.blog.index', array_filter(['status' => 'pending', 'search' => request('search')])) }}" 
+                       class="px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all inline-flex items-center gap-1.5 shrink-0 whitespace-nowrap {{ request('status') === 'pending' ? 'bg-amber-600 text-white shadow-sm ring-1 ring-amber-600' : 'bg-amber-50/70 text-amber-800 hover:bg-amber-100 border border-amber-200/60' }}">
+                        <span class="material-symbols-outlined text-[15px]">hourglass_empty</span>
+                        <span>Chờ duyệt</span>
+                        <span id="user-blog-count-pending" class="px-1.5 py-0.5 rounded-full text-[10px] {{ request('status') === 'pending' ? 'bg-white/20 text-white' : 'bg-white text-amber-800 shadow-2xs' }}">{{ $statusCounts['pending'] ?? 0 }}</span>
+                    </a>
+
+                    {{-- 4. Đã xuất bản --}}
+                    <a href="{{ route('nguoi-dung.blog.index', array_filter(['status' => 'published', 'search' => request('search')])) }}" 
+                       class="px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all inline-flex items-center gap-1.5 shrink-0 whitespace-nowrap {{ request('status') === 'published' ? 'bg-emerald-600 text-white shadow-sm ring-1 ring-emerald-600' : 'bg-emerald-50/70 text-emerald-800 hover:bg-emerald-100 border border-emerald-200/60' }}">
+                        <span class="material-symbols-outlined text-[15px]">check_circle</span>
+                        <span>Đã xuất bản</span>
+                        <span id="user-blog-count-published" class="px-1.5 py-0.5 rounded-full text-[10px] {{ request('status') === 'published' ? 'bg-white/20 text-white' : 'bg-white text-emerald-800 shadow-2xs' }}">{{ $statusCounts['published'] ?? 0 }}</span>
+                    </a>
+
+                    {{-- 5. Cần sửa --}}
+                    <a href="{{ route('nguoi-dung.blog.index', array_filter(['status' => 'need_revision', 'search' => request('search')])) }}" 
+                       class="px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all inline-flex items-center gap-1.5 shrink-0 whitespace-nowrap {{ request('status') === 'need_revision' ? 'bg-orange-600 text-white shadow-sm ring-1 ring-orange-600' : 'bg-orange-50/70 text-orange-800 hover:bg-orange-100 border border-orange-200/60' }}">
+                        <span class="material-symbols-outlined text-[15px]">warning</span>
+                        <span>Cần sửa</span>
+                        <span id="user-blog-count-revision" class="px-1.5 py-0.5 rounded-full text-[10px] {{ request('status') === 'need_revision' ? 'bg-white/30 text-white' : 'bg-white text-orange-800 shadow-2xs' }}">{{ $statusCounts['need_revision'] ?? 0 }}</span>
+                    </a>
+
+                    {{-- 6. Từ chối --}}
+                    <a href="{{ route('nguoi-dung.blog.index', array_filter(['status' => 'rejected', 'search' => request('search')])) }}" 
+                       class="px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all inline-flex items-center gap-1.5 shrink-0 whitespace-nowrap {{ request('status') === 'rejected' ? 'bg-rose-600 text-white shadow-sm ring-1 ring-rose-600' : 'bg-rose-50/70 text-rose-800 hover:bg-rose-100 border border-rose-200/60' }}">
+                        <span class="material-symbols-outlined text-[15px]">cancel</span>
+                        <span>Từ chối</span>
+                        <span id="user-blog-count-rejected" class="px-1.5 py-0.5 rounded-full text-[10px] {{ request('status') === 'rejected' ? 'bg-white/30 text-white' : 'bg-white text-rose-800 shadow-2xs' }}">{{ $statusCounts['rejected'] ?? 0 }}</span>
+                    </a>
+                </div>
             </div>
 
             @if(request()->filled('search'))
@@ -74,8 +104,9 @@
                 </div>
             @endif
 
+            <div id="user-blog-container">
             @if($blogs->count() > 0)
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-stack-lg mb-8">
+                <div id="user-blog-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-stack-lg mb-8">
                     @foreach($blogs as $blog)
                         @php
                             $statusConfig = [
@@ -89,7 +120,7 @@
                             $config = $statusConfig[$blog->status] ?? $statusConfig['draft'];
                         @endphp
                         
-                        <article class="bg-surface-card rounded-2xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.04)] border border-outline-variant/30 flex flex-col group hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-all duration-300">
+                        <article id="user-blog-card-{{ $blog->id }}" class="bg-surface-card rounded-2xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.04)] border border-outline-variant/30 flex flex-col group hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-all duration-300">
                             <!-- Image & Status -->
                             <div class="relative aspect-[4/3] bg-surface-container overflow-hidden">
                                 @if($blog->cover_image_url)
@@ -101,7 +132,7 @@
                                 @endif
                                 
                                 <!-- Status Badge -->
-                                <div class="absolute top-3 right-3 px-3 py-1.5 rounded-full flex items-center gap-1.5 text-xs font-bold shadow-sm backdrop-blur-md {{ $config['bg'] }} {{ $config['text'] }} bg-opacity-90">
+                                <div id="user-blog-badge-{{ $blog->id }}" class="absolute top-3 right-3 px-3 py-1.5 rounded-full flex items-center gap-1.5 text-xs font-bold shadow-sm backdrop-blur-md {{ $config['bg'] }} {{ $config['text'] }} bg-opacity-90">
                                     <span class="material-symbols-outlined text-[14px]">{{ $config['icon'] }}</span>
                                     {{ $config['label'] }}
                                 </div>
@@ -127,9 +158,29 @@
                                         <span class="flex items-center gap-1" title="Bình luận"><span class="material-symbols-outlined text-[16px]">forum</span> {{ number_format($blog->comment_count ?? 0) }}</span>
                                     </div>
                                 </div>
+
+                                {{-- Moderation feedback block if rejected or need revision --}}
+                                @php
+                                    $latestLog = $blog->moderationLogs ? $blog->moderationLogs->first() : null;
+                                @endphp
+                                <div id="user-blog-note-{{ $blog->id }}">
+                                    @if(in_array($blog->status, ['rejected', 'need_revision']) && $latestLog && $latestLog->note)
+                                        <div class="mb-4 p-3 rounded-xl bg-amber-50 border border-amber-200/70 text-xs text-amber-950 flex items-start gap-2 shadow-2xs">
+                                            <span class="material-symbols-outlined text-[16px] text-amber-600 shrink-0 mt-0.5">feedback</span>
+                                            <div class="min-w-0 flex-1">
+                                                <span class="font-bold text-[11px] uppercase tracking-wider block text-amber-800">
+                                                    {{ $blog->status === 'rejected' ? 'Lý do từ chối duyệt:' : 'Yêu cầu chỉnh sửa:' }}
+                                                </span>
+                                                <p class="text-[11px] text-slate-700 mt-0.5 leading-relaxed font-medium">
+                                                    {{ $latestLog->note }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    @endif
+                                </div>
                                 
                                 <!-- Actions -->
-                                <div class="pt-4 border-t border-surface-dim flex items-center justify-between">
+                                <div id="user-blog-actions-{{ $blog->id }}" class="pt-4 border-t border-surface-dim flex items-center justify-between">
                                     @if(in_array($blog->status, ['draft', 'need_revision', 'rejected', 'published']))
                                         <a href="{{ route('nguoi-dung.blog.edit', $blog) }}" class="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl bg-primary/10 text-primary hover:bg-primary hover:text-white font-label-md transition-colors">
                                             <span class="material-symbols-outlined text-[18px]">edit</span> Sửa bài
@@ -182,6 +233,7 @@
                     </div>
                 @endif
             @endif
+            </div>
         </div>
     </div>
 </main>
@@ -285,10 +337,149 @@
         }
     });
 
-    // Luôn làm mới dữ liệu lượt xem khi quay lại trang bằng nút Back
-    window.addEventListener('pageshow', function(event) {
-        if (event.persisted) {
-            window.location.reload();
+    // Lắng nghe sự kiện duyệt / cập nhật bài viết thời gian thực từ hệ thống
+    window.addEventListener('quanmoi:blog-status-updated', function(e) {
+        const notif = e.detail;
+        if (!notif) return;
+
+        // 1. Cập nhật số lượng trên các tab lọc
+        fetch('{{ route("nguoi-dung.blog.index") }}', {
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data && data.success) {
+                const counts = data.status_counts || {};
+                const total = data.total_count || 0;
+                const elTotal = document.getElementById('user-blog-count-total');
+                const elDraft = document.getElementById('user-blog-count-draft');
+                const elPending = document.getElementById('user-blog-count-pending');
+                const elPublished = document.getElementById('user-blog-count-published');
+                const elRev = document.getElementById('user-blog-count-revision');
+                const elRej = document.getElementById('user-blog-count-rejected');
+                if (elTotal) elTotal.textContent = total;
+                if (elDraft) elDraft.textContent = counts.draft || 0;
+                if (elPending) elPending.textContent = counts.pending || 0;
+                if (elPublished) elPublished.textContent = counts.published || 0;
+                if (elRev) elRev.textContent = counts.need_revision || 0;
+                if (elRej) elRej.textContent = counts.rejected || 0;
+            }
+        })
+        .catch(() => {});
+
+        // 2. Nếu thẻ bài viết đang hiển thị trên giao diện, cập nhật ngay lập tức badge và nút bấm
+        const blogId = notif.blog_id;
+        if (!blogId) return;
+
+        const card = document.getElementById('user-blog-card-' + blogId);
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentFilterStatus = urlParams.get('status');
+
+        if (card) {
+            const badge = document.getElementById('user-blog-badge-' + blogId);
+            const actions = document.getElementById('user-blog-actions-' + blogId);
+            const noteBox = document.getElementById('user-blog-note-' + blogId);
+
+            // Highlight thẻ bài viết
+            card.classList.add('ring-2', 'ring-primary', 'transition-all', 'duration-500');
+            setTimeout(() => card.classList.remove('ring-2', 'ring-primary'), 4000);
+
+            // Cập nhật badge
+            if (badge && notif.status) {
+                const statusMap = {
+                    'published': { bg: 'bg-green-100', text: 'text-green-700', label: 'Đã xuất bản', icon: 'check_circle' },
+                    'rejected': { bg: 'bg-red-100', text: 'text-red-700', label: 'Từ chối', icon: 'cancel' },
+                    'need_revision': { bg: 'bg-orange-100', text: 'text-orange-700', label: 'Cần sửa', icon: 'warning' },
+                    'hidden': { bg: 'bg-gray-200', text: 'text-gray-500', label: 'Đã ẩn', icon: 'visibility_off' },
+                    'pending': { bg: 'bg-amber-100', text: 'text-amber-700', label: 'Chờ duyệt', icon: 'hourglass_empty' },
+                };
+                const cfg = statusMap[notif.status];
+                if (cfg) {
+                    badge.className = `absolute top-3 right-3 px-3 py-1.5 rounded-full flex items-center gap-1.5 text-xs font-bold shadow-sm backdrop-blur-md ${cfg.bg} ${cfg.text} bg-opacity-90 transition-all`;
+                    badge.innerHTML = `<span class="material-symbols-outlined text-[14px]">${cfg.icon}</span> ${cfg.label}`;
+                }
+            }
+
+            // Cập nhật ghi chú của quản trị viên nếu có
+            if (noteBox) {
+                if (notif.note && (notif.status === 'rejected' || notif.status === 'need_revision')) {
+                    noteBox.innerHTML = `
+                        <div class="mb-4 p-3 rounded-xl bg-amber-50 border border-amber-200/70 text-xs text-amber-950 flex items-start gap-2 shadow-2xs">
+                            <span class="material-symbols-outlined text-[16px] text-amber-600 shrink-0 mt-0.5">feedback</span>
+                            <div class="min-w-0 flex-1">
+                                <span class="font-bold text-[11px] uppercase tracking-wider block text-amber-800">
+                                    ${notif.status === 'rejected' ? 'Lý do từ chối duyệt:' : 'Yêu cầu chỉnh sửa:'}
+                                </span>
+                                <p class="text-[11px] text-slate-700 mt-0.5 leading-relaxed font-medium">${notif.note}</p>
+                            </div>
+                        </div>
+                    `;
+                } else if (notif.status === 'published') {
+                    noteBox.innerHTML = '';
+                }
+            }
+
+            // Cập nhật action buttons
+            if (actions) {
+                const editUrl = `/thanh-vien/blog/${blogId}/sua`;
+                const deleteUrl = `/thanh-vien/blog/${blogId}`;
+                const publicUrl = notif.link || `/blog/${notif.slug || blogId}`;
+                const titleSafe = (notif.title || '').replace(/'/g, "\\'");
+
+                if (notif.status === 'published') {
+                    actions.innerHTML = `
+                        <a href="${editUrl}" class="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl bg-primary/10 text-primary hover:bg-primary hover:text-white font-label-md transition-colors">
+                            <span class="material-symbols-outlined text-[18px]">edit</span> Sửa bài
+                        </a>
+                        <a href="${publicUrl}" target="_blank" class="w-10 h-10 ml-3 rounded-xl flex items-center justify-center bg-surface-container text-on-surface hover:bg-primary-fixed hover:text-primary-fixed-variant transition-colors" title="Xem bài viết">
+                            <span class="material-symbols-outlined text-[20px]">open_in_new</span>
+                        </a>
+                        <button type="button" onclick="confirmDeleteBlog('${deleteUrl}', '${titleSafe}')" class="w-10 h-10 ml-2 rounded-xl flex items-center justify-center bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all cursor-pointer shadow-2xs active:scale-95" title="Xóa bài viết">
+                            <span class="material-symbols-outlined text-[20px]">delete</span>
+                        </button>
+                    `;
+                } else if (notif.status === 'rejected' || notif.status === 'need_revision') {
+                    actions.innerHTML = `
+                        <a href="${editUrl}" class="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl bg-primary text-white hover:bg-primary-hover font-label-md transition-colors shadow-xs">
+                            <span class="material-symbols-outlined text-[18px]">edit</span> Chỉnh sửa & Gửi lại
+                        </a>
+                        <button type="button" onclick="confirmDeleteBlog('${deleteUrl}', '${titleSafe}')" class="w-10 h-10 ml-2 rounded-xl flex items-center justify-center bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all cursor-pointer shadow-2xs active:scale-95" title="Xóa bài viết">
+                            <span class="material-symbols-outlined text-[20px]">delete</span>
+                        </button>
+                    `;
+                }
+            }
+
+            // Nếu đang xem tab lọc riêng mà bài viết đã đổi sang trạng thái khác, mờ dần sau 3 giây
+            if (currentFilterStatus && currentFilterStatus !== notif.status) {
+                setTimeout(() => {
+                    card.style.transition = 'all 0.5s ease';
+                    card.style.opacity = '0';
+                    card.style.transform = 'scale(0.95)';
+                    setTimeout(() => card.remove(), 500);
+                }, 3000);
+            }
+        } else {
+            // Nếu thẻ bài viết chưa có trên giao diện (ví dụ đang xem tab Đã xuất bản mà bài vừa được duyệt sang)
+            if (!currentFilterStatus || currentFilterStatus === notif.status) {
+                fetch(window.location.href, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(res => res.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const newContainer = doc.getElementById('user-blog-container');
+                    const currentContainer = document.getElementById('user-blog-container');
+                    if (newContainer && currentContainer) {
+                        currentContainer.innerHTML = newContainer.innerHTML;
+                    }
+                })
+                .catch(() => {});
+            }
         }
     });
 </script>
