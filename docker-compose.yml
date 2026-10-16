@@ -1,3 +1,5 @@
+name: quanmoicomgit
+
 services:
   app:
     build:

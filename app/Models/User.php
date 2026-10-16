@@ -39,6 +39,7 @@ class User extends Authenticatable
         'ngay_sinh',
         'so_dien_thoai',
         'dia_chi',
+        'cai_dat',
         'google_id',
     ];
 
@@ -53,6 +54,7 @@ class User extends Authenticatable
             'da_xac_thuc' => 'boolean',
             'ngay_xac_thuc' => 'datetime',
             'mat_khau' => 'hashed',
+            'cai_dat' => 'array',
         ];
     }
 
@@ -211,5 +213,14 @@ class User extends Authenticatable
     public function blogRevisions(): HasMany
     {
         return $this->hasMany(BlogRevision::class);
+    }
+
+    /**
+     * Lấy giá trị cài đặt người dùng hoặc trả về mặc định
+     */
+    public function getSetting(string $key, mixed $default = null): mixed
+    {
+        $settings = $this->cai_dat ?? [];
+        return data_get($settings, $key, $default);
     }
 }

@@ -142,60 +142,98 @@
 @push('scripts')
 <script>
     async function toggleSave(btn, quanId) {
+        if (btn.dataset.loading === 'true') return;
+        btn.dataset.loading = 'true';
+
+        const cardDesktop = document.getElementById(`quan-card-desktop-${quanId}`);
+        const cardMobile = document.getElementById(`quan-card-mobile-${quanId}`);
+        const sourceCard = cardDesktop || cardMobile;
+        const quanName = sourceCard?.querySelector('h3')?.childNodes[0]?.textContent?.trim() || sourceCard?.querySelector('h3')?.textContent?.trim() || '';
+        const quanImg = sourceCard?.querySelector('img')?.getAttribute('src') || null;
+
+        // 1. SHOW TOAST NOTIFICATION IMMEDIATELY (0ms delay)
+        if (window.showToast) {
+            window.showToast({
+                eyebrow: 'Đã cập nhật danh sách',
+                title: quanName ? `Đã bỏ lưu "${quanName}"` : 'Đã bỏ lưu quán',
+                message: 'Địa điểm đã được gỡ khỏi danh sách yêu thích của bạn.',
+                type: 'unsaved',
+                image: quanImg
+            });
+        }
+
+        // 2. OPTIMISTIC UI: Instantly animate and remove cards
+        const removeCard = (card) => {
+            if (card) {
+                card.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+                card.style.opacity = '0';
+                card.style.transform = 'scale(0.88)';
+                setTimeout(() => {
+                    card.remove();
+                    // Check if grid is empty
+                    const gridDesktop = document.getElementById('saved-places-grid-desktop');
+                    const gridMobile = document.getElementById('saved-places-list-mobile');
+                    
+                    if (gridDesktop && gridDesktop.querySelectorAll('article').length === 0) {
+                        gridDesktop.innerHTML = `
+                        <div class="col-span-full py-12 text-center text-on-surface-variant empty-state-desktop">
+                            <span class="material-symbols-outlined text-[48px] mb-2 text-red-300 opacity-60">favorite_border</span>
+                            <p class="font-body-lg text-body-lg">Bạn chưa lưu địa điểm nào.</p>
+                        </div>
+                        `;
+                    }
+                    if (gridMobile && gridMobile.querySelectorAll('div[id^="quan-card-mobile-"]').length === 0) {
+                        gridMobile.innerHTML = `
+                        <div class="py-12 text-center text-on-surface-variant empty-state-mobile">
+                            <span class="material-symbols-outlined text-[48px] mb-2 text-red-300 opacity-60">favorite_border</span>
+                            <p class="font-body-lg text-body-lg">Bạn chưa lưu địa điểm nào.</p>
+                        </div>
+                        `;
+                    }
+                }, 280);
+            }
+        };
+
+        removeCard(cardDesktop);
+        removeCard(cardMobile);
+
         try {
+            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
             const res = await fetch(`/quan-da-luu/${quanId}/toggle`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    'X-CSRF-TOKEN': token,
+                    'Accept': 'application/json'
                 }
             });
+
+            if (res.status === 401) {
+                window.location.href = "{{ route('login') }}";
+                return;
+            }
+
             const data = await res.json();
-            if (data.success) {
-                if (data.status === 'unsaved') {
-                    // Remove both desktop and mobile cards from the list with a nice animation
-                    const cardDesktop = document.getElementById(`quan-card-desktop-${quanId}`);
-                    const cardMobile = document.getElementById(`quan-card-mobile-${quanId}`);
-                    
-                    const removeCard = (card) => {
-                        if (card) {
-                            card.style.opacity = '0';
-                            card.style.transform = 'scale(0.9)';
-                            setTimeout(() => {
-                                card.remove();
-                                // Check if grid is empty
-                                const gridDesktop = document.getElementById('saved-places-grid-desktop');
-                                const gridMobile = document.getElementById('saved-places-list-mobile');
-                                
-                                if (gridDesktop && gridDesktop.querySelectorAll('article').length === 0) {
-                                    gridDesktop.innerHTML = `
-                                    <div class="col-span-full py-12 text-center text-on-surface-variant empty-state-desktop">
-                                        <span class="material-symbols-outlined text-[48px] mb-2 text-red-300 opacity-60">favorite_border</span>
-                                        <p class="font-body-lg text-body-lg">Bạn chưa lưu địa điểm nào.</p>
-                                    </div>
-                                    `;
-                                }
-                                if (gridMobile && gridMobile.querySelectorAll('div[id^="quan-card-mobile-"]').length === 0) {
-                                    gridMobile.innerHTML = `
-                                    <div class="py-12 text-center text-on-surface-variant empty-state-mobile">
-                                        <span class="material-symbols-outlined text-[48px] mb-2 text-red-300 opacity-60">favorite_border</span>
-                                        <p class="font-body-lg text-body-lg">Bạn chưa lưu địa điểm nào.</p>
-                                    </div>
-                                    `;
-                                }
-                            }, 300);
-                        }
-                    };
-                    
-                    removeCard(cardDesktop);
-                    removeCard(cardMobile);
-                } else {
-                    // This shouldn't normally happen on the saved places page unless they untoggle and toggle again very fast
+            if (!data.success) {
+                if (window.showToast) {
+                    window.showToast({
+                        title: 'Không thể thực hiện',
+                        message: data.message || 'Đã có lỗi xảy ra, vui lòng tải lại trang.',
+                        type: 'error'
+                    });
                 }
             }
         } catch (err) {
             console.error(err);
-            alert('Có lỗi xảy ra, vui lòng thử lại sau.');
+            if (window.showToast) {
+                window.showToast({
+                    title: 'Lỗi kết nối',
+                    message: 'Không thể gửi yêu cầu đến máy chủ.',
+                    type: 'error'
+                });
+            }
+        } finally {
+            btn.dataset.loading = 'false';
         }
     }
 </script>

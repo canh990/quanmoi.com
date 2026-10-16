@@ -175,101 +175,124 @@
                 </form>
             </section>
 
-            <!-- Saved Places Section (Static Mockup from User) -->
-            <section>
-                <div class="flex justify-between items-end mb-stack-md">
+            <!-- Saved Places Section (Bố cục chuẩn: 1 thẻ lớn + 4 thẻ nhỏ, nếu thừa có nút Xem tất cả / Xem thêm) -->
+            <section class="space-y-4">
+                <div class="flex justify-between items-end mb-2">
                     <div>
                         <h3 class="font-headline-lg text-headline-lg text-on-surface">Địa điểm đã lưu</h3>
                         <p class="font-body-sm text-body-sm text-text-muted">Danh sách các nhà hàng và quán yêu thích của bạn</p>
                     </div>
-                    <a class="font-label-md text-label-md text-primary hover:underline" href="#">Xem tất cả</a>
+                    @if(isset($savedQuan) && $savedQuan->isNotEmpty())
+                        <a class="font-label-md text-label-md text-primary font-bold hover:underline inline-flex items-center gap-1" href="{{ route('quan-da-luu.index') }}">
+                            <span>Xem tất cả</span>
+                            @if($savedQuan->count() > 5)
+                                <span>({{ $savedQuan->count() }})</span>
+                            @endif
+                            <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+                        </a>
+                    @endif
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
-                    <!-- Card 1 -->
-                    <div class="md:col-span-2 relative group rounded-xl overflow-hidden shadow-[0px_4px_20px_rgba(0,0,0,0.05)] border border-surface-container active:scale-[0.98] transition-transform cursor-pointer">
-                        <div class="h-64 w-full bg-cover bg-center transition-transform duration-700 group-hover:scale-110" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuB3jqwH813tiSNEvFGv_EaYpRbcPOShZZtE2YqrBax43KOL1RBtHwwZ-ygBaADC8pOWQxovokZTFf5QUtpygXzcfr--UFqZQC0ju7oviYRmiVVnZ0GpAW45jP4fJJ4ODvYyegbPDL-iA2vKexecE3-uGd41fQzVL5VRuwCBWU2kNeL0zDd5_2rw7pOtpotKX3EwxfqrzWjzg_-4RV96KSZvfGA85rBDWWgxX53V9XJo00KS3YZDUfe6bY17z1-efbGzO2pHDSSH1Hw')"></div>
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-                        <div class="absolute bottom-0 p-stack-md w-full">
-                            <div class="flex justify-between items-end">
-                                <div>
-                                    <div class="flex items-center gap-2 mb-1">
-                                        <span class="bg-primary text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">Đánh giá cao</span>
-                                        <span class="flex items-center text-white text-label-sm"><span class="material-symbols-outlined text-sm mr-1" style="font-variation-settings: 'FILL' 1;">star</span> 4.9</span>
+
+                @if(isset($savedQuan) && $savedQuan->isNotEmpty())
+                    @php
+                        $firstQuan = $savedQuan->first();
+                        $remainingQuan = $savedQuan->slice(1, 4);
+                        $totalSaved = $savedQuan->count();
+                    @endphp
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter" id="saved-places-grid">
+                        <!-- Card 1: Thẻ lớn nổi bật (Chiếm 2 cột) -->
+                        @php
+                            $firstImg = $firstQuan->hinhAnh->first()->url ?? ($firstQuan->anh_bia_url ?? 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80');
+                            $firstRating = $firstQuan->danh_gia_avg_so_sao ? number_format($firstQuan->danh_gia_avg_so_sao, 1) : '4.9';
+                            $firstLoc = $firstQuan->ten_quan_huyen ? ($firstQuan->ten_quan_huyen . ($firstQuan->ten_tinh_thanh ? ', ' . Str::replace(['Thành phố ', 'Tỉnh '], '', $firstQuan->ten_tinh_thanh) : '')) : ($firstQuan->dia_chi_chi_tiet ?? 'Việt Nam');
+                        @endphp
+                        <div id="saved-card-{{ $firstQuan->id }}" class="saved-quan-card {{ $remainingQuan->isEmpty() ? 'md:col-span-3' : 'md:col-span-2' }} relative group rounded-2xl overflow-hidden shadow-[0px_4px_20px_rgba(0,0,0,0.06)] border border-surface-container active:scale-[0.99] transition-all hover:shadow-xl cursor-pointer">
+                            <div class="h-64 md:h-72 w-full bg-cover bg-center transition-transform duration-700 group-hover:scale-105" style="background-image: url('{{ $firstImg }}')"></div>
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent pointer-events-none"></div>
+                            <a href="{{ route('quan.detail', $firstQuan->slug) }}" class="absolute inset-0 z-10" aria-label="{{ $firstQuan->ten_quan }}"></a>
+                            <div class="absolute bottom-0 p-stack-md w-full z-20 pointer-events-none">
+                                <div class="flex justify-between items-end gap-3">
+                                    <div class="min-w-0">
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <span class="bg-primary text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider">ĐÁNH GIÁ CAO</span>
+                                            <span class="flex items-center text-white text-xs font-bold gap-1 bg-black/40 backdrop-blur-sm px-2 py-0.5 rounded-full">
+                                                <span class="material-symbols-outlined text-[14px] text-amber-400" style="font-variation-settings: 'FILL' 1;">star</span>
+                                                <span>{{ $firstRating }}</span>
+                                            </span>
+                                        </div>
+                                        <h4 class="text-white font-title-lg text-lg md:text-xl font-bold truncate group-hover:text-primary-fixed transition-colors">{{ $firstQuan->ten_quan }}</h4>
+                                        <p class="text-white/85 text-body-sm flex items-center gap-1 truncate mt-0.5">
+                                            <span class="material-symbols-outlined text-[16px] text-primary-fixed">location_on</span>
+                                            <span>{{ $firstLoc }}</span>
+                                        </p>
                                     </div>
-                                    <h4 class="text-white font-title-md text-title-md">Phở Gia Truyền - Bát Đàn</h4>
-                                    <p class="text-white/80 text-body-sm flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">location_on</span> Hoàn Kiếm, Hà Nội</p>
+                                    <button type="button" onclick="event.stopPropagation(); toggleSavePlace(this, '{{ $firstQuan->id }}')" class="pointer-events-auto bg-white/20 hover:bg-white/40 backdrop-blur-md p-2.5 rounded-full text-white border border-white/30 transition-all cursor-pointer shadow-md active:scale-90 shrink-0" title="Bỏ lưu địa điểm" aria-label="Bỏ lưu địa điểm">
+                                        <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">bookmark</span>
+                                    </button>
                                 </div>
-                                <button class="bg-white/20 backdrop-blur-md p-2 rounded-full text-white border border-white/30">
-                                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">bookmark</span>
-                                </button>
                             </div>
                         </div>
-                    </div>
-                    <!-- Card 2 -->
-                    <div class="group bg-surface-card rounded-xl overflow-hidden shadow-[0px_4px_20px_rgba(0,0,0,0.05)] border border-surface-container active:scale-[0.98] transition-transform cursor-pointer">
-                        <div class="h-40 w-full relative">
-                            <img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDhXp2aELz0P35wu9Gs_jLu_fZHZObzZKDRlbQMwQuhPnFA60JER_sxAGnBQrH5ajRz_WPnpgn1xhVTL1JK_bN010gUh5qhnG_rkFgBdzfGQpKaKnawowrS4R3ShYqvnFKSirJpu4DC_eX1pDexpyMNTmD5a4jr-_s5zHqZWKPNci4vcaFh83bV1M2VGK4klUvq0CJJoGvWGSDA3l4994sQ2HlmsI6TJrXYuXfEFV12ck--GufY9hkU6kN4M2JFyQpGNkpxxiwiF3w"/>
-                            <button class="absolute top-3 right-3 bg-white/80 backdrop-blur-sm p-1.5 rounded-full text-primary shadow-sm">
-                                <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">bookmark</span>
-                            </button>
-                        </div>
-                        <div class="p-stack-sm space-y-1">
-                            <h4 class="font-title-md text-title-md text-on-surface truncate">The Workshop Coffee</h4>
-                            <div class="flex items-center justify-between">
-                                <span class="text-body-sm text-text-muted">Quận 1, HCM</span>
-                                <span class="text-tick-xanh font-bold text-label-sm">ĐANG MỞ</span>
+
+                        <!-- Các thẻ nhỏ còn lại (Tối đa 4 thẻ) -->
+                        @foreach($remainingQuan as $quan)
+                            @php
+                                $quanImg = $quan->hinhAnh->first()->url ?? ($quan->anh_bia_url ?? 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=500&q=80');
+                                $isOpen = $quan->isDangMoCua();
+                                $locText = $quan->ten_quan_huyen ? ($quan->ten_quan_huyen . ($quan->ten_tinh_thanh ? ', ' . Str::replace(['Thành phố ', 'Tỉnh '], '', $quan->ten_tinh_thanh) : '')) : ($quan->dia_chi_chi_tiet ?? 'Việt Nam');
+                            @endphp
+                            <div id="saved-card-{{ $quan->id }}" class="saved-quan-card group bg-surface-card rounded-2xl overflow-hidden shadow-[0px_4px_20px_rgba(0,0,0,0.05)] border border-surface-container active:scale-[0.98] transition-all hover:-translate-y-1 hover:shadow-lg cursor-pointer relative flex flex-col justify-between">
+                                <div class="h-44 w-full relative overflow-hidden bg-surface-container-low">
+                                    <img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="{{ $quanImg }}" alt="{{ $quan->ten_quan }}"/>
+                                    <a href="{{ route('quan.detail', $quan->slug) }}" class="absolute inset-0 z-10" aria-label="{{ $quan->ten_quan }}"></a>
+                                    <button type="button" onclick="event.stopPropagation(); toggleSavePlace(this, '{{ $quan->id }}')" class="absolute top-3 right-3 z-20 bg-white/90 hover:bg-white backdrop-blur-sm p-1.5 rounded-full text-primary shadow-sm hover:scale-110 active:scale-95 transition-all cursor-pointer" title="Bỏ lưu địa điểm" aria-label="Bỏ lưu địa điểm">
+                                        <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">bookmark</span>
+                                    </button>
+                                </div>
+                                <div class="p-4 space-y-1.5 relative">
+                                    <a href="{{ route('quan.detail', $quan->slug) }}" class="absolute inset-0 z-0" aria-label="{{ $quan->ten_quan }}"></a>
+                                    <h4 class="font-title-md text-sm md:text-base font-bold text-on-surface truncate group-hover:text-primary transition-colors relative z-10 pointer-events-none">{{ $quan->ten_quan }}</h4>
+                                    <div class="flex items-center justify-between text-xs relative z-10 pointer-events-none pt-0.5">
+                                        <span class="text-text-muted truncate max-w-[65%]" title="{{ $locText }}">{{ $locText }}</span>
+                                        @if($isOpen)
+                                            <span class="text-tick-xanh font-extrabold text-[11px] tracking-wide shrink-0 flex items-center gap-1">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                                <span>ĐANG MỞ</span>
+                                            </span>
+                                        @else
+                                            <span class="text-error font-extrabold text-[11px] tracking-wide shrink-0">ĐÓNG CỬA</span>
+                                        @endif
+                                    </div>
+                                </div>
                             </div>
+                        @endforeach
+                    </div>
+
+                    {{-- Nút Xem thêm nếu có trên 5 địa điểm đã lưu --}}
+                    @if($totalSaved > 5)
+                    <div class="pt-4 text-center">
+                        <a href="{{ route('quan-da-luu.index') }}" class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl border border-primary/20 bg-primary/5 hover:bg-primary hover:text-white text-primary text-xs md:text-sm font-bold shadow-xs hover:shadow-md transition-all group">
+                            <span>Xem thêm {{ $totalSaved - 5 }} địa điểm đã lưu</span>
+                            <span class="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                        </a>
+                    </div>
+                    @endif
+                @else
+                    {{-- Trạng thái trống khi chưa lưu địa điểm nào --}}
+                    <div class="bg-surface-card rounded-2xl border border-surface-container p-8 md:p-12 text-center space-y-3">
+                        <div class="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto">
+                            <span class="material-symbols-outlined text-3xl">bookmark_border</span>
+                        </div>
+                        <h4 class="text-base md:text-lg font-bold text-on-surface">Bạn chưa lưu địa điểm nào</h4>
+                        <p class="text-xs md:text-sm text-text-muted max-w-md mx-auto">Khám phá các nhà hàng, quán ăn ngon và bấm vào biểu tượng lưu để xem lại nhanh chóng tại đây bất cứ lúc nào.</p>
+                        <div class="pt-2">
+                            <a href="{{ route('kham-pha') }}" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-white text-xs font-bold shadow-md shadow-primary/20 transition-all">
+                                <span class="material-symbols-outlined text-[18px]">travel_explore</span>
+                                <span>Khám phá quán ngon ngay</span>
+                            </a>
                         </div>
                     </div>
-                    <!-- Card 3 -->
-                    <div class="group bg-surface-card rounded-xl overflow-hidden shadow-[0px_4px_20px_rgba(0,0,0,0.05)] border border-surface-container active:scale-[0.98] transition-transform cursor-pointer">
-                        <div class="h-40 w-full relative">
-                            <img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDq5dCIh8Av4FojFGW4EV28OX4d-O0cxOWyKChOthbzav-vrZSTmJjWEK68TbmyZyjqrrMyqR8MfoGbjM2SWchLMLbjSBAcDGeTZ7Q9LHhN5WyaktILdP7IeJlA2GuEkmvY_dr1xmiaOZUmOiYRx0scHd1EMYGg51ezJq175ovPCHpn8tJ030JZIuB-wcYOC0FfiEtXxSnfL_XvXo07m23iRYBSwB5QXABRMLiAaCSMrSogP2UgHfJIYpHtuHV97B0faMgwnrCEg-s"/>
-                            <button class="absolute top-3 right-3 bg-white/80 backdrop-blur-sm p-1.5 rounded-full text-primary shadow-sm">
-                                <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">bookmark</span>
-                            </button>
-                        </div>
-                        <div class="p-stack-sm space-y-1">
-                            <h4 class="font-title-md text-title-md text-on-surface truncate">Bếp Mẹ Ỉn</h4>
-                            <div class="flex items-center justify-between">
-                                <span class="text-body-sm text-text-muted">Lê Thánh Tôn, HCM</span>
-                                <span class="text-error font-bold text-label-sm">ĐÓNG CỬA</span>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Card 4 -->
-                    <div class="group bg-surface-card rounded-xl overflow-hidden shadow-[0px_4px_20px_rgba(0,0,0,0.05)] border border-surface-container active:scale-[0.98] transition-transform cursor-pointer">
-                        <div class="h-40 w-full relative">
-                            <img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCZCzphAGbwOAFrMJki4D9PSCH_OB5VhtWdhKOGTVdcSTPDY38IUFHjTnBvkUjGCSed0TsbmLMd_JU97pll9OwAqdXRj2pROKMFcGK0YNDbjQ7eAtFg0b_VHj0UIeIG4H5M2lNmhCGlZzAUuFy5q2mjn80rsiHyMA5kwcsM3PQZEHJVSt4nc5rGF8O9RxxX34-QRn6G-2xbDB0NmDptfHE_9e3NpjQN3KrpkLTw55wlzdITHe5tM8xoy-XXGQF-XeNIaPV7GWGwnlM"/>
-                            <button class="absolute top-3 right-3 bg-white/80 backdrop-blur-sm p-1.5 rounded-full text-primary shadow-sm">
-                                <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">bookmark</span>
-                            </button>
-                        </div>
-                        <div class="p-stack-sm space-y-1">
-                            <h4 class="font-title-md text-title-md text-on-surface truncate">Sushi Tony</h4>
-                            <div class="flex items-center justify-between">
-                                <span class="text-body-sm text-text-muted">Quận 7, HCM</span>
-                                <span class="text-tick-xanh font-bold text-label-sm">ĐANG MỞ</span>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Card 5 -->
-                    <div class="group bg-surface-card rounded-xl overflow-hidden shadow-[0px_4px_20px_rgba(0,0,0,0.05)] border border-surface-container active:scale-[0.98] transition-transform cursor-pointer">
-                        <div class="h-40 w-full relative">
-                            <img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAFhuaCGLfF8hdgQN0B2sir216mHF3CQSFxxxM3CFWMgW9HISDEaenLCaFC6BaU13-mT669wBM_EpORfmxic64eYnVSdVLrUQrh2WqLCrEDdOeXiKHaknOmRcuBkSZ3TaNXtXxukreQNLbsyp7ZcyEq_M3i2Hf7fUAAYHWQTBTRn9WW4s4oc6H1LVCdkr6U5WWlxNqMONJzYdWxcJ-XG-q40UY68qd2fM07D3Ey8d02eMxY_Avj1wlPOicpzamqcfoF0D_uwJKsj40"/>
-                            <button class="absolute top-3 right-3 bg-white/80 backdrop-blur-sm p-1.5 rounded-full text-primary shadow-sm">
-                                <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">bookmark</span>
-                            </button>
-                        </div>
-                        <div class="p-stack-sm space-y-1">
-                            <h4 class="font-title-md text-title-md text-on-surface truncate">Maison Marou</h4>
-                            <div class="flex items-center justify-between">
-                                <span class="text-body-sm text-text-muted">Hà Nội & HCM</span>
-                                <span class="text-tick-xanh font-bold text-label-sm">ĐANG MỞ</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                @endif
             </section>
         </div>
     </div>
@@ -310,5 +333,75 @@
             });
         });
     });
+
+    function toggleSavePlace(btn, quanId) {
+        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        if (!token) return;
+
+        const card = document.getElementById(`saved-card-${quanId}`);
+        const quanName = card?.querySelector('h4')?.textContent?.trim() || '';
+        let quanImg = card?.querySelector('img')?.getAttribute('src') || null;
+        if (!quanImg && card) {
+            const bgDiv = card.querySelector('[style*="background-image"]');
+            const match = bgDiv?.style?.backgroundImage?.match(/url\(["']?([^"']+)["']?\)/);
+            if (match && match[1]) quanImg = match[1];
+        }
+
+        // 1. SHOW TOAST NOTIFICATION IMMEDIATELY (0ms delay)
+        if (window.showToast) {
+            window.showToast({
+                eyebrow: 'Đã cập nhật danh sách',
+                title: quanName ? `Đã bỏ lưu "${quanName}"` : 'Đã bỏ lưu quán',
+                message: 'Địa điểm đã được gỡ khỏi danh sách yêu thích của bạn.',
+                type: 'unsaved',
+                image: quanImg
+            });
+        }
+
+        // 2. OPTIMISTIC UI: Remove card instantly
+        if (card) {
+            card.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+            card.style.opacity = '0';
+            card.style.transform = 'scale(0.88)';
+            setTimeout(() => {
+                card.remove();
+                const remaining = document.querySelectorAll('.saved-quan-card');
+                if (remaining.length === 0) {
+                    window.location.reload();
+                }
+            }, 280);
+        }
+
+        fetch(`/quan-da-luu/${quanId}/toggle`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': token,
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (!data.success) {
+                if (window.showToast) {
+                    window.showToast({
+                        title: 'Không thể thực hiện',
+                        message: data.message || 'Đã có lỗi xảy ra, vui lòng tải lại trang.',
+                        type: 'error'
+                    });
+                }
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            if (window.showToast) {
+                window.showToast({
+                    title: 'Lỗi kết nối',
+                    message: 'Không thể gửi yêu cầu đến máy chủ.',
+                    type: 'error'
+                });
+            }
+        });
+    }
 </script>
 @endsection
