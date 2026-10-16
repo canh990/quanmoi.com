@@ -61,7 +61,7 @@
     $danhMucList = [
         ['ten' => 'Lẩu & Nướng', 'icon' => 'skillet', 'desc' => 'Buffet nướng, lẩu thái, nướng than'],
         ['ten' => 'Cà phê & Trà', 'icon' => 'local_cafe', 'desc' => 'Cafe chill, trà sữa, acoustic'],
-        ['ten' => 'Ăn vặt', 'icon' => 'fastfood', 'desc' => 'Bánh tráng, xiên que, trà chanh'],
+        ['ten' => 'Đồ ăn vặt', 'icon' => 'fastfood', 'desc' => 'Bánh tráng, xiên que, trà chanh'],
         ['ten' => 'Nhà hàng', 'icon' => 'dinner_dining', 'desc' => 'Gia đình, sang trọng, tiệc tùng'],
         ['ten' => 'Quán Đêm 24/7', 'icon' => 'nightlife', 'desc' => 'Mở xuyên đêm, ăn khuya'],
         ['ten' => 'Billiards & Giải trí', 'icon' => 'sports_esports', 'desc' => 'Bida, board game, giải trí'],
@@ -353,7 +353,9 @@
                     </a>
                     @foreach($danhMucList as $dm)
                         @php 
-                            $isSelected = ($danhMuc === $dm['ten']) || ($dm['ten'] === 'Cà phê & Trà' && in_array($danhMuc, ['Cà phê', 'Cà phê & Trà']));
+                            $isSelected = ($danhMuc === $dm['ten'])
+                                || ($dm['ten'] === 'Cà phê & Trà' && in_array($danhMuc, ['Cà phê', 'Cà phê & Trà']))
+                                || ($dm['ten'] === 'Đồ ăn vặt' && in_array($danhMuc, ['Ăn vặt', 'Đồ ăn vặt']));
                         @endphp
                         <a href="{{ request()->fullUrlWithQuery(['danh_muc' => $dm['ten']]) }}" 
                            class="flex items-center justify-between px-3 py-2 rounded-xl text-[13px] transition-colors {{ $isSelected ? 'bg-amber-50 text-amber-900 font-bold' : 'text-gray-700 hover:bg-gray-50' }}">
@@ -579,7 +581,7 @@
                         <a href="{{ route('quan.detail', $quanCuaMon->slug) }}" class="group bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col">
                             <div class="relative h-32 w-full overflow-hidden bg-gray-100">
                                 <img
-                                    src="{{ $mon->hinh_anh ?: ($quanCuaMon->anh_bia ?: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=400&q=80') }}"
+                                    src="{{ $mon->hinh_anh_url ?: ($quanCuaMon->anh_bia_url ?: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=400&q=80') }}"
                                     alt="{{ $mon->ten_mon }}"
                                     loading="lazy"
                                     class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
@@ -657,7 +659,7 @@
                             @foreach($quansGoiY as $quan)
                                 <a href="{{ route('quan.detail', $quan->slug) }}" class="block bg-white rounded-2xl shadow-sm overflow-hidden group cursor-pointer hover:shadow-xl transition-all border border-gray-100 flex flex-col h-full">
                                     <div class="relative h-48 w-full overflow-hidden flex-shrink-0">
-                                        <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="{{ $quan->anh_bia ? $quan->anh_bia : 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=600&q=80' }}" alt="{{ $quan->ten_quan }}"/>
+                                        <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="{{ $quan->anh_bia_url ?: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=600&q=80' }}" alt="{{ $quan->ten_quan }}"/>
                                         
                                         <div class="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-xl text-primary font-bold text-xs flex items-center gap-1 shadow-sm">
                                             <span class="material-symbols-outlined text-[15px] text-amber-500" style="font-variation-settings: 'FILL' 1;">star</span> 4.9
@@ -812,6 +814,7 @@
                 url.searchParams.set('sap_xep', 'near_me');
                 url.searchParams.set('lat', pos.coords.latitude);
                 url.searchParams.set('lon', pos.coords.longitude);
+                url.searchParams.delete('lng');
                 if (radius) {
                     url.searchParams.set('ban_kinh', radius);
                 }

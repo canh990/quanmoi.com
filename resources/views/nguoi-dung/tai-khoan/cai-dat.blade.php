@@ -73,63 +73,6 @@
     </nav>
 
     {{-- Alert Cập nhật thành công với đếm ngược 10s --}}
-    @if(session('success'))
-    <div id="toast-success" class="relative overflow-hidden mb-6 flex items-center gap-3 bg-white border border-green-200 rounded-2xl px-5 py-4 shadow-lg shadow-green-100/50 transition-all duration-500 ease-out" role="alert" aria-live="polite">
-        <div class="w-9 h-9 rounded-xl bg-green-100 flex items-center justify-center shrink-0">
-            <span class="material-symbols-outlined text-green-600" style="font-variation-settings:'FILL' 1">check_circle</span>
-        </div>
-        <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-2">
-                <p class="font-bold text-gray-900 text-sm">Cập nhật thành công!</p>
-                <span id="toast-countdown-badge" class="text-[11px] font-semibold text-green-700 bg-green-50 px-2 py-0.5 rounded-full border border-green-200/70 inline-flex items-center gap-1" title="Tự động đóng sau 10 giây">
-                    <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-                    <span id="toast-countdown-seconds">10s</span>
-                </span>
-            </div>
-            <p class="text-gray-500 text-xs mt-0.5">{{ session('success') }}</p>
-        </div>
-        <button onclick="dismissToastSuccess()" class="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-lg hover:bg-gray-100 cursor-pointer" title="Đóng ngay" aria-label="Đóng thông báo">
-            <span class="material-symbols-outlined text-[20px]">close</span>
-        </button>
-
-        {{-- Thanh tiến trình đếm ngược 10 giây --}}
-        <div class="absolute bottom-0 left-0 right-0 h-1 bg-green-100 overflow-hidden">
-            <div id="toast-progress-bar" class="h-full bg-green-500 transition-all duration-1000 ease-linear" style="width: 100%;"></div>
-        </div>
-    </div>
-
-    <script>
-        function dismissToastSuccess() {
-            const toast = document.getElementById('toast-success');
-            if (!toast) return;
-            toast.style.opacity = '0';
-            toast.style.transform = 'translateY(-10px)';
-            setTimeout(() => {
-                toast.remove();
-            }, 500);
-        }
-
-        (function() {
-            let timeLeft = 10;
-            const secondsEl = document.getElementById('toast-countdown-seconds');
-            const progressEl = document.getElementById('toast-progress-bar');
-
-            const timer = setInterval(() => {
-                timeLeft--;
-                if (secondsEl) {
-                    secondsEl.textContent = timeLeft + 's';
-                }
-                if (progressEl) {
-                    progressEl.style.width = (timeLeft * 10) + '%';
-                }
-                if (timeLeft <= 0) {
-                    clearInterval(timer);
-                    dismissToastSuccess();
-                }
-            }, 1000);
-        })();
-    </script>
-    @endif
 
     {{-- Alert xung đột dữ liệu Optimistic Locking --}}
     @if(session('error_conflict') || session('error'))

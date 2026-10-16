@@ -18,3 +18,4 @@ return new class extends Migration
             DB::statement("ALTER TABLE `nguoi_dung` MODIFY COLUMN `gioi_tinh` ENUM('nam', 'nu', 'khac') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'nam'");
         }
     }
+};
