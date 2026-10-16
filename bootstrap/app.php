@@ -25,6 +25,8 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->validateCsrfTokens(except: [
             'blog/*/luot-xem',
+            'blog/*/ai-tom-tat',
+            'api/blog/*',
         ]);
 
         $middleware->alias([
