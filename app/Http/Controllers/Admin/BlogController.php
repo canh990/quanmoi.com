@@ -31,17 +31,27 @@ class BlogController extends Controller
     {
         $query = Blog::with(['user', 'category']);
         
-        if ($request->has('status')) {
+        if ($request->has('status') && $request->status !== '') {
             $query->where('status', $request->status);
         }
         
-        $blogs = $query->latest()->paginate(20);
+        $blogs = $query->latest()->paginate(20)->withQueryString();
         
         $stats = [
             'total' => Blog::count(),
             'pending' => Blog::where('status', 'pending')->count(),
             'published' => Blog::where('status', 'published')->count(),
+            'rejected' => Blog::where('status', 'rejected')->count(),
+            'need_revision' => Blog::where('status', 'need_revision')->count(),
         ];
+        
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'stats' => $stats,
+                'data' => $blogs,
+            ]);
+        }
         
         return view('admin.blog.index', compact('blogs', 'stats'));
     }
@@ -58,6 +68,37 @@ class BlogController extends Controller
         $blog->load(['user', 'category', 'tags', 'moderationLogs.admin' => function($q) {
             $q->latest();
         }]);
+
+        if (request()->expectsJson() || request()->ajax() || request()->wantsJson() || request()->query('ajax') == '1') {
+            return response()->json([
+                'success' => true,
+                'blog' => [
+                    'id' => $blog->id,
+                    'title' => $blog->title,
+                    'slug' => $blog->slug,
+                    'status' => $blog->status,
+                    'excerpt' => $blog->excerpt,
+                    'content' => $blog->content,
+                    'cover_image_url' => $blog->cover_image_url,
+                    'created_at_formatted' => $blog->created_at?->format('d/m/Y H:i'),
+                    'updated_at_formatted' => $blog->updated_at?->format('d/m/Y H:i'),
+                    'author_name' => $blog->user?->ho_ten ?? 'Ẩn danh',
+                    'author_email' => $blog->user?->email ?? '',
+                    'author_avatar' => $blog->user?->anh_dai_dien_url ?? 'https://ui-avatars.com/api/?name=' . urlencode($blog->user?->ho_ten ?? 'U'),
+                    'category_name' => $blog->category?->name ?? 'Không phân loại',
+                    'tags' => $blog->tags->map(fn($t) => ['id' => $t->id, 'name' => $t->name])->values()->all(),
+                    'is_hero' => (bool)$blog->is_hero,
+                    'detail_url' => route('admin.blog.posts.show', $blog->id),
+                    'public_url' => $blog->status === 'published' ? route('blog.show', $blog->slug) : null,
+                    'latest_log' => $blog->moderationLogs->first() ? [
+                        'admin_name' => $blog->moderationLogs->first()->admin?->ho_ten ?? 'Quản trị viên',
+                        'action' => $blog->moderationLogs->first()->action,
+                        'note' => $blog->moderationLogs->first()->note,
+                        'created_at' => $blog->moderationLogs->first()->created_at?->format('d/m/Y H:i'),
+                    ] : null,
+                ],
+            ]);
+        }
         
         return view('admin.blog.show', compact('blog'));
     }
@@ -67,8 +108,20 @@ class BlogController extends Controller
         $this->authorize('update', $blog);
         $request->validate([
             'status' => 'required|in:published,rejected,need_revision,hidden,scheduled',
-            'note' => 'nullable|string'
+            'note' => 'nullable|string|max:1000',
+            'expected_status' => 'nullable|string'
         ]);
+        
+        // Concurrency check: prevent conflicting updates if status already modified
+        if ($request->filled('expected_status') && $blog->status !== $request->expected_status) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Trạng thái bài viết đã được thay đổi bởi quản trị viên khác trước đó. Đang tải lại dữ liệu.',
+                    'current_status' => $blog->status,
+                ], 409);
+            }
+        }
         
         $oldStatus = $blog->status;
         $status = $request->status;
@@ -86,21 +139,30 @@ class BlogController extends Controller
             }
         }
         
-        DB::transaction(function () use ($blog, $status, $oldStatus, $request) {
+        $actionMap = [
+            'published' => 'published',
+            'scheduled' => 'approved',
+            'rejected' => 'rejected',
+            'need_revision' => 'requested_revision',
+            'hidden' => 'hidden'
+        ];
+        
+        $statusLabels = [
+            'published' => 'Xuất bản',
+            'rejected' => 'Từ chối',
+            'need_revision' => 'Cần sửa',
+            'hidden' => 'Đã ẩn',
+            'scheduled' => 'Lên lịch',
+            'draft' => 'Bản nháp',
+            'pending' => 'Chờ duyệt',
+        ];
+        
+        DB::transaction(function () use ($blog, $status, $oldStatus, $request, $actionMap) {
             $blog->status = $status;
             if ($status === 'published' && !$blog->published_at) {
                 $blog->published_at = now();
             }
             $blog->save();
-            
-            // Log Moderation
-            $actionMap = [
-                'published' => 'published',
-                'scheduled' => 'approved', // Conceptually approved but waiting
-                'rejected' => 'rejected',
-                'need_revision' => 'requested_revision',
-                'hidden' => 'hidden'
-            ];
             
             BlogModerationLog::create([
                 'blog_id' => $blog->id,
@@ -122,10 +184,56 @@ class BlogController extends Controller
             }
         });
         
-        return back()->with('success', 'Trạng thái bài viết đã được cập nhật.');
+        $msg = match ($status) {
+            'published' => 'Đã phê duyệt và xuất bản bài viết thành công!',
+            'rejected' => 'Đã từ chối duyệt bài viết thành công!',
+            'need_revision' => 'Đã gửi yêu cầu chỉnh sửa đến tác giả!',
+            'hidden' => 'Đã ẩn bài viết thành công!',
+            default => 'Trạng thái bài viết đã được cập nhật thành công.'
+        };
+        
+        $freshStats = [
+            'total' => Blog::count(),
+            'pending' => Blog::where('status', 'pending')->count(),
+            'published' => Blog::where('status', 'published')->count(),
+            'rejected' => Blog::where('status', 'rejected')->count(),
+            'need_revision' => Blog::where('status', 'need_revision')->count(),
+        ];
+        
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => $msg,
+                'status' => $blog->status,
+                'status_label' => $statusLabels[$blog->status] ?? $blog->status,
+                'stats' => $freshStats,
+                'blog' => [
+                    'id' => $blog->id,
+                    'title' => $blog->title,
+                    'status' => $blog->status,
+                    'published_at' => $blog->published_at ? $blog->published_at->format('d/m/Y H:i') : null,
+                    'updated_at' => $blog->updated_at ? $blog->updated_at->format('d/m/Y H:i') : null,
+                ],
+                'log' => [
+                    'admin_name' => Auth::user()?->ho_ten ?? 'Hệ thống',
+                    'action' => $actionMap[$status] ?? 'updated',
+                    'action_label' => match($status) {
+                        'published' => 'phê duyệt và xuất bản',
+                        'rejected' => 'từ chối duyệt',
+                        'need_revision' => 'yêu cầu chỉnh sửa',
+                        'hidden' => 'ẩn',
+                        default => 'cập nhật'
+                    },
+                    'note' => $request->note,
+                    'created_at' => now()->format('d/m/Y H:i'),
+                ]
+            ]);
+        }
+        
+        return back()->with('success', $msg);
     }
     
-    public function toggleHero(Blog $blog)
+    public function toggleHero(Request $request, Blog $blog)
     {
         $this->authorize('update', $blog);
         DB::transaction(function () use ($blog) {
@@ -135,6 +243,14 @@ class BlogController extends Controller
             $blog->is_hero = true;
             $blog->save();
         });
+        
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Đã đặt bài viết thành Hero thành công.',
+                'is_hero' => true,
+            ]);
+        }
         
         return back()->with('success', 'Đã đặt bài viết thành Hero.');
     }
@@ -161,12 +277,38 @@ class BlogController extends Controller
                 }
             }
             $blog->forceDelete();
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Bài viết đã bị xoá vĩnh viễn.',
+                    'stats' => [
+                        'total' => Blog::count(),
+                        'pending' => Blog::where('status', 'pending')->count(),
+                        'published' => Blog::where('status', 'published')->count(),
+                        'rejected' => Blog::where('status', 'rejected')->count(),
+                        'need_revision' => Blog::where('status', 'need_revision')->count(),
+                    ]
+                ]);
+            }
             return redirect()->route('admin.blog.posts.index')->with('success', 'Bài viết đã bị xoá vĩnh viễn.');
         }
 
         $this->authorize('delete', $blog);
         
         $blog->delete();
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Bài viết đã được chuyển vào thùng rác thành công.',
+                'stats' => [
+                    'total' => Blog::count(),
+                    'pending' => Blog::where('status', 'pending')->count(),
+                    'published' => Blog::where('status', 'published')->count(),
+                    'rejected' => Blog::where('status', 'rejected')->count(),
+                    'need_revision' => Blog::where('status', 'need_revision')->count(),
+                ]
+            ]);
+        }
         return redirect()->route('admin.blog.posts.index')->with('success', 'Bài viết đã bị xoá tạm thời.');
     }
 }

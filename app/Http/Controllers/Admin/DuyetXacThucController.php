@@ -79,6 +79,14 @@ class DuyetXacThucController extends Controller
             $owner->update(['vai_tro_id' => $ownerRole->id]);
         }
 
+        if ($owner) {
+            try {
+                $owner->notify(new \App\Notifications\QuanStatusUpdatedNotification($quan, 'approved'));
+            } catch (\Throwable $notifEx) {
+                \Illuminate\Support\Facades\Log::warning('Quan approval notification error: ' . $notifEx->getMessage());
+            }
+        }
+
         if ($this->adminAudit && $request->user()) {
             $this->adminAudit->record($request->user(), 'venue.approved', $quan, $request);
         }
@@ -107,6 +115,15 @@ class DuyetXacThucController extends Controller
             'trang_thai' => 'bi_khoa',
             'is_xac_thuc' => false,
         ]);
+
+        $owner = $quan->chuQuan;
+        if ($owner) {
+            try {
+                $owner->notify(new \App\Notifications\QuanStatusUpdatedNotification($quan, 'rejected', $request->input('note')));
+            } catch (\Throwable $notifEx) {
+                \Illuminate\Support\Facades\Log::warning('Quan rejection notification error: ' . $notifEx->getMessage());
+            }
+        }
 
         if ($this->adminAudit && $request->user()) {
             $this->adminAudit->record($request->user(), 'venue.rejected', $quan, $request);

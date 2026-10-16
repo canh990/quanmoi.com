@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
@@ -12,9 +13,15 @@ use Tests\TestCase;
  */
 class TimKiemKhuVucVaGanBanTest extends TestCase
 {
+    use RefreshDatabase;
+
     protected function setUp(): void
     {
         parent::setUp();
+
+        $this->seed(\Database\Seeders\VaiTroSeeder::class);
+        $this->seed(\Database\Seeders\MultiRegionQuanSeeder::class);
+        \App\Models\Quan::factory()->count(5)->create();
 
         $this->mock(\App\Services\DiaChiService::class, function ($mock) {
             $mock->shouldReceive('getTinhThanh')->andReturn([

@@ -16,6 +16,7 @@ class DuyetXacThucTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\PreventRequestForgery::class);
         $this->seed(VaiTroSeeder::class);
     }
 

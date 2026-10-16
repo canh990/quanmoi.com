@@ -15,6 +15,7 @@ class CrudQuanTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\PreventRequestForgery::class);
         $this->seed(\Database\Seeders\VaiTroSeeder::class);
     }
 

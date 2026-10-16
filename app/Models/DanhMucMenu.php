@@ -30,4 +30,9 @@ class DanhMucMenu extends Model
     {
         return $this->hasMany(MonTrongMenu::class, 'danh_muc_id');
     }
+
+    public function monTrongMenu()
+    {
+        return $this->monAn();
+    }
 }

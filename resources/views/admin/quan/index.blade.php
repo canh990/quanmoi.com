@@ -36,28 +36,35 @@
 
     {{-- Venues Table (Report Matching) --}}
     <div class="bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse text-xs">
+        <div class="w-full overflow-x-auto custom-scrollbar">
+            <table class="w-full text-left border-collapse text-xs min-w-[850px] table-fixed-enterprise">
+                <colgroup>
+                    <col class="w-[30%]">
+                    <col class="w-[20%]">
+                    <col class="w-[24%]">
+                    <col class="w-[12%]">
+                    <col class="w-[14%]">
+                </colgroup>
                 <thead>
                     <tr class="bg-slate-50 border-b border-slate-200/80 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                        <th class="py-3.5 px-4">TÊN QUÁN & LOẠI HÌNH</th>
-                        <th class="py-3.5 px-4">CHỦ SỞ HỮU</th>
-                        <th class="py-3.5 px-4">ĐỊA CHỈ</th>
-                        <th class="py-3.5 px-4">TRẠNG THÁI</th>
-                        <th class="py-3.5 px-4 text-right whitespace-nowrap min-w-[170px]">THAO TÁC</th>
+                        <th class="py-3 px-3.5">TÊN QUÁN & LOẠI HÌNH</th>
+                        <th class="py-3 px-3.5">CHỦ SỞ HỮU</th>
+                        <th class="py-3 px-3.5">ĐỊA CHỈ</th>
+                        <th class="py-3 px-3.5">TRẠNG THÁI</th>
+                        <th class="py-3 px-3.5 text-right whitespace-nowrap">THAO TÁC</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 text-xs">
                     @forelse($quanList as $quan)
                         <tr class="hover:bg-slate-50/80 transition-colors {{ $quan->trashed() ? 'bg-rose-50/30' : '' }}">
                             <td class="py-3.5 px-4">
-                                <div class="flex items-center gap-3">
+                                <div class="flex items-center gap-3 min-w-0">
                                     <img src="{{ $quan->anh_bia_url ?: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=100&q=80' }}" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=100&q=80';" class="w-10 h-10 rounded-lg object-cover border border-slate-200 flex-shrink-0" alt="{{ $quan->ten_quan }}" />
-                                    <div>
-                                        <p class="font-bold text-slate-900 leading-tight flex items-center gap-1">
+                                    <div class="min-w-0 flex-1">
+                                        <p class="font-bold text-slate-900 leading-tight flex items-center gap-1 cell-wrap-2line">
                                             {{ $quan->ten_quan }}
                                             @if($quan->is_xac_thuc)
-                                                <span class="material-symbols-outlined text-blue-500 text-[14px]" title="Có Tick Xanh" style="font-variation-settings: 'FILL' 1;">verified</span>
+                                                <span class="material-symbols-outlined text-blue-500 text-[14px] shrink-0" title="Có Tick Xanh" style="font-variation-settings: 'FILL' 1;">verified</span>
                                             @endif
                                         </p>
                                         <span class="inline-block bg-amber-50 text-amber-700 px-2 py-0.5 rounded text-[10px] font-semibold mt-0.5 border border-amber-200/60">
@@ -67,12 +74,12 @@
                                 </div>
                             </td>
                             <td class="py-3.5 px-4">
-                                <p class="font-bold text-slate-800">{{ $quan->chuQuan?->ho_ten ?: 'Quản Trị Viên (Admin)' }}</p>
-                                <p class="text-[11px] text-slate-400 font-mono leading-tight">{{ $quan->chuQuan?->email ?: 'admin@quanmoi.com' }}</p>
+                                <p class="font-bold text-slate-800 cell-wrap-1line">{{ $quan->chuQuan?->ho_ten ?: 'Quản Trị Viên (Admin)' }}</p>
+                                <p class="text-[11px] text-slate-400 font-mono leading-tight truncate">{{ $quan->chuQuan?->email ?: 'admin@quanmoi.com' }}</p>
                             </td>
-                            <td class="py-3.5 px-4 max-w-xs text-slate-600">
-                                <p class="font-medium truncate" title="{{ $quan->dia_chi_chi_tiet }}">{{ $quan->dia_chi_chi_tiet ?: '228 Love Creek Suite 319' }}</p>
-                                <p class="text-[11px] text-slate-400">{{ $quan->ten_quan_huyen ?: 'Quận Ba Đình' }}, {{ $quan->ten_tinh_thanh ?: 'Thành phố Hà Nội' }}</p>
+                            <td class="py-3.5 px-4 text-slate-600">
+                                <p class="font-medium cell-wrap-2line" title="{{ $quan->dia_chi_chi_tiet }}">{{ $quan->dia_chi_chi_tiet ?: '228 Love Creek Suite 319' }}</p>
+                                <p class="text-[11px] text-slate-400 cell-wrap-1line">{{ $quan->ten_quan_huyen ?: 'Quận Ba Đình' }}, {{ $quan->ten_tinh_thanh ?: 'Thành phố Hà Nội' }}</p>
                             </td>
                             <td class="py-3.5 px-4">
                                 @if($quan->trashed())
@@ -110,13 +117,13 @@
                                     </a>
 
                                     @if($quan->trashed())
-                                        <form action="{{ route('admin.quan.restore', $quan->id) }}" method="POST" class="inline">
+                                        <form action="{{ route('admin.quan.restore', $quan->id) }}" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn khôi phục quán này không?');" class="inline">
                                             @csrf
                                             <button type="submit" class="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all" title="Khôi phục quán">
                                                 <span class="material-symbols-outlined text-[18px]">restore_from_trash</span>
                                             </button>
                                         </form>
-                                        <form action="{{ route('admin.quan.force-destroy', $quan->id) }}" method="POST" onsubmit="return confirm('CẢNH BÁO: Bạn có chắc chắn muốn xóa vĩnh viễn quán này khỏi cơ sở dữ liệu? Hành động này không thể khôi phục!');" class="inline">
+                                        <form action="{{ route('admin.quan.force-destroy', $quan->id) }}" method="POST" onsubmit="return confirm('CẢNH BÁO: Bạn có chắc chắn muốn xóa vĩnh viễn quán này khỏi cơ sở dữ liệu không? Hành động này không thể hoàn tác!');" class="inline">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="p-1.5 text-rose-700 hover:bg-rose-100 rounded-lg transition-all" title="Xóa cứng (Vĩnh viễn)">
@@ -124,7 +131,7 @@
                                             </button>
                                         </form>
                                     @else
-                                        <form action="{{ route('admin.quan.destroy', $quan->id) }}" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa tạm quán này?');" class="inline">
+                                        <form action="{{ route('admin.quan.destroy', $quan->id) }}" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa quán này vào thùng rác không?');" class="inline">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition-all" title="Xóa tạm (Soft-delete)">

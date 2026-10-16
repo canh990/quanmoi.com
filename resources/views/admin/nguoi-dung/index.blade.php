@@ -41,32 +41,40 @@
 
     {{-- Users Table --}}
     <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
+        <div class="w-full overflow-x-auto custom-scrollbar">
+            <table class="w-full text-left border-collapse min-w-[800px] table-fixed-enterprise">
+                <colgroup>
+                    <col class="w-[28%]">
+                    <col class="w-[24%]">
+                    <col class="w-[14%]">
+                    <col class="w-[12%]">
+                    <col class="w-[8%]">
+                    <col class="w-[14%]">
+                </colgroup>
                 <thead>
                     <tr class="bg-gray-50 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase">
-                        <th class="py-3.5 px-4">Người Dùng</th>
-                        <th class="py-3.5 px-4">Email & SĐT</th>
-                        <th class="py-3.5 px-4">Vai Trò</th>
-                        <th class="py-3.5 px-4">Trạng Thái</th>
-                        <th class="py-3.5 px-4 text-center">Quán</th>
-                        <th class="py-3.5 px-4 text-right whitespace-nowrap min-w-[160px]">Thao Tác</th>
+                        <th class="py-3 px-3.5">Người Dùng</th>
+                        <th class="py-3 px-3.5">Email & SĐT</th>
+                        <th class="py-3 px-3.5">Vai Trò</th>
+                        <th class="py-3 px-3.5">Trạng Thái</th>
+                        <th class="py-3 px-3.5 text-center">Quán</th>
+                        <th class="py-3 px-3.5 text-right whitespace-nowrap">Thao Tác</th>
                     </tr>
                 </thead>
                 <tbody id="users-tbody" class="divide-y divide-gray-100 text-sm">
                     @forelse($users as $user)
                         <tr id="user-row-{{ $user->id }}" class="hover:bg-gray-50/80 transition-colors {{ $user->trashed() ? 'bg-red-50/30' : '' }}">
                             <td class="py-3.5 px-4">
-                                <div class="flex items-center gap-3">
-                                    <img src="{{ $user->anh_dai_dien ?: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80' }}" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80';" class="w-10 h-10 rounded-full object-cover border border-gray-200" alt="{{ $user->ho_ten }}" />
-                                    <div>
-                                        <p class="font-bold text-gray-900 flex items-center gap-1">
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <img src="{{ $user->anh_dai_dien ?: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80' }}" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80';" class="w-10 h-10 rounded-full object-cover border border-gray-200 shrink-0" alt="{{ $user->ho_ten }}" />
+                                    <div class="min-w-0 flex-1">
+                                        <p class="font-bold text-gray-900 flex items-center gap-1 cell-wrap-2line">
                                              {{ $user->ho_ten }}
                                             @if($user->isAdmin())
-                                                <span class="material-symbols-outlined text-amber-500 text-sm" title="Quản trị viên">shield</span>
+                                                <span class="material-symbols-outlined text-amber-500 text-sm shrink-0" title="Quản trị viên">shield</span>
                                             @endif
                                             @if($user->da_xac_thuc)
-                                                <span class="material-symbols-outlined text-blue-500 text-[16px]" title="Có Tick Xanh" style="font-variation-settings: 'FILL' 1;">verified</span>
+                                                <span class="material-symbols-outlined text-blue-500 text-[16px] shrink-0" title="Có Tick Xanh" style="font-variation-settings: 'FILL' 1;">verified</span>
                                             @endif
                                         </p>
                                         <span class="text-xs text-gray-400">ID: {{ substr($user->id, 0, 8) }}...</span>
@@ -74,7 +82,7 @@
                                 </div>
                             </td>
                             <td class="py-3.5 px-4">
-                                <p class="font-medium text-gray-800">{{ $user->email }}</p>
+                                <p class="font-medium text-gray-800 cell-wrap-1line">{{ $user->email }}</p>
                                 <p class="text-xs text-gray-400">{{ $user->so_dien_thoai ?: 'Chưa cập nhật SĐT' }}</p>
                             </td>
                             <td class="py-3.5 px-4">
@@ -111,13 +119,13 @@
                                     </a>
 
                                     @if($user->trashed())
-                                        <form action="{{ route('admin.nguoi-dung.restore', $user->id) }}" method="POST" class="inline">
+                                        <form action="{{ route('admin.nguoi-dung.restore', $user->id) }}" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn khôi phục tài khoản người dùng này không?');" class="inline">
                                             @csrf
                                             <button type="submit" class="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all" title="Khôi phục">
                                                 <span class="material-symbols-outlined text-lg">restore_from_trash</span>
                                             </button>
                                         </form>
-                                        <form action="{{ route('admin.nguoi-dung.force-destroy', $user->id) }}" method="POST" onsubmit="return confirm('CẢNH BÁO: Thao tác này sẽ xóa vĩnh viễn người dùng và tất cả các quán liên quan khỏi cơ sở dữ liệu. Bạn có chắc chắn muốn tiếp tục?');" class="inline">
+                                        <form action="{{ route('admin.nguoi-dung.force-destroy', $user->id) }}" method="POST" onsubmit="return confirm('CẢNH BÁO: Thao tác này sẽ xóa vĩnh viễn người dùng và tất cả các quán liên quan khỏi cơ sở dữ liệu. Bạn có chắc chắn muốn xóa vĩnh viễn không?');" class="inline">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="p-2 text-red-700 hover:bg-red-100 rounded-lg transition-all" title="Xóa vĩnh viễn">
@@ -125,7 +133,7 @@
                                             </button>
                                         </form>
                                     @else
-                                        <form action="{{ route('admin.nguoi-dung.destroy', $user->id) }}" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa tạm thời người dùng này? Các quán của họ cũng sẽ tạm khóa.');" class="inline">
+                                        <form action="{{ route('admin.nguoi-dung.destroy', $user->id) }}" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa tạm thời người dùng này không? Các quán của họ cũng sẽ tạm khóa.');" class="inline">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all" title="Xóa tạm thời">

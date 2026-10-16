@@ -8,6 +8,18 @@ use App\Models\User;
 class BlogPolicy
 {
     /**
+     * Perform pre-authorization checks.
+     */
+    public function before(?User $user, string $ability): ?bool
+    {
+        if ($user && $user->isAdmin()) {
+            return true;
+        }
+
+        return null;
+    }
+
+    /**
      * Determine whether the user can view any models.
      */
     public function viewAny(?User $user): bool
@@ -48,7 +60,7 @@ class BlogPolicy
             return true;
         }
 
-        if ($user->id === $blog->user_id && in_array($blog->status, ['draft', 'need_revision', 'rejected', 'published'])) {
+        if ($user->id === $blog->user_id && in_array($blog->status, ['draft', 'need_revision', 'rejected'])) {
             return true;
         }
 

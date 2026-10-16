@@ -473,12 +473,12 @@
                 <div class="sticky-sidebar space-y-3">
                     <!-- CTA Card -->
                     <div class="venue-side-card bg-surface-card rounded-xl p-4 shadow-[0px_6px_20px_rgba(0,0,0,0.08)] border border-primary/10 overflow-hidden relative">
-                        <h3 class="font-title-md text-sm font-bold text-on-background mb-2">Đặt món trên ShopeeFood</h3>
+                        <h3 class="font-title-md text-sm font-bold text-on-background mb-2">Giao hàng tận nơi</h3>
                         <p class="text-on-surface-variant text-[11px] leading-relaxed mb-3">Nhấn để mở gian hàng ShopeeFood chính thức của quán.</p>
                         @if(filled($quan->shopeefood_url))
                             <a href="{{ $quan->shopeefood_url }}" target="_blank" rel="noopener noreferrer" class="w-full bg-[#EE4D2D] text-white py-2.5 px-3 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 hover:brightness-110 transition-all shadow-sm mb-2">
                                 <span class="material-symbols-outlined text-base">shopping_bag</span>
-                                Mở ShopeeFood của quán
+                                Đặt ngay trên ShopeeFood
                                 <span class="material-symbols-outlined text-sm">open_in_new</span>
                             </a>
                         @else

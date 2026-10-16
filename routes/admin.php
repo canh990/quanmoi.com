@@ -104,6 +104,16 @@ Route::middleware(['auth', 'KiemTraQuyenHan:admin'])->group(function () {
             Route::delete('/{blog}', [BlogController::class, 'destroy'])->name('destroy');
         });
 
+        // Route alias for /admin/blog/posts/... (ensures backward/cross compatibility for AJAX requests)
+        Route::prefix('posts')->group(function () {
+            Route::get('/', [BlogController::class, 'index']);
+            Route::get('/cho-duyet', [BlogController::class, 'pending']);
+            Route::get('/{blog}', [BlogController::class, 'show']);
+            Route::put('/{blog}/status', [BlogController::class, 'updateStatus']);
+            Route::put('/{blog}/hero', [BlogController::class, 'toggleHero']);
+            Route::delete('/{blog}', [BlogController::class, 'destroy']);
+        });
+
         Route::get('/danh-muc', [BlogCategoryController::class, 'index'])->name('categories.index');
         Route::post('/danh-muc', [BlogCategoryController::class, 'store'])->name('categories.store');
 

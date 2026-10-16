@@ -264,23 +264,79 @@
             color: #ffffff !important;
         }
 
-        /* 8. TABLE CELL ANTI-OVERFLOW & BOUNDARY ENFORCEMENT */
+        /* 8. TABLE CELL RESPONSIVE WRAPPING & ANTI-OVERFLOW */
         .duyet-table-row td {
             vertical-align: middle;
         }
         .duyet-table-row td .truncate {
-            overflow: hidden !important;
-            text-overflow: ellipsis !important;
-            white-space: nowrap !important;
-            min-width: 0 !important;
-        }
-        .duyet-table-row td .line-clamp-2 {
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
             overflow: hidden;
-            word-break: break-word;
-            overflow-wrap: anywhere;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            min-width: 0;
+        }
+
+        /* Classes to allow text to wrap down (xuống hàng nội dung) when zooming in */
+        .cell-wrap-2line {
+            display: -webkit-box !important;
+            -webkit-line-clamp: 2 !important;
+            -webkit-box-orient: vertical !important;
+            overflow: hidden !important;
+            white-space: normal !important;
+            word-break: break-word !important;
+            overflow-wrap: break-word !important;
+            line-height: 1.35 !important;
+        }
+        .cell-wrap-1line {
+            display: -webkit-box !important;
+            -webkit-line-clamp: 1 !important;
+            -webkit-box-orient: vertical !important;
+            overflow: hidden !important;
+            white-space: normal !important;
+            word-break: break-word !important;
+            overflow-wrap: break-word !important;
+            line-height: 1.35 !important;
+        }
+        .cell-wrap-free {
+            white-space: normal !important;
+            word-break: break-word !important;
+            overflow-wrap: break-word !important;
+        }
+
+        /* 9. TABLE FIXED & RESPONSIVE SCROLL SYSTEM */
+        html, body {
+            max-width: 100vw;
+        }
+        #admin-main-content {
+            width: 100%;
+            min-width: 0;
+        }
+        .table-fixed-enterprise {
+            table-layout: fixed;
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .table-fixed-enterprise th,
+        .table-fixed-enterprise td {
+            vertical-align: middle;
+        }
+        .table-responsive-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .btn-action-compact {
+            padding: 0.25rem 0.5rem !important;
+            font-size: 0.72rem !important;
+            line-height: 1rem !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 0.25rem !important;
+            white-space: nowrap !important;
+            flex-shrink: 0 !important;
+            border-radius: 0.5rem !important;
+        }
+        .btn-action-compact .material-symbols-outlined {
+            font-size: 14px !important;
         }
     </style>
 </head>
@@ -324,9 +380,9 @@
                         <p class="text-[10px] text-slate-400 truncate leading-tight">Quản Trị Cao Cấp</p>
                     </div>
                 </div>
-                <form action="{{ route('logout') }}" method="POST">
+                <form id="mobile-logout-form" action="{{ route('logout') }}" method="POST">
                     @csrf
-                    <button type="submit" title="Đăng xuất" class="p-1.5 text-slate-400 hover:text-rose-400 rounded-md transition-colors">
+                    <button type="button" onclick="confirmAdminLogout('mobile-logout-form')" title="Đăng xuất" class="p-1.5 text-slate-400 hover:text-rose-400 rounded-md transition-colors cursor-pointer">
                         <span class="material-symbols-outlined text-[18px]">logout</span>
                     </button>
                 </form>
@@ -363,9 +419,9 @@
                         <p class="text-[10px] text-slate-400 truncate leading-tight">Quản Trị Cấp Cao</p>
                     </div>
                 </div>
-                <form action="{{ route('logout') }}" method="POST">
+                <form id="desktop-logout-form" action="{{ route('logout') }}" method="POST">
                     @csrf
-                    <button type="submit" title="Đăng xuất" class="p-1.5 text-slate-400 hover:text-rose-400 rounded-md transition-colors">
+                    <button type="button" onclick="confirmAdminLogout('desktop-logout-form')" title="Đăng xuất" class="p-1.5 text-slate-400 hover:text-rose-400 rounded-md transition-colors cursor-pointer">
                         <span class="material-symbols-outlined text-[18px]">logout</span>
                     </button>
                 </form>
@@ -474,7 +530,7 @@
         </div>
 
         {{-- Page Content --}}
-        <main id="admin-main-content" class="p-4 sm:p-6 flex-grow transition-opacity duration-150">
+        <main id="admin-main-content" class="p-4 sm:p-6 flex-grow transition-opacity duration-150 min-w-0 w-full overflow-x-hidden">
             @yield('content')
         </main>
     </div>
@@ -525,12 +581,16 @@
                     <span class="material-symbols-outlined text-[18px]">shield</span>
                     <span>Cấu Hình Bảo Mật Hệ Thống</span>
                 </a>
+                <div onclick="closeCommandPalette(); confirmAdminLogout('desktop-logout-form');" class="cmd-item flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-rose-50 hover:text-rose-600 text-rose-700 font-semibold transition-colors cursor-pointer border-t border-slate-100 mt-1">
+                    <span class="material-symbols-outlined text-[18px] text-rose-500">logout</span>
+                    <span>Đăng Xuất Khỏi Quản Trị</span>
+                </div>
             </div>
         </div>
     </div>
 
     {{-- Enterprise Custom Confirmation Modal --}}
-    <div id="admin-confirm-modal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4 transition-opacity duration-200">
+    <div id="admin-confirm-modal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4 transition-opacity duration-200" style="display: none;">
         <div id="admin-confirm-box" class="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-md w-full p-6 transform transition-all scale-95 duration-200 text-center">
             <div id="confirm-modal-icon-bg" class="w-14 h-14 rounded-2xl mx-auto flex items-center justify-center mb-4 transition-colors bg-amber-100 text-amber-600">
                 <span id="confirm-modal-icon" class="material-symbols-outlined text-[32px]">help</span>
@@ -551,7 +611,7 @@
     </div>
 
     {{-- Enterprise Venue Media & Detail Inspection Modal --}}
-    <div id="venue-media-modal" class="fixed inset-0 bg-slate-950/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3 sm:p-5 transition-opacity duration-200">
+    <div id="venue-media-modal" class="fixed inset-0 bg-slate-950/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3 sm:p-5 transition-opacity duration-200" style="display: none;">
         <div id="venue-media-box" class="bg-white rounded-3xl shadow-2xl border border-slate-200/90 max-w-5xl w-full max-h-[94vh] flex flex-col overflow-hidden transform transition-all scale-95 duration-200">
             {{-- Header --}}
             <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/80 shrink-0">
@@ -676,14 +736,180 @@
             </div>
 
             {{-- Footer Action Buttons --}}
-            <div class="px-6 py-4 border-t border-slate-100 bg-slate-50/80 flex items-center justify-between shrink-0 flex-nowrap gap-3">
+            <div class="px-6 py-4 border-t border-slate-100 bg-slate-50/80 flex items-center justify-between shrink-0 flex-wrap sm:flex-nowrap gap-3">
                 <button type="button" onclick="closeVenueMediaModal()" class="btn-enterprise btn-enterprise-secondary">
                     <span class="material-symbols-outlined text-[16px]">close</span>
                     <span class="whitespace-nowrap">Đóng lại</span>
                 </button>
-                <div id="vm-actions" class="flex items-center gap-2 flex-nowrap shrink-0">
+                <div id="vm-actions" class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
                     {{-- Approve & Reject buttons injected dynamically --}}
                 </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Enterprise Blog Quick Preview Modal --}}
+    <div id="admin-blog-preview-modal" class="fixed inset-0 bg-slate-950/75 backdrop-blur-xs z-50 hidden flex items-center justify-center p-3 sm:p-5 transition-opacity duration-200" style="display: none;">
+        <div id="admin-blog-preview-box" class="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-3xl w-full max-h-[92vh] flex flex-col overflow-hidden transform transition-all scale-95 duration-200">
+            {{-- Header --}}
+            <div class="px-5 sm:px-6 py-3.5 border-b border-slate-100 flex items-center justify-between bg-slate-50/90 shrink-0 gap-3">
+                <div class="flex items-center gap-3 min-w-0">
+                    <img id="bp-author-avatar" src="https://ui-avatars.com/api/?name=Admin" alt="Avatar" class="w-10 h-10 rounded-2xl object-cover border border-slate-200 shrink-0 shadow-2xs">
+                    <div class="min-w-0 flex-1">
+                        <h3 id="bp-title" class="text-sm sm:text-base font-black text-slate-900 leading-tight truncate">Xem Nhanh Bài Viết Phê Duyệt</h3>
+                        <p id="bp-meta" class="text-[11px] text-slate-500 mt-0.5 truncate leading-tight">Tác giả: ... • Chuyên mục: ...</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeBlogQuickPreviewModal()" class="w-9 h-9 rounded-xl bg-slate-200/70 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors cursor-pointer shrink-0" title="Đóng cửa sổ">
+                    <span class="material-symbols-outlined text-[20px]">close</span>
+                </button>
+            </div>
+
+            {{-- Body --}}
+            <div class="p-5 sm:p-6 overflow-y-auto flex-grow space-y-4 custom-scrollbar">
+                {{-- Cover Image --}}
+                <div id="bp-cover-container" class="w-full max-h-72 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200/90 shadow-2xs">
+                    <img id="bp-cover-img" src="" alt="Ảnh bìa bài viết" class="w-full h-full max-h-72 object-cover">
+                </div>
+
+                {{-- Badges & Metadata --}}
+                <div>
+                    <div class="flex items-center gap-2 flex-wrap mb-2">
+                        <span id="bp-badge" class="px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-amber-100 text-amber-800 border border-amber-200">Chờ duyệt</span>
+                        <span id="bp-hero-badge" class="hidden inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500 text-white shadow-2xs">
+                            <span class="material-symbols-outlined text-[13px]">star</span>
+                            <span>Hero Nổi Bật</span>
+                        </span>
+                        <span id="bp-date-badge" class="text-[11px] text-slate-400 font-medium"></span>
+                    </div>
+
+                    <h2 id="bp-heading" class="text-lg sm:text-2xl font-black text-slate-900 leading-snug break-words whitespace-normal cell-wrap-free"></h2>
+
+                    {{-- Tags --}}
+                    <div id="bp-tags-container" class="flex flex-wrap gap-1.5 mt-2"></div>
+
+                    {{-- Excerpt --}}
+                    <div id="bp-excerpt" class="hidden mt-3 text-xs sm:text-[13px] text-slate-600 bg-amber-50/50 p-3.5 rounded-2xl border border-amber-200/60 italic leading-relaxed break-words whitespace-normal"></div>
+
+                    {{-- Moderation Notes History Callout --}}
+                    <div id="bp-log-container" class="hidden mt-3 text-xs p-3.5 rounded-2xl border leading-relaxed break-words whitespace-normal"></div>
+                </div>
+
+                {{-- Post Full Content --}}
+                <div id="bp-content" class="prose max-w-none text-xs sm:text-sm text-slate-700 border-t border-slate-100 pt-4 leading-relaxed break-words overflow-x-auto custom-scrollbar"></div>
+            </div>
+
+            {{-- Footer Actions --}}
+            <div class="px-5 sm:px-6 py-3.5 border-t border-slate-100 bg-slate-50/90 flex flex-wrap items-center justify-between gap-2.5 shrink-0">
+                <div class="flex items-center gap-2 flex-wrap">
+                    <a id="bp-detail-link" href="#" class="btn-enterprise btn-enterprise-secondary py-2 text-xs">
+                        <span class="material-symbols-outlined text-[16px]">open_in_new</span>
+                        <span>Mở trang chi tiết đầy đủ</span>
+                    </a>
+                    <a id="bp-public-link" href="#" target="_blank" class="hidden btn-enterprise btn-enterprise-dark py-2 text-xs" title="Xem trên giao diện công khai">
+                        <span class="material-symbols-outlined text-[16px]">visibility</span>
+                        <span>Xem ngoài website</span>
+                    </a>
+                </div>
+
+                <div class="flex items-center gap-2 flex-wrap">
+                    <button type="button" id="bp-btn-delete" class="btn-enterprise btn-enterprise-secondary text-gray-500 hover:text-rose-600 hover:bg-rose-50 border-gray-200 py-2 text-xs" title="Xóa bài viết">
+                        <span class="material-symbols-outlined text-[16px]">delete</span>
+                        <span class="hidden sm:inline">Xóa bài</span>
+                    </button>
+                    <button type="button" id="bp-btn-reject" class="btn-enterprise btn-enterprise-danger py-2 text-xs">
+                        <span class="material-symbols-outlined text-[16px]">cancel</span>
+                        <span>Không duyệt</span>
+                    </button>
+                    <button type="button" id="bp-btn-approve" class="btn-enterprise btn-enterprise-success py-2 text-xs">
+                        <span class="material-symbols-outlined text-[16px]">check_circle</span>
+                        <span>Phê Duyệt Bài Viết</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Global Blog Moderation Modal (Từ chối / Yêu cầu sửa) --}}
+    <div id="admin-blog-moderation-modal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4 transition-opacity duration-200" style="display: none;">
+        <div id="admin-blog-moderation-box" class="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-lg w-full p-6 transform transition-all scale-95 duration-200">
+            <div class="flex items-start justify-between gap-3 mb-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0 border border-rose-200/70">
+                        <span class="material-symbols-outlined text-[22px]">gavel</span>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900 leading-tight">Phản Hồi & Kiểm Duyệt Bài Viết</h3>
+                        <p id="mod-modal-blog-title" class="text-xs text-slate-500 font-medium truncate max-w-xs mt-0.5">Tiêu đề bài viết...</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeBlogModerationModal()" class="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 flex items-center justify-center transition-colors">
+                    <span class="material-symbols-outlined text-[20px]">close</span>
+                </button>
+            </div>
+
+            <input type="hidden" id="mod-modal-blog-id" value="">
+            <input type="hidden" id="mod-modal-expected-status" value="">
+
+            <div class="mb-4">
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Hành động kiểm duyệt <span class="text-rose-500">*</span></label>
+                <div class="grid grid-cols-2 gap-3">
+                    <label class="relative flex items-center gap-2.5 p-3 rounded-xl border border-slate-200 cursor-pointer hover:bg-slate-50 transition-colors has-[:checked]:border-rose-500 has-[:checked]:bg-rose-50/50">
+                        <input type="radio" name="mod_action_type" value="rejected" checked class="text-rose-600 focus:ring-rose-500">
+                        <div>
+                            <span class="block text-xs font-bold text-slate-900">Từ chối bài viết</span>
+                            <span class="block text-[10px] text-slate-500">Không cho phép đăng</span>
+                        </div>
+                    </label>
+                    <label class="relative flex items-center gap-2.5 p-3 rounded-xl border border-slate-200 cursor-pointer hover:bg-slate-50 transition-colors has-[:checked]:border-orange-500 has-[:checked]:bg-orange-50/50">
+                        <input type="radio" name="mod_action_type" value="need_revision" class="text-orange-600 focus:ring-orange-500">
+                        <div>
+                            <span class="block text-xs font-bold text-slate-900">Yêu cầu sửa đổi</span>
+                            <span class="block text-[10px] text-slate-500">Tác giả sửa lại</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Gợi ý lý do phổ biến:</label>
+                <div class="flex flex-wrap gap-1.5">
+                    <button type="button" onclick="setModerationReasonChip('Nội dung vi phạm tiêu chuẩn cộng đồng hoặc không phù hợp ẩm thực.')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-medium rounded-lg transition-colors cursor-pointer">
+                        Vi phạm tiêu chuẩn
+                    </button>
+                    <button type="button" onclick="setModerationReasonChip('Hình ảnh mờ, chất lượng thấp hoặc chứa watermark bản quyền.')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-medium rounded-lg transition-colors cursor-pointer">
+                        Ảnh mờ / bản quyền
+                    </button>
+                    <button type="button" onclick="setModerationReasonChip('Nội dung bài viết quá sơ sài, thiếu thông tin trải nghiệm thực tế.')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-medium rounded-lg transition-colors cursor-pointer">
+                        Nội dung sơ sài
+                    </button>
+                    <button type="button" onclick="setModerationReasonChip('Nội dung trùng lặp hoặc sao chép từ bài viết khác trên hệ thống.')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-medium rounded-lg transition-colors cursor-pointer">
+                        Trùng lặp nội dung
+                    </button>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label for="mod-modal-note" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Lý do chi tiết & Hướng dẫn chỉnh sửa <span class="text-rose-500">*</span>
+                </label>
+                <textarea 
+                    id="mod-modal-note" 
+                    rows="3" 
+                    placeholder="Nhập lý do cụ thể gửi đến tác giả bài viết..." 
+                    class="w-full p-3 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all font-medium placeholder:text-slate-400"
+                ></textarea>
+                <p class="text-[10px] text-slate-400 mt-1">Lý do này sẽ hiển thị trực tiếp trong trang quản lý bài viết của tác giả và gửi thông báo.</p>
+            </div>
+
+            <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                <button type="button" onclick="closeBlogModerationModal()" class="btn-enterprise btn-enterprise-secondary py-2">
+                    <span>Hủy bỏ</span>
+                </button>
+                <button type="button" id="btn-submit-blog-moderation" onclick="adminSubmitModerationModal()" class="btn-enterprise btn-enterprise-danger py-2">
+                    <span class="material-symbols-outlined text-[16px]">send</span>
+                    <span id="btn-submit-blog-moderation-text">Xác Nhận & Gửi Phản Hồi</span>
+                </button>
             </div>
         </div>
     </div>
@@ -692,6 +918,18 @@
     <div id="realtime-toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-3 max-w-sm pointer-events-auto"></div>
 
     <script>
+        function escapeHtml(text) {
+            if (!text) return '';
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return String(text).replace(/[&<>"']/g, m => map[m]);
+        }
+
         // Enterprise Confirmation Modal Engine
         let confirmModalCallback = null;
 
@@ -718,6 +956,7 @@
             btnIcon.textContent = options.confirmIcon || 'check_circle';
             submitBtn.className = 'btn-enterprise w-1/2 py-2.5 ' + (options.confirmClass || 'btn-enterprise-success');
 
+            modal.style.display = 'flex';
             modal.classList.remove('hidden');
             setTimeout(() => {
                 box.classList.remove('scale-95');
@@ -734,6 +973,7 @@
             box.classList.add('scale-95');
             setTimeout(() => {
                 modal.classList.add('hidden');
+                modal.style.display = 'none';
                 confirmModalCallback = null;
             }, 150);
         }
@@ -747,6 +987,25 @@
                 closeConfirmModal();
             }
         });
+
+        // Xác nhận đăng xuất bằng Custom Modal tiếng Việt
+        function confirmAdminLogout(formId = 'desktop-logout-form') {
+            openConfirmModal({
+                title: 'Xác Nhận Đăng Xuất',
+                message: 'Bạn có chắc chắn muốn đăng xuất khỏi trang quản trị <b class="text-slate-900 font-bold">QuanMoi Admin</b> không?<br><span class="text-slate-500 text-[11px]">Vui lòng lưu lại mọi nội dung đang chỉnh sửa trước khi rời khỏi hệ thống.</span>',
+                icon: 'logout',
+                iconBg: 'bg-rose-100 text-rose-700 border border-rose-200',
+                confirmText: 'Đăng Xuất Ngay',
+                confirmClass: 'btn-enterprise-danger',
+                confirmIcon: 'logout',
+                onConfirm: () => {
+                    const form = document.getElementById(formId);
+                    if (form) {
+                        form.submit();
+                    }
+                }
+            });
+        }
 
         document.getElementById('venue-media-modal')?.addEventListener('click', function(e) {
             if (e.target === this) {
@@ -836,7 +1095,7 @@
                 (phone ? `<div><a href="tel:${phone}" class="hover:text-primary font-bold">📞 ${phone}</a></div>` : '');
 
             const hours = (v.gio_mo_cua && v.gio_dong_cua) ? `${v.gio_mo_cua} - ${v.gio_dong_cua}` : 'Chưa thiết lập giờ';
-            const price = (v.gia_nho_nhat && v.gia_lon_nhat) ? `${Number(v.gia_nho_nhat).toLocaleString()}đ - ${Number(v.gia_nho_nhat).toLocaleString()}đ` : 'Chưa cập nhật giá';
+            const price = (v.gia_nho_nhat && v.gia_lon_nhat) ? `${Number(v.gia_nho_nhat).toLocaleString()}đ - ${Number(v.gia_lon_nhat).toLocaleString()}đ` : 'Chưa cập nhật giá';
             document.getElementById('vm-detail-hours-price').textContent = `⏰ ${hours} • 💰 ${price}`;
             document.getElementById('vm-detail-date').textContent = v.created_at || (v.created_at_formatted || 'Gần đây');
 
@@ -872,9 +1131,14 @@
                         <span class="material-symbols-outlined text-[16px]">cancel</span>
                         <span class="whitespace-nowrap">Không Duyệt Quán</span>
                     </button>
+                    <button type="button" onclick="closeVenueMediaModal(); confirmDeletePendingQuan('${v.id}', '${safeName}')" class="btn-enterprise btn-enterprise-secondary text-slate-500 hover:text-rose-600 hover:bg-rose-50 border-slate-200">
+                        <span class="material-symbols-outlined text-[16px]">delete</span>
+                        <span class="whitespace-nowrap">Xóa Hồ Sơ</span>
+                    </button>
                 `;
             }
 
+            modal.style.display = 'flex';
             modal.classList.remove('hidden');
             setTimeout(() => {
                 box.classList.remove('scale-95');
@@ -890,7 +1154,565 @@
             box.classList.add('scale-95');
             setTimeout(() => {
                 modal.classList.add('hidden');
+                modal.style.display = 'none';
             }, 150);
+        }
+
+        // Global Blog Quick Preview Engine
+        document.getElementById('admin-blog-preview-modal')?.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeBlogQuickPreviewModal();
+            }
+        });
+
+        function openBlogQuickPreviewModal(blogId) {
+            const modal = document.getElementById('admin-blog-preview-modal');
+            const box = document.getElementById('admin-blog-preview-box');
+            if (!modal) return;
+
+            document.getElementById('bp-title').textContent = 'Đang tải bài viết...';
+            document.getElementById('bp-meta').textContent = 'Vui lòng chờ trong giây lát...';
+            document.getElementById('bp-heading').textContent = '';
+            document.getElementById('bp-excerpt').textContent = '';
+            document.getElementById('bp-excerpt').classList.add('hidden');
+            document.getElementById('bp-log-container').classList.add('hidden');
+            document.getElementById('bp-tags-container').innerHTML = '';
+            document.getElementById('bp-hero-badge').classList.add('hidden');
+            document.getElementById('bp-public-link').classList.add('hidden');
+            document.getElementById('bp-content').innerHTML = '<div class="py-12 text-center text-slate-400"><span class="material-symbols-outlined text-3xl animate-spin">progress_activity</span><p class="mt-2 text-xs font-medium">Đang tải nội dung bài viết...</p></div>';
+            document.getElementById('bp-cover-container').classList.add('hidden');
+            document.getElementById('bp-detail-link').href = `/admin/blog/bai-viet/${blogId}`;
+
+            modal.style.display = 'flex';
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                box.classList.remove('scale-95');
+                box.classList.add('scale-100');
+            }, 10);
+
+            fetch(`/admin/blog/bai-viet/${blogId}?ajax=1`, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(async res => {
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok || !data || !data.success || !data.blog) {
+                    throw new Error(data.message || `Lỗi máy chủ HTTP ${res.status}`);
+                }
+                return data;
+            })
+            .then(data => {
+                const b = data.blog;
+                document.getElementById('bp-title').textContent = 'Chi Tiết & Xem Nhanh Bài Viết';
+                document.getElementById('bp-meta').textContent = `Tác giả: ${b.author_name} ${b.author_email ? '(' + b.author_email + ')' : ''} • Chuyên mục: ${b.category_name} • Ngày tạo: ${b.created_at_formatted || 'Gần đây'}`;
+                document.getElementById('bp-heading').textContent = b.title;
+
+                const avatarEl = document.getElementById('bp-author-avatar');
+                if (avatarEl && b.author_avatar) {
+                    avatarEl.src = b.author_avatar;
+                }
+
+                if (b.cover_image_url) {
+                    const img = document.getElementById('bp-cover-img');
+                    img.src = b.cover_image_url;
+                    img.onerror = function() { this.src = 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=80'; };
+                    document.getElementById('bp-cover-container').classList.remove('hidden');
+                } else {
+                    document.getElementById('bp-cover-container').classList.add('hidden');
+                }
+
+                const badgeEl = document.getElementById('bp-badge');
+                if (badgeEl) {
+                    if (b.status === 'published') {
+                        badgeEl.className = 'px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200';
+                        badgeEl.textContent = 'Đã xuất bản';
+                    } else if (b.status === 'rejected') {
+                        badgeEl.className = 'px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-rose-100 text-rose-800 border border-rose-200';
+                        badgeEl.textContent = 'Đã từ chối';
+                    } else if (b.status === 'need_revision') {
+                        badgeEl.className = 'px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-orange-100 text-orange-800 border border-orange-200';
+                        badgeEl.textContent = 'Cần sửa đổi';
+                    } else if (b.status === 'scheduled') {
+                        badgeEl.className = 'px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-purple-100 text-purple-800 border border-purple-200';
+                        badgeEl.textContent = 'Lên lịch';
+                    } else {
+                        badgeEl.className = 'px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-amber-100 text-amber-800 border border-amber-200';
+                        badgeEl.textContent = 'Chờ duyệt';
+                    }
+                }
+
+                const heroBadge = document.getElementById('bp-hero-badge');
+                if (heroBadge) {
+                    if (b.is_hero) {
+                        heroBadge.classList.remove('hidden');
+                    } else {
+                        heroBadge.classList.add('hidden');
+                    }
+                }
+
+                const dateBadge = document.getElementById('bp-date-badge');
+                if (dateBadge) {
+                    dateBadge.textContent = b.created_at_formatted ? `• Ngày đăng: ${b.created_at_formatted}` : '';
+                }
+
+                const tagsContainer = document.getElementById('bp-tags-container');
+                if (tagsContainer) {
+                    tagsContainer.innerHTML = '';
+                    if (b.tags && b.tags.length > 0) {
+                        b.tags.forEach(t => {
+                            const tEl = document.createElement('span');
+                            tEl.className = 'px-2 py-0.5 bg-slate-100 text-slate-700 font-medium text-[10.5px] rounded-md border border-slate-200/80';
+                            tEl.textContent = '#' + (typeof t === 'object' ? t.name : t);
+                            tagsContainer.appendChild(tEl);
+                        });
+                    }
+                }
+
+                const excerptEl = document.getElementById('bp-excerpt');
+                if (excerptEl) {
+                    if (b.excerpt) {
+                        excerptEl.textContent = '“ ' + b.excerpt + ' ”';
+                        excerptEl.classList.remove('hidden');
+                    } else {
+                        excerptEl.classList.add('hidden');
+                    }
+                }
+
+                const logContainer = document.getElementById('bp-log-container');
+                if (logContainer) {
+                    if (b.latest_log && b.latest_log.note) {
+                        const isReject = b.latest_log.action === 'rejected';
+                        logContainer.className = `mt-3 text-xs p-3.5 rounded-2xl border leading-relaxed break-words whitespace-normal ${isReject ? 'bg-rose-50 border-rose-200 text-rose-800' : 'bg-orange-50 border-orange-200 text-orange-800'}`;
+                        logContainer.innerHTML = `
+                            <div class="flex items-center gap-1.5 font-bold mb-1">
+                                <span class="material-symbols-outlined text-[16px]">${isReject ? 'cancel' : 'rule'}</span>
+                                <span>Ghi chú kiểm duyệt gần nhất (${b.latest_log.admin_name || 'Admin'} - ${b.latest_log.created_at || ''}):</span>
+                            </div>
+                            <div class="pl-5 italic">"${escapeHtml(b.latest_log.note)}"</div>
+                        `;
+                        logContainer.classList.remove('hidden');
+                    } else {
+                        logContainer.classList.add('hidden');
+                    }
+                }
+
+                document.getElementById('bp-content').innerHTML = b.content || '<em class="text-slate-400">Không có nội dung chi tiết.</em>';
+
+                const publicLink = document.getElementById('bp-public-link');
+                if (publicLink) {
+                    if (b.public_url) {
+                        publicLink.href = b.public_url;
+                        publicLink.classList.remove('hidden');
+                    } else {
+                        publicLink.classList.add('hidden');
+                    }
+                }
+
+                const btnApprove = document.getElementById('bp-btn-approve');
+                const btnReject = document.getElementById('bp-btn-reject');
+                const btnDelete = document.getElementById('bp-btn-delete');
+
+                if (btnApprove) {
+                    btnApprove.style.display = b.status === 'published' ? 'none' : 'inline-flex';
+                    btnApprove.onclick = function() {
+                        adminQuickApproveBlog(b.id, b.title);
+                    };
+                }
+
+                if (btnReject) {
+                    btnReject.style.display = b.status === 'rejected' ? 'none' : 'inline-flex';
+                    btnReject.onclick = function() {
+                        adminOpenRejectModal(b.id, b.title, b.status);
+                    };
+                }
+
+                if (btnDelete) {
+                    btnDelete.onclick = function() {
+                        adminConfirmDeleteBlog(b.id, b.title);
+                    };
+                }
+            })
+            .catch(err => {
+                document.getElementById('bp-content').innerHTML = `
+                    <div class="p-6 text-center text-rose-500 text-xs">
+                        <span class="material-symbols-outlined text-3xl mb-1 text-rose-400 block">error</span>
+                        <p class="font-bold mb-1">Không thể nạp nội dung bài viết này (${escapeHtml(err.message || 'Lỗi kết nối')})</p>
+                        <p class="text-slate-500 mb-3">Vui lòng thử lại hoặc mở trực tiếp trang kiểm duyệt chi tiết.</p>
+                        <button type="button" onclick="openBlogQuickPreviewModal(${blogId})" class="btn-enterprise btn-enterprise-secondary py-1.5 text-xs mr-2">
+                            <span class="material-symbols-outlined text-[14px]">refresh</span>
+                            <span>Thử lại</span>
+                        </button>
+                    </div>
+                `;
+            });
+        }
+
+        function closeBlogQuickPreviewModal() {
+            const modal = document.getElementById('admin-blog-preview-modal');
+            const box = document.getElementById('admin-blog-preview-box');
+            if (!modal) return;
+            box.classList.remove('scale-100');
+            box.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.style.display = 'none';
+            }, 150);
+        }
+
+        // Global Blog Actions: Approve, Reject/Revision, Delete
+        function adminQuickApproveBlog(blogId, blogTitle) {
+            let title = blogTitle;
+            if (!title) {
+                const titleEl = document.querySelector(`#admin-blog-row-${blogId} a[title]`);
+                title = titleEl ? titleEl.getAttribute('title') : '#' + blogId;
+            }
+
+            openConfirmModal({
+                title: 'Xác Nhận Duyệt Bài Viết',
+                message: `Bạn có chắc chắn muốn phê duyệt và xuất bản bài viết <b class="text-slate-900 font-bold">"${escapeHtml(title)}"</b> không?<br><span class="text-emerald-700 text-[11px] font-medium">Bài viết sẽ chính thức được xuất bản công khai ngay lập tức.</span>`,
+                icon: 'task_alt',
+                iconBg: 'bg-emerald-100 text-emerald-800 border border-emerald-200',
+                confirmText: 'Đồng Ý Duyệt',
+                confirmClass: 'btn-enterprise-success',
+                confirmIcon: 'check_circle',
+                onConfirm: () => executeQuickApproveBlog(blogId)
+            });
+        }
+
+        function executeQuickApproveBlog(blogId) {
+            const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+            const url = `/admin/blog/bai-viet/${blogId}/status`;
+
+            fetch(url, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrf,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    status: 'published',
+                    note: 'Phê duyệt xuất bản bài viết từ trang quản trị.'
+                })
+            })
+            .then(async res => {
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) throw new Error(data.message || `Lỗi HTTP ${res.status}`);
+                return data;
+            })
+            .then(data => {
+                if (data.success) {
+                    if (typeof showRealtimeToast === 'function') {
+                        showRealtimeToast('Đã Phê Duyệt', data.message || 'Bài viết đã được xuất bản thành công!', '', 'check_circle', 'bg-emerald-500');
+                    }
+                    clearAdminPageCache();
+                    closeBlogQuickPreviewModal();
+
+                    if (typeof updateRowStatusBadge === 'function') {
+                        updateRowStatusBadge(blogId, data.status, data.status_label);
+                    }
+                    if (typeof updateAdminBlogStats === 'function' && data.stats) {
+                        updateAdminBlogStats(data.stats);
+                    }
+
+                    const isPendingPage = (new URLSearchParams(window.location.search).get('status') === 'pending') || window.location.pathname.includes('/cho-duyet');
+                    if (isPendingPage) {
+                        const rowEl = document.getElementById(`admin-blog-row-${blogId}`);
+                        if (rowEl) {
+                            rowEl.style.transition = 'all 0.35s ease';
+                            rowEl.style.opacity = '0';
+                            rowEl.style.transform = 'translateX(20px)';
+                            setTimeout(() => {
+                                rowEl.remove();
+                                const tbody = document.getElementById('admin-blog-tbody');
+                                if (tbody && tbody.querySelectorAll('tr').length === 0) {
+                                    tbody.innerHTML = `
+                                        <tr>
+                                            <td colspan="6" class="px-6 py-12 text-center text-gray-400 font-medium">
+                                                <span class="material-symbols-outlined text-3xl text-emerald-400 block mb-2">task_alt</span>
+                                                Tuyệt vời! Hiện không còn bài viết nào đang chờ duyệt.
+                                            </td>
+                                        </tr>
+                                    `;
+                                }
+                            }, 350);
+                        }
+                    }
+                } else {
+                    if (typeof showRealtimeToast === 'function') {
+                        showRealtimeToast('Duyệt Thất Bại', data.message || 'Không thể phê duyệt bài viết.', '', 'error', 'bg-rose-500');
+                    }
+                }
+            })
+            .catch(err => {
+                if (typeof showRealtimeToast === 'function') {
+                    showRealtimeToast('Lỗi Kết Nối', err.message || 'Không thể kết nối máy chủ.', '', 'wifi_off', 'bg-rose-500');
+                }
+            });
+        }
+
+        function adminOpenRejectModal(blogId, blogTitle, currentStatus = 'pending') {
+            const modal = document.getElementById('admin-blog-moderation-modal');
+            const box = document.getElementById('admin-blog-moderation-box');
+            const idInput = document.getElementById('mod-modal-blog-id');
+            const expInput = document.getElementById('mod-modal-expected-status');
+            const titleEl = document.getElementById('mod-modal-blog-title');
+            const noteInput = document.getElementById('mod-modal-note');
+
+            if (!modal) return;
+
+            let title = blogTitle;
+            if (!title) {
+                const titleElDom = document.querySelector(`#admin-blog-row-${blogId} a[title]`);
+                title = titleElDom ? titleElDom.getAttribute('title') : '#' + blogId;
+            }
+
+            idInput.value = blogId;
+            expInput.value = currentStatus;
+            titleEl.textContent = title || 'Bài viết #' + blogId;
+            noteInput.value = '';
+
+            const firstRadio = document.querySelector('input[name="mod_action_type"][value="rejected"]');
+            if (firstRadio) firstRadio.checked = true;
+
+            modal.style.display = 'flex';
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                box.classList.remove('scale-95');
+                box.classList.add('scale-100');
+                noteInput.focus();
+            }, 10);
+        }
+
+        function closeBlogModerationModal() {
+            const modal = document.getElementById('admin-blog-moderation-modal');
+            const box = document.getElementById('admin-blog-moderation-box');
+            if (!modal) return;
+
+            box.classList.remove('scale-100');
+            box.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.style.display = 'none';
+            }, 150);
+        }
+
+        function setModerationReasonChip(text) {
+            const noteInput = document.getElementById('mod-modal-note');
+            if (noteInput) {
+                noteInput.value = text;
+                noteInput.focus();
+            }
+        }
+
+        function adminSubmitModerationModal() {
+            const blogId = document.getElementById('mod-modal-blog-id')?.value;
+            const expectedStatus = document.getElementById('mod-modal-expected-status')?.value;
+            const selectedRadio = document.querySelector('input[name="mod_action_type"]:checked');
+            const status = selectedRadio ? selectedRadio.value : 'rejected';
+            const note = document.getElementById('mod-modal-note')?.value.trim();
+
+            if (!note) {
+                if (typeof showRealtimeToast === 'function') {
+                    showRealtimeToast('Chưa Nhập Lý Do', 'Vui lòng nhập lý do từ chối hoặc hướng dẫn sửa để tác giả được biết.', '', 'warning', 'bg-amber-500');
+                }
+                document.getElementById('mod-modal-note')?.focus();
+                return;
+            }
+
+            const actionText = status === 'rejected' ? 'từ chối (không duyệt)' : 'yêu cầu chỉnh sửa';
+            const actionTitle = status === 'rejected' ? 'Xác Nhận Không Duyệt Bài Viết' : 'Xác Nhận Yêu Cầu Chỉnh Sửa';
+            const blogTitle = document.getElementById('mod-modal-blog-title')?.textContent || '#' + blogId;
+
+            closeBlogModerationModal();
+            openConfirmModal({
+                title: actionTitle,
+                message: `Bạn có chắc chắn muốn <b>${actionText}</b> bài viết <b class="text-slate-900 font-bold">"${escapeHtml(blogTitle)}"</b> không?<br><span class="text-slate-500 text-[11px]">Thông báo kèm theo lý do "<i>${escapeHtml(note)}</i>" sẽ được gửi trực tiếp đến tác giả.</span>`,
+                icon: status === 'rejected' ? 'cancel' : 'edit_note',
+                iconBg: status === 'rejected' ? 'bg-rose-100 text-rose-800 border border-rose-200' : 'bg-orange-100 text-orange-800 border border-orange-200',
+                confirmText: status === 'rejected' ? 'Xác Nhận Không Duyệt' : 'Gửi Yêu Cầu Sửa',
+                confirmClass: status === 'rejected' ? 'btn-enterprise-danger' : 'btn-enterprise-warning',
+                confirmIcon: status === 'rejected' ? 'cancel' : 'send',
+                onConfirm: () => executeSubmitModeration(blogId, status, note, expectedStatus)
+            });
+        }
+
+        function executeSubmitModeration(blogId, status, note, expectedStatus) {
+            const submitBtn = document.getElementById('btn-submit-blog-moderation');
+            const submitText = document.getElementById('btn-submit-blog-moderation-text');
+            if (submitBtn) submitBtn.disabled = true;
+            if (submitText) submitText.textContent = 'Đang xử lý...';
+
+            const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+            const url = `/admin/blog/bai-viet/${blogId}/status`;
+
+            fetch(url, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrf,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    status: status,
+                    note: note,
+                    expected_status: expectedStatus || null
+                })
+            })
+            .then(async res => {
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) throw new Error(data.message || `Lỗi HTTP ${res.status}`);
+                return data;
+            })
+            .then(data => {
+                if (data.success) {
+                    if (typeof showRealtimeToast === 'function') {
+                        const icon = status === 'rejected' ? 'cancel' : 'rule';
+                        const color = status === 'rejected' ? 'bg-rose-500' : 'bg-orange-500';
+                        showRealtimeToast('Thành Công', data.message || 'Cập nhật trạng thái bài viết thành công!', '', icon, color);
+                    }
+                    clearAdminPageCache();
+                    closeBlogQuickPreviewModal();
+
+                    if (typeof updateRowStatusBadge === 'function') {
+                        updateRowStatusBadge(blogId, data.status, data.status_label);
+                    }
+                    if (typeof updateAdminBlogStats === 'function' && data.stats) {
+                        updateAdminBlogStats(data.stats);
+                    }
+
+                    const isPendingPage = (new URLSearchParams(window.location.search).get('status') === 'pending') || window.location.pathname.includes('/cho-duyet');
+                    if (isPendingPage && data.status !== 'pending') {
+                        const rowEl = document.getElementById(`admin-blog-row-${blogId}`);
+                        if (rowEl) {
+                            rowEl.style.transition = 'all 0.35s ease';
+                            rowEl.style.opacity = '0';
+                            rowEl.style.transform = 'translateX(20px)';
+                            setTimeout(() => {
+                                rowEl.remove();
+                                const tbody = document.getElementById('admin-blog-tbody');
+                                if (tbody && tbody.querySelectorAll('tr').length === 0) {
+                                    tbody.innerHTML = `
+                                        <tr>
+                                            <td colspan="6" class="px-6 py-12 text-center text-gray-400 font-medium">
+                                                <span class="material-symbols-outlined text-3xl text-emerald-400 block mb-2">task_alt</span>
+                                                Tuyệt vời! Hiện không còn bài viết nào đang chờ duyệt.
+                                            </td>
+                                        </tr>
+                                    `;
+                                }
+                            }, 350);
+                        }
+                    }
+                } else {
+                    if (typeof showRealtimeToast === 'function') {
+                        showRealtimeToast('Thao Tác Thất Bại', data.message || 'Có lỗi xảy ra, vui lòng thử lại.', '', 'error', 'bg-rose-500');
+                    }
+                }
+            })
+            .catch(err => {
+                if (typeof showRealtimeToast === 'function') {
+                    showRealtimeToast('Lỗi Xử Lý', err.message || 'Không thể kết nối đến máy chủ.', '', 'wifi_off', 'bg-rose-500');
+                }
+            })
+            .finally(() => {
+                if (submitBtn) submitBtn.disabled = false;
+                if (submitText) submitText.textContent = 'Xác Nhận & Gửi Phản Hồi';
+            });
+        }
+
+        // Global Blog Delete with Custom Modal
+        function adminConfirmDeleteBlog(blogId, blogTitle) {
+            openConfirmModal({
+                title: 'Xóa Bài Viết',
+                message: `Bạn có chắc chắn muốn xóa bài viết <b class="text-slate-900 font-bold">"${escapeHtml(blogTitle || '#' + blogId)}"</b> không?<br><span class="text-rose-600 text-[11px] font-medium">Bài viết sẽ được chuyển vào thùng rác hệ thống.</span>`,
+                icon: 'delete',
+                iconBg: 'bg-rose-100 text-rose-800 border border-rose-200',
+                confirmText: 'Xác Nhận Xóa',
+                confirmClass: 'btn-enterprise-danger',
+                confirmIcon: 'delete',
+                onConfirm: () => executeGlobalBlogDelete(blogId)
+            });
+        }
+
+        function executeGlobalBlogDelete(blogId) {
+            const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+            const url = `/admin/blog/bai-viet/${blogId}`;
+            const rowEl = document.getElementById(`admin-blog-row-${blogId}`);
+
+            fetch(url, {
+                method: 'DELETE',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrf,
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(async res => {
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) throw new Error(data.message || `Lỗi máy chủ HTTP ${res.status}`);
+                return data;
+            })
+            .then(data => {
+                if (data.success) {
+                    if (typeof showRealtimeToast === 'function') {
+                        showRealtimeToast('Đã Xóa', data.message || 'Bài viết đã được xóa thành công.', '', 'delete', 'bg-slate-700');
+                    }
+                    clearAdminPageCache();
+                    closeBlogQuickPreviewModal();
+
+                    if (rowEl) {
+                        rowEl.style.transition = 'all 0.35s ease';
+                        rowEl.style.opacity = '0';
+                        rowEl.style.transform = 'translateX(20px)';
+                        setTimeout(() => {
+                            rowEl.remove();
+                            const tbody = document.getElementById('admin-blog-tbody');
+                            if (tbody && tbody.querySelectorAll('tr').length === 0) {
+                                tbody.innerHTML = `
+                                    <tr>
+                                        <td colspan="6" class="px-6 py-12 text-center text-gray-400 font-medium">
+                                            <span class="material-symbols-outlined text-3xl text-gray-300 block mb-2">article_off</span>
+                                            Không còn bài viết nào trong danh sách.
+                                        </td>
+                                    </tr>
+                                `;
+                            }
+                        }, 350);
+                    }
+
+                    if (data.stats && typeof updateAdminBlogStats === 'function') {
+                        updateAdminBlogStats(data.stats);
+                    }
+                } else {
+                    if (typeof showRealtimeToast === 'function') {
+                        showRealtimeToast('Xóa Thất Bại', data.message || 'Không thể xóa bài viết này.', '', 'error', 'bg-rose-500');
+                    }
+                }
+            })
+            .catch(err => {
+                if (typeof showRealtimeToast === 'function') {
+                    showRealtimeToast('Lỗi Kết Nối', err.message || 'Không thể kết nối đến máy chủ.', '', 'wifi_off', 'bg-rose-500');
+                }
+            });
+        }
+
+        // Venue Pending Deletion
+        function confirmDeletePendingQuan(id, name) {
+            openConfirmModal({
+                title: 'Xóa Hồ Sơ Quán Chờ Duyệt',
+                message: `Bạn có chắc chắn muốn xóa hồ sơ quán <b class="text-slate-900 font-bold">"${escapeHtml(name)}"</b> không?<br><span class="text-rose-600 text-[11px] font-medium">Hồ sơ quán này sẽ bị khóa và chuyển vào thùng rác.</span>`,
+                icon: 'delete',
+                iconBg: 'bg-rose-100 text-rose-800 border border-rose-200',
+                confirmText: 'Xác Nhận Xóa',
+                confirmClass: 'btn-enterprise-danger',
+                confirmIcon: 'delete',
+                onConfirm: () => executeActionAjax(`/admin/duyet-xac-thuc/quan/${id}`, 'DELETE', 'quan-row-' + id)
+            });
         }
 
         // Global Action Helpers for Approval / Rejection
@@ -949,7 +1771,7 @@
         function confirmReapproveQuan(id, name) {
             openConfirmModal({
                 title: 'Phê Duyệt Lại Quán Ăn',
-                message: `Bạn có muốn duyệt lại hồ sơ quán <b class="text-slate-900 font-bold">"${name}"</b> không?<br><span class="text-slate-500 text-[11px]">Quán sẽ được chuyển sang trạng thái đã duyệt và hiển thị công khai trên hệ thống.</span>`,
+                message: `Bạn có chắc chắn muốn duyệt lại hồ sơ quán <b class="text-slate-900 font-bold">"${name}"</b> không?<br><span class="text-slate-500 text-[11px]">Quán sẽ được chuyển sang trạng thái đã duyệt và hiển thị công khai trên hệ thống.</span>`,
                 icon: 'published_with_changes',
                 iconBg: 'bg-emerald-100 text-emerald-800 border border-emerald-200',
                 confirmText: 'Duyệt Lại Quán',
@@ -962,7 +1784,7 @@
         function confirmDeleteRejectedQuan(id, name) {
             openConfirmModal({
                 title: 'Xóa Hồ Sơ Quán Ăn',
-                message: `Bạn có chắc chắn muốn xóa quán <b class="text-slate-900 font-bold">"${name}"</b> khỏi danh sách từ chối?<br><span class="text-rose-600 text-[11px]">Hồ sơ quán này sẽ được chuyển vào thùng rác hệ thống.</span>`,
+                message: `Bạn có chắc chắn muốn xóa quán <b class="text-slate-900 font-bold">"${name}"</b> khỏi danh sách từ chối không?<br><span class="text-rose-600 text-[11px]">Hồ sơ quán này sẽ được chuyển vào thùng rác hệ thống.</span>`,
                 icon: 'delete_forever',
                 iconBg: 'bg-rose-100 text-rose-800 border border-rose-200',
                 confirmText: 'Xác Nhận Xóa',
@@ -993,9 +1815,9 @@
             });
 
             // Update topbar badges & sidebar badges if any
-            const totalPending = ((stats.pending_quan || 0) + (stats.unverified_users || 0));
+            const totalPending = ((stats.pending_quan || 0) + (stats.pending_blog || 0) + (stats.unverified_users || 0));
             const badgeCount = document.getElementById('realtime-badge-count');
-            const sidebarBadge = document.getElementById('sidebar-notif-badge');
+            const badgeDropdown = document.getElementById('realtime-badge-dropdown');
             if (badgeCount) {
                 if (totalPending > 0) {
                     badgeCount.textContent = totalPending;
@@ -1004,19 +1826,54 @@
                     badgeCount.classList.add('hidden');
                 }
             }
-            if (sidebarBadge) {
+            if (badgeDropdown) {
+                badgeDropdown.textContent = totalPending + ' mới';
+            }
+            document.querySelectorAll('.sidebar-notif-badge').forEach(b => {
                 if (totalPending > 0) {
-                    sidebarBadge.textContent = totalPending;
-                    sidebarBadge.classList.remove('hidden');
+                    b.textContent = totalPending;
+                    b.classList.remove('hidden');
                 } else {
-                    sidebarBadge.classList.add('hidden');
+                    b.classList.add('hidden');
                 }
+            });
+
+            if (stats.pending_blog !== undefined) {
+                document.querySelectorAll('.sidebar-blog-pending-badge').forEach(b => {
+                    const badgeText = b.querySelector('.badge-text');
+                    if (stats.pending_blog > 0) {
+                        if (badgeText) badgeText.textContent = stats.pending_blog + ' cần duyệt';
+                        b.classList.remove('hidden');
+                    } else {
+                        b.classList.add('hidden');
+                    }
+                });
+            }
+
+            if (stats.pending_quan !== undefined) {
+                document.querySelectorAll('.sidebar-quan-pending-badge').forEach(b => {
+                    const badgeText = b.querySelector('.badge-text');
+                    if (stats.pending_quan > 0) {
+                        if (badgeText) badgeText.textContent = stats.pending_quan + ' cần duyệt';
+                        b.classList.remove('hidden');
+                    } else {
+                        b.classList.add('hidden');
+                    }
+                });
             }
         }
 
         function executeActionAjax(url, method, rowId) {
             const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
-            const tr = document.getElementById(rowId);
+            let tr = rowId ? document.getElementById(rowId) : null;
+            if (!tr && rowId) {
+                const cleanId = String(rowId).replace(/^(quan-row-|pending-row-|rejected-row-|user-row-|blog-row-)/, '');
+                tr = document.getElementById('quan-row-' + cleanId)
+                    || document.getElementById('rejected-row-' + cleanId)
+                    || document.getElementById('pending-row-' + cleanId)
+                    || document.getElementById('user-row-' + cleanId)
+                    || document.getElementById('admin-blog-row-' + cleanId);
+            }
 
             const formData = new FormData();
             formData.append('_token', csrf);
@@ -1030,12 +1887,19 @@
                     'X-Requested-With': 'XMLHttpRequest',
                 }
             })
-            .then(res => res.json())
+            .then(async res => {
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    throw new Error(data.message || `Lỗi máy chủ HTTP ${res.status}`);
+                }
+                return data;
+            })
             .then(data => {
                 if (data.success) {
                     if (typeof showRealtimeToast === 'function') {
-                        showRealtimeToast('Hoàn Tất', data.message || 'Thao tác thành công', window.location.href, 'check_circle', 'bg-emerald-500');
+                        showRealtimeToast('Hoàn Tất', data.message || 'Thao tác thành công', '', 'check_circle', 'bg-emerald-500');
                     }
+                    clearAdminPageCache();
 
                     if (data.stats) {
                         updateAllStatsCounters(data.stats);
@@ -1080,11 +1944,12 @@
                     }
                 }
             })
-            .catch(() => {
+            .catch(err => {
+                const msg = (err && err.message) ? err.message : 'Lỗi kết nối máy chủ, vui lòng kiểm tra mạng và thử lại!';
                 if (typeof showRealtimeToast === 'function') {
-                    showRealtimeToast('Lỗi Kết Nối', 'Lỗi kết nối máy chủ, vui lòng kiểm tra mạng và thử lại!', '', 'wifi_off', 'bg-rose-500');
+                    showRealtimeToast('Thao Tác Thất Bại', msg, '', 'error', 'bg-rose-500');
                 } else {
-                    alert('Lỗi kết nối máy chủ, vui lòng kiểm tra mạng và thử lại!');
+                    alert(msg);
                 }
             });
         }
@@ -1186,8 +2051,10 @@
             playChimeSound();
 
             const toast = document.createElement('div');
-            toast.className = 'bg-slate-900 text-white rounded-2xl p-4 shadow-2xl border border-slate-700/80 flex items-start gap-3 transform translate-x-full transition-all duration-300 ease-out cursor-pointer hover:border-amber-400';
-            toast.onclick = () => window.location.href = url;
+            toast.className = 'bg-slate-900 text-white rounded-2xl p-4 shadow-2xl border border-slate-700/80 flex items-start gap-3 transform translate-x-full transition-all duration-300 ease-out hover:border-amber-400 ' + (url && url !== '#' ? 'cursor-pointer' : '');
+            if (url && url !== '#') {
+                toast.onclick = () => window.location.href = url;
+            }
             toast.innerHTML = `
                 <div class="w-9 h-9 rounded-xl ${badgeBg} text-slate-950 flex items-center justify-center flex-shrink-0 font-bold">
                     <span class="material-symbols-outlined text-[20px]">${iconName}</span>
@@ -1227,7 +2094,6 @@
 
                 const badgeCount = document.getElementById('realtime-badge-count');
                 const badgeDropdown = document.getElementById('realtime-badge-dropdown');
-                const sidebarBadge = document.getElementById('sidebar-notif-badge');
 
                 if (badgeCount) {
                     if (data.total_pending > 0) {
@@ -1242,14 +2108,47 @@
                     badgeDropdown.textContent = data.total_pending + ' mới';
                 }
 
-                if (sidebarBadge) {
+                // Cập nhật tất cả badge thông báo tổng (cả desktop & mobile sidebar)
+                document.querySelectorAll('.sidebar-notif-badge').forEach(b => {
                     if (data.total_pending > 0) {
-                        sidebarBadge.textContent = data.total_pending;
-                        sidebarBadge.classList.remove('hidden');
+                        b.textContent = data.total_pending;
+                        b.classList.remove('hidden');
                     } else {
-                        sidebarBadge.classList.add('hidden');
+                        b.classList.add('hidden');
                     }
+                });
+
+                // Cập nhật huy hiệu "Cần duyệt" cho mục Duyệt Bài Viết (cả desktop & mobile)
+                if (data.pending_blog !== undefined) {
+                    document.querySelectorAll('.sidebar-blog-pending-badge').forEach(b => {
+                        const badgeText = b.querySelector('.badge-text');
+                        if (data.pending_blog > 0) {
+                            if (badgeText) badgeText.textContent = data.pending_blog + ' cần duyệt';
+                            b.classList.remove('hidden');
+                        } else {
+                            b.classList.add('hidden');
+                        }
+                    });
                 }
+
+                // Cập nhật huy hiệu "Cần duyệt" cho mục Quán Chờ Duyệt (cả desktop & mobile)
+                if (data.pending_quan !== undefined) {
+                    document.querySelectorAll('.sidebar-quan-pending-badge').forEach(b => {
+                        const badgeText = b.querySelector('.badge-text');
+                        if (data.pending_quan > 0) {
+                            if (badgeText) badgeText.textContent = data.pending_quan + ' cần duyệt';
+                            b.classList.remove('hidden');
+                        } else {
+                            b.classList.add('hidden');
+                        }
+                    });
+                }
+
+                // Cập nhật thống kê bài viết trên màn hình quản lý bài viết nếu đang hiển thị
+                const statBlogPending = document.getElementById('stat-blog-pending');
+                if (statBlogPending && data.pending_blog !== undefined) statBlogPending.textContent = data.pending_blog;
+                const statBlogTotal = document.getElementById('stat-blog-total');
+                if (statBlogTotal && data.total_blogs !== undefined) statBlogTotal.textContent = data.total_blogs;
 
                 // Render toàn bộ thông báo vào dropdown bell
                 window.__allNotifications = data.notifications || [];
@@ -1258,10 +2157,38 @@
                 // Phát tín hiệu cập nhật toàn bộ hệ thống cho các trang con (Duyệt xác thực, Thông báo...)
                 window.dispatchEvent(new CustomEvent('admin:notifications-updated', { detail: data }));
 
-                // Toast & chime notification nếu có item mới xuất hiện
+                // Toast & chime notification nếu có bài viết mới được gửi duyệt
+                if (data.latest_blog) {
+                    if (isNotifInit && window.__lastSeenBlogId && window.__lastSeenBlogId !== data.latest_blog.id) {
+                        showRealtimeToast(
+                            'Bài Viết Chờ Phê Duyệt',
+                            `"${data.latest_blog.title}" của ${data.latest_blog.author || 'Người dùng'} vừa gửi duyệt`,
+                            data.latest_blog.detail_url || data.latest_blog.url,
+                            'article',
+                            'bg-amber-400'
+                        );
+                    }
+                    window.__lastSeenBlogId = data.latest_blog.id;
+                }
+
+                // Toast & chime notification nếu có quán mới gửi duyệt
+                if (data.latest_quan) {
+                    if (isNotifInit && window.__lastSeenQuanKey && window.__lastSeenQuanKey !== data.latest_quan.id) {
+                        showRealtimeToast(
+                            'Quán Ăn Chờ Phê Duyệt',
+                            `Hồ sơ quán "${data.latest_quan.ten_quan}" vừa đăng ký mở bán`,
+                            data.latest_quan.url,
+                            'storefront',
+                            'bg-amber-400'
+                        );
+                    }
+                    window.__lastSeenQuanKey = data.latest_quan.id;
+                }
+
+                // Toast & chime notification tổng quát
                 if (data.notifications && data.notifications.length > 0) {
                     const topNotif = data.notifications[0];
-                    if (isNotifInit && window.__lastSeenTopNotifId && window.__lastSeenTopNotifId !== topNotif.id) {
+                    if (isNotifInit && window.__lastSeenTopNotifId && window.__lastSeenTopNotifId !== topNotif.id && (!window.__lastSeenBlogId || topNotif.id !== 'blog_' + window.__lastSeenBlogId) && (!window.__lastSeenQuanKey || topNotif.id !== 'quan_' + window.__lastSeenQuanKey)) {
                         showRealtimeToast(
                             topNotif.category_label + ': ' + topNotif.title,
                             topNotif.description || 'Có thông báo mới cần xử lý',
@@ -1301,48 +2228,47 @@
                     newRow.setAttribute('data-search', `${qData.ten_quan} ${ownerName} ${quanAddr} ${qData.loai_hinh_kinh_doanh || ''}`.toLowerCase());
 
                     newRow.innerHTML = `
-                        <td class="p-3.5 font-medium min-w-[320px] max-w-[360px] overflow-hidden">
-                            <div class="flex items-center gap-3.5 min-w-0">
-                                <div onclick="openVenueMediaModal(window.__venueMediaData['${qData.id}'])" class="w-16 h-16 rounded-2xl overflow-hidden bg-slate-100 shrink-0 border border-slate-200/90 cursor-pointer group relative shadow-2xs hover:ring-2 hover:ring-amber-500 hover:border-amber-400 transition-all" title="Bấm để xem ảnh và thẩm định chi tiết">
+                        <td class="px-3.5 py-3 font-medium overflow-hidden">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <div onclick="openVenueMediaModal(window.__venueMediaData['${qData.id}'])" class="w-12 h-12 rounded-xl overflow-hidden bg-slate-100 shrink-0 border border-slate-200/90 cursor-pointer group relative shadow-2xs hover:ring-2 hover:ring-amber-500 hover:border-amber-400 transition-all" title="Bấm để xem ảnh và thẩm định chi tiết">
                                     <img src="${anhBia}" alt="${qData.ten_quan}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&auto=format&fit=crop&q=80';">
                                     <div class="absolute inset-0 bg-black/35 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white">
-                                        <span class="material-symbols-outlined text-[20px]">zoom_in</span>
+                                        <span class="material-symbols-outlined text-[16px]">zoom_in</span>
                                     </div>
-                                    <span class="absolute bottom-1 right-1 bg-black/70 backdrop-blur-xs text-white text-[9px] font-bold px-1.5 py-0.2 rounded-md">
+                                    <span class="absolute bottom-0.5 right-0.5 bg-black/70 backdrop-blur-xs text-white text-[8px] font-bold px-1 py-0.2 rounded">
                                         ${galleryCount}
                                     </span>
                                 </div>
-                                <div class="min-w-0 flex-1 overflow-hidden space-y-1">
-                                    <div class="flex items-center gap-2 min-w-0">
+                                <div class="min-w-0 flex-1 overflow-hidden space-y-0.5">
+                                    <div class="flex items-center gap-1.5 min-w-0">
                                         <span class="w-2 h-2 rounded-full bg-amber-500 animate-ping shrink-0"></span>
-                                        <span class="font-bold text-slate-900 text-sm truncate max-w-[170px]" title="${safeName}">
+                                        <span class="font-bold text-slate-900 text-xs truncate" title="${safeName}">
                                             ${qData.ten_quan}
                                         </span>
-                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-300 shrink-0 whitespace-nowrap">
+                                        <span class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-50 text-amber-800 border border-amber-300 shrink-0 whitespace-nowrap">
                                             <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
                                             <span>Chờ duyệt</span>
                                         </span>
                                     </div>
-                                    ${loaiHinh ? `<div class="mt-0.5"><span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-slate-100 text-slate-700 border border-slate-200 max-w-full truncate" title="${qData.loai_hinh_kinh_doanh || qData.loai_hinh}">🏷️ ${qData.loai_hinh_kinh_doanh || qData.loai_hinh}</span></div>` : ''}
-                                    <div class="flex items-center gap-1.5 pt-0.5 flex-wrap">
-                                        <button type="button" onclick="openVenueMediaModal(window.__venueMediaData['${qData.id}'])" class="btn-enterprise btn-enterprise-photo" title="Xem bộ sưu tập hình ảnh quán">
-                                            <span class="material-symbols-outlined text-[15px]">photo_library</span>
-                                            <span>Xem ảnh</span>
-                                            <span class="btn-enterprise-photo-count">${galleryCount}</span>
+                                    ${loaiHinh ? `<div class="truncate text-[10px] text-slate-500" title="${qData.loai_hinh_kinh_doanh || qData.loai_hinh}">🏷️ ${qData.loai_hinh_kinh_doanh || qData.loai_hinh}</div>` : ''}
+                                    <div class="flex items-center gap-1 pt-0.5 flex-nowrap">
+                                        <button type="button" onclick="openVenueMediaModal(window.__venueMediaData['${qData.id}'])" class="btn-enterprise btn-enterprise-photo btn-action-compact" title="Xem bộ sưu tập hình ảnh quán">
+                                            <span class="material-symbols-outlined text-[13px]">photo_library</span>
+                                            <span>Ảnh (${galleryCount})</span>
                                         </button>
                                         ${qData.slug ? `
-                                            <a href="/quan/${qData.slug}" class="btn-enterprise btn-enterprise-secondary" title="Xem trang quán thực tế ngoài website">
+                                            <a href="/quan/${qData.slug}" class="btn-enterprise btn-enterprise-secondary btn-action-compact" title="Xem trang quán thực tế ngoài website">
                                                 <span>Trang quán</span>
-                                                <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+                                                <span class="material-symbols-outlined text-[13px]">arrow_forward</span>
                                             </a>
                                         ` : ''}
                                     </div>
                                 </div>
                             </div>
                         </td>
-                        <td class="p-3.5 min-w-[180px] max-w-[210px] overflow-hidden">
+                        <td class="px-3.5 py-3 overflow-hidden">
                             <div class="flex items-center gap-2 min-w-0">
-                                <div class="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center shrink-0">
+                                <div class="w-7 h-7 rounded-full bg-slate-100 border border-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center shrink-0">
                                     ${ownerName ? ownerName.charAt(0).toUpperCase() : 'U'}
                                 </div>
                                 <div class="min-w-0 flex-1 space-y-0.5 overflow-hidden">
@@ -1355,31 +2281,35 @@
                                 </div>
                             </div>
                         </td>
-                        <td class="p-3.5 text-slate-600 min-w-[180px] max-w-[240px] overflow-hidden">
-                            <div class="space-y-1 min-w-0">
-                                <div class="font-bold text-slate-800 text-xs leading-snug line-clamp-2 break-words" title="${quanAddr}">
+                        <td class="px-3.5 py-3 text-slate-600 overflow-hidden">
+                            <div class="space-y-0.5 min-w-0">
+                                <div class="font-semibold text-slate-800 text-xs truncate" title="${quanAddr}">
                                     ${quanAddr || 'Chưa cập nhật chi tiết'}
                                 </div>
                                 ${qData.ten_tinh_thanh ? `
-                                    <div class="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-700 bg-slate-50 border border-slate-200 px-2 py-0.5 rounded-md max-w-full overflow-hidden" title="${qData.ten_tinh_thanh}">
-                                        <span class="material-symbols-outlined text-[13px] text-slate-500 shrink-0">location_on</span>
+                                    <div class="inline-flex items-center gap-1 text-[10px] font-semibold text-slate-600 bg-slate-50 border border-slate-200 px-1.5 py-0.2 rounded max-w-full overflow-hidden" title="${qData.ten_tinh_thanh}">
+                                        <span class="material-symbols-outlined text-[12px] text-slate-400 shrink-0">location_on</span>
                                         <span class="truncate">${qData.ten_tinh_thanh}</span>
                                     </div>
                                 ` : ''}
                             </div>
                         </td>
-                        <td class="p-3.5 text-emerald-600 font-bold whitespace-nowrap min-w-[110px] w-[110px]">
+                        <td class="px-3.5 py-3 text-emerald-600 font-bold whitespace-nowrap overflow-hidden">
                             <div class="whitespace-nowrap font-bold text-xs">Vừa xong</div>
                             <div class="text-[10px] text-slate-400 font-normal whitespace-nowrap">Mới đăng</div>
                         </td>
-                        <td class="p-3.5 text-right whitespace-nowrap min-w-[210px] w-[210px]">
-                            <div class="flex items-center justify-end gap-2 flex-nowrap shrink-0">
-                                <button type="button" onclick="confirmApproveQuan('${qData.id}', '${safeName}')" class="btn-enterprise btn-enterprise-success">
-                                    <span class="material-symbols-outlined text-[16px]">check_circle</span>
-                                    <span class="uppercase tracking-wider">Duyệt</span>
+                        <td class="px-3.5 py-3 text-right whitespace-nowrap overflow-hidden">
+                            <div class="flex items-center justify-end gap-1 flex-nowrap">
+                                <button type="button" onclick="openVenueMediaModal(window.__venueMediaData['${qData.id}'])" class="btn-enterprise btn-enterprise-secondary btn-action-compact font-semibold" title="Xem chi tiết hồ sơ & thẩm định ảnh">
+                                    <span class="material-symbols-outlined text-[14px]">visibility</span>
+                                    <span>Xem</span>
                                 </button>
-                                <button type="button" onclick="confirmRejectQuan('${qData.id}', '${safeName}')" class="btn-enterprise btn-enterprise-danger">
-                                    <span class="material-symbols-outlined text-[16px]">cancel</span>
+                                <button type="button" onclick="confirmApproveQuan('${qData.id}', '${safeName}')" class="btn-enterprise btn-enterprise-success btn-action-compact font-bold shadow-2xs" title="Phê duyệt hồ sơ quán này">
+                                    <span class="material-symbols-outlined text-[14px]">check_circle</span>
+                                    <span>Duyệt</span>
+                                </button>
+                                <button type="button" onclick="confirmRejectQuan('${qData.id}', '${safeName}')" class="btn-enterprise btn-enterprise-danger btn-action-compact font-semibold shadow-2xs" title="Không duyệt hồ sơ quán này">
+                                    <span class="material-symbols-outlined text-[14px]">cancel</span>
                                     <span>Không duyệt</span>
                                 </button>
                             </div>
@@ -1498,6 +2428,84 @@
                     setTimeout(() => uRow.classList.remove('bg-indigo-50/90', 'animate-pulse'), 5000);
                 }
 
+                // Inject Live Blog Row if standing on Blog Management screen
+                const blogTbody = document.getElementById('admin-blog-tbody');
+                if (blogTbody && (data.latest_blog || (data.pending_blogs && data.pending_blogs.length > 0))) {
+                    window.__pendingBlogsData = window.__pendingBlogsData || {};
+                    const blogsToProcess = data.pending_blogs ? [...data.pending_blogs].reverse() : [data.latest_blog];
+
+                    blogsToProcess.forEach(bData => {
+                        if (!bData || document.getElementById('admin-blog-row-' + bData.id)) return;
+                        window.__pendingBlogsData[bData.id] = bData;
+
+                        const emptyBlogRow = blogTbody.querySelector('.empty-blog-row');
+                        if (emptyBlogRow) emptyBlogRow.remove();
+
+                        const safeTitle = (bData.title || '').replace(/'/g, "\\'");
+                        const bRow = document.createElement('tr');
+                        bRow.id = 'admin-blog-row-' + bData.id;
+                        bRow.setAttribute('data-status', 'pending');
+                        bRow.className = 'hover:bg-gray-50/60 transition-all duration-1000 bg-amber-50/90 animate-pulse';
+                        bRow.innerHTML = `
+                            <td class="px-3.5 py-3">
+                                <div class="flex items-center gap-2.5 min-w-0">
+                                    <div class="w-10 h-10 rounded-lg overflow-hidden bg-gray-100 shrink-0 border border-gray-200/60">
+                                        <img src="${bData.cover_image_url}" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80';" class="w-full h-full object-cover">
+                                    </div>
+                                    <div class="min-w-0 flex-1 overflow-hidden">
+                                        <a href="${bData.detail_url || bData.url}" class="font-bold text-gray-900 hover:text-amber-700 truncate block transition-colors text-xs" title="${bData.title}">
+                                            ${bData.title}
+                                        </a>
+                                        <p class="text-[11px] text-gray-400 mt-0.5 truncate">${bData.category_name || 'Chưa phân loại'}</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-3.5 py-3">
+                                <div class="flex items-center gap-1.5 min-w-0">
+                                    <img src="${bData.author_avatar}" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(bData.author || 'U')}';" class="w-6 h-6 rounded-full border border-gray-200 shrink-0">
+                                    <span class="font-semibold text-gray-800 truncate text-xs">${bData.author || 'Người dùng'}</span>
+                                </div>
+                            </td>
+                            <td class="px-3.5 py-3" id="admin-blog-status-td-${bData.id}">
+                                <span id="admin-blog-status-badge-${bData.id}" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] font-bold border bg-amber-100 text-amber-800 border-amber-200 whitespace-nowrap">
+                                    <span class="material-symbols-outlined text-[13px]">pending_actions</span>
+                                    <span>Chờ duyệt</span>
+                                </span>
+                            </td>
+                            <td class="px-3.5 py-3 text-center" id="admin-blog-hero-td-${bData.id}">
+                                <button type="button" onclick="adminToggleHero(${bData.id}, this)" class="text-gray-300 hover:text-amber-500 transition-colors cursor-pointer" title="Đặt làm Hero nổi bật">
+                                    <span class="material-symbols-outlined text-[18px]">star</span>
+                                </button>
+                            </td>
+                            <td class="px-3.5 py-3 text-gray-500 text-[11px] whitespace-nowrap">
+                                <span class="font-bold text-amber-600 block leading-tight">Vừa xong</span>
+                                <span class="text-gray-400 text-[10px] block leading-tight">Mới gửi duyệt</span>
+                            </td>
+                            <td class="px-3.5 py-3 text-right" id="admin-blog-actions-${bData.id}">
+                                <div class="flex items-center justify-end gap-1.5 flex-nowrap">
+                                    <button type="button" onclick="openBlogQuickPreviewModal(${bData.id})" class="btn-enterprise btn-enterprise-secondary btn-action-compact font-semibold" title="Xem nhanh nội dung bài viết">
+                                        <span class="material-symbols-outlined text-[14px]">visibility</span>
+                                        <span>Xem</span>
+                                    </button>
+                                    <button type="button" onclick="adminQuickApproveBlog(${bData.id}, '${safeTitle}')" class="btn-enterprise btn-enterprise-success btn-action-compact font-bold shadow-2xs" title="Phê duyệt bài viết ngay">
+                                        <span class="material-symbols-outlined text-[14px]">check_circle</span>
+                                        <span>Duyệt</span>
+                                    </button>
+                                    <button type="button" onclick="adminOpenRejectModal(${bData.id}, '${safeTitle}', 'pending')" class="btn-enterprise btn-enterprise-danger btn-action-compact font-semibold shadow-2xs" title="Từ chối hoặc yêu cầu sửa">
+                                        <span class="material-symbols-outlined text-[14px]">cancel</span>
+                                        <span>Không duyệt</span>
+                                    </button>
+                                    <button type="button" onclick="adminConfirmDeleteBlog(${bData.id}, '${safeTitle}')" class="btn-enterprise btn-enterprise-secondary btn-action-compact text-gray-400 hover:text-rose-600 hover:bg-rose-50 border-gray-200" title="Xóa bài viết">
+                                        <span class="material-symbols-outlined text-[14px]">delete</span>
+                                    </button>
+                                </div>
+                            </td>
+                        `;
+                        blogTbody.insertBefore(bRow, blogTbody.firstChild);
+                        setTimeout(() => bRow.classList.remove('bg-amber-50/90', 'animate-pulse'), 5000);
+                    });
+                }
+
                 isNotifInit = true;
             })
             .catch(() => {});
@@ -1570,6 +2578,15 @@
         // INSTANT SPA TURBO NAVIGATION & HOVER PREFETCHING ENGINE
         // ========================================================
         const adminPageCache = new Map();
+        window.adminPageCache = adminPageCache;
+
+        function clearAdminPageCache() {
+            try {
+                if (window.adminPageCache) {
+                    window.adminPageCache.clear();
+                }
+            } catch (e) {}
+        }
         let currentNavAbort = null;
 
         function prefetchUrl(url) {
@@ -1767,8 +2784,12 @@
                 const parsed = new URL(link.href, window.location.origin);
                 if (parsed.origin !== window.location.origin || !parsed.pathname.startsWith('/admin')) return;
 
-                if (parsed.pathname === window.location.pathname) {
+                if (parsed.href === window.location.href) {
                     e.preventDefault();
+                    return;
+                }
+
+                if (parsed.pathname === window.location.pathname && parsed.search === window.location.search && parsed.hash) {
                     return;
                 }
 
@@ -1809,6 +2830,7 @@
             instantNavigate(window.location.href, false);
         });
     </script>
+    @yield('scripts')
     @stack('scripts')
 </body>
 </html>
