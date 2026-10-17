@@ -128,4 +128,36 @@ class CrudQuanTest extends TestCase
 
         $this->assertNotSoftDeleted('quan', ['id' => $quan->id], null, 'ngay_xoa');
     }
+
+    public function test_admin_can_toggle_quan_status_via_ajax(): void
+    {
+        $adminRole = VaiTro::where('ten', 'admin')->first();
+        $admin = User::factory()->create([
+            'email' => 'admin@quanmoi.com',
+            'vai_tro_id' => $adminRole?->id,
+        ]);
+
+        $owner = User::factory()->create();
+        $quan = Quan::create([
+            'chu_quan_id' => $owner->id,
+            'ten_quan' => 'Quán Test AJAX',
+            'loai_hinh_kinh_doanh' => 'Cà phê & Trà',
+            'slug' => 'quan-test-ajax',
+            'dia_chi_chi_tiet' => '123 Kim Mã',
+            'so_dien_thoai' => '0901112233',
+            'trang_thai' => 'da_duyet',
+            'is_xac_thuc' => false,
+            'is_noi_bat' => false,
+        ]);
+
+        // 1. Toggle Tick Xanh via AJAX
+        $resXacThuc = $this->actingAs($admin)->putJson('/admin/quan/' . $quan->id . '/toggle-xac-thuc');
+        $resXacThuc->assertStatus(200)->assertJson(['success' => true, 'is_xac_thuc' => true]);
+        $this->assertTrue($quan->fresh()->is_xac_thuc);
+
+        // 2. Toggle Noi Bat via AJAX
+        $resNoiBat = $this->actingAs($admin)->putJson('/admin/quan/' . $quan->id . '/toggle-noi-bat');
+        $resNoiBat->assertStatus(200)->assertJson(['success' => true, 'is_noi_bat' => true]);
+        $this->assertTrue($quan->fresh()->is_noi_bat);
+    }
 }

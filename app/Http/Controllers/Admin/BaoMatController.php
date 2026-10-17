@@ -21,6 +21,13 @@ class BaoMatController extends Controller
 
     public function update(Request $request)
     {
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Đã cập nhật thiết lập bảo mật thành công!',
+            ]);
+        }
+
         return redirect()->back()->with('success', 'Đã cập nhật thiết lập bảo mật thành công!');
     }
 }

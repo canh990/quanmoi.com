@@ -214,4 +214,59 @@ class TaiKhoanController extends Controller
 
         return redirect()->route('tai-khoan.index')->with('success', 'Đổi mật khẩu thành công.');
     }
+
+    public function requestVerification(Request $request)
+    {
+        $user = Auth::user();
+        if ($user->da_xac_thuc) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Tài khoản của bạn đã được xác thực danh tính đầy đủ.',
+                    'already_verified' => true,
+                ]);
+            }
+            return back()->with('info', 'Tài khoản của bạn đã được xác thực danh tính đầy đủ.');
+        }
+
+        $validated = $request->validate([
+            'ly_do' => 'nullable|string|max:500',
+        ]);
+
+        $settings = $user->cai_dat ?? [];
+        $settings['yeu_cau_xac_thuc'] = [
+            'thoi_gian' => now()->toIso8601String(),
+            'ly_do' => $validated['ly_do'] ?? 'Yêu cầu cấp huy hiệu xác thực tài khoản',
+            'trang_thai' => 'cho_duyet',
+        ];
+
+        $user->cai_dat = $settings;
+        $user->save();
+
+        try {
+            \App\Models\AdminAuditLog::create([
+                'actor_id' => $user->id,
+                'action' => 'user.verification_requested',
+                'target_type' => \App\Models\User::class,
+                'target_id' => (string) $user->id,
+                'metadata' => [
+                    'ho_ten' => $user->ho_ten,
+                    'email' => $user->email,
+                    'ly_do' => $validated['ly_do'] ?? 'Yêu cầu cấp huy hiệu xác thực tài khoản',
+                ],
+                'ip_address' => $request->ip(),
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning('Log verification request failed: ' . $e->getMessage());
+        }
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Yêu cầu xác thực tài khoản của bạn đã được gửi đến Ban quản trị thành công!',
+            ]);
+        }
+
+        return back()->with('success', 'Yêu cầu xác thực tài khoản của bạn đã được gửi đến Ban quản trị thành công!');
+    }
 }

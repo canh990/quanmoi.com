@@ -384,6 +384,30 @@
                     iconName = 'visibility_off';
                     iconClass = 'bg-slate-200 text-slate-700';
                     statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-700">Đã ẩn</span>';
+                } else if (action === 'role_updated') {
+                    iconName = 'admin_panel_settings';
+                    iconClass = 'bg-purple-100 text-purple-700';
+                    statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-700">Đổi vai trò</span>';
+                } else if (action === 'verified') {
+                    iconName = 'verified';
+                    iconClass = 'bg-emerald-100 text-emerald-700';
+                    statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">Đã xác thực</span>';
+                } else if (action === 'verification_rejected') {
+                    iconName = 'gpp_bad';
+                    iconClass = 'bg-rose-100 text-rose-700';
+                    statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700">Từ chối xác thực</span>';
+                } else if (action === 'permission_granted') {
+                    iconName = 'lock_open';
+                    iconClass = 'bg-teal-100 text-teal-700';
+                    statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-100 text-teal-700">Cấp quyền</span>';
+                } else if (action === 'permission_denied') {
+                    iconName = 'lock';
+                    iconClass = 'bg-rose-100 text-rose-700';
+                    statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700">Tước quyền</span>';
+                } else if (action === 'permission_reset') {
+                    iconName = 'refresh';
+                    iconClass = 'bg-sky-100 text-sky-700';
+                    statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-700">Quyền mặc định</span>';
                 }
 
                 return `
@@ -497,15 +521,21 @@
                         const action = top.action || '';
                         let toastType = 'info';
                         let toastIcon = 'notifications';
-                        if (action === 'published' || action === 'approved') {
+                        if (action === 'published' || action === 'approved' || action === 'verified' || action === 'permission_granted') {
                             toastType = 'success';
-                            toastIcon = 'check_circle';
-                        } else if (action === 'rejected') {
+                            toastIcon = action === 'verified' ? 'verified' : (action === 'permission_granted' ? 'lock_open' : 'check_circle');
+                        } else if (action === 'role_updated') {
+                            toastType = 'info';
+                            toastIcon = 'admin_panel_settings';
+                        } else if (action === 'rejected' || action === 'verification_rejected' || action === 'permission_denied') {
                             toastType = 'error';
-                            toastIcon = 'cancel';
+                            toastIcon = action === 'permission_denied' ? 'lock' : 'cancel';
                         } else if (action === 'requested_revision' || action === 'need_revision') {
                             toastType = 'warning';
                             toastIcon = 'edit_note';
+                        } else if (action === 'permission_reset') {
+                            toastType = 'info';
+                            toastIcon = 'refresh';
                         }
 
                         window.showUserToast(
@@ -519,6 +549,12 @@
                         // Broadcast event so other components can sync instantly
                         if (top.blog_id) {
                             window.dispatchEvent(new CustomEvent('quanmoi:blog-status-updated', { detail: top }));
+                        }
+                        if (top.quan_id) {
+                            window.dispatchEvent(new CustomEvent('quanmoi:quan-status-updated', { detail: top }));
+                        }
+                        if (top.action && (top.action.startsWith('permission_') || top.action === 'role_updated' || top.action === 'verified' || top.action === 'verification_rejected')) {
+                            window.dispatchEvent(new CustomEvent('quanmoi:role-permission-updated', { detail: top }));
                         }
                         if (top.quan_id) {
                             window.dispatchEvent(new CustomEvent('quanmoi:quan-status-updated', { detail: top }));

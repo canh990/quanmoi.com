@@ -120,14 +120,14 @@
     <!-- Danh sách bài viết -->
     <div class="bg-white rounded-2xl border border-gray-200/80 shadow-xs overflow-hidden">
         <div class="w-full overflow-x-auto custom-scrollbar">
-            <table class="w-full text-left text-xs min-w-[760px] table-fixed-enterprise">
+            <table class="w-full text-left text-xs min-w-[920px] table-fixed-enterprise">
                 <colgroup>
-                    <col class="w-[32%]">
-                    <col class="w-[14%]">
+                    <col class="w-[28%]">
                     <col class="w-[13%]">
-                    <col class="w-[7%]">
+                    <col class="w-[12%]">
+                    <col class="w-[6%]">
                     <col class="w-[10%]">
-                    <col class="w-[24%]">
+                    <col class="w-[31%]">
                 </colgroup>
                 <thead class="bg-gray-50/80 border-b border-gray-200/80 text-gray-500 font-semibold text-[11px] uppercase tracking-wider">
                     <tr>
@@ -136,7 +136,7 @@
                         <th class="px-3.5 py-3">Trạng thái</th>
                         <th class="px-2 py-3 text-center whitespace-nowrap">Nổi bật</th>
                         <th class="px-3.5 py-3">Ngày tạo</th>
-                        <th class="px-3.5 py-3 text-right whitespace-nowrap">Thao tác</th>
+                        <th class="px-3.5 pr-6 py-3 text-right whitespace-nowrap">Thao tác</th>
                     </tr>
                 </thead>
                 <tbody id="admin-blog-tbody" class="divide-y divide-gray-100 text-xs">
@@ -191,34 +191,34 @@
                         <td class="px-3.5 py-3 text-gray-500 font-medium text-xs whitespace-nowrap">
                             {{ $blog->created_at->format('d/m/Y') }}
                         </td>
-                        <td class="px-3.5 py-3 text-right" id="admin-blog-actions-{{ $blog->id }}">
-                            <div class="flex items-center justify-end gap-1.5 flex-nowrap">
-                                {{-- Nút Xem bài viết --}}
-                                <button type="button" onclick="openBlogQuickPreviewModal({{ $blog->id }})" class="btn-enterprise btn-enterprise-secondary btn-action-compact font-semibold" title="Xem nhanh nội dung bài viết">
+                        <td class="px-3.5 pr-6 py-3 text-right whitespace-nowrap" id="admin-blog-actions-{{ $blog->id }}">
+                            <div class="inline-flex items-center justify-end gap-1.5 flex-nowrap shrink-0">
+                                {{-- Nút Xem bài viết (Cố định chiều rộng 68px) --}}
+                                <button type="button" onclick="openBlogQuickPreviewModal({{ $blog->id }})" class="btn-enterprise btn-enterprise-secondary btn-action-compact font-semibold w-[68px] justify-center shrink-0" title="Xem nhanh nội dung bài viết">
                                     <span class="material-symbols-outlined text-[14px]">visibility</span>
                                     <span>Xem</span>
                                 </button>
 
                                 @if($blog->status === 'pending')
                                     {{-- Nút duyệt bài viết --}}
-                                    <button type="button" onclick="adminQuickApproveBlog({{ $blog->id }}, '{{ addslashes($blog->title) }}')" class="btn-enterprise btn-enterprise-success btn-action-compact font-bold shadow-2xs" title="Phê duyệt và xuất bản ngay">
+                                    <button type="button" onclick="adminQuickApproveBlog({{ $blog->id }}, '{{ addslashes($blog->title) }}')" class="btn-enterprise btn-enterprise-success btn-action-compact font-bold shadow-2xs w-[72px] justify-center shrink-0" title="Phê duyệt và xuất bản ngay">
                                         <span class="material-symbols-outlined text-[14px]">check_circle</span>
                                         <span>Duyệt</span>
                                     </button>
                                     {{-- Nút không duyệt / yêu cầu sửa --}}
-                                    <button type="button" onclick="adminOpenRejectModal({{ $blog->id }}, '{{ addslashes($blog->title) }}', '{{ $blog->status }}')" class="btn-enterprise btn-enterprise-danger btn-action-compact font-semibold shadow-2xs" title="Không duyệt hoặc yêu cầu sửa">
+                                    <button type="button" onclick="adminOpenRejectModal({{ $blog->id }}, '{{ addslashes($blog->title) }}', '{{ $blog->status }}')" class="btn-enterprise btn-enterprise-danger btn-action-compact font-semibold shadow-2xs w-[98px] justify-center shrink-0" title="Không duyệt hoặc yêu cầu sửa">
                                         <span class="material-symbols-outlined text-[14px]">cancel</span>
                                         <span>Không duyệt</span>
                                     </button>
                                 @else
                                     @if($blog->status !== 'published')
-                                        <button type="button" onclick="adminQuickApproveBlog({{ $blog->id }}, '{{ addslashes($blog->title) }}')" class="btn-enterprise btn-enterprise-success btn-action-compact font-bold shadow-2xs" title="Duyệt bài viết này">
+                                        <button type="button" onclick="adminQuickApproveBlog({{ $blog->id }}, '{{ addslashes($blog->title) }}')" class="btn-enterprise btn-enterprise-success btn-action-compact font-bold shadow-2xs w-[98px] justify-center shrink-0" title="Duyệt bài viết này">
                                             <span class="material-symbols-outlined text-[14px]">check_circle</span>
                                             <span>Duyệt</span>
                                         </button>
                                     @endif
                                     @if($blog->status !== 'rejected')
-                                        <button type="button" onclick="adminOpenRejectModal({{ $blog->id }}, '{{ addslashes($blog->title) }}', '{{ $blog->status }}')" class="btn-enterprise btn-enterprise-danger btn-action-compact font-semibold shadow-2xs" title="Từ chối hoặc yêu cầu chỉnh sửa">
+                                        <button type="button" onclick="adminOpenRejectModal({{ $blog->id }}, '{{ addslashes($blog->title) }}', '{{ $blog->status }}')" class="btn-enterprise btn-enterprise-danger btn-action-compact font-semibold shadow-2xs w-[98px] justify-center shrink-0" title="Từ chối hoặc yêu cầu chỉnh sửa">
                                             <span class="material-symbols-outlined text-[14px]">cancel</span>
                                             <span>Không duyệt</span>
                                         </button>
@@ -226,7 +226,7 @@
                                 @endif
 
                                 {{-- Xóa bài viết --}}
-                                <button type="button" onclick="adminConfirmDeleteBlog({{ $blog->id }}, '{{ addslashes($blog->title) }}')" class="btn-enterprise btn-enterprise-secondary btn-action-compact text-gray-400 hover:text-rose-600 hover:bg-rose-50 border-gray-200" title="Xóa bài viết">
+                                <button type="button" onclick="adminConfirmDeleteBlog({{ $blog->id }}, '{{ addslashes($blog->title) }}')" class="btn-enterprise btn-enterprise-secondary btn-action-compact text-gray-400 hover:text-rose-600 hover:bg-rose-50 border-gray-200 w-8 h-8 p-0 flex items-center justify-center shrink-0" title="Xóa bài viết">
                                     <span class="material-symbols-outlined text-[14px]">delete</span>
                                 </button>
                             </div>
@@ -285,25 +285,26 @@
 
         // Cập nhật các nút thao tác sau khi đổi trạng thái
         if (actionsEl) {
+            actionsEl.className = 'px-3.5 pr-6 py-3 text-right whitespace-nowrap';
             actionsEl.innerHTML = `
-                <div class="flex items-center justify-end gap-1.5 flex-nowrap">
-                    <button type="button" onclick="openBlogQuickPreviewModal(${blogId})" class="btn-enterprise btn-enterprise-secondary btn-action-compact font-semibold" title="Xem nhanh nội dung bài viết">
+                <div class="inline-flex items-center justify-end gap-1.5 flex-nowrap shrink-0">
+                    <button type="button" onclick="openBlogQuickPreviewModal(${blogId})" class="btn-enterprise btn-enterprise-secondary btn-action-compact font-semibold w-[68px] justify-center shrink-0" title="Xem nhanh nội dung bài viết">
                         <span class="material-symbols-outlined text-[14px]">visibility</span>
                         <span>Xem</span>
                     </button>
                     ${status !== 'published' ? `
-                        <button type="button" onclick="adminQuickApproveBlog(${blogId}, '')" class="btn-enterprise btn-enterprise-success btn-action-compact font-bold shadow-2xs" title="Duyệt bài viết này">
+                        <button type="button" onclick="adminQuickApproveBlog(${blogId}, '')" class="btn-enterprise btn-enterprise-success btn-action-compact font-bold shadow-2xs w-[98px] justify-center shrink-0" title="Duyệt bài viết này">
                             <span class="material-symbols-outlined text-[14px]">check_circle</span>
                             <span>Duyệt</span>
                         </button>
                     ` : ''}
                     ${status !== 'rejected' ? `
-                        <button type="button" onclick="adminOpenRejectModal(${blogId}, '', '${status}')" class="btn-enterprise btn-enterprise-danger btn-action-compact font-semibold shadow-2xs" title="Từ chối bài viết">
+                        <button type="button" onclick="adminOpenRejectModal(${blogId}, '', '${status}')" class="btn-enterprise btn-enterprise-danger btn-action-compact font-semibold shadow-2xs w-[98px] justify-center shrink-0" title="Từ chối bài viết">
                             <span class="material-symbols-outlined text-[14px]">cancel</span>
                             <span>Không duyệt</span>
                         </button>
                     ` : ''}
-                    <button type="button" onclick="adminConfirmDeleteBlog(${blogId}, '')" class="btn-enterprise btn-enterprise-secondary btn-action-compact text-gray-400 hover:text-rose-600 hover:bg-rose-50 border-gray-200" title="Xóa bài viết">
+                    <button type="button" onclick="adminConfirmDeleteBlog(${blogId}, '')" class="btn-enterprise btn-enterprise-secondary btn-action-compact text-gray-400 hover:text-rose-600 hover:bg-rose-50 border-gray-200 w-8 h-8 p-0 flex items-center justify-center shrink-0" title="Xóa bài viết">
                         <span class="material-symbols-outlined text-[14px]">delete</span>
                     </button>
                 </div>

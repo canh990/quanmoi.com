@@ -20,6 +20,8 @@ class QuyenHan extends Model
 
     public function vaiTro(): BelongsToMany
     {
-        return $this->belongsToMany(VaiTro::class, 'vai_tro_quyen_han', 'quyen_han_id', 'vai_tro_id');
+        return $this->belongsToMany(VaiTro::class, 'vai_tro_quyen_han', 'quyen_han_id', 'vai_tro_id')
+            ->using(VaiTroQuyenHan::class)
+            ->withTimestamps();
     }
 }

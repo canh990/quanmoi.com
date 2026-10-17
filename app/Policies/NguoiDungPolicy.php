@@ -8,6 +8,10 @@ class NguoiDungPolicy
 {
     public function before(?User $user, string $ability): ?bool
     {
+        if ($user && method_exists($user, 'hasPermissionExplicitlyDenied') && $user->hasPermissionExplicitlyDenied($ability)) {
+            return false;
+        }
+
         if ($user && ($user->isAdmin() || $user->hasRole('admin'))) {
             return true;
         }

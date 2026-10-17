@@ -166,6 +166,14 @@ class QuanLyQuanController extends Controller
 
         $statusStr = $quan->is_noi_bat ? 'Đã thêm quán vào danh sách nổi bật' : 'Đã gỡ quán khỏi danh sách nổi bật';
 
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'is_noi_bat' => $quan->is_noi_bat,
+                'message' => $statusStr,
+            ]);
+        }
+
         return back()->with('success', $statusStr);
     }
 
@@ -180,6 +188,14 @@ class QuanLyQuanController extends Controller
         ]);
 
         $statusStr = $quan->is_xac_thuc ? 'Đã cấp Tick Xanh cho quán' : 'Đã gỡ Tick Xanh của quán';
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'is_xac_thuc' => $quan->is_xac_thuc,
+                'message' => $statusStr,
+            ]);
+        }
 
         return back()->with('success', $statusStr);
     }

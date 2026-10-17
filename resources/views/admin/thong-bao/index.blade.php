@@ -322,10 +322,12 @@
                     <p class="text-[10px] text-slate-400 mt-0.5">${item.created_at_formatted || (item.created_at ? new Date(item.created_at).toLocaleString('vi-VN') : '')}</p>
                 </td>
                 <td class="p-3 text-right whitespace-nowrap">
-                    <a href="${item.url}" class="btn-enterprise btn-enterprise-dark">
-                        <span>Xử lý</span>
-                        <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
-                    </a>
+                    <div class="inline-flex items-center justify-end">
+                        <a href="${item.url}" class="btn-enterprise btn-enterprise-dark btn-action-compact w-[80px] justify-center shrink-0">
+                            <span>Xử lý</span>
+                            <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+                        </a>
+                    </div>
                 </td>
             </tr>
         `).join('');

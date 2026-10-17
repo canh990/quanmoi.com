@@ -42,11 +42,13 @@ Route::middleware(['auth', 'KiemTraQuyenHan:admin'])->group(function () {
     Route::get('/vai-tro', [VaiTroController::class, 'index'])->name('vai-tro.index');
     Route::post('/vai-tro', [VaiTroController::class, 'store'])->name('vai-tro.store');
     Route::put('/vai-tro/{id}/permissions', [VaiTroController::class, 'updatePermissions'])->name('vai-tro.update-permissions');
+    Route::delete('/vai-tro/{id}', [VaiTroController::class, 'destroy'])->name('vai-tro.destroy');
 
     // 5. Quản lý & Override Phân quyền
     Route::get('/phan-quyen', [PhanQuyenController::class, 'index'])->name('phan-quyen.index');
     Route::post('/phan-quyen', [PhanQuyenController::class, 'store'])->name('phan-quyen.store');
     Route::post('/phan-quyen/override', [PhanQuyenController::class, 'overrideUserPermission'])->name('phan-quyen.override');
+    Route::delete('/phan-quyen/{id}', [PhanQuyenController::class, 'destroy'])->name('phan-quyen.destroy');
 
     // 6. Quản lý Quán
     Route::get('/quan', [QuanLyQuanController::class, 'index'])->name('quan.index');

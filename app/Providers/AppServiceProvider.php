@@ -38,20 +38,10 @@ class AppServiceProvider extends ServiceProvider
         Schema::defaultStringLength(191);
 
         Gate::before(function ($user, $ability) {
-            if (method_exists($user, 'hasPermissionTo')) {
-                // Check explicit user override
-                if (method_exists($user, 'quyenHanOverrides')) {
-                    $override = $user->quyenHanOverrides()
-                        ->where(function ($query) use ($ability) {
-                            $query->where('quyen_han.ten', $ability)->orWhere('quyen_han.id', $ability);
-                        })
-                        ->first();
-
-                    if ($override !== null) {
-                        return (bool) $override->pivot->cho_phep;
-                    }
+            if ($user && method_exists($user, 'hasPermissionTo')) {
+                if (method_exists($user, 'hasPermissionExplicitlyDenied') && $user->hasPermissionExplicitlyDenied($ability)) {
+                    return false;
                 }
-
                 if ($user->hasPermissionTo($ability)) {
                     return true;
                 }

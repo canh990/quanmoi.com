@@ -93,6 +93,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/tai-khoan', [TaiKhoanController::class, 'index'])->name('tai-khoan.index');
     Route::get('/tai-khoan/cai-dat', [TaiKhoanController::class, 'settings'])->name('tai-khoan.cai-dat');
     Route::put('/tai-khoan/cai-dat', [TaiKhoanController::class, 'updateSettings'])->name('tai-khoan.cai-dat.update');
+    Route::post('/tai-khoan/yeu-cau-xac-thuc', [TaiKhoanController::class, 'requestVerification'])->name('tai-khoan.yeu-cau-xac-thuc');
     Route::get('/cai-dat', fn () => redirect()->route('tai-khoan.cai-dat'))->name('cai-dat');
     Route::get('/quan-da-luu', [\App\Http\Controllers\NguoiDung\QuanDaLuuController::class, 'index'])->name('quan-da-luu.index');
     Route::post('/quan-da-luu/{quanId}/toggle', [\App\Http\Controllers\NguoiDung\QuanDaLuuController::class, 'toggle'])->name('quan-da-luu.toggle');
@@ -134,5 +135,5 @@ Route::get('/{slug}', function (string $slug) {
         return redirect()->route('quan.detail', ['slug' => $slug]);
     }
     abort(404);
-})->where('slug', '[a-zA-Z0-9\-]+');
+})->where('slug', '^(?!admin$|api$|chu-quan$|thanh-vien$)[a-zA-Z0-9\-]+$');
 

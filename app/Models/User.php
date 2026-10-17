@@ -127,34 +127,59 @@ class User extends Authenticatable
     public function quyenHanOverrides(): BelongsToMany
     {
         return $this->belongsToMany(QuyenHan::class, 'nguoi_dung_quyen_han', 'nguoi_dung_id', 'quyen_han_id')
+            ->using(NguoiDungQuyenHan::class)
             ->withPivot('cho_phep')
             ->withTimestamps();
+    }
+
+    protected ?array $cachedPermissionOverrides = null;
+    protected ?array $cachedRolePermissions = null;
+
+    public function clearPermissionCache(): void
+    {
+        $this->cachedPermissionOverrides = null;
+        $this->cachedRolePermissions = null;
+        $this->unsetRelation('quyenHanOverrides');
+        $this->unsetRelation('vaiTro');
     }
 
     public function hasPermissionTo(string $permissionName): bool
     {
         // 1. Check user-level override in nguoi_dung_quyen_han
-        $override = $this->quyenHanOverrides()
-            ->where(function ($query) use ($permissionName) {
-                $query->where('quyen_han.ten', $permissionName)
-                    ->orWhere('quyen_han.id', $permissionName);
-            })
-            ->first();
+        if ($this->cachedPermissionOverrides === null) {
+            $this->cachedPermissionOverrides = [];
+            $overrides = $this->relationLoaded('quyenHanOverrides')
+                ? $this->quyenHanOverrides
+                : $this->quyenHanOverrides()->get();
 
-        if ($override !== null) {
-            return (bool) $override->pivot->cho_phep;
+            foreach ($overrides as $ov) {
+                $this->cachedPermissionOverrides[$ov->ten] = (bool) $ov->pivot->cho_phep;
+                $this->cachedPermissionOverrides[$ov->id] = (bool) $ov->pivot->cho_phep;
+            }
+        }
+
+        if (array_key_exists($permissionName, $this->cachedPermissionOverrides)) {
+            return $this->cachedPermissionOverrides[$permissionName];
         }
 
         // 2. Check role permissions via vai_tro_quyen_han
-        if ($this->vaiTro) {
-            $hasRolePerm = $this->vaiTro->quyenHan()
-                ->where(function ($query) use ($permissionName) {
-                    $query->where('quyen_han.ten', $permissionName)
-                        ->orWhere('quyen_han.id', $permissionName);
-                })
-                ->exists();
+        if ($this->vai_tro_id) {
+            if ($this->cachedRolePermissions === null) {
+                $this->cachedRolePermissions = [];
+                $role = $this->relationLoaded('vaiTro')
+                    ? $this->vaiTro
+                    : $this->vaiTro()->with('quyenHan')->first();
 
-            if ($hasRolePerm) {
+                if ($role) {
+                    $perms = $role->relationLoaded('quyenHan') ? $role->quyenHan : $role->quyenHan()->get();
+                    foreach ($perms as $p) {
+                        $this->cachedRolePermissions[$p->ten] = true;
+                        $this->cachedRolePermissions[$p->id] = true;
+                    }
+                }
+            }
+
+            if (!empty($this->cachedRolePermissions[$permissionName])) {
                 return true;
             }
         }
@@ -165,6 +190,16 @@ class User extends Authenticatable
         }
 
         return false;
+    }
+
+    public function hasPermissionExplicitlyDenied(string $permissionName): bool
+    {
+        if ($this->cachedPermissionOverrides === null) {
+            $this->hasPermissionTo($permissionName);
+        }
+
+        return array_key_exists($permissionName, $this->cachedPermissionOverrides ?? [])
+            && $this->cachedPermissionOverrides[$permissionName] === false;
     }
 
     public function isAdmin(): bool
