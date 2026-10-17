@@ -67,9 +67,9 @@
                         <p class="flex items-center gap-1"><span class="material-symbols-outlined text-[13px] text-emerald-500">image</span> OG Image đã cài</p>
                         @endif
                     </div>
-                    <a href="{{ route('admin.seo.edit', $seo->trang) }}" class="inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-white rounded-xl font-bold text-[13px] hover:bg-primary/90 transition-all shadow-sm hover:shadow-md">
-                        <span class="material-symbols-outlined text-[16px]">edit</span>
-                        Chỉnh sửa
+                    <a href="{{ route('admin.seo.edit', $seo->trang) }}" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-primary text-white rounded-xl font-bold text-[13px] hover:bg-primary/90 transition-all shadow-sm hover:shadow-md whitespace-nowrap shrink-0">
+                        <span class="material-symbols-outlined text-[16px] shrink-0">edit</span>
+                        <span class="whitespace-nowrap">Chỉnh sửa</span>
                     </a>
                 </div>
             </div>

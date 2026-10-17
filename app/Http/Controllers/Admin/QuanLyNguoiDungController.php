@@ -93,12 +93,45 @@ class QuanLyNguoiDungController extends Controller
             }
 
             $user->update($updateData);
+
+            $roleChanged = $user->wasChanged('vai_tro_id');
+            $verificationChanged = $user->wasChanged('da_xac_thuc');
+
             $this->adminAudit->record($actor, 'user.updated', $user, $request, [
-                'role_changed' => $user->wasChanged('vai_tro_id'),
+                'role_changed' => $roleChanged,
                 'status_changed' => $user->wasChanged('trang_thai'),
-                'verification_changed' => $user->wasChanged('da_xac_thuc'),
+                'verification_changed' => $verificationChanged,
                 'password_changed' => array_key_exists('mat_khau', $updateData),
             ]);
+
+            $user->clearPermissionCache();
+
+            if ($roleChanged) {
+                try {
+                    $user->load('vaiTro');
+                    $tenVaiTro = $user->vaiTro?->ten_hien_thi ?? ($user->vaiTro?->ten ?? 'Mới');
+                    $user->notify(new \App\Notifications\UserRoleStatusUpdatedNotification(
+                        'role_updated',
+                        "Vai trò tài khoản của bạn đã được quản trị viên cập nhật thành '{$tenVaiTro}'.",
+                        null,
+                        $user->hasRole('chu_quan') ? route('chu-quan.quan.index') : route('tai-khoan.index')
+                    ));
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::warning('User role update notification error: ' . $e->getMessage());
+                }
+            }
+
+            if ($verificationChanged) {
+                try {
+                    $msg = $user->da_xac_thuc
+                        ? 'Tài khoản của bạn đã được quản trị viên cấp Tick Xanh xác thực thành công.'
+                        : 'Huy hiệu Tick Xanh xác thực tài khoản của bạn đã bị gỡ bỏ.';
+                    $action = $user->da_xac_thuc ? 'verified' : 'verification_rejected';
+                    $user->notify(new \App\Notifications\UserRoleStatusUpdatedNotification($action, $msg));
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::warning('User verification change notification error: ' . $e->getMessage());
+                }
+            }
         });
 
         if ($request->wantsJson()) {
@@ -202,8 +235,27 @@ class QuanLyNguoiDungController extends Controller
 
             $this->adminAudit->record($actor, 'user.verification_toggled', $user, $request, ['verified' => $user->da_xac_thuc]);
 
+            $user->clearPermissionCache();
+            try {
+                $msg = $user->da_xac_thuc
+                    ? 'Tài khoản của bạn đã được cấp Tick Xanh xác thực thành công.'
+                    : 'Huy hiệu Tick Xanh xác thực của bạn đã bị gỡ bỏ.';
+                $action = $user->da_xac_thuc ? 'verified' : 'verification_rejected';
+                $user->notify(new \App\Notifications\UserRoleStatusUpdatedNotification($action, $msg));
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('User verification toggle notification error: ' . $e->getMessage());
+            }
+
             return $user->da_xac_thuc;
         });
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'verified' => $verified,
+                'message' => $verified ? 'Đã cấp Tick Xanh cho người dùng.' : 'Đã gỡ Tick Xanh của người dùng.',
+            ]);
+        }
 
         return back()->with('success', $verified ? 'Đã cấp Tick Xanh cho người dùng.' : 'Đã gỡ Tick Xanh của người dùng.');
     }

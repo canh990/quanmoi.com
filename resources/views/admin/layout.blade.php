@@ -338,6 +338,47 @@
         .btn-action-compact .material-symbols-outlined {
             font-size: 14px !important;
         }
+
+        /* ==========================================================================
+           10. CHỐNG XUỐNG HÀNG & CHỐNG MẤT CHỮ TOÀN DIỆN CHO ADMIN
+           Đảm bảo 100% tất cả các nút bấm, badge, tiêu đề cột, ngày giờ không bao giờ bị cắt chữ hay gãy dòng
+           ========================================================================== */
+        button,
+        a.btn,
+        .btn,
+        .btn-enterprise,
+        .btn-action-compact,
+        a[class*="rounded-xl"],
+        button[class*="rounded-xl"],
+        a[class*="rounded-lg"],
+        button[class*="rounded-lg"] {
+            white-space: nowrap !important;
+            flex-shrink: 0 !important;
+        }
+
+        /* Tất cả badge trạng thái không bao giờ rớt dòng */
+        [class*="rounded-full"],
+        .badge {
+            white-space: nowrap !important;
+            flex-shrink: 0 !important;
+        }
+
+        /* Tiêu đề bảng không bao giờ bị xuống hàng */
+        thead th {
+            white-space: nowrap !important;
+        }
+
+        /* Cột thao tác trong bảng luôn giữ nguyên trên 1 dòng */
+        td:last-child,
+        td.text-right {
+            white-space: nowrap !important;
+        }
+
+        /* Cột ngày giờ không bị cắt cụt dấu ... */
+        .table-date-cell,
+        td.whitespace-nowrap div {
+            white-space: nowrap;
+        }
     </style>
 </head>
 <body class="h-full text-slate-800 bg-[#f8fafc] font-sans antialiased flex flex-col md:flex-row min-h-screen overflow-x-hidden">
@@ -432,43 +473,43 @@
     {{-- Main Content Wrapper --}}
     <div class="admin-main-wrapper flex-1 flex flex-col min-w-0 min-h-screen bg-[#f8fafc] md:ml-65 w-full md:w-[calc(100%-16.25rem)]">
         
-        {{-- Header Topbar --}}
-        <header class="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/90 px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
-            <div class="flex items-center gap-3">
-                <button onclick="toggleSidebar()" class="md:hidden p-1.5 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors">
+        {{-- Header Topbar (Đảm bảo không bao giờ bị xuống hàng khi phóng to / zoom) --}}
+        <header class="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/90 px-3 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between gap-2 sm:gap-4 flex-nowrap min-w-0">
+            <div class="flex items-center gap-2 sm:gap-3 shrink-0 min-w-0">
+                <button onclick="toggleSidebar()" class="md:hidden p-1.5 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors shrink-0">
                     <span class="material-symbols-outlined text-[22px]">menu</span>
                 </button>
                 
-                {{-- Breadcrumb --}}
-                <div class="flex items-center gap-2 text-xs font-medium text-slate-500">
-                    <span>Quản trị</span>
-                    <span class="material-symbols-outlined text-[14px] text-slate-300">chevron_right</span>
-                    <span id="header-page-title" class="font-semibold text-slate-900">@yield('page-title', 'Bảng Điều Khiển')</span>
+                {{-- Breadcrumb (Không bị xuống hàng) --}}
+                <div class="flex items-center gap-1.5 sm:gap-2 text-xs font-medium text-slate-500 whitespace-nowrap shrink-0 min-w-0">
+                    <span class="shrink-0">Quản trị</span>
+                    <span class="material-symbols-outlined text-[14px] text-slate-300 shrink-0">chevron_right</span>
+                    <span id="header-page-title" class="font-semibold text-slate-900 whitespace-nowrap truncate max-w-[150px] sm:max-w-[280px] lg:max-w-none">@yield('page-title', 'Bảng Điều Khiển')</span>
                 </div>
             </div>
 
-            {{-- Topbar Right Tools --}}
-            <div class="flex items-center gap-3">
+            {{-- Topbar Right Tools (Tất cả nút nằm thẳng hàng, không xuống dòng) --}}
+            <div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0 whitespace-nowrap">
                 {{-- Quick Search Button --}}
-                <div onclick="openCommandPalette()" class="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-slate-100/80 hover:bg-slate-100 border border-slate-200 rounded-lg text-xs text-slate-400 w-60 cursor-pointer transition-colors shadow-2xs">
-                    <span class="material-symbols-outlined text-[16px] text-slate-400">search</span>
+                <div onclick="openCommandPalette()" class="hidden xl:flex items-center gap-2 px-3 py-1.5 bg-slate-100/80 hover:bg-slate-100 border border-slate-200 rounded-lg text-xs text-slate-400 w-44 2xl:w-56 cursor-pointer transition-colors shadow-2xs whitespace-nowrap shrink-0">
+                    <span class="material-symbols-outlined text-[16px] text-slate-400 shrink-0">search</span>
                     <span class="flex-1 truncate">Tìm kiếm lối tắt...</span>
-                    <kbd class="px-1.5 py-0.5 text-[10px] font-semibold bg-white border border-slate-200 rounded text-slate-500">Ctrl K</kbd>
+                    <kbd class="px-1.5 py-0.5 text-[10px] font-semibold bg-white border border-slate-200 rounded text-slate-500 shrink-0">Ctrl K</kbd>
                 </div>
 
-                <a href="{{ route('admin.vai-tro.index') }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200/80 hover:bg-blue-100 transition-colors shadow-2xs">
-                    <span class="material-symbols-outlined text-[16px] text-blue-600">admin_panel_settings</span>
-                    <span>Phân quyền</span>
+                <a href="{{ route('admin.vai-tro.index') }}" class="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200/80 hover:bg-blue-100 transition-colors shadow-2xs whitespace-nowrap shrink-0">
+                    <span class="material-symbols-outlined text-[16px] text-blue-600 shrink-0">admin_panel_settings</span>
+                    <span class="whitespace-nowrap">Phân quyền</span>
                 </a>
 
-                <a href="{{ route('home') }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-slate-700 bg-white border border-slate-200/90 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-300 transition-all shadow-2xs group" title="Quay về trang chủ website">
-                    <span class="material-symbols-outlined text-[18px] text-amber-500 group-hover:scale-110 transition-transform">home</span>
-                    <span class="font-bold">Quay về trang chủ</span>
+                <a href="{{ route('home') }}" class="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold text-slate-700 bg-white border border-slate-200/90 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-300 transition-all shadow-2xs group whitespace-nowrap shrink-0" title="Quay về trang chủ website">
+                    <span class="material-symbols-outlined text-[18px] text-amber-500 group-hover:scale-110 transition-transform shrink-0">home</span>
+                    <span class="font-bold whitespace-nowrap">Quay về trang chủ</span>
                 </a>
 
                 {{-- Real-time Admin Notification Bell --}}
-                <div class="relative" id="admin-notif-container">
-                    <button id="admin-notif-bell" onclick="toggleNotifDropdown()" class="relative p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors flex items-center justify-center">
+                <div class="relative shrink-0" id="admin-notif-container">
+                    <button id="admin-notif-bell" onclick="toggleNotifDropdown()" class="relative p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors flex items-center justify-center shrink-0">
                         <span class="material-symbols-outlined text-[22px]">notifications</span>
                         <span id="realtime-badge-count" class="hidden absolute -top-1 -right-1 min-w-[20px] h-[20px] px-1 bg-rose-500 text-white text-[11px] font-bold rounded-full flex items-center justify-center border-2 border-white shadow-xs">0</span>
                     </button>
@@ -503,11 +544,51 @@
                     </div>
                 </div>
 
-                <div class="h-5 w-px bg-slate-200"></div>
+                <div class="h-5 w-px bg-slate-200 shrink-0"></div>
 
-                <div class="flex items-center gap-2 px-3 py-1 bg-emerald-50 border border-emerald-200/80 rounded-full">
-                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <span class="text-xs font-bold text-emerald-700">Quản Trị Viên Cao Cấp</span>
+                {{-- Interactive Admin User Profile Dropdown (Không bao giờ rớt dòng) --}}
+                <div class="relative shrink-0" id="admin-profile-container">
+                    <button type="button" id="admin-profile-trigger" onclick="toggleAdminProfileDropdown()" class="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/90 rounded-full transition-all cursor-pointer shadow-2xs group focus:outline-none focus:ring-2 focus:ring-emerald-400 whitespace-nowrap shrink-0" title="Bấm để xem hồ sơ và tùy chọn quản trị">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
+                        <span class="text-xs font-bold text-emerald-800 whitespace-nowrap">{{ auth()->user()->ho_ten ?? 'Quản Trị Viên (Admin)' }}</span>
+                        <span class="material-symbols-outlined text-[16px] text-emerald-600 group-hover:rotate-180 transition-transform shrink-0">expand_more</span>
+                    </button>
+
+                    <div id="admin-profile-dropdown" class="hidden absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-200 z-50 overflow-hidden py-1.5 transition-all text-xs">
+                        <div class="px-4 py-3 border-b border-slate-100 bg-slate-50/70">
+                            <p class="font-bold text-slate-900 text-sm truncate">{{ auth()->user()->ho_ten ?? 'Quản Trị Viên' }}</p>
+                            <p class="text-slate-500 text-[11px] truncate">{{ auth()->user()->email ?? 'admin@quanmoi.com' }}</p>
+                            <div class="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Quản Trị Cấp Cao
+                            </div>
+                        </div>
+
+                        <div class="py-1">
+                            <a href="{{ route('tai-khoan.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-slate-700 hover:bg-slate-100 hover:text-slate-900 font-medium transition-colors">
+                                <span class="material-symbols-outlined text-[18px] text-slate-400">account_circle</span>
+                                <span>Hồ sơ cá nhân</span>
+                            </a>
+                            <a href="{{ route('tai-khoan.cai-dat') }}" class="flex items-center gap-2.5 px-4 py-2 text-slate-700 hover:bg-slate-100 hover:text-slate-900 font-medium transition-colors">
+                                <span class="material-symbols-outlined text-[18px] text-slate-400">settings</span>
+                                <span>Cài đặt tài khoản</span>
+                            </a>
+                            <a href="{{ route('admin.vai-tro.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-slate-700 hover:bg-slate-100 hover:text-slate-900 font-medium transition-colors">
+                                <span class="material-symbols-outlined text-[18px] text-blue-500">admin_panel_settings</span>
+                                <span>Vai trò & Phân quyền</span>
+                            </a>
+                            <a href="{{ route('admin.bao-mat.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-slate-700 hover:bg-slate-100 hover:text-slate-900 font-medium transition-colors">
+                                <span class="material-symbols-outlined text-[18px] text-emerald-500">security</span>
+                                <span>Cấu hình bảo mật</span>
+                            </a>
+                        </div>
+
+                        <div class="border-t border-slate-100 pt-1 mt-1">
+                            <button type="button" onclick="confirmAdminLogout('desktop-logout-form')" class="w-full flex items-center gap-2.5 px-4 py-2 text-rose-600 hover:bg-rose-50 font-bold transition-colors text-left cursor-pointer">
+                                <span class="material-symbols-outlined text-[18px] text-rose-500">logout</span>
+                                <span>Đăng xuất hệ thống</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </header>
@@ -521,10 +602,31 @@
                 </div>
             @endif
 
+            @if(session('info'))
+                <div class="bg-blue-50 border border-blue-200 text-blue-900 px-4 py-3 rounded-lg text-xs font-medium flex items-center gap-2.5 shadow-xs mb-3">
+                    <span class="material-symbols-outlined text-blue-600 text-[18px]">info</span>
+                    <div class="flex-1">{{ session('info') }}</div>
+                </div>
+            @endif
+
             @if(session('error'))
                 <div class="bg-rose-50 border border-rose-200 text-rose-900 px-4 py-3 rounded-lg text-xs font-medium flex items-center gap-2.5 shadow-xs mb-3">
                     <span class="material-symbols-outlined text-rose-600 text-[18px]">error</span>
                     <div class="flex-1">{{ session('error') }}</div>
+                </div>
+            @endif
+
+            @if(isset($errors) && $errors->any())
+                <div class="bg-amber-50 border border-amber-200 text-amber-900 px-4 py-3 rounded-lg text-xs font-medium flex items-start gap-2.5 shadow-xs mb-3">
+                    <span class="material-symbols-outlined text-amber-600 text-[18px] shrink-0 mt-0.5">warning</span>
+                    <div class="flex-1">
+                        <div class="font-bold mb-1">Vui lòng kiểm tra lại thông tin:</div>
+                        <ul class="list-disc list-inside space-y-0.5 text-[11px] text-amber-800">
+                            @foreach($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
                 </div>
             @endif
         </div>
@@ -750,7 +852,7 @@
 
     {{-- Enterprise Blog Quick Preview Modal --}}
     <div id="admin-blog-preview-modal" class="fixed inset-0 bg-slate-950/75 backdrop-blur-xs z-50 hidden flex items-center justify-center p-3 sm:p-5 transition-opacity duration-200" style="display: none;">
-        <div id="admin-blog-preview-box" class="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-3xl w-full max-h-[92vh] flex flex-col overflow-hidden transform transition-all scale-95 duration-200">
+        <div id="admin-blog-preview-box" class="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-4xl lg:max-w-5xl w-full max-h-[92vh] flex flex-col overflow-hidden transform transition-all scale-95 duration-200">
             {{-- Header --}}
             <div class="px-5 sm:px-6 py-3.5 border-b border-slate-100 flex items-center justify-between bg-slate-50/90 shrink-0 gap-3">
                 <div class="flex items-center gap-3 min-w-0">
@@ -800,30 +902,30 @@
             </div>
 
             {{-- Footer Actions --}}
-            <div class="px-5 sm:px-6 py-3.5 border-t border-slate-100 bg-slate-50/90 flex flex-wrap items-center justify-between gap-2.5 shrink-0">
-                <div class="flex items-center gap-2 flex-wrap">
-                    <a id="bp-detail-link" href="#" class="btn-enterprise btn-enterprise-secondary py-2 text-xs">
-                        <span class="material-symbols-outlined text-[16px]">open_in_new</span>
-                        <span>Mở trang chi tiết đầy đủ</span>
+            <div class="px-5 sm:px-6 py-3.5 border-t border-slate-100 bg-slate-50/95 flex items-center justify-between gap-2.5 sm:gap-4 shrink-0 overflow-x-auto custom-scrollbar flex-nowrap">
+                <div class="flex items-center gap-2 flex-nowrap shrink-0">
+                    <a id="bp-detail-link" href="#" class="btn-enterprise btn-enterprise-secondary h-9 px-3.5 text-xs whitespace-nowrap shrink-0 inline-flex items-center gap-1.5 font-semibold" title="Mở trang chi tiết đầy đủ">
+                        <span class="material-symbols-outlined text-[16px] shrink-0">open_in_new</span>
+                        <span class="whitespace-nowrap">Mở trang chi tiết đầy đủ</span>
                     </a>
-                    <a id="bp-public-link" href="#" target="_blank" class="hidden btn-enterprise btn-enterprise-dark py-2 text-xs" title="Xem trên giao diện công khai">
-                        <span class="material-symbols-outlined text-[16px]">visibility</span>
-                        <span>Xem ngoài website</span>
+                    <a id="bp-public-link" href="#" target="_blank" class="hidden btn-enterprise btn-enterprise-dark h-9 px-3.5 text-xs whitespace-nowrap shrink-0 inline-flex items-center gap-1.5 font-semibold" title="Xem trên giao diện công khai">
+                        <span class="material-symbols-outlined text-[16px] shrink-0">visibility</span>
+                        <span class="whitespace-nowrap">Xem ngoài website</span>
                     </a>
                 </div>
 
-                <div class="flex items-center gap-2 flex-wrap">
-                    <button type="button" id="bp-btn-delete" class="btn-enterprise btn-enterprise-secondary text-gray-500 hover:text-rose-600 hover:bg-rose-50 border-gray-200 py-2 text-xs" title="Xóa bài viết">
-                        <span class="material-symbols-outlined text-[16px]">delete</span>
-                        <span class="hidden sm:inline">Xóa bài</span>
+                <div class="flex items-center gap-2 flex-nowrap shrink-0">
+                    <button type="button" id="bp-btn-delete" class="btn-enterprise btn-enterprise-secondary text-gray-500 hover:text-rose-600 hover:bg-rose-50 border-gray-200 h-9 px-3 text-xs whitespace-nowrap shrink-0 inline-flex items-center gap-1.5 font-semibold" title="Xóa bài viết">
+                        <span class="material-symbols-outlined text-[16px] shrink-0">delete</span>
+                        <span class="whitespace-nowrap">Xóa bài</span>
                     </button>
-                    <button type="button" id="bp-btn-reject" class="btn-enterprise btn-enterprise-danger py-2 text-xs">
-                        <span class="material-symbols-outlined text-[16px]">cancel</span>
-                        <span>Không duyệt</span>
+                    <button type="button" id="bp-btn-reject" class="btn-enterprise btn-enterprise-danger h-9 px-3.5 text-xs whitespace-nowrap shrink-0 inline-flex items-center gap-1.5 font-semibold" title="Không duyệt bài viết">
+                        <span class="material-symbols-outlined text-[16px] shrink-0">cancel</span>
+                        <span class="whitespace-nowrap">Không duyệt</span>
                     </button>
-                    <button type="button" id="bp-btn-approve" class="btn-enterprise btn-enterprise-success py-2 text-xs">
-                        <span class="material-symbols-outlined text-[16px]">check_circle</span>
-                        <span>Phê Duyệt Bài Viết</span>
+                    <button type="button" id="bp-btn-approve" class="btn-enterprise btn-enterprise-success h-9 px-4 text-xs whitespace-nowrap shrink-0 inline-flex items-center gap-1.5 font-bold" title="Phê duyệt bài viết">
+                        <span class="material-symbols-outlined text-[16px] shrink-0">check_circle</span>
+                        <span class="whitespace-nowrap">Phê Duyệt Bài Viết</span>
                     </button>
                 </div>
             </div>
@@ -2481,21 +2583,21 @@
                                 <span class="font-bold text-amber-600 block leading-tight">Vừa xong</span>
                                 <span class="text-gray-400 text-[10px] block leading-tight">Mới gửi duyệt</span>
                             </td>
-                            <td class="px-3.5 py-3 text-right" id="admin-blog-actions-${bData.id}">
-                                <div class="flex items-center justify-end gap-1.5 flex-nowrap">
-                                    <button type="button" onclick="openBlogQuickPreviewModal(${bData.id})" class="btn-enterprise btn-enterprise-secondary btn-action-compact font-semibold" title="Xem nhanh nội dung bài viết">
+                            <td class="px-3.5 pr-6 py-3 text-right whitespace-nowrap" id="admin-blog-actions-${bData.id}">
+                                <div class="inline-flex items-center justify-end gap-1.5 flex-nowrap shrink-0">
+                                    <button type="button" onclick="openBlogQuickPreviewModal(${bData.id})" class="btn-enterprise btn-enterprise-secondary btn-action-compact font-semibold w-[68px] justify-center shrink-0" title="Xem nhanh nội dung bài viết">
                                         <span class="material-symbols-outlined text-[14px]">visibility</span>
                                         <span>Xem</span>
                                     </button>
-                                    <button type="button" onclick="adminQuickApproveBlog(${bData.id}, '${safeTitle}')" class="btn-enterprise btn-enterprise-success btn-action-compact font-bold shadow-2xs" title="Phê duyệt bài viết ngay">
+                                    <button type="button" onclick="adminQuickApproveBlog(${bData.id}, '${safeTitle}')" class="btn-enterprise btn-enterprise-success btn-action-compact font-bold shadow-2xs w-[72px] justify-center shrink-0" title="Phê duyệt bài viết ngay">
                                         <span class="material-symbols-outlined text-[14px]">check_circle</span>
                                         <span>Duyệt</span>
                                     </button>
-                                    <button type="button" onclick="adminOpenRejectModal(${bData.id}, '${safeTitle}', 'pending')" class="btn-enterprise btn-enterprise-danger btn-action-compact font-semibold shadow-2xs" title="Từ chối hoặc yêu cầu sửa">
+                                    <button type="button" onclick="adminOpenRejectModal(${bData.id}, '${safeTitle}', 'pending')" class="btn-enterprise btn-enterprise-danger btn-action-compact font-semibold shadow-2xs w-[98px] justify-center shrink-0" title="Từ chối hoặc yêu cầu sửa">
                                         <span class="material-symbols-outlined text-[14px]">cancel</span>
                                         <span>Không duyệt</span>
                                     </button>
-                                    <button type="button" onclick="adminConfirmDeleteBlog(${bData.id}, '${safeTitle}')" class="btn-enterprise btn-enterprise-secondary btn-action-compact text-gray-400 hover:text-rose-600 hover:bg-rose-50 border-gray-200" title="Xóa bài viết">
+                                    <button type="button" onclick="adminConfirmDeleteBlog(${bData.id}, '${safeTitle}')" class="btn-enterprise btn-enterprise-secondary btn-action-compact text-gray-400 hover:text-rose-600 hover:bg-rose-50 border-gray-200 w-8 h-8 p-0 flex items-center justify-center shrink-0" title="Xóa bài viết">
                                         <span class="material-symbols-outlined text-[14px]">delete</span>
                                     </button>
                                 </div>
@@ -2542,6 +2644,21 @@
             }
         }
 
+        function toggleAdminProfileDropdown() {
+            const dropdown = document.getElementById('admin-profile-dropdown');
+            if (dropdown) {
+                dropdown.classList.toggle('hidden');
+            }
+        }
+
+        document.addEventListener('click', function(e) {
+            const container = document.getElementById('admin-profile-container');
+            const dropdown = document.getElementById('admin-profile-dropdown');
+            if (container && dropdown && !container.contains(e.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+
         function filterCommandPalette() {
             const query = (document.getElementById('command-palette-input')?.value || '').toLowerCase();
             const items = document.querySelectorAll('#command-palette-list .cmd-item');
@@ -2559,6 +2676,8 @@
             if (e.key === 'Escape') {
                 closeCommandPalette();
                 closeConfirmModal();
+                document.getElementById('admin-profile-dropdown')?.classList.add('hidden');
+                document.getElementById('admin-notif-dropdown')?.classList.add('hidden');
             }
         });
 
@@ -2778,7 +2897,7 @@
 
             const href = link.getAttribute('href');
             if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
-            if (link.getAttribute('target') === '_blank' || link.hasAttribute('download')) return;
+            if (link.getAttribute('target') === '_blank' || link.hasAttribute('download') || href.includes('export')) return;
 
             try {
                 const parsed = new URL(link.href, window.location.origin);

@@ -40,6 +40,13 @@ class SeoController extends Controller
             'og_image'         => $request->og_image,
         ]);
 
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Đã cập nhật SEO cho trang "' . $trang . '" thành công!',
+            ]);
+        }
+
         return redirect()->route('admin.seo.index')->with('success', 'Đã cập nhật SEO cho trang "' . $trang . '" thành công!');
     }
 }

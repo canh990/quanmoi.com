@@ -103,43 +103,28 @@
                                 <span class="font-bold text-gray-700">{{ $user->quan->count() }}</span>
                             </td>
                             <td class="py-3.5 px-4 text-right whitespace-nowrap min-w-[160px]">
-                                <div class="flex items-center justify-end gap-2 flex-nowrap shrink-0">
+                                <div class="inline-flex items-center justify-end gap-1 flex-nowrap shrink-0">
                                     @if(!$user->trashed())
-                                        <form action="{{ route('admin.nguoi-dung.toggle-xac-thuc', $user->id) }}" method="POST" class="inline">
-                                            @csrf
-                                            @method('PUT')
-                                            <button type="submit" class="p-2 rounded-lg transition-all {{ $user->da_xac_thuc ? 'text-blue-500 hover:bg-blue-50' : 'text-gray-400 hover:text-blue-500 hover:bg-gray-100' }}" title="{{ $user->da_xac_thuc ? 'Gỡ Tick Xanh' : 'Cấp Tick Xanh' }}">
-                                                <span class="material-symbols-outlined text-lg" {!! $user->da_xac_thuc ? 'style="font-variation-settings: \'FILL\' 1;"' : '' !!}>verified</span>
-                                            </button>
-                                        </form>
+                                        <button type="button" onclick="adminToggleUserVerification('{{ $user->id }}', this)" class="w-8 h-8 flex items-center justify-center rounded-lg transition-all cursor-pointer shrink-0 {{ $user->da_xac_thuc ? 'text-blue-500 hover:bg-blue-50' : 'text-gray-400 hover:text-blue-500 hover:bg-gray-100' }}" title="{{ $user->da_xac_thuc ? 'Gỡ Tick Xanh' : 'Cấp Tick Xanh' }}">
+                                            <span class="material-symbols-outlined text-lg" {!! $user->da_xac_thuc ? 'style="font-variation-settings: \'FILL\' 1;"' : '' !!}>verified</span>
+                                        </button>
                                     @endif
 
-                                    <a href="{{ route('admin.nguoi-dung.edit', $user->id) }}" class="p-2 text-gray-600 hover:text-primary hover:bg-gray-100 rounded-lg transition-all" title="Chỉnh sửa">
+                                    <a href="{{ route('admin.nguoi-dung.edit', $user->id) }}" class="w-8 h-8 flex items-center justify-center text-gray-600 hover:text-primary hover:bg-gray-100 rounded-lg transition-all shrink-0" title="Chỉnh sửa">
                                         <span class="material-symbols-outlined text-lg">edit</span>
                                     </a>
 
                                     @if($user->trashed())
-                                        <form action="{{ route('admin.nguoi-dung.restore', $user->id) }}" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn khôi phục tài khoản người dùng này không?');" class="inline">
-                                            @csrf
-                                            <button type="submit" class="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all" title="Khôi phục">
-                                                <span class="material-symbols-outlined text-lg">restore_from_trash</span>
-                                            </button>
-                                        </form>
-                                        <form action="{{ route('admin.nguoi-dung.force-destroy', $user->id) }}" method="POST" onsubmit="return confirm('CẢNH BÁO: Thao tác này sẽ xóa vĩnh viễn người dùng và tất cả các quán liên quan khỏi cơ sở dữ liệu. Bạn có chắc chắn muốn xóa vĩnh viễn không?');" class="inline">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="p-2 text-red-700 hover:bg-red-100 rounded-lg transition-all" title="Xóa vĩnh viễn">
-                                                <span class="material-symbols-outlined text-lg">delete_forever</span>
-                                            </button>
-                                        </form>
+                                        <button type="button" onclick="adminRestoreUser('{{ $user->id }}', '{{ addslashes($user->ho_ten) }}')" class="w-8 h-8 flex items-center justify-center text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all cursor-pointer shrink-0" title="Khôi phục">
+                                            <span class="material-symbols-outlined text-lg">restore_from_trash</span>
+                                        </button>
+                                        <button type="button" onclick="adminForceDeleteUser('{{ $user->id }}', '{{ addslashes($user->ho_ten) }}')" class="w-8 h-8 flex items-center justify-center text-red-700 hover:bg-red-100 rounded-lg transition-all cursor-pointer shrink-0" title="Xóa vĩnh viễn">
+                                            <span class="material-symbols-outlined text-lg">delete_forever</span>
+                                        </button>
                                     @else
-                                        <form action="{{ route('admin.nguoi-dung.destroy', $user->id) }}" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa tạm thời người dùng này không? Các quán của họ cũng sẽ tạm khóa.');" class="inline">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all" title="Xóa tạm thời">
-                                                <span class="material-symbols-outlined text-lg">delete</span>
-                                            </button>
-                                        </form>
+                                        <button type="button" onclick="adminSoftDeleteUser('{{ $user->id }}', '{{ addslashes($user->ho_ten) }}')" class="w-8 h-8 flex items-center justify-center text-red-600 hover:bg-red-50 rounded-lg transition-all cursor-pointer shrink-0" title="Xóa tạm thời">
+                                            <span class="material-symbols-outlined text-lg">delete</span>
+                                        </button>
                                     @endif
                                 </div>
                             </td>
@@ -158,4 +143,181 @@
         </div>
     </div>
 </div>
+
+<script>
+    function adminToggleUserVerification(userId, btn) {
+        const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+        const iconSpan = btn.querySelector('.material-symbols-outlined');
+
+        fetch(`/admin/nguoi-dung/${userId}/toggle-xac-thuc`, {
+            method: 'PUT',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrf
+            }
+        })
+        .then(async res => {
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(data.message || `Lỗi HTTP ${res.status}`);
+            return data;
+        })
+        .then(data => {
+            if (typeof showRealtimeToast === 'function') {
+                showRealtimeToast('Xác Thực Người Dùng', data.message, '', 'verified', 'bg-blue-500');
+            }
+            clearAdminPageCache();
+
+            const isVerified = data.verified;
+            if (isVerified) {
+                btn.className = 'p-2 rounded-lg transition-all cursor-pointer text-blue-500 hover:bg-blue-50';
+                btn.title = 'Gỡ Tick Xanh';
+                if (iconSpan) iconSpan.style.fontVariationSettings = "'FILL' 1";
+            } else {
+                btn.className = 'p-2 rounded-lg transition-all cursor-pointer text-gray-400 hover:text-blue-500 hover:bg-gray-100';
+                btn.title = 'Cấp Tick Xanh';
+                if (iconSpan) iconSpan.style.fontVariationSettings = "'FILL' 0";
+            }
+        })
+        .catch(err => {
+            if (typeof showRealtimeToast === 'function') {
+                showRealtimeToast('Lỗi Xác Thực', err.message || 'Không thể thay đổi trạng thái xác thực.', '', 'error', 'bg-rose-500');
+            }
+        });
+    }
+
+    function adminSoftDeleteUser(userId, userName) {
+        openConfirmModal({
+            title: 'Xóa Tạm Thời Người Dùng',
+            message: `Bạn có chắc chắn muốn xóa tạm thời người dùng <b class="text-slate-900 font-bold">"${userName}"</b> không?<br><span class="text-rose-600 text-[11px] font-medium">Tất cả quán trực thuộc người dùng này cũng sẽ bị khóa tạm thời.</span>`,
+            icon: 'delete',
+            iconBg: 'bg-rose-100 text-rose-800 border border-rose-200',
+            confirmText: 'Xác Nhận Xóa',
+            confirmClass: 'btn-enterprise-danger',
+            confirmIcon: 'delete',
+            onConfirm: () => {
+                const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+                const row = document.getElementById(`user-row-${userId}`);
+
+                fetch(`/admin/nguoi-dung/${userId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrf
+                    }
+                })
+                .then(async res => {
+                    const data = await res.json().catch(() => ({}));
+                    if (!res.ok) throw new Error(data.message || `Lỗi HTTP ${res.status}`);
+                    return data;
+                })
+                .then(data => {
+                    if (typeof showRealtimeToast === 'function') {
+                        showRealtimeToast('Đã Xóa Người Dùng', data.message || 'Đã xóa người dùng thành công.', '', 'delete', 'bg-slate-700');
+                    }
+                    clearAdminPageCache();
+                    if (row) {
+                        row.style.transition = 'all 0.35s ease';
+                        row.style.opacity = '0';
+                        row.style.transform = 'translateX(20px)';
+                        setTimeout(() => row.remove(), 350);
+                    }
+                })
+                .catch(err => {
+                    if (typeof showRealtimeToast === 'function') {
+                        showRealtimeToast('Không Thể Xóa', err.message || 'Có lỗi xảy ra khi xóa người dùng.', '', 'error', 'bg-rose-500');
+                    }
+                });
+            }
+        });
+    }
+
+    function adminRestoreUser(userId, userName) {
+        openConfirmModal({
+            title: 'Khôi Phục Tài Khoản',
+            message: `Bạn có chắc chắn muốn khôi phục tài khoản người dùng <b class="text-slate-900 font-bold">"${userName}"</b> không?<br><span class="text-emerald-600 text-[11px] font-medium">Các quán trực thuộc cũng sẽ được khôi phục về trạng thái hoạt động.</span>`,
+            icon: 'restore_from_trash',
+            iconBg: 'bg-emerald-100 text-emerald-800 border border-emerald-200',
+            confirmText: 'Khôi Phục Ngay',
+            confirmClass: 'btn-enterprise-success',
+            confirmIcon: 'check_circle',
+            onConfirm: () => {
+                const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+                fetch(`/admin/nguoi-dung/${userId}/restore`, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrf
+                    }
+                })
+                .then(async res => {
+                    const data = await res.json().catch(() => ({}));
+                    if (!res.ok) throw new Error(data.message || `Lỗi HTTP ${res.status}`);
+                    return data;
+                })
+                .then(data => {
+                    if (typeof showRealtimeToast === 'function') {
+                        showRealtimeToast('Khôi Phục Thành Công', data.message || 'Khôi phục thành công!', '', 'check_circle', 'bg-emerald-500');
+                    }
+                    clearAdminPageCache();
+                    instantNavigate(window.location.href, false);
+                })
+                .catch(err => {
+                    if (typeof showRealtimeToast === 'function') {
+                        showRealtimeToast('Lỗi Khôi Phục', err.message || 'Không thể khôi phục tài khoản.', '', 'error', 'bg-rose-500');
+                    }
+                });
+            }
+        });
+    }
+
+    function adminForceDeleteUser(userId, userName) {
+        openConfirmModal({
+            title: 'XÓA VĨNH VIỄN NGƯỜI DÙNG',
+            message: `CẢNH BÁO: Thao tác này sẽ xóa vĩnh viễn người dùng <b class="text-slate-900 font-bold">"${userName}"</b> và toàn bộ cơ sở dữ liệu liên quan. Không thể hoàn tác!<br><span class="text-rose-600 text-[11px] font-bold">Bạn có chắc chắn muốn tiếp tục không?</span>`,
+            icon: 'delete_forever',
+            iconBg: 'bg-rose-100 text-rose-800 border border-rose-200',
+            confirmText: 'Xác Nhận Xóa Vĩnh Viễn',
+            confirmClass: 'btn-enterprise-danger',
+            confirmIcon: 'delete_forever',
+            onConfirm: () => {
+                const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+                const row = document.getElementById(`user-row-${userId}`);
+
+                fetch(`/admin/nguoi-dung/${userId}/force`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrf
+                    }
+                })
+                .then(async res => {
+                    const data = await res.json().catch(() => ({}));
+                    if (!res.ok) throw new Error(data.message || `Lỗi HTTP ${res.status}`);
+                    return data;
+                })
+                .then(data => {
+                    if (typeof showRealtimeToast === 'function') {
+                        showRealtimeToast('Đã Xóa Vĩnh Viễn', data.message || 'Đã xóa vĩnh viễn người dùng.', '', 'delete_forever', 'bg-rose-700');
+                    }
+                    clearAdminPageCache();
+                    if (row) {
+                        row.style.transition = 'all 0.35s ease';
+                        row.style.opacity = '0';
+                        row.style.transform = 'translateX(20px)';
+                        setTimeout(() => row.remove(), 350);
+                    }
+                })
+                .catch(err => {
+                    if (typeof showRealtimeToast === 'function') {
+                        showRealtimeToast('Không Thể Xóa', err.message || 'Có lỗi xảy ra khi xóa vĩnh viễn.', '', 'error', 'bg-rose-500');
+                    }
+                });
+            }
+        });
+    }
+</script>
 @endsection

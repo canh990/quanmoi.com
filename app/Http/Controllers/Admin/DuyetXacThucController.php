@@ -76,7 +76,19 @@ class DuyetXacThucController extends Controller
         $owner = $quan->chuQuan;
         $ownerRole = VaiTro::where('ten', 'chu_quan')->first();
         if ($owner && $ownerRole && ! $owner->hasRole('admin')) {
+            $oldRoleId = $owner->vai_tro_id;
             $owner->update(['vai_tro_id' => $ownerRole->id]);
+            $owner->clearPermissionCache();
+            if ($oldRoleId !== $ownerRole->id) {
+                try {
+                    $owner->notify(new \App\Notifications\UserRoleStatusUpdatedNotification(
+                        'role_updated',
+                        "Bạn đã được nâng cấp vai trò thành 'Chủ Quán' sau khi cơ sở '{$quan->ten_quan}' được duyệt thành công!"
+                    ));
+                } catch (\Throwable $notifEx) {
+                    \Illuminate\Support\Facades\Log::warning('Owner role update notification error: ' . $notifEx->getMessage());
+                }
+            }
         }
 
         if ($owner) {
@@ -178,13 +190,29 @@ class DuyetXacThucController extends Controller
         }
 
         $user = User::findOrFail($id);
+        $settings = $user->cai_dat ?? [];
+        if (isset($settings['yeu_cau_xac_thuc'])) {
+            $settings['yeu_cau_xac_thuc']['trang_thai'] = 'da_duyet';
+            $settings['yeu_cau_xac_thuc']['ngay_duyet'] = now()->toIso8601String();
+        }
         $user->update([
             'da_xac_thuc' => true,
             'ngay_xac_thuc' => now(),
+            'cai_dat' => $settings,
         ]);
+        $user->clearPermissionCache();
 
         if ($this->adminAudit && $request->user()) {
             $this->adminAudit->record($request->user(), 'user.verified', $user, $request);
+        }
+
+        try {
+            $user->notify(new \App\Notifications\UserRoleStatusUpdatedNotification(
+                'verified',
+                'Tài khoản của bạn đã được quản trị viên duyệt xác thực danh tính thành công.'
+            ));
+        } catch (\Throwable $notifEx) {
+            \Illuminate\Support\Facades\Log::warning('User verification notification error: ' . $notifEx->getMessage());
         }
 
         if ($request->wantsJson()) {
@@ -206,13 +234,33 @@ class DuyetXacThucController extends Controller
     public function rejectUser(Request $request, $id)
     {
         $user = User::findOrFail($id);
+        $settings = $user->cai_dat ?? [];
+        if (isset($settings['yeu_cau_xac_thuc'])) {
+            $settings['yeu_cau_xac_thuc']['trang_thai'] = 'tu_choi';
+            $settings['yeu_cau_xac_thuc']['ngay_tu_choi'] = now()->toIso8601String();
+            if ($request->filled('note')) {
+                $settings['yeu_cau_xac_thuc']['ly_do_tu_choi'] = $request->input('note');
+            }
+        }
         $user->update([
             'da_xac_thuc' => false,
             'ngay_xac_thuc' => null,
+            'cai_dat' => $settings,
         ]);
+        $user->clearPermissionCache();
 
         if ($this->adminAudit && $request->user()) {
             $this->adminAudit->record($request->user(), 'user.rejected', $user, $request);
+        }
+
+        try {
+            $user->notify(new \App\Notifications\UserRoleStatusUpdatedNotification(
+                'verification_rejected',
+                'Yêu cầu xác thực tài khoản của bạn đã bị từ chối hoặc thu hồi.',
+                $request->input('note')
+            ));
+        } catch (\Throwable $notifEx) {
+            \Illuminate\Support\Facades\Log::warning('User rejection notification error: ' . $notifEx->getMessage());
         }
 
         if ($request->wantsJson()) {

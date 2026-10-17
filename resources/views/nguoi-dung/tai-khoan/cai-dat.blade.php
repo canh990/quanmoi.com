@@ -72,7 +72,57 @@
         </ol>
     </nav>
 
-    {{-- Alert Cập nhật thành công với đếm ngược 10s --}}
+    {{-- Alert Cập nhật thành công --}}
+    @if(session('success'))
+    <div id="toast-success" class="mb-6 flex items-start sm:items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-2xl px-5 py-4 shadow-lg shadow-emerald-100/50" role="alert">
+        <div class="w-9 h-9 rounded-xl bg-emerald-100 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0 text-emerald-600">
+            <span class="material-symbols-outlined text-[22px]">check_circle</span>
+        </div>
+        <div class="flex-1 min-w-0">
+            <p class="font-bold text-emerald-900 text-sm">Thao tác thành công!</p>
+            <p class="text-emerald-800 text-xs mt-0.5">{{ session('success') }}</p>
+        </div>
+        <button type="button" onclick="document.getElementById('toast-success').remove()" class="text-emerald-500 hover:text-emerald-700 cursor-pointer">
+            <span class="material-symbols-outlined text-[18px]">close</span>
+        </button>
+    </div>
+    @endif
+
+    {{-- Alert thông tin --}}
+    @if(session('info'))
+    <div id="toast-info" class="mb-6 flex items-start sm:items-center gap-3 bg-blue-50 border border-blue-200 rounded-2xl px-5 py-4 shadow-lg shadow-blue-100/50" role="alert">
+        <div class="w-9 h-9 rounded-xl bg-blue-100 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0 text-blue-600">
+            <span class="material-symbols-outlined text-[22px]">info</span>
+        </div>
+        <div class="flex-1 min-w-0">
+            <p class="font-bold text-blue-900 text-sm">Thông báo hệ thống</p>
+            <p class="text-blue-800 text-xs mt-0.5">{{ session('info') }}</p>
+        </div>
+        <button type="button" onclick="document.getElementById('toast-info').remove()" class="text-blue-500 hover:text-blue-700 cursor-pointer">
+            <span class="material-symbols-outlined text-[18px]">close</span>
+        </button>
+    </div>
+    @endif
+
+    {{-- Alert lỗi validation --}}
+    @if(isset($errors) && $errors->any())
+    <div id="toast-errors" class="mb-6 flex items-start sm:items-center gap-3 bg-rose-50 border border-rose-200 rounded-2xl px-5 py-4 shadow-lg shadow-rose-100/50" role="alert">
+        <div class="w-9 h-9 rounded-xl bg-rose-100 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0 text-rose-600">
+            <span class="material-symbols-outlined text-[22px]">error</span>
+        </div>
+        <div class="flex-1 min-w-0">
+            <p class="font-bold text-rose-900 text-sm">Vui lòng kiểm tra lại thông tin:</p>
+            <ul class="list-disc list-inside text-rose-800 text-xs mt-1 space-y-0.5">
+                @foreach($errors->all() as $err)
+                    <li>{{ $err }}</li>
+                @endforeach
+            </ul>
+        </div>
+        <button type="button" onclick="document.getElementById('toast-errors').remove()" class="text-rose-500 hover:text-rose-700 cursor-pointer">
+            <span class="material-symbols-outlined text-[18px]">close</span>
+        </button>
+    </div>
+    @endif
 
     {{-- Alert xung đột dữ liệu Optimistic Locking --}}
     @if(session('error_conflict') || session('error'))
@@ -114,6 +164,10 @@
                     </a>
                 </div>
             </header>
+
+            <form id="form-request-verify" action="{{ route('tai-khoan.yeu-cau-xac-thuc') }}" method="POST" class="hidden">
+                @csrf
+            </form>
 
             <form id="form-settings" action="{{ route('tai-khoan.cai-dat.update') }}" method="POST" class="space-y-6">
                 @csrf
@@ -433,6 +487,52 @@
                             <span class="material-symbols-outlined text-[18px]">add_business</span>
                             <span>Kênh Chủ Quán</span>
                         </a>
+                    </div>
+
+                    <!-- Trạng thái xác thực tài khoản & Tick Xanh -->
+                    <div class="p-4 rounded-xl border {{ $user->da_xac_thuc ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-surface-container/20 border-surface-container' }} flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-2">
+                                @if($user->da_xac_thuc)
+                                    <span class="material-symbols-outlined text-emerald-600 text-[20px]" style="font-variation-settings: 'FILL' 1;">verified</span>
+                                    <span class="text-sm font-bold text-on-surface">Tài khoản đã xác thực (Tick Xanh chính chủ)</span>
+                                @elseif($user->getSetting('yeu_cau_xac_thuc.trang_thai') === 'cho_duyet')
+                                    <span class="material-symbols-outlined text-amber-600 text-[20px]">hourglass_top</span>
+                                    <span class="text-sm font-bold text-on-surface">Yêu cầu xác thực đang chờ phê duyệt</span>
+                                @else
+                                    <span class="material-symbols-outlined text-on-surface-variant text-[20px]">verified_user</span>
+                                    <span class="text-sm font-bold text-on-surface">Xác thực danh tính tài khoản</span>
+                                @endif
+                            </div>
+                            <p class="text-xs text-text-muted">
+                                @if($user->da_xac_thuc)
+                                    Hồ sơ của bạn đã được chứng thực uy tín{{ $user->ngay_xac_thuc ? ' từ ngày ' . $user->ngay_xac_thuc->format('d/m/Y') : '' }}.
+                                @elseif($user->getSetting('yeu_cau_xac_thuc.trang_thai') === 'cho_duyet')
+                                    Yêu cầu của bạn đã được gửi đến Ban quản trị Quán Mới và đang trong quá trình thẩm định.
+                                @else
+                                    Nhận huy hiệu Tick Xanh để tăng độ tin cậy cho bài đánh giá và bảo vệ quyền lợi tài khoản.
+                                @endif
+                            </p>
+                        </div>
+
+                        <div>
+                            @if($user->da_xac_thuc)
+                                <span class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-emerald-100 text-emerald-800 text-xs font-bold shrink-0">
+                                    <span class="material-symbols-outlined text-[16px]">check_circle</span>
+                                    <span>Đã chứng thực</span>
+                                </span>
+                            @elseif($user->getSetting('yeu_cau_xac_thuc.trang_thai') === 'cho_duyet')
+                                <span class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-amber-100 text-amber-800 text-xs font-bold shrink-0">
+                                    <span class="material-symbols-outlined text-[16px] animate-spin">sync</span>
+                                    <span>Đang xét duyệt</span>
+                                </span>
+                            @else
+                                <button type="submit" form="form-request-verify" class="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface text-xs font-bold border border-surface-container-highest transition-all shrink-0 cursor-pointer shadow-xs">
+                                    <span class="material-symbols-outlined text-[18px] text-primary">verified</span>
+                                    <span>Gửi yêu cầu xác thực</span>
+                                </button>
+                            @endif
+                        </div>
                     </div>
                 </section>
 

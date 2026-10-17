@@ -56,7 +56,7 @@
                 </thead>
                 <tbody class="divide-y divide-slate-100 text-xs">
                     @forelse($quanList as $quan)
-                        <tr class="hover:bg-slate-50/80 transition-colors {{ $quan->trashed() ? 'bg-rose-50/30' : '' }}">
+                        <tr id="quan-mgmt-row-{{ $quan->id }}" class="hover:bg-slate-50/80 transition-colors {{ $quan->trashed() ? 'bg-rose-50/30' : '' }}">
                             <td class="py-3.5 px-4">
                                 <div class="flex items-center gap-3 min-w-0">
                                     <img src="{{ $quan->anh_bia_url ?: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=100&q=80' }}" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=100&q=80';" class="w-10 h-10 rounded-lg object-cover border border-slate-200 flex-shrink-0" alt="{{ $quan->ten_quan }}" />
@@ -93,51 +93,32 @@
                                 @endif
                             </td>
                             <td class="py-3.5 px-4 text-right whitespace-nowrap min-w-[170px]">
-                                <div class="flex items-center justify-end gap-1.5 flex-nowrap shrink-0">
+                                <div class="inline-flex items-center justify-end gap-1 flex-nowrap shrink-0">
                                     @if(!$quan->trashed())
-                                        <form action="{{ route('admin.quan.toggle-xac-thuc', $quan->id) }}" method="POST" class="inline">
-                                            @csrf
-                                            @method('PUT')
-                                            <button type="submit" class="p-1.5 rounded-lg transition-all {{ $quan->is_xac_thuc ? 'text-blue-500 hover:bg-blue-50' : 'text-slate-400 hover:text-blue-500 hover:bg-slate-100' }}" title="{{ $quan->is_xac_thuc ? 'Gỡ Tick Xanh' : 'Cấp Tick Xanh' }}">
-                                                <span class="material-symbols-outlined text-[18px]" {!! $quan->is_xac_thuc ? 'style="font-variation-settings: \'FILL\' 1;"' : '' !!}>check_circle</span>
-                                            </button>
-                                        </form>
+                                        <button type="button" onclick="adminToggleQuanVerification('{{ $quan->id }}', this)" class="w-8 h-8 flex items-center justify-center rounded-lg transition-all cursor-pointer shrink-0 {{ $quan->is_xac_thuc ? 'text-blue-500 hover:bg-blue-50' : 'text-slate-400 hover:text-blue-500 hover:bg-slate-100' }}" title="{{ $quan->is_xac_thuc ? 'Gỡ Tick Xanh' : 'Cấp Tick Xanh' }}">
+                                            <span class="material-symbols-outlined text-[18px]" {!! $quan->is_xac_thuc ? 'style="font-variation-settings: \'FILL\' 1;"' : '' !!}>check_circle</span>
+                                        </button>
 
-                                        <form action="{{ route('admin.quan.toggle-noi-bat', $quan->id) }}" method="POST" class="inline">
-                                            @csrf
-                                            @method('PUT')
-                                            <button type="submit" class="p-1.5 rounded-lg transition-all {{ $quan->is_noi_bat ? 'text-amber-500 hover:bg-amber-50' : 'text-slate-400 hover:text-amber-500 hover:bg-slate-100' }}" title="{{ $quan->is_noi_bat ? 'Gỡ khỏi danh sách nổi bật' : 'Đánh dấu nổi bật' }}">
-                                                <span class="material-symbols-outlined text-[18px]" {!! $quan->is_noi_bat ? 'style="font-variation-settings: \'FILL\' 1;"' : '' !!}>star</span>
-                                            </button>
-                                        </form>
+                                        <button type="button" onclick="adminToggleQuanFeatured('{{ $quan->id }}', this)" class="w-8 h-8 flex items-center justify-center rounded-lg transition-all cursor-pointer shrink-0 {{ $quan->is_noi_bat ? 'text-amber-500 hover:bg-amber-50' : 'text-slate-400 hover:text-amber-500 hover:bg-slate-100' }}" title="{{ $quan->is_noi_bat ? 'Gỡ khỏi danh sách nổi bật' : 'Đánh dấu nổi bật' }}">
+                                            <span class="material-symbols-outlined text-[18px]" {!! $quan->is_noi_bat ? 'style="font-variation-settings: \'FILL\' 1;"' : '' !!}>star</span>
+                                        </button>
                                     @endif
 
-                                    <a href="{{ route('admin.quan.edit', $quan->id) }}" class="p-1.5 text-slate-600 hover:text-amber-600 hover:bg-slate-100 rounded-lg transition-all" title="Chỉnh sửa & Duyệt">
+                                    <a href="{{ route('admin.quan.edit', $quan->id) }}" class="w-8 h-8 flex items-center justify-center text-slate-600 hover:text-amber-600 hover:bg-slate-100 rounded-lg transition-all shrink-0" title="Chỉnh sửa & Duyệt">
                                         <span class="material-symbols-outlined text-[18px]">edit</span>
                                     </a>
 
                                     @if($quan->trashed())
-                                        <form action="{{ route('admin.quan.restore', $quan->id) }}" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn khôi phục quán này không?');" class="inline">
-                                            @csrf
-                                            <button type="submit" class="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all" title="Khôi phục quán">
-                                                <span class="material-symbols-outlined text-[18px]">restore_from_trash</span>
-                                            </button>
-                                        </form>
-                                        <form action="{{ route('admin.quan.force-destroy', $quan->id) }}" method="POST" onsubmit="return confirm('CẢNH BÁO: Bạn có chắc chắn muốn xóa vĩnh viễn quán này khỏi cơ sở dữ liệu không? Hành động này không thể hoàn tác!');" class="inline">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="p-1.5 text-rose-700 hover:bg-rose-100 rounded-lg transition-all" title="Xóa cứng (Vĩnh viễn)">
-                                                <span class="material-symbols-outlined text-[18px]">delete_forever</span>
-                                            </button>
-                                        </form>
+                                        <button type="button" onclick="adminRestoreQuan('{{ $quan->id }}', '{{ addslashes($quan->ten_quan) }}')" class="w-8 h-8 flex items-center justify-center text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all cursor-pointer shrink-0" title="Khôi phục quán">
+                                            <span class="material-symbols-outlined text-[18px]">restore_from_trash</span>
+                                        </button>
+                                        <button type="button" onclick="adminForceDeleteQuan('{{ $quan->id }}', '{{ addslashes($quan->ten_quan) }}')" class="w-8 h-8 flex items-center justify-center text-rose-700 hover:bg-rose-100 rounded-lg transition-all cursor-pointer shrink-0" title="Xóa cứng (Vĩnh viễn)">
+                                            <span class="material-symbols-outlined text-[18px]">delete_forever</span>
+                                        </button>
                                     @else
-                                        <form action="{{ route('admin.quan.destroy', $quan->id) }}" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa quán này vào thùng rác không?');" class="inline">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition-all" title="Xóa tạm (Soft-delete)">
-                                                <span class="material-symbols-outlined text-[18px]">delete</span>
-                                            </button>
-                                        </form>
+                                        <button type="button" onclick="adminSoftDeleteQuan('{{ $quan->id }}', '{{ addslashes($quan->ten_quan) }}')" class="w-8 h-8 flex items-center justify-center text-rose-600 hover:bg-rose-50 rounded-lg transition-all cursor-pointer shrink-0" title="Xóa tạm (Soft-delete)">
+                                            <span class="material-symbols-outlined text-[18px]">delete</span>
+                                        </button>
                                     @endif
                                 </div>
                             </td>
@@ -156,4 +137,220 @@
         </div>
     </div>
 </div>
+
+<script>
+    function adminToggleQuanVerification(quanId, btn) {
+        const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+        const iconSpan = btn.querySelector('.material-symbols-outlined');
+
+        fetch(`/admin/quan/${quanId}/toggle-xac-thuc`, {
+            method: 'PUT',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrf
+            }
+        })
+        .then(async res => {
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(data.message || `Lỗi HTTP ${res.status}`);
+            return data;
+        })
+        .then(data => {
+            if (typeof showRealtimeToast === 'function') {
+                showRealtimeToast('Xác Thực Quán', data.message, '', 'verified', 'bg-blue-500');
+            }
+            clearAdminPageCache();
+
+            if (data.is_xac_thuc) {
+                btn.className = 'p-1.5 rounded-lg transition-all cursor-pointer text-blue-500 hover:bg-blue-50';
+                btn.title = 'Gỡ Tick Xanh';
+                if (iconSpan) iconSpan.style.fontVariationSettings = "'FILL' 1";
+            } else {
+                btn.className = 'p-1.5 rounded-lg transition-all cursor-pointer text-slate-400 hover:text-blue-500 hover:bg-slate-100';
+                btn.title = 'Cấp Tick Xanh';
+                if (iconSpan) iconSpan.style.fontVariationSettings = "'FILL' 0";
+            }
+        })
+        .catch(err => {
+            if (typeof showRealtimeToast === 'function') {
+                showRealtimeToast('Lỗi Xác Thực', err.message || 'Không thể thay đổi trạng thái xác thực quán.', '', 'error', 'bg-rose-500');
+            }
+        });
+    }
+
+    function adminToggleQuanFeatured(quanId, btn) {
+        const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+        const iconSpan = btn.querySelector('.material-symbols-outlined');
+
+        fetch(`/admin/quan/${quanId}/toggle-noi-bat`, {
+            method: 'PUT',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrf
+            }
+        })
+        .then(async res => {
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(data.message || `Lỗi HTTP ${res.status}`);
+            return data;
+        })
+        .then(data => {
+            if (typeof showRealtimeToast === 'function') {
+                showRealtimeToast('Quán Nổi Bật', data.message, '', 'star', 'bg-amber-500');
+            }
+            clearAdminPageCache();
+
+            if (data.is_noi_bat) {
+                btn.className = 'p-1.5 rounded-lg transition-all cursor-pointer text-amber-500 hover:bg-amber-50';
+                btn.title = 'Gỡ khỏi danh sách nổi bật';
+                if (iconSpan) iconSpan.style.fontVariationSettings = "'FILL' 1";
+            } else {
+                btn.className = 'p-1.5 rounded-lg transition-all cursor-pointer text-slate-400 hover:text-amber-500 hover:bg-slate-100';
+                btn.title = 'Đánh dấu nổi bật';
+                if (iconSpan) iconSpan.style.fontVariationSettings = "'FILL' 0";
+            }
+        })
+        .catch(err => {
+            if (typeof showRealtimeToast === 'function') {
+                showRealtimeToast('Lỗi Nổi Bật', err.message || 'Không thể cập nhật trạng thái nổi bật.', '', 'error', 'bg-rose-500');
+            }
+        });
+    }
+
+    function adminSoftDeleteQuan(quanId, quanName) {
+        openConfirmModal({
+            title: 'Xóa Tạm Quán Ăn',
+            message: `Bạn có chắc chắn muốn xóa tạm quán <b class="text-slate-900 font-bold">"${quanName}"</b> vào thùng rác không?`,
+            icon: 'delete',
+            iconBg: 'bg-rose-100 text-rose-800 border border-rose-200',
+            confirmText: 'Xác Nhận Xóa Tạm',
+            confirmClass: 'btn-enterprise-danger',
+            confirmIcon: 'delete',
+            onConfirm: () => {
+                const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+                const row = document.getElementById(`quan-mgmt-row-${quanId}`);
+
+                fetch(`/admin/quan/${quanId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrf
+                    }
+                })
+                .then(async res => {
+                    const data = await res.json().catch(() => ({}));
+                    if (!res.ok) throw new Error(data.message || `Lỗi HTTP ${res.status}`);
+                    return data;
+                })
+                .then(data => {
+                    if (typeof showRealtimeToast === 'function') {
+                        showRealtimeToast('Đã Xóa Tạm Quán', data.message || 'Đã chuyển quán vào thùng rác.', '', 'delete', 'bg-slate-700');
+                    }
+                    clearAdminPageCache();
+                    if (row) {
+                        row.style.transition = 'all 0.35s ease';
+                        row.style.opacity = '0';
+                        row.style.transform = 'translateX(20px)';
+                        setTimeout(() => row.remove(), 350);
+                    }
+                })
+                .catch(err => {
+                    if (typeof showRealtimeToast === 'function') {
+                        showRealtimeToast('Không Thể Xóa', err.message || 'Có lỗi xảy ra khi xóa quán.', '', 'error', 'bg-rose-500');
+                    }
+                });
+            }
+        });
+    }
+
+    function adminRestoreQuan(quanId, quanName) {
+        openConfirmModal({
+            title: 'Khôi Phục Quán Ăn',
+            message: `Bạn có chắc chắn muốn khôi phục quán <b class="text-slate-900 font-bold">"${quanName}"</b> về hoạt động bình thường không?`,
+            icon: 'restore_from_trash',
+            iconBg: 'bg-emerald-100 text-emerald-800 border border-emerald-200',
+            confirmText: 'Khôi Phục Quán',
+            confirmClass: 'btn-enterprise-success',
+            confirmIcon: 'check_circle',
+            onConfirm: () => {
+                const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+                fetch(`/admin/quan/${quanId}/restore`, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrf
+                    }
+                })
+                .then(async res => {
+                    const data = await res.json().catch(() => ({}));
+                    if (!res.ok) throw new Error(data.message || `Lỗi HTTP ${res.status}`);
+                    return data;
+                })
+                .then(data => {
+                    if (typeof showRealtimeToast === 'function') {
+                        showRealtimeToast('Khôi Phục Thành Công', data.message || 'Quán đã được khôi phục!', '', 'check_circle', 'bg-emerald-500');
+                    }
+                    clearAdminPageCache();
+                    instantNavigate(window.location.href, false);
+                })
+                .catch(err => {
+                    if (typeof showRealtimeToast === 'function') {
+                        showRealtimeToast('Lỗi Khôi Phục', err.message || 'Không thể khôi phục quán.', '', 'error', 'bg-rose-500');
+                    }
+                });
+            }
+        });
+    }
+
+    function adminForceDeleteQuan(quanId, quanName) {
+        openConfirmModal({
+            title: 'XÓA VĨNH VIỄN QUÁN ĂN',
+            message: `CẢNH BÁO: Thao tác này sẽ xóa vĩnh viễn quán <b class="text-slate-900 font-bold">"${quanName}"</b> khỏi cơ sở dữ liệu. Không thể hoàn tác!<br><span class="text-rose-600 text-[11px] font-bold">Bạn có chắc chắn muốn xóa vĩnh viễn không?</span>`,
+            icon: 'delete_forever',
+            iconBg: 'bg-rose-100 text-rose-800 border border-rose-200',
+            confirmText: 'Xác Nhận Xóa Vĩnh Viễn',
+            confirmClass: 'btn-enterprise-danger',
+            confirmIcon: 'delete_forever',
+            onConfirm: () => {
+                const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+                const row = document.getElementById(`quan-mgmt-row-${quanId}`);
+
+                fetch(`/admin/quan/${quanId}/force`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrf
+                    }
+                })
+                .then(async res => {
+                    const data = await res.json().catch(() => ({}));
+                    if (!res.ok) throw new Error(data.message || `Lỗi HTTP ${res.status}`);
+                    return data;
+                })
+                .then(data => {
+                    if (typeof showRealtimeToast === 'function') {
+                        showRealtimeToast('Đã Xóa Vĩnh Viễn', data.message || 'Đã xóa vĩnh viễn quán ăn.', '', 'delete_forever', 'bg-rose-700');
+                    }
+                    clearAdminPageCache();
+                    if (row) {
+                        row.style.transition = 'all 0.35s ease';
+                        row.style.opacity = '0';
+                        row.style.transform = 'translateX(20px)';
+                        setTimeout(() => row.remove(), 350);
+                    }
+                })
+                .catch(err => {
+                    if (typeof showRealtimeToast === 'function') {
+                        showRealtimeToast('Không Thể Xóa', err.message || 'Có lỗi xảy ra khi xóa vĩnh viễn.', '', 'error', 'bg-rose-500');
+                    }
+                });
+            }
+        });
+    }
+</script>
 @endsection

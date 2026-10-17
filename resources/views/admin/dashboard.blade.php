@@ -18,14 +18,14 @@
         </div>
 
         <div class="flex items-center gap-2.5">
-            <a href="{{ route('home') }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-300 transition-colors shadow-xs">
-                <span class="material-symbols-outlined text-[16px] text-amber-500">home</span>
+            <a href="{{ route('home') }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-300 transition-colors shadow-xs group" title="Quay về trang chủ website">
+                <span class="material-symbols-outlined text-[16px] text-amber-500 group-hover:scale-110 transition-transform">home</span>
                 <span>Quay về trang chủ</span>
             </a>
 
             {{-- Date Range Selector --}}
             <div class="relative inline-block text-left">
-                <select class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors shadow-xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <select onchange="instantNavigate('{{ route('admin.thong-ke.index') }}?preset=' + (this.value === '7' ? '7days' : (this.value === '90' ? '90days' : (this.value === '365' ? 'this_year' : '30days'))))" class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors shadow-xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500" title="Bấm để lọc thống kê theo khoảng thời gian">
                     <option value="30">30 ngày gần đây</option>
                     <option value="7">7 ngày gần đây</option>
                     <option value="90">Quý này</option>
@@ -33,26 +33,26 @@
                 </select>
             </div>
 
-            <a href="{{ route('admin.thong-ke.export') }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors shadow-xs">
+            <a href="{{ route('admin.thong-ke.export') }}" download="bao_cao_quanmoi.csv" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-emerald-700 hover:border-emerald-300 transition-colors shadow-xs cursor-pointer" title="Tải xuống tệp báo cáo CSV">
                 <span class="material-symbols-outlined text-[16px] text-slate-500">download</span>
                 <span>Xuất báo cáo</span>
             </a>
 
-            <a href="{{ route('admin.duyet-xac-thuc.index') }}" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold transition-colors shadow-xs">
+            <a href="{{ route('admin.duyet-xac-thuc.index') }}" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold transition-colors shadow-xs cursor-pointer" title="Đi tới trang duyệt yêu cầu">
                 <span class="material-symbols-outlined text-[16px]">add_task</span>
                 <span>Duyệt yêu cầu</span>
             </a>
         </div>
     </div>
 
-    {{-- KPI Metric Cards Grid --}}
+    {{-- KPI Metric Cards Grid (Tất cả thẻ đều click mở chi tiết tương ứng) --}}
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         
         {{-- KPI 1: Total Venues --}}
-        <div class="bg-white rounded-xl p-5 border border-slate-200/90 shadow-xs hover:border-slate-300 transition-all">
+        <div onclick="instantNavigate('{{ route('admin.quan.index') }}')" class="bg-white rounded-xl p-5 border border-slate-200/90 shadow-xs hover:border-indigo-400 hover:shadow-md cursor-pointer transition-all group" title="Bấm để quản lý danh sách quán">
             <div class="flex items-center justify-between">
-                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tổng số quán</span>
-                <span class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider group-hover:text-indigo-600 transition-colors">Tổng số quán</span>
+                <span class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-colors">
                     <span class="material-symbols-outlined text-[18px]">storefront</span>
                 </span>
             </div>
@@ -64,15 +64,18 @@
             </div>
             <div class="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
                 <span>Quán nổi bật:</span>
-                <span class="font-semibold text-slate-800">{{ number_format($stats['featured_quan']) }} địa điểm</span>
+                <a href="{{ route('admin.quan-noi-bat.index') }}" onclick="event.stopPropagation();" class="font-semibold text-amber-600 hover:underline flex items-center gap-0.5">
+                    <span>{{ number_format($stats['featured_quan']) }} địa điểm</span>
+                    <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+                </a>
             </div>
         </div>
 
         {{-- KPI 2: Pending Approval --}}
-        <div class="bg-white rounded-xl p-5 border border-slate-200/90 shadow-xs hover:border-slate-300 transition-all">
+        <div onclick="instantNavigate('{{ route('admin.duyet-xac-thuc.index') }}')" class="bg-white rounded-xl p-5 border border-slate-200/90 shadow-xs hover:border-amber-400 hover:shadow-md cursor-pointer transition-all group" title="Bấm để xử lý quán chờ duyệt">
             <div class="flex items-center justify-between">
-                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Chờ duyệt xác thực</span>
-                <span class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider group-hover:text-amber-600 transition-colors">Chờ duyệt xác thực</span>
+                <span class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center group-hover:bg-amber-600 group-hover:text-white transition-colors">
                     <span class="material-symbols-outlined text-[18px]">pending_actions</span>
                 </span>
             </div>
@@ -90,15 +93,18 @@
             </div>
             <div class="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
                 <span>Thao tác nhanh:</span>
-                <a href="{{ route('admin.duyet-xac-thuc.index') }}" class="font-semibold text-indigo-600 hover:underline">Xử lý ngay &rarr;</a>
+                <a href="{{ route('admin.duyet-xac-thuc.index') }}" onclick="event.stopPropagation();" class="font-semibold text-indigo-600 hover:underline flex items-center gap-0.5">
+                    <span>Xử lý ngay</span>
+                    <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+                </a>
             </div>
         </div>
 
         {{-- KPI 3: Total Users --}}
-        <div class="bg-white rounded-xl p-5 border border-slate-200/90 shadow-xs hover:border-slate-300 transition-all">
+        <div onclick="instantNavigate('{{ route('admin.nguoi-dung.index') }}')" class="bg-white rounded-xl p-5 border border-slate-200/90 shadow-xs hover:border-blue-400 hover:shadow-md cursor-pointer transition-all group" title="Bấm để quản lý người dùng">
             <div class="flex items-center justify-between">
-                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Người dùng hệ thống</span>
-                <span class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider group-hover:text-blue-600 transition-colors">Người dùng hệ thống</span>
+                <span class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors">
                     <span class="material-symbols-outlined text-[18px]">group</span>
                 </span>
             </div>
@@ -110,15 +116,18 @@
             </div>
             <div class="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
                 <span>Tài khoản hoạt động:</span>
-                <span id="kpi-active-users" class="font-semibold text-slate-800">{{ number_format($stats['active_users']) }} người</span>
+                <a href="{{ route('admin.nguoi-dung.index') }}?trang_thai=hoat_dong" onclick="event.stopPropagation();" class="font-semibold text-blue-600 hover:underline flex items-center gap-0.5">
+                    <span id="kpi-active-users">{{ number_format($stats['active_users']) }} người</span>
+                    <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+                </a>
             </div>
         </div>
 
         {{-- KPI 4: Package Revenue --}}
-        <div class="bg-white rounded-xl p-5 border border-slate-200/90 shadow-xs hover:border-slate-300 transition-all">
+        <div onclick="instantNavigate('{{ route('admin.thong-ke.index') }}')" class="bg-white rounded-xl p-5 border border-slate-200/90 shadow-xs hover:border-emerald-400 hover:shadow-md cursor-pointer transition-all group" title="Bấm để xem báo cáo thống kê doanh thu">
             <div class="flex items-center justify-between">
-                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Doanh thu dịch vụ</span>
-                <span class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider group-hover:text-emerald-600 transition-colors">Doanh thu dịch vụ</span>
+                <span class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition-colors">
                     <span class="material-symbols-outlined text-[18px]">payments</span>
                 </span>
             </div>
@@ -132,7 +141,10 @@
             </div>
             <div class="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
                 <span>Dữ liệu thực tế:</span>
-                <span class="font-semibold text-emerald-600">Thanh toán thành công</span>
+                <a href="{{ route('admin.thong-ke.index') }}" onclick="event.stopPropagation();" class="font-semibold text-emerald-600 hover:underline flex items-center gap-0.5">
+                    <span>Thanh toán thành công</span>
+                    <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+                </a>
             </div>
         </div>
 

@@ -16,7 +16,7 @@ class QuanNoiBatController extends Controller
         return view('admin.quan-noi-bat.index', compact('featuredQuan', 'allQuan'));
     }
 
-    public function toggle($id)
+    public function toggle(Request $request, $id)
     {
         $quan = Quan::findOrFail($id);
         $quan->update([
@@ -24,6 +24,15 @@ class QuanNoiBatController extends Controller
         ]);
 
         $status = $quan->is_noi_bat ? 'Đã bật' : 'Đã tắt';
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'is_noi_bat' => $quan->is_noi_bat,
+                'message' => "{$status} trạng thái nổi bật cho quán '{$quan->ten_quan}'!",
+            ]);
+        }
+
         return redirect()->back()->with('success', "{$status} trạng thái nổi bật cho quán '{$quan->ten_quan}'!");
     }
 }
