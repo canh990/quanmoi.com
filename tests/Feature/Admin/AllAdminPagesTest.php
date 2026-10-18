@@ -104,4 +104,32 @@ class AllAdminPagesTest extends TestCase
             $this->assertContains($response->getStatusCode(), [200, 302], "Failed asserting route renders cleanly: {$url}");
         }
     }
+
+    public function test_flash_alert_is_isolated_to_its_originating_page_and_does_not_leak(): void
+    {
+        // 1. Thực hiện tạo thẻ mới từ trang Blog Tags -> redirect kèm flash message 'Thêm thẻ thành công.'
+        $storeResponse = $this->actingAs($this->admin)
+            ->from(route('admin.blog.tags.index'))
+            ->post(route('admin.blog.tags.store'), ['name' => 'Ẩm thực đêm']);
+
+        $storeResponse->assertRedirect(route('admin.blog.tags.index'));
+        $storeResponse->assertSessionHas('success', 'Thêm thẻ thành công.');
+
+        // Trang đích (Tags Index) khi nhận redirect sẽ hiển thị flash message bên trong #admin-flash-container
+        $followedResponse = $this->followRedirects($storeResponse);
+        $followedResponse->assertStatus(200);
+        $followedResponse->assertSee('id="admin-flash-container"', false);
+        $followedResponse->assertSee('Thêm thẻ thành công.');
+        $followedResponse->assertSee('dismissAdminFlashAlert');
+
+        // 2. Khi chuyển sang chức năng khác (ví dụ: Vai trò hoặc Quán) - không được hiển thị thông báo của chức năng trước
+        $responseNextPage = $this->actingAs($this->admin)->get(route('admin.vai-tro.index'));
+        $responseNextPage->assertStatus(200);
+        $responseNextPage->assertDontSee('Thêm thẻ thành công.');
+
+        $responseQuanPage = $this->actingAs($this->admin)->get(route('admin.quan.index'));
+        $responseQuanPage->assertStatus(200);
+        $responseQuanPage->assertDontSee('Thêm thẻ thành công.');
+    }
 }
+
