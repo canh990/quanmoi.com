@@ -52,13 +52,16 @@ Route::middleware(['auth', 'KiemTraQuyenHan:admin'])->group(function () {
 
     // 6. Quản lý Quán
     Route::get('/quan', [QuanLyQuanController::class, 'index'])->name('quan.index');
-    Route::get('/quan/{id}/edit', [QuanLyQuanController::class, 'edit'])->name('quan.edit');
-    Route::put('/quan/{id}', [QuanLyQuanController::class, 'update'])->name('quan.update');
-    Route::delete('/quan/{id}', [QuanLyQuanController::class, 'destroy'])->name('quan.destroy');
-    Route::post('/quan/{id}/restore', [QuanLyQuanController::class, 'restore'])->name('quan.restore');
-    Route::delete('/quan/{id}/force', [QuanLyQuanController::class, 'forceDestroy'])->name('quan.force-destroy');
-    Route::put('/quan/{id}/toggle-noi-bat', [QuanLyQuanController::class, 'toggleNoiBat'])->name('quan.toggle-noi-bat');
-    Route::put('/quan/{id}/toggle-xac-thuc', [QuanLyQuanController::class, 'toggleXacThuc'])->name('quan.toggle-xac-thuc');
+    Route::get('/quan/create', [QuanLyQuanController::class, 'create'])->name('quan.create');
+    Route::post('/quan', [QuanLyQuanController::class, 'store'])->name('quan.store');
+    Route::get('/quan/{id}', [QuanLyQuanController::class, 'show'])->name('quan.show')->where('id', '[0-9a-fA-F\-]+');
+    Route::get('/quan/{id}/edit', [QuanLyQuanController::class, 'edit'])->name('quan.edit')->where('id', '[0-9a-fA-F\-]+');
+    Route::put('/quan/{id}', [QuanLyQuanController::class, 'update'])->name('quan.update')->where('id', '[0-9a-fA-F\-]+');
+    Route::delete('/quan/{id}', [QuanLyQuanController::class, 'destroy'])->name('quan.destroy')->where('id', '[0-9a-fA-F\-]+');
+    Route::post('/quan/{id}/restore', [QuanLyQuanController::class, 'restore'])->name('quan.restore')->where('id', '[0-9a-fA-F\-]+');
+    Route::delete('/quan/{id}/force', [QuanLyQuanController::class, 'forceDestroy'])->name('quan.force-destroy')->where('id', '[0-9a-fA-F\-]+');
+    Route::put('/quan/{id}/toggle-noi-bat', [QuanLyQuanController::class, 'toggleNoiBat'])->name('quan.toggle-noi-bat')->where('id', '[0-9a-fA-F\-]+');
+    Route::put('/quan/{id}/toggle-xac-thuc', [QuanLyQuanController::class, 'toggleXacThuc'])->name('quan.toggle-xac-thuc')->where('id', '[0-9a-fA-F\-]+');
 
     // 7. Duyệt xác thực (Quán / User)
     Route::get('/duyet-xac-thuc', [DuyetXacThucController::class, 'index'])->name('duyet-xac-thuc.index');

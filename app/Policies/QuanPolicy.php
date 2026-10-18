@@ -9,7 +9,7 @@ class QuanPolicy
 {
     public function before(?User $user, string $ability): ?bool
     {
-        if ($user && ($user->isAdmin() || $user->hasRole('admin'))) {
+        if ($user && ($user->isAdmin() || $user->hasRole('admin') || (method_exists($user, 'hasPermissionTo') && $user->hasPermissionTo('quan_ly_quan')))) {
             return true;
         }
 

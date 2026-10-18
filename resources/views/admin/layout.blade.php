@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi" class="h-full bg-slate-50">
+<html lang="vi" class="bg-slate-50 min-h-screen scroll-smooth">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -264,6 +264,214 @@
             color: #ffffff !important;
         }
 
+        /* 7b. WARNING: Amber-500/600 */
+        .btn-enterprise-warning {
+            background-color: #f59e0b !important;
+            border-color: #d97706 !important;
+            color: #ffffff !important;
+        }
+        .btn-enterprise-warning:hover {
+            background-color: #d97706 !important;
+            border-color: #b45309 !important;
+            color: #ffffff !important;
+        }
+        .btn-enterprise-warning:active {
+            background-color: #b45309 !important;
+            border-color: #92400e !important;
+            color: #ffffff !important;
+        }
+        .btn-enterprise-warning .material-symbols-outlined {
+            color: #ffffff !important;
+        }
+
+        /* ==========================================================================
+           ENTERPRISE MODAL CONFIRMATION CONTROLS
+           Đảm bảo 100% hiển thị rõ ràng, tương phản cao, không bao giờ mất nút
+           ========================================================================== */
+        .modal-btn-cancel {
+            width: 50% !important;
+            padding: 0.625rem 1rem !important;
+            font-size: 0.8125rem !important;
+            font-weight: 700 !important;
+            border-radius: 0.75rem !important;
+            background-color: #f1f5f9 !important;
+            border: 1px solid #cbd5e1 !important;
+            color: #334155 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 0.375rem !important;
+            cursor: pointer !important;
+            transition: all 0.15s ease !important;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+            user-select: none !important;
+            text-decoration: none !important;
+        }
+        .modal-btn-cancel:hover {
+            background-color: #e2e8f0 !important;
+            border-color: #94a3b8 !important;
+            color: #0f172a !important;
+            transform: scale(1.02) !important;
+        }
+        .modal-btn-cancel:active {
+            transform: scale(0.97) !important;
+        }
+        .modal-btn-cancel .material-symbols-outlined {
+            font-size: 16px !important;
+            color: #475569 !important;
+        }
+
+        .modal-btn-action {
+            width: 50% !important;
+            padding: 0.625rem 1rem !important;
+            font-size: 0.8125rem !important;
+            font-weight: 700 !important;
+            border-radius: 0.75rem !important;
+            border: 1px solid transparent !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 0.375rem !important;
+            cursor: pointer !important;
+            transition: all 0.15s ease !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1) !important;
+            user-select: none !important;
+            text-decoration: none !important;
+            color: #ffffff !important;
+        }
+        .modal-btn-action:hover {
+            transform: scale(1.02) !important;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.15), 0 4px 6px -4px rgba(0, 0, 0, 0.1) !important;
+            color: #ffffff !important;
+        }
+        .modal-btn-action:active {
+            transform: scale(0.97) !important;
+        }
+        .modal-btn-action .material-symbols-outlined {
+            font-size: 16px !important;
+            color: #ffffff !important;
+        }
+
+        /* Success / Restore / Duyệt (Emerald Green) */
+        .modal-btn-success {
+            background-color: #059669 !important;
+            background-image: linear-gradient(135deg, #10b981, #059669) !important;
+            border-color: #047857 !important;
+            color: #ffffff !important;
+        }
+        .modal-btn-success:hover {
+            background-color: #047857 !important;
+            background-image: linear-gradient(135deg, #059669, #047857) !important;
+            color: #ffffff !important;
+        }
+
+        /* Danger / Delete / Xóa vĩnh viễn (Rose Red) */
+        .modal-btn-danger {
+            background-color: #e11d48 !important;
+            background-image: linear-gradient(135deg, #f43f5e, #e11d48) !important;
+            border-color: #be123c !important;
+            color: #ffffff !important;
+        }
+        .modal-btn-danger:hover {
+            background-color: #be123c !important;
+            background-image: linear-gradient(135deg, #e11d48, #be123c) !important;
+            color: #ffffff !important;
+        }
+
+        /* Warning / Nổi bật / Cảnh báo (Amber Orange) */
+        .modal-btn-warning {
+            background-color: #d97706 !important;
+            background-image: linear-gradient(135deg, #f59e0b, #d97706) !important;
+            border-color: #b45309 !important;
+            color: #ffffff !important;
+        }
+        .modal-btn-warning:hover {
+            background-color: #b45309 !important;
+            background-image: linear-gradient(135deg, #d97706, #b45309) !important;
+            color: #ffffff !important;
+        }
+
+        /* Primary / Blue (Xác thực, Tick xanh, Chi tiết) */
+        .modal-btn-primary {
+            background-color: #2563eb !important;
+            background-image: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+            border-color: #1d4ed8 !important;
+            color: #ffffff !important;
+        }
+        .modal-btn-primary:hover {
+            background-color: #1d4ed8 !important;
+            background-image: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+            color: #ffffff !important;
+        }
+
+        /* Dark / Slate (Gỡ nổi bật, Ẩn nội dung, Thao tác quản trị cấp cao) */
+        .modal-btn-dark {
+            background-color: #1e293b !important;
+            background-image: linear-gradient(135deg, #334155, #1e293b) !important;
+            border-color: #0f172a !important;
+            color: #ffffff !important;
+        }
+        .modal-btn-dark:hover {
+            background-color: #0f172a !important;
+            background-image: linear-gradient(135deg, #1e293b, #0f172a) !important;
+            color: #ffffff !important;
+        }
+
+        /* Button Glow & Secondary Utilities */
+        .btn-action-primary-glow {
+            background-color: #d97706 !important;
+            background-image: linear-gradient(135deg, #f59e0b, #d97706) !important;
+            color: #ffffff !important;
+            border: 1px solid #b45309 !important;
+            box-shadow: 0 4px 10px -1px rgba(217, 119, 6, 0.35) !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 0.375rem !important;
+            font-weight: 700 !important;
+            font-size: 0.75rem !important;
+            padding: 0.4375rem 0.875rem !important;
+            border-radius: 0.75rem !important;
+            transition: all 0.15s ease !important;
+            cursor: pointer !important;
+            text-decoration: none !important;
+            white-space: nowrap !important;
+        }
+        .btn-action-primary-glow:hover {
+            background-color: #b45309 !important;
+            background-image: linear-gradient(135deg, #d97706, #b45309) !important;
+            transform: scale(1.02) !important;
+            box-shadow: 0 6px 14px -2px rgba(217, 119, 6, 0.45) !important;
+            color: #ffffff !important;
+        }
+        .btn-action-primary-glow .material-symbols-outlined {
+            color: #ffffff !important;
+        }
+
+        .btn-action-secondary {
+            background-color: #f1f5f9 !important;
+            border: 1.5px solid #cbd5e1 !important;
+            color: #334155 !important;
+            font-weight: 600 !important;
+            font-size: 0.75rem !important;
+            padding: 0.4375rem 0.75rem !important;
+            border-radius: 0.75rem !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 0.25rem !important;
+            transition: all 0.15s ease !important;
+            cursor: pointer !important;
+            text-decoration: none !important;
+            white-space: nowrap !important;
+        }
+        .btn-action-secondary:hover {
+            background-color: #e2e8f0 !important;
+            color: #0f172a !important;
+            border-color: #94a3b8 !important;
+            transform: scale(1.02) !important;
+        }
+
         /* 8. TABLE CELL RESPONSIVE WRAPPING & ANTI-OVERFLOW */
         .duyet-table-row td {
             vertical-align: middle;
@@ -381,7 +589,7 @@
         }
     </style>
 </head>
-<body class="h-full text-slate-800 bg-[#f8fafc] font-sans antialiased flex flex-col md:flex-row min-h-screen overflow-x-hidden">
+<body class="text-slate-800 bg-[#f8fafc] font-sans antialiased flex flex-col md:flex-row min-h-screen overflow-x-hidden">
 
     {{-- Instant Loading Top Progress Bar --}}
     <div id="admin-top-progress-bar" class="fixed top-0 left-0 h-[3px] bg-amber-500 z-[9999] transition-all duration-150 pointer-events-none opacity-0 w-0 shadow-xs"></div>
@@ -593,49 +801,75 @@
             </div>
         </header>
 
-        {{-- Flash Alerts --}}
-        <div class="px-4 sm:px-6 pt-4">
-            @if(session('success'))
-                <div class="bg-emerald-50 border border-emerald-200 text-emerald-900 px-4 py-3 rounded-lg text-xs font-medium flex items-center gap-2.5 shadow-xs mb-3">
-                    <span class="material-symbols-outlined text-emerald-600 text-[18px]">check_circle</span>
-                    <div class="flex-1">{{ session('success') }}</div>
-                </div>
-            @endif
-
-            @if(session('info'))
-                <div class="bg-blue-50 border border-blue-200 text-blue-900 px-4 py-3 rounded-lg text-xs font-medium flex items-center gap-2.5 shadow-xs mb-3">
-                    <span class="material-symbols-outlined text-blue-600 text-[18px]">info</span>
-                    <div class="flex-1">{{ session('info') }}</div>
-                </div>
-            @endif
-
-            @if(session('error'))
-                <div class="bg-rose-50 border border-rose-200 text-rose-900 px-4 py-3 rounded-lg text-xs font-medium flex items-center gap-2.5 shadow-xs mb-3">
-                    <span class="material-symbols-outlined text-rose-600 text-[18px]">error</span>
-                    <div class="flex-1">{{ session('error') }}</div>
-                </div>
-            @endif
-
-            @if(isset($errors) && $errors->any())
-                <div class="bg-amber-50 border border-amber-200 text-amber-900 px-4 py-3 rounded-lg text-xs font-medium flex items-start gap-2.5 shadow-xs mb-3">
-                    <span class="material-symbols-outlined text-amber-600 text-[18px] shrink-0 mt-0.5">warning</span>
-                    <div class="flex-1">
-                        <div class="font-bold mb-1">Vui lòng kiểm tra lại thông tin:</div>
-                        <ul class="list-disc list-inside space-y-0.5 text-[11px] text-amber-800">
-                            @foreach($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                </div>
-            @endif
-        </div>
-
         {{-- Page Content --}}
         <main id="admin-main-content" class="p-4 sm:p-6 flex-grow transition-opacity duration-150 min-w-0 w-full overflow-x-hidden">
+            {{-- Flash Alerts Container (chỉ hiển thị tại chức năng phát sinh thông báo) --}}
+            <div id="admin-flash-container" class="space-y-3 mb-4 empty:hidden">
+                @if(session('success'))
+                    <div class="admin-flash-alert bg-emerald-50 border border-emerald-200 text-emerald-900 px-4 py-3 rounded-xl text-xs font-medium flex items-center justify-between gap-3 shadow-xs transition-all duration-300">
+                        <div class="flex items-center gap-2.5 flex-1 min-w-0">
+                            <span class="material-symbols-outlined text-emerald-600 text-[18px] shrink-0">check_circle</span>
+                            <div class="flex-1 break-words font-medium">{{ session('success') }}</div>
+                        </div>
+                        <button type="button" onclick="dismissAdminFlashAlert(this)" class="text-emerald-700/60 hover:text-emerald-900 p-1 rounded-lg hover:bg-emerald-100/60 transition-colors shrink-0" title="Đóng thông báo">
+                            <span class="material-symbols-outlined text-[16px] block">close</span>
+                        </button>
+                    </div>
+                @endif
+
+                @if(session('info'))
+                    <div class="admin-flash-alert bg-blue-50 border border-blue-200 text-blue-900 px-4 py-3 rounded-xl text-xs font-medium flex items-center justify-between gap-3 shadow-xs transition-all duration-300">
+                        <div class="flex items-center gap-2.5 flex-1 min-w-0">
+                            <span class="material-symbols-outlined text-blue-600 text-[18px] shrink-0">info</span>
+                            <div class="flex-1 break-words font-medium">{{ session('info') }}</div>
+                        </div>
+                        <button type="button" onclick="dismissAdminFlashAlert(this)" class="text-blue-700/60 hover:text-blue-900 p-1 rounded-lg hover:bg-blue-100/60 transition-colors shrink-0" title="Đóng thông báo">
+                            <span class="material-symbols-outlined text-[16px] block">close</span>
+                        </button>
+                    </div>
+                @endif
+
+                @if(session('error'))
+                    <div class="admin-flash-alert bg-rose-50 border border-rose-200 text-rose-900 px-4 py-3 rounded-xl text-xs font-medium flex items-center justify-between gap-3 shadow-xs transition-all duration-300">
+                        <div class="flex items-center gap-2.5 flex-1 min-w-0">
+                            <span class="material-symbols-outlined text-rose-600 text-[18px] shrink-0">error</span>
+                            <div class="flex-1 break-words font-medium">{{ session('error') }}</div>
+                        </div>
+                        <button type="button" onclick="dismissAdminFlashAlert(this)" class="text-rose-700/60 hover:text-rose-900 p-1 rounded-lg hover:bg-rose-100/60 transition-colors shrink-0" title="Đóng thông báo">
+                            <span class="material-symbols-outlined text-[16px] block">close</span>
+                        </button>
+                    </div>
+                @endif
+
+                @if(isset($errors) && $errors->any())
+                    <div class="admin-flash-alert bg-amber-50 border border-amber-200 text-amber-900 px-4 py-3 rounded-xl text-xs font-medium flex items-start justify-between gap-3 shadow-xs transition-all duration-300">
+                        <div class="flex items-start gap-2.5 flex-1 min-w-0">
+                            <span class="material-symbols-outlined text-amber-600 text-[18px] shrink-0 mt-0.5">warning</span>
+                            <div class="flex-1">
+                                <div class="font-bold mb-1">Vui lòng kiểm tra lại thông tin:</div>
+                                <ul class="list-disc list-inside space-y-0.5 text-[11px] text-amber-800">
+                                    @foreach($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        </div>
+                        <button type="button" onclick="dismissAdminFlashAlert(this)" class="text-amber-700/60 hover:text-amber-900 p-1 rounded-lg hover:bg-amber-100/60 transition-colors shrink-0 mt-0.5" title="Đóng thông báo">
+                            <span class="material-symbols-outlined text-[16px] block">close</span>
+                        </button>
+                    </div>
+                @endif
+            </div>
+
             @yield('content')
         </main>
     </div>
+
+    {{-- Floating Back to Top Button --}}
+    <button id="admin-back-to-top" type="button" onclick="scrollAdminToTop(true)" class="fixed bottom-6 right-6 z-40 bg-slate-900/90 hover:bg-slate-950 text-white px-3.5 py-2.5 rounded-2xl shadow-xl border border-slate-700/60 backdrop-blur-md transition-all duration-300 opacity-0 pointer-events-none translate-y-3 flex items-center justify-center gap-1.5 text-xs font-bold cursor-pointer hover:shadow-2xl hover:scale-105" title="Cuộn lên đầu trang">
+        <span class="material-symbols-outlined text-[18px] text-amber-400">arrow_upward</span>
+        <span class="text-[11px]">Lên đầu trang</span>
+    </button>
 
     {{-- Enterprise Command Palette Modal (Ctrl + K) --}}
     <div id="command-palette-modal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden flex items-start justify-center pt-20 px-4 transition-opacity">
@@ -701,10 +935,11 @@
             <div id="confirm-modal-message" class="text-xs text-slate-600 mb-6 leading-relaxed">Bạn có chắc chắn muốn thực hiện hành động này?</div>
 
             <div class="flex items-center justify-center gap-3">
-                <button type="button" onclick="closeConfirmModal()" class="btn-enterprise btn-enterprise-secondary w-1/2 py-2.5 text-xs">
-                    Hủy bỏ
+                <button type="button" onclick="closeConfirmModal()" id="confirm-modal-cancel-btn" class="modal-btn-cancel">
+                    <span class="material-symbols-outlined text-[16px]">close</span>
+                    <span>Hủy bỏ</span>
                 </button>
-                <button type="button" id="confirm-modal-submit-btn" class="btn-enterprise btn-enterprise-success w-1/2 py-2.5 text-xs">
+                <button type="button" id="confirm-modal-submit-btn" class="modal-btn-action modal-btn-success">
                     <span id="confirm-modal-btn-icon" class="material-symbols-outlined text-[16px]">check_circle</span>
                     <span id="confirm-modal-btn-text">Xác nhận</span>
                 </button>
@@ -1056,7 +1291,24 @@
             iconBgEl.className = 'w-14 h-14 rounded-2xl mx-auto flex items-center justify-center mb-4 ' + (options.iconBg || 'bg-amber-100 text-amber-600');
             btnText.textContent = options.confirmText || 'Xác nhận';
             btnIcon.textContent = options.confirmIcon || 'check_circle';
-            submitBtn.className = 'btn-enterprise w-1/2 py-2.5 ' + (options.confirmClass || 'btn-enterprise-success');
+
+            // Intelligent style mapping: ALWAYS assigns a vibrant, high-contrast action color with white text
+            let actionColorClass = 'modal-btn-success';
+            const cClass = (options.confirmClass || '').toLowerCase();
+            if (cClass.includes('danger') || cClass.includes('rose') || cClass.includes('red') || cClass.includes('delete')) {
+                actionColorClass = 'modal-btn-danger';
+            } else if (cClass.includes('warning') || cClass.includes('amber') || cClass.includes('orange') || cClass.includes('yellow')) {
+                actionColorClass = 'modal-btn-warning';
+            } else if (cClass.includes('primary') || cClass.includes('blue') || cClass.includes('indigo') || cClass.includes('verified')) {
+                actionColorClass = 'modal-btn-primary';
+            } else if (cClass.includes('dark') || cClass.includes('slate') || cClass.includes('secondary') || cClass.includes('cancel') || cClass.includes('gray')) {
+                actionColorClass = 'modal-btn-dark';
+            }
+
+            // Always assign full, reliable classes and ensure visible inline color
+            submitBtn.className = 'modal-btn-action ' + actionColorClass;
+            submitBtn.style.color = '#ffffff';
+            submitBtn.style.display = 'inline-flex';
 
             modal.style.display = 'flex';
             modal.classList.remove('hidden');
@@ -2687,7 +2939,38 @@
             }
         });
 
+        function scrollAdminToTop(smooth = false) {
+            try {
+                const behavior = smooth ? 'smooth' : 'instant';
+                window.scrollTo({ top: 0, left: 0, behavior });
+                document.documentElement.scrollTo({ top: 0, left: 0, behavior });
+                document.body.scrollTo({ top: 0, left: 0, behavior });
+                document.documentElement.scrollTop = 0;
+                document.body.scrollTop = 0;
+                const wrapper = document.querySelector('.admin-main-wrapper');
+                if (wrapper) wrapper.scrollTop = 0;
+                const main = document.getElementById('admin-main-content');
+                if (main) main.scrollTop = 0;
+            } catch (e) {}
+        }
+
+        window.addEventListener('scroll', function() {
+            const btn = document.getElementById('admin-back-to-top');
+            if (!btn) return;
+            const top = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+            if (top > 220) {
+                btn.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-3');
+                btn.classList.add('opacity-100', 'translate-y-0');
+            } else {
+                btn.classList.add('opacity-0', 'pointer-events-none', 'translate-y-3');
+                btn.classList.remove('opacity-100', 'translate-y-0');
+            }
+        }, { passive: true });
+
         document.addEventListener('DOMContentLoaded', function() {
+            if ('scrollRestoration' in history) {
+                history.scrollRestoration = 'manual';
+            }
             updateSidebarActiveLinks(window.location.href);
             checkRealtimeAdminNotifications();
             setInterval(checkRealtimeAdminNotifications, 3000);
@@ -2708,6 +2991,56 @@
         }
         let currentNavAbort = null;
 
+        function stripFlashFromHtml(html) {
+            if (!html || typeof html !== 'string') return html;
+            try {
+                const p = new DOMParser();
+                const d = p.parseFromString(html, 'text/html');
+                const flash = d.querySelector('#admin-flash-container');
+                if (flash) {
+                    flash.innerHTML = '';
+                }
+                return d.documentElement.outerHTML;
+            } catch (e) {
+                return html;
+            }
+        }
+
+        function dismissAdminFlashAlert(btnOrEl) {
+            const alert = (btnOrEl && btnOrEl.closest) ? btnOrEl.closest('.admin-flash-alert') : btnOrEl;
+            if (!alert) return;
+            alert.style.transition = 'all 0.25s ease-out';
+            alert.style.opacity = '0';
+            alert.style.transform = 'translateY(-6px)';
+            setTimeout(() => {
+                alert.remove();
+            }, 250);
+        }
+
+        function initAdminFlashAlerts() {
+            document.querySelectorAll('.admin-flash-alert').forEach(alert => {
+                if (alert.dataset.hasDismissTimer) return;
+                alert.dataset.hasDismissTimer = 'true';
+
+                // Tự động đóng sau 4.5s cho thông báo thành công hoặc thông tin
+                if (!alert.classList.contains('bg-rose-50') && !alert.classList.contains('bg-amber-50')) {
+                    let timer = setTimeout(() => {
+                        dismissAdminFlashAlert(alert);
+                    }, 4500);
+
+                    // Tạm dừng khi rê chuột vào để người dùng đọc kịp
+                    alert.addEventListener('mouseenter', () => clearTimeout(timer));
+                    alert.addEventListener('mouseleave', () => {
+                        timer = setTimeout(() => {
+                            dismissAdminFlashAlert(alert);
+                        }, 2500);
+                    });
+                }
+            });
+        }
+        document.addEventListener('DOMContentLoaded', initAdminFlashAlerts);
+        initAdminFlashAlerts();
+
         function prefetchUrl(url) {
             if (!url || adminPageCache.has(url)) return;
             try {
@@ -2721,7 +3054,7 @@
                     })
                     .then(html => {
                         if (html) {
-                            adminPageCache.set(url, html);
+                            adminPageCache.set(url, stripFlashFromHtml(html));
                             if (adminPageCache.size > 25) {
                                 const firstKey = adminPageCache.keys().next().value;
                                 adminPageCache.delete(firstKey);
@@ -2733,6 +3066,15 @@
         }
 
         function instantNavigate(url, pushState = true) {
+            // Ngay lập tức ẩn thông báo flash của trang trước, đảm bảo không bao giờ lan sang chức năng mới
+            const activeFlash = document.getElementById('admin-flash-container');
+            if (activeFlash) {
+                activeFlash.innerHTML = '';
+            }
+
+            // Luôn luôn cuộn lên đỉnh đầu trang khi bấm chuyển chức năng / liên kết
+            scrollAdminToTop(false);
+
             const bar = document.getElementById('admin-top-progress-bar');
             if (bar) {
                 bar.style.opacity = '1';
@@ -2754,7 +3096,7 @@
                         return res.text();
                     })
                     .then(html => {
-                        adminPageCache.set(url, html);
+                        adminPageCache.set(url, stripFlashFromHtml(html));
                         return html;
                     });
 
@@ -2805,8 +3147,10 @@
                         });
 
                         currentMain.style.opacity = '1';
-                        window.scrollTo({ top: 0, behavior: 'instant' });
+                        scrollAdminToTop(false);
+                        requestAnimationFrame(() => scrollAdminToTop(false));
 
+                        initAdminFlashAlerts();
                         updateSidebarActiveLinks(url);
 
                         if (pushState) {
@@ -2924,6 +3268,29 @@
             } catch (e) {}
         });
 
+        // Intercept GET search/filter forms for instant 0-delay load (ngăn chặn Chrome tự động cuộn xuống nút Lọc)
+        document.addEventListener('submit', function(e) {
+            const form = e.target;
+            if (!form || (form.method && form.method.toUpperCase() !== 'GET')) return;
+            const action = form.getAttribute('action') || window.location.pathname;
+            try {
+                const parsed = new URL(action, window.location.origin);
+                if (parsed.origin !== window.location.origin || !parsed.pathname.startsWith('/admin')) return;
+
+                e.preventDefault();
+                const formData = new FormData(form);
+                const params = new URLSearchParams();
+                for (const [key, value] of formData.entries()) {
+                    if (value !== '' && value !== null && value !== undefined) {
+                        params.append(key, value);
+                    }
+                }
+                const queryString = params.toString();
+                const targetUrl = parsed.pathname + (queryString ? '?' + queryString : '');
+                instantNavigate(targetUrl, true);
+            } catch (err) {}
+        });
+
         // Hover prefetch: loads page into RAM when cursor approaches (0ms latency on click)
         document.addEventListener('mouseover', function(e) {
             const link = e.target.closest('a');
@@ -2945,8 +3312,13 @@
 
         // Handle Browser Back / Forward buttons instantly from cache
         window.addEventListener('popstate', function() {
+            scrollAdminToTop(false);
             updateSidebarActiveLinks(window.location.href);
             instantNavigate(window.location.href, false);
+        });
+
+        window.addEventListener('pageshow', function() {
+            scrollAdminToTop(false);
         });
     </script>
     @yield('scripts')
