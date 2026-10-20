@@ -172,7 +172,7 @@ class QuanController extends Controller
     {
         $quan = Quan::where('slug', $slug)
             ->where('chu_quan_id', Auth::id())
-            ->with(['hinhAnh', 'danhMucMenu.monAn', 'danhGia.nguoiDung'])
+            ->with(['hinhAnh', 'danhMucMenu.monAn', 'danhGia.nguoiDung', 'khuyenMais'])
             ->firstOrFail();
 
         $this->authorize('update', $quan);

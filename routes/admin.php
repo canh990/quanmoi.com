@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\BlogCategoryController;
 use App\Http\Controllers\Admin\BlogController;
 use App\Http\Controllers\Admin\BlogTagController;
 use App\Http\Controllers\Admin\DuyetXacThucController;
+use App\Http\Controllers\Admin\KhuyenMaiAiController;
 use App\Http\Controllers\Admin\PhanQuyenController;
 use App\Http\Controllers\Admin\QuanLyNguoiDungController;
 use App\Http\Controllers\Admin\QuanLyQuanController;
@@ -90,6 +91,20 @@ Route::middleware(['auth', 'KiemTraQuyenHan:admin'])->group(function () {
     // 12. AI Tools
     Route::get('/ai-tools', [AiToolsController::class, 'index'])->name('ai-tools.index');
     Route::post('/ai-tools/generate', [AiToolsController::class, 'generateSeoDescription'])->name('ai-tools.generate');
+    Route::post('/ai-tools/generate-promotion', [AiToolsController::class, 'generatePromotion'])->name('ai-tools.generate-promotion');
+    Route::post('/ai-tools/save-promotion', [AiToolsController::class, 'savePromotion'])->name('ai-tools.save-promotion');
+    Route::delete('/ai-tools/promotions/{id}', [AiToolsController::class, 'destroyPromotion'])->name('ai-tools.destroy-promotion');
+    Route::put('/ai-tools/promotions/{id}/toggle', [AiToolsController::class, 'togglePromotion'])->name('ai-tools.toggle-promotion');
+    Route::post('/ai-tools/test-connection', [AiToolsController::class, 'testConnection'])->name('ai-tools.test-connection');
+
+    // 13. Khuyến Mãi AI Studio & Voucher (Module riêng trong Vận Hành & Phân Quyền)
+    Route::prefix('khuyen-mai-ai')->name('khuyen-mai-ai.')->group(function () {
+        Route::get('/', [KhuyenMaiAiController::class, 'index'])->name('index');
+        Route::post('/generate', [KhuyenMaiAiController::class, 'generate'])->name('generate');
+        Route::post('/store', [KhuyenMaiAiController::class, 'store'])->name('store');
+        Route::delete('/{id}', [KhuyenMaiAiController::class, 'destroy'])->name('destroy');
+        Route::put('/{id}/toggle', [KhuyenMaiAiController::class, 'toggle'])->name('toggle');
+    });
 
     // Quản lý SEO
     Route::get('/seo', [SeoController::class, 'index'])->name('seo.index');

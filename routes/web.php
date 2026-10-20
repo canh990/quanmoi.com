@@ -77,6 +77,18 @@ Route::prefix('chu-quan')->group(function () {
         Route::get('/quan/{slug}/thuc-don', [\App\Http\Controllers\ChuQuan\MenuController::class, 'edit'])->name('chu-quan.quan.menu.edit');
         Route::post('/quan/{slug}/thuc-don', [\App\Http\Controllers\ChuQuan\MenuController::class, 'update'])->name('chu-quan.quan.menu.update');
         Route::put('/quan/{slug}', [QuanController::class, 'update'])->name('chu-quan.quan.update');
+
+        // Quản lý Khuyến mãi & AI Tạo Nội Dung (Kira AI)
+        Route::post('/quan/{slug}/khuyen-mai/ai-generate', [\App\Http\Controllers\ChuQuan\KhuyenMaiController::class, 'generateAi'])
+            ->name('chu-quan.quan.khuyen-mai.ai-generate');
+        Route::post('/quan/{slug}/khuyen-mai', [\App\Http\Controllers\ChuQuan\KhuyenMaiController::class, 'store'])
+            ->name('chu-quan.quan.khuyen-mai.store');
+        Route::put('/quan/{slug}/khuyen-mai/{id}/toggle', [\App\Http\Controllers\ChuQuan\KhuyenMaiController::class, 'toggle'])
+            ->name('chu-quan.quan.khuyen-mai.toggle');
+        Route::delete('/quan/{slug}/khuyen-mai/{id}', [\App\Http\Controllers\ChuQuan\KhuyenMaiController::class, 'destroy'])
+            ->name('chu-quan.quan.khuyen-mai.destroy');
+        Route::post('/quan/{slug}/khuyen-mai/kiem-tra', [\App\Http\Controllers\ChuQuan\KhuyenMaiController::class, 'kiemTraVoucher'])
+            ->name('chu-quan.quan.khuyen-mai.kiem-tra');
     });
 });
 

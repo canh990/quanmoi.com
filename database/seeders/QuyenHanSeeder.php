@@ -15,6 +15,7 @@ class QuyenHanSeeder extends Seeder
         $permissions = [
             ['ten' => 'quan_ly_nguoi_dung', 'mo_ta' => 'Quản lý danh sách, chỉnh sửa và xóa người dùng'],
             ['ten' => 'quan_ly_quan', 'mo_ta' => 'Quản lý danh sách, duyệt bài và khóa quán'],
+            ['ten' => 'quan_ly_khuyen_mai_ai', 'mo_ta' => 'Sử dụng Kira AI tạo khuyến mãi, voucher và quản lý ưu đãi quán'],
         ];
 
         foreach ($permissions as $permData) {

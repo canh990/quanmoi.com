@@ -80,6 +80,10 @@
             <span class="material-symbols-outlined text-[18px]">admin_panel_settings</span>
             <span>Vai Trò & Phân Quyền</span>
         </a>
+        <a href="{{ route('admin.khuyen-mai-ai.index') }}" class="sidebar-item flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all {{ request()->routeIs('admin.khuyen-mai-ai.*') ? 'bg-[#F59E0B] text-white font-bold shadow-md' : 'text-slate-300 hover:bg-slate-800/80 hover:text-white' }}">
+            <span class="material-symbols-outlined text-[18px]">loyalty</span>
+            <span>Khuyến Mãi & Voucher AI</span>
+        </a>
         <a href="{{ route('admin.thong-bao.index') }}" class="sidebar-item flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all {{ request()->routeIs('admin.thong-bao.*') ? 'bg-[#F59E0B] text-white font-bold shadow-md' : 'text-slate-300 hover:bg-slate-800/80 hover:text-white' }}">
             <div class="flex items-center gap-2.5">
                 <span class="material-symbols-outlined text-[18px]">campaign</span>

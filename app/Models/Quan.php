@@ -279,4 +279,20 @@ class Quan extends Model
     {
         return $this->hasMany(QuanDanhGia::class, 'quan_id');
     }
+
+    public function khuyenMais()
+    {
+        return $this->hasMany(KhuyenMai::class, 'quan_id')->orderBy('created_at', 'desc');
+    }
+
+    public function khuyenMaiDangChay()
+    {
+        return $this->hasMany(KhuyenMai::class, 'quan_id')
+            ->where('trang_thai', true)
+            ->where(function ($query) {
+                $query->whereNull('ngay_ket_thuc')
+                    ->orWhereDate('ngay_ket_thuc', '>=', now()->toDateString());
+            })
+            ->orderBy('created_at', 'desc');
+    }
 }

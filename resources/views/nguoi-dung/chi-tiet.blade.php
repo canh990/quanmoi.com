@@ -330,10 +330,63 @@
                     </div>
                 </div>
 
+                @if($quan->khuyenMaiDangChay && $quan->khuyenMaiDangChay->isNotEmpty())
+                    @php $kmHead = $quan->khuyenMaiDangChay->first(); @endphp
+                    <div class="mb-5 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 p-4 sm:p-5 text-white shadow-lg shadow-orange-500/20 relative overflow-hidden">
+                        <div class="absolute -right-6 -bottom-6 w-32 h-32 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative z-10">
+                            <div class="flex items-start sm:items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center shrink-0 text-xl font-bold shadow-inner">
+                                    🎁
+                                </div>
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-[10px] font-black uppercase tracking-wider bg-white/25 px-2 py-0.5 rounded-full">Ưu Đãi Đang Diễn Ra</span>
+                                        @if($quan->khuyenMaiDangChay->count() > 1)
+                                            <span class="text-[10px] bg-black/20 px-2 py-0.5 rounded-full">+{{ $quan->khuyenMaiDangChay->count() - 1 }} ưu đãi khác</span>
+                                        @endif
+                                    </div>
+                                    <h3 class="font-bold text-base sm:text-lg leading-tight mt-0.5">{{ $kmHead->tieu_de }}</h3>
+                                    <p class="text-xs text-white/90 line-clamp-1 mt-0.5">{{ $kmHead->slogan ?: $kmHead->noi_dung_bai_dang }}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 shrink-0">
+                                @if($kmHead->ma_voucher)
+                                    <div class="flex items-center bg-white text-gray-900 rounded-xl px-3 py-1.5 shadow-sm">
+                                        <span class="text-xs font-mono font-black text-orange-600 mr-2">{{ $kmHead->ma_voucher }}</span>
+                                        <button type="button" onclick="copyCustomerVoucher('{{ $kmHead->ma_voucher }}')" class="text-xs font-bold text-gray-600 hover:text-orange-600 flex items-center gap-1 transition-colors" title="Sao chép mã">
+                                            <span class="material-symbols-outlined text-sm">content_copy</span>
+                                            <span>Lấy mã</span>
+                                        </button>
+                                    </div>
+                                @endif
+                                <button type="button" onclick="openPromoModal('promo-modal-{{ $kmHead->id }}')" class="px-3 py-1.5 bg-black/20 hover:bg-black/30 rounded-xl text-xs font-bold transition-colors flex items-center gap-1 cursor-pointer" title="Xem chi tiết bài viết khuyến mãi">
+                                    <span>Chi tiết</span>
+                                    <span class="material-symbols-outlined text-sm">visibility</span>
+                                </button>
+                                @if(auth()->check() && (auth()->user()->isAdmin() || auth()->id() === $quan->chu_quan_id))
+                                    <button type="button" onclick="deletePublicVoucher('{{ $kmHead->id }}', '{{ $kmHead->ma_voucher ?: $kmHead->tieu_de }}')" class="px-2.5 py-1.5 bg-red-600/80 hover:bg-red-600 text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-1 cursor-pointer shadow-sm" title="Xóa voucher này">
+                                        <span class="material-symbols-outlined text-sm">delete</span>
+                                        <span>Xóa</span>
+                                    </button>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
                 <!-- Tabbed Interface -->
                 <div class="mb-6">
                     <nav id="venue-tabs" class="flex border-b border-surface-variant gap-5 overflow-x-auto no-scrollbar" aria-label="Điều hướng chi tiết quán">
                         <a href="#menu-section" aria-current="location" class="tab-active py-3 font-label-md text-xs sm:text-sm whitespace-nowrap px-1">THỰC ĐƠN</a>
+                        @if($quan->khuyenMaiDangChay && $quan->khuyenMaiDangChay->isNotEmpty())
+                            <a href="#promotions-section" class="text-on-surface-variant hover:text-primary py-3 font-label-md text-xs sm:text-sm whitespace-nowrap px-1 transition-colors flex items-center gap-1.5">
+                                ƯU ĐÃI
+                                <span class="bg-gradient-to-r from-orange-500 to-rose-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold shadow-sm animate-pulse">
+                                    {{ $quan->khuyenMaiDangChay->count() }}
+                                </span>
+                            </a>
+                        @endif
                         <a href="#reviews-section" class="text-on-surface-variant hover:text-primary py-3 font-label-md text-xs sm:text-sm whitespace-nowrap px-1 transition-colors">ĐÁNH GIÁ</a>
                         <a href="#info-section" class="text-on-surface-variant hover:text-primary py-3 font-label-md text-xs sm:text-sm whitespace-nowrap px-1 transition-colors">THÔNG TIN CHI TIẾT</a>
                         <a href="#gallery-section" class="text-on-surface-variant hover:text-primary py-3 font-label-md text-xs sm:text-sm whitespace-nowrap px-1 transition-colors">HÌNH ẢNH</a>
@@ -392,6 +445,203 @@
                             </div>
                         @endif
                     </div>
+
+                    @if($quan->khuyenMaiDangChay && $quan->khuyenMaiDangChay->isNotEmpty())
+                    <section id="promotions-section" hidden class="venue-section-anchor mt-5 space-y-6">
+                        <!-- DANH SÁCH CÁC CHƯƠNG TRÌNH KHUYẾN MÃI -->
+                        <div>
+                            <div class="flex items-center justify-between mb-3">
+                                <h2 class="text-base font-bold text-gray-900 flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-orange-500 text-xl">local_fire_department</span>
+                                    Danh sách ưu đãi đang áp dụng ({{ $quan->khuyenMaiDangChay->count() }})
+                                </h2>
+                                <span class="text-xs text-gray-500">Áp dụng trực tiếp tại quán hoặc khi liên hệ</span>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                @foreach($quan->khuyenMaiDangChay as $km)
+                                    <div class="rounded-2xl border-2 border-orange-100 bg-white p-5 shadow-sm hover:shadow-md transition-all relative overflow-hidden flex flex-col justify-between">
+                                        <div class="absolute -top-3 -right-3 w-16 h-16 bg-gradient-to-br from-orange-400 to-rose-400 opacity-10 rounded-full pointer-events-none"></div>
+
+                                        <div>
+                                            <div class="flex items-start justify-between gap-2 mb-2">
+                                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-orange-50 text-orange-600 border border-orange-200">
+                                                    🏷️ {{ $km->gia_tri_khuyen_mai ?: 'Ưu Đãi Đặc Biệt' }}
+                                                </span>
+                                                @if($km->ngay_ket_thuc)
+                                                    <span class="text-[11px] text-gray-500 flex items-center gap-1 font-medium">
+                                                        <span class="material-symbols-outlined text-xs">schedule</span>
+                                                        HSD: {{ $km->ngay_ket_thuc->format('d/m/Y') }}
+                                                    </span>
+                                                @else
+                                                    <span class="text-[11px] text-emerald-600 font-semibold flex items-center gap-1">
+                                                        <span class="material-symbols-outlined text-xs">all_inclusive</span>
+                                                        Đang diễn ra
+                                                    </span>
+                                                @endif
+                                            </div>
+
+                                            <h3 class="font-bold text-gray-900 text-base leading-snug">{{ $km->tieu_de }}</h3>
+                                            @if($km->slogan)
+                                                <p class="text-xs text-orange-600 font-medium italic mt-1">"{{ $km->slogan }}"</p>
+                                            @endif
+
+                                            @if($km->dieu_kien_ap_dung || $km->the_le)
+                                                <div class="mt-3 bg-gray-50 rounded-xl p-2.5 text-xs text-gray-600 space-y-1 border border-gray-100">
+                                                    <span class="font-bold text-gray-700 flex items-center gap-1 text-[11px]">
+                                                        <span class="material-symbols-outlined text-xs text-gray-500">info</span> Điều kiện áp dụng:
+                                                    </span>
+                                                    <p class="text-[11px] leading-relaxed line-clamp-2">{{ $km->dieu_kien_ap_dung ?: $km->the_le }}</p>
+                                                </div>
+                                            @endif
+                                        </div>
+
+                                        <div class="mt-4 pt-3 border-t border-gray-100 flex flex-wrap items-center justify-between gap-2">
+                                            @if($km->ma_voucher)
+                                                <div class="flex items-center gap-1.5 flex-wrap">
+                                                    <div class="px-2.5 py-1 bg-dashed border border-dashed border-orange-300 rounded-lg bg-orange-50/50">
+                                                        <span class="font-mono font-black text-orange-600 text-xs tracking-wider">{{ $km->ma_voucher }}</span>
+                                                    </div>
+                                                    <button type="button" onclick="copyCustomerVoucher('{{ $km->ma_voucher }}')" class="p-1.5 px-2.5 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold flex items-center gap-1 shadow-sm transition-colors cursor-pointer" title="Sao chép mã voucher">
+                                                        <span class="material-symbols-outlined text-xs">content_copy</span>
+                                                        <span>Copy</span>
+                                                    </button>
+                                                </div>
+                                            @else
+                                                <span class="text-xs text-gray-500 italic">Áp dụng trực tiếp tại quầy</span>
+                                            @endif
+
+                                            {{-- Nút Xem chi tiết bài đăng voucher --}}
+                                            <div class="flex items-center gap-1.5 ml-auto">
+                                                <button type="button" onclick="openPromoModal('promo-modal-{{ $km->id }}')" class="px-3 py-1.5 rounded-lg border border-orange-200 text-orange-600 hover:text-orange-700 bg-orange-50 hover:bg-orange-100 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs hover:shadow-xs">
+                                                    <span class="material-symbols-outlined text-[15px]">visibility</span>
+                                                    <span>Xem chi tiết</span>
+                                                </button>
+                                                @if(auth()->check() && (auth()->user()->isAdmin() || auth()->id() === $quan->chu_quan_id))
+                                                    <button type="button" onclick="deletePublicVoucher('{{ $km->id }}', '{{ $km->ma_voucher ?: $km->tieu_de }}')" class="px-2.5 py-1.5 rounded-lg border border-red-200 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold flex items-center gap-1 transition-all cursor-pointer shadow-2xs" title="Xóa voucher này">
+                                                        <span class="material-symbols-outlined text-[15px]">delete</span>
+                                                        <span>Xóa</span>
+                                                    </button>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {{-- Modal Xem Chi Tiết Bài Đăng Khuyến Mãi --}}
+                                    <div id="promo-modal-{{ $km->id }}" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs hidden transition-opacity" onclick="if(event.target === this) closePromoModal('promo-modal-{{ $km->id }}')">
+                                        <div class="bg-white rounded-3xl max-w-lg w-full max-h-[90vh] flex flex-col shadow-2xl border border-gray-100 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+                                            {{-- Modal Header --}}
+                                            <div class="p-5 border-b border-gray-100 bg-gradient-to-r from-orange-50 to-amber-50/50 flex items-center justify-between gap-3">
+                                                <div class="flex items-center gap-2.5">
+                                                    <div class="w-9 h-9 rounded-xl bg-orange-500 text-white flex items-center justify-center shadow-sm">
+                                                        <span class="material-symbols-outlined text-lg">campaign</span>
+                                                    </div>
+                                                    <div>
+                                                        <h3 class="font-bold text-gray-900 text-sm sm:text-base leading-tight">Chi Tiết Bài Đăng Khuyến Mãi</h3>
+                                                        <p class="text-[11px] text-gray-500 mt-0.5">{{ $quan->ten_quan }}</p>
+                                                    </div>
+                                                </div>
+                                                <button type="button" onclick="closePromoModal('promo-modal-{{ $km->id }}')" class="w-8 h-8 rounded-full bg-white text-gray-400 hover:text-gray-700 hover:bg-gray-100 flex items-center justify-center transition-colors cursor-pointer shadow-2xs">
+                                                    <span class="material-symbols-outlined text-lg">close</span>
+                                                </button>
+                                            </div>
+
+                                            {{-- Modal Body (Scrollable) --}}
+                                            <div class="p-5 overflow-y-auto space-y-4 text-xs">
+                                                {{-- Title & Slogan --}}
+                                                <div>
+                                                    <div class="flex flex-wrap items-center gap-2 mb-1.5">
+                                                        <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-orange-100 text-orange-700 border border-orange-200">
+                                                            🏷️ {{ $km->gia_tri_khuyen_mai ?: 'Ưu Đãi Đặc Biệt' }}
+                                                        </span>
+                                                        @if($km->mon_ap_dung)
+                                                            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-gray-100 text-gray-700">
+                                                                Món: {{ $km->mon_ap_dung }}
+                                                            </span>
+                                                        @endif
+                                                        @if($km->ngay_ket_thuc)
+                                                            <span class="text-[11px] text-gray-500 font-medium ml-auto flex items-center gap-1">
+                                                                <span class="material-symbols-outlined text-xs">schedule</span>
+                                                                HSD: {{ $km->ngay_ket_thuc->format('d/m/Y') }}
+                                                            </span>
+                                                        @endif
+                                                    </div>
+                                                    <h4 class="font-black text-gray-900 text-base leading-snug">{{ $km->tieu_de }}</h4>
+                                                    @if($km->slogan)
+                                                        <p class="text-xs text-orange-600 font-semibold italic mt-1">"{{ $km->slogan }}"</p>
+                                                    @endif
+                                                </div>
+
+                                                {{-- Voucher Code Box if available --}}
+                                                @if($km->ma_voucher)
+                                                    <div class="p-3 bg-gradient-to-r from-orange-50 to-amber-50 rounded-2xl border border-dashed border-orange-300 flex items-center justify-between gap-3">
+                                                        <div>
+                                                            <p class="text-[10px] uppercase font-bold text-orange-600 tracking-wider">Mã Voucher Ưu Đãi</p>
+                                                            <p class="font-mono font-black text-lg text-gray-900 mt-0.5 tracking-wider">{{ $km->ma_voucher }}</p>
+                                                        </div>
+                                                        <button type="button" onclick="copyCustomerVoucher('{{ $km->ma_voucher }}')" class="px-3.5 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer">
+                                                            <span class="material-symbols-outlined text-sm">content_copy</span>
+                                                            <span>Lấy Mã</span>
+                                                        </button>
+                                                    </div>
+                                                @endif
+
+                                                {{-- Full Post Content --}}
+                                                <div>
+                                                    <div class="flex items-center justify-between mb-1.5">
+                                                        <label class="font-bold text-gray-900 text-xs flex items-center gap-1">
+                                                            <span class="material-symbols-outlined text-sm text-orange-500">article</span>
+                                                            Nội dung bài viết quảng bá:
+                                                        </label>
+                                                        <button type="button" onclick="copyPromoArticle('promo-article-{{ $km->id }}', this)" class="text-[11px] font-bold text-orange-600 hover:text-orange-800 flex items-center gap-1 cursor-pointer transition-colors">
+                                                            <span class="material-symbols-outlined text-xs">content_copy</span>
+                                                            <span>Sao chép bài viết</span>
+                                                        </button>
+                                                    </div>
+                                                    <div id="promo-article-{{ $km->id }}" class="bg-gray-50 border border-gray-200 rounded-2xl p-4 text-xs text-gray-800 leading-relaxed whitespace-pre-line font-sans select-text">
+                                                        {{ $km->noi_dung ?: $km->noi_dung_bai_dang }}
+                                                    </div>
+                                                </div>
+
+                                                {{-- Terms & Conditions --}}
+                                                @if($km->the_le || $km->dieu_kien_ap_dung)
+                                                    <div>
+                                                        <label class="font-bold text-gray-900 text-xs flex items-center gap-1 mb-1.5">
+                                                            <span class="material-symbols-outlined text-sm text-gray-500">gavel</span>
+                                                            Thể lệ & Điều kiện áp dụng:
+                                                        </label>
+                                                        <div class="bg-amber-50/50 border border-amber-200/60 rounded-2xl p-3.5 text-xs text-gray-700 leading-relaxed whitespace-pre-line">
+                                                            {{ $km->the_le ?: $km->dieu_kien_ap_dung }}
+                                                        </div>
+                                                    </div>
+                                                @endif
+                                            </div>
+
+                                            {{-- Modal Footer --}}
+                                            <div class="p-3.5 border-t border-gray-100 bg-gray-50/80 flex items-center justify-end gap-2">
+                                                @if(auth()->check() && (auth()->user()->isAdmin() || auth()->id() === $quan->chu_quan_id))
+                                                    <button type="button" onclick="deletePublicVoucher('{{ $km->id }}', '{{ $km->ma_voucher ?: $km->tieu_de }}', 'promo-modal-{{ $km->id }}')" class="px-3.5 py-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer mr-auto" title="Xóa vĩnh viễn voucher này">
+                                                        <span class="material-symbols-outlined text-sm">delete</span>
+                                                        <span>Xóa voucher này</span>
+                                                    </button>
+                                                @endif
+                                                <button type="button" onclick="closePromoModal('promo-modal-{{ $km->id }}')" class="px-4 py-2 rounded-xl text-gray-700 font-bold text-xs hover:bg-gray-200 transition-colors cursor-pointer">
+                                                    Đóng
+                                                </button>
+                                                @if($km->ma_voucher)
+                                                    <button type="button" onclick="copyCustomerVoucher('{{ $km->ma_voucher }}')" class="px-4 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer">
+                                                        <span class="material-symbols-outlined text-sm">content_copy</span>
+                                                        <span>Lấy mã voucher</span>
+                                                    </button>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </section>
+                    @endif
                     <section id="reviews-section" hidden class="venue-section-anchor mt-7 border-t border-surface-variant pt-4">
                         @php
                             $soDanhGia = $quan->danhGia->count();
@@ -632,6 +882,58 @@
         window.addEventListener('hashchange', () => setActiveTab(window.location.hash));
         setActiveTab(window.location.hash || '#menu-section');
 
+        function showPromoTab() {
+            const promoTab = document.querySelector('a[href="#promotions-section"]');
+            if (promoTab) {
+                promoTab.click();
+                promoTab.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        function copyCustomerVoucher(code) {
+            if (!code) return;
+            navigator.clipboard.writeText(code).then(() => {
+                const toast = document.createElement('div');
+                toast.className = 'fixed bottom-6 right-6 z-50 bg-gray-900 text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-2 border border-orange-500/30 text-xs font-bold animate-bounce';
+                toast.innerHTML = `<span class="text-base text-orange-400">🎉</span> Đã copy mã voucher: <span class="font-mono text-orange-300 font-bold">${code}</span>! Áp dụng ngay khi thanh toán!`;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 3000);
+            }).catch(() => {   
+                prompt('Mã khuyến mãi:', code);
+            });
+        }
+
+        async function deletePublicVoucher(id, title = '', modalId = null) {
+            if (!confirm(`Bạn có chắc chắn muốn xóa voucher/ưu đãi "${title || 'này'}" không? Sau khi xóa sẽ không thể phục hồi!`)) return;
+
+            try {
+                const res = await fetch('/chu-quan/quan/{{ $quan->slug }}/khuyen-mai/' + id, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}'
+                    }
+                });
+
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    if (modalId) {
+                        closePromoModal(modalId);
+                    }
+                    const toast = document.createElement('div');
+                    toast.className = 'fixed bottom-6 right-6 z-50 bg-gray-900 text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-2 border border-red-500/30 text-xs font-bold animate-bounce';
+                    toast.innerHTML = `<span class="text-base text-red-400">🗑️</span> Đã xóa voucher thành công!`;
+                    document.body.appendChild(toast);
+                    setTimeout(() => window.location.reload(), 800);
+                } else {
+                    alert('Lỗi: ' + (data.message || 'Không thể xóa voucher.'));
+                }
+            } catch (err) {
+                alert('Lỗi kết nối khi xóa voucher.');
+            }
+        }
+
         const style = document.createElement('style');
         style.textContent = `
             @keyframes pulse {
@@ -758,5 +1060,45 @@
                 btn.dataset.loading = 'false';
             }
         };
+
+        function openPromoModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.remove('hidden');
+                document.body.classList.add('overflow-hidden');
+            }
+        }
+
+        function closePromoModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+            }
+        }
+
+        function copyPromoArticle(elementId, btn) {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            const text = el.innerText || el.textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const originalHtml = btn.innerHTML;
+                btn.innerHTML = `<span class="material-symbols-outlined text-xs text-emerald-600">check</span><span class="text-emerald-600">Đã sao chép!</span>`;
+                setTimeout(() => {
+                    btn.innerHTML = originalHtml;
+                }, 2000);
+            }).catch(() => {
+                alert('Không thể tự động sao chép, bạn vui lòng chọn bài viết và copy.');
+            });
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('[id^="promo-modal-"]:not(.hidden)').forEach(modal => {
+                    modal.classList.add('hidden');
+                    document.body.classList.remove('overflow-hidden');
+                });
+            }
+        });
     </script>
 @endpush
