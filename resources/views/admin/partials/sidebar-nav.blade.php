@@ -75,6 +75,10 @@
             <span class="material-symbols-outlined text-[18px]">admin_panel_settings</span>
             <span>Vai Trò & Phân Quyền</span>
         </a>
+        <a href="{{ route('admin.khuyen-mai-ai.index') }}" class="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all {{ request()->routeIs('admin.khuyen-mai-ai.*') ? 'bg-[#F59E0B] text-white font-bold shadow-md' : 'text-slate-300 hover:bg-slate-800/80 hover:text-white' }}">
+            <span class="material-symbols-outlined text-[18px]">campaign</span>
+            <span>Khuyến Mãi & Voucher AI</span>
+        </a>
         <a href="{{ route('admin.audit-log.index') }}" class="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all {{ request()->routeIs('admin.audit-log.*') ? 'bg-[#F59E0B] text-white font-bold shadow-md' : 'text-slate-300 hover:bg-slate-800/80 hover:text-white' }}">
             <span class="material-symbols-outlined text-[18px]">reorder</span>
             <span>Nhật Ký Tác Vụ</span>

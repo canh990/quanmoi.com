@@ -27,7 +27,7 @@ class KiemTraQuyenHan
             return redirect()->route('login')->with('error', 'Vui lòng đăng nhập bằng tài khoản đang hoạt động.');
         }
 
-        if (! $user->hasRole($role)) {
+        if (! $user->hasRole($role) && ! ($role === 'chu_quan' && $user->isAdmin())) {
             if ($request->expectsJson()) {
                 return response()->json(['success' => false, 'message' => 'Bạn không có quyền truy cập tài nguyên này.'], 403);
             }
