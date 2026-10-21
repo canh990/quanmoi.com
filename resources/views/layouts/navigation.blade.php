@@ -26,6 +26,9 @@
             <a class="nav-link py-2 text-[13px] lg:text-[15px] font-semibold transition-all duration-200 {{ request()->is('/') ? 'active text-primary font-bold' : 'text-on-surface-variant hover:text-primary' }}" href="/">
                 Khám phá
             </a>
+            <a class="nav-link py-2 text-[13px] lg:text-[15px] font-semibold transition-all duration-200 {{ request()->routeIs('ban-do') ? 'active text-primary font-bold' : 'text-on-surface-variant hover:text-primary' }} flex items-center gap-1" href="{{ route('ban-do') }}">
+                Bản đồ
+            </a>
             <a class="nav-link py-2 text-[13px] lg:text-[15px] font-semibold transition-all duration-200 text-on-surface-variant hover:text-primary" href="#">
                 Video review
             </a>
@@ -134,6 +137,9 @@
                 @include('layouts.notification-dropdown', ['isMobile' => true, 'isAdmin' => $isAdmin, 'navUnreadCount' => $navCount, 'navNotifications' => $navList])
             </div>
         @endauth
+        <a href="{{ route('ban-do') }}" class="p-2 rounded-full hover:bg-surface-container active:scale-90 transition-all text-on-surface-variant hover:text-primary" title="Bản đồ quán lân cận">
+            <span class="material-symbols-outlined text-[22px]">map</span>
+        </a>
         <a href="{{ route('kham-pha') }}" class="p-2 rounded-full hover:bg-surface-container active:scale-90 transition-all text-on-surface-variant hover:text-primary" title="Tìm món ăn">
             <span class="material-symbols-outlined text-[22px]">search</span>
         </a>
@@ -171,8 +177,8 @@
                     <div class="relative inline-flex">
                         <img alt="Ảnh đại diện" class="w-[22px] h-[22px] rounded-full object-cover ring-2 ring-primary-fixed" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->ho_ten) }}&background=ffdbcc&color=a04100&bold=true&size=64';" src="{{ Auth::user()->anh_dai_dien ?? 'https://ui-avatars.com/api/?name=' . urlencode(Auth::user()->ho_ten) . '&background=ffdbcc&color=a04100&bold=true&size=64' }}"/>
                         @if(Auth::user()->da_xac_thuc)
-                            <span class="absolute -top-1 -right-1.5 w-2.5 h-2.5 bg-tick-xanh rounded-full border border-white flex items-center justify-center">
-                                <span class="material-symbols-outlined text-white text-[8px]" style="font-variation-settings: 'FILL' 1;">check</span>
+                            <span class="absolute -top-1 -right-1.5 bg-white rounded-full flex items-center justify-center leading-none">
+                                <span class="material-symbols-outlined text-tick-xanh text-[11px]" style="font-variation-settings: 'FILL' 1;">verified</span>
                             </span>
                         @endif
                     </div>
@@ -373,7 +379,7 @@
             if (!items || items.length === 0) {
                 const emptyHtml = `
                     <div class="py-10 px-4 text-center text-gray-400 text-xs">
-                        <span class="material-symbols-outlined text-4xl text-gray-300 block mb-2">notifications_none</span>
+                        <span class="material-symbols-outlined text-4xl text-gray-300 block mb-2">notifications</span>
                         <p class="font-medium text-gray-600">${isAdmin ? 'Bạn chưa có thông báo quản trị nào' : 'Bạn chưa có thông báo nào'}</p>
                         <p class="text-[11px] text-gray-400 mt-1">${isAdmin ? 'Khi có quán, bài viết hoặc tài khoản cần duyệt, thông báo sẽ xuất hiện tại đây.' : 'Các thông báo duyệt quán, bài viết và đánh giá sẽ xuất hiện tại đây.'}</p>
                     </div>
@@ -790,7 +796,7 @@
                             toastIcon = action === 'permission_denied' ? 'lock' : (['deleted', 'force_deleted'].includes(action) ? 'delete_forever' : (action === 'verification_rejected' ? 'gpp_bad' : 'cancel'));
                         } else if (['requested_revision', 'need_revision', 'featured_revoked', 'verified_revoked'].includes(action)) {
                             toastType = 'warning';
-                            toastIcon = action === 'featured_revoked' ? 'star_border' : 'edit_note';
+                            toastIcon = action === 'featured_revoked' ? 'star' : 'edit_note';
                         } else if (action === 'new_review') {
                             toastType = 'info';
                             toastIcon = 'rate_review';

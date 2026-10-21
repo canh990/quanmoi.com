@@ -155,6 +155,7 @@ class SecurityHardeningTest extends TestCase
 
     public function test_geocode_endpoint_validates_empty_address(): void
     {
+        $this->withoutMiddleware(\Illuminate\Routing\Middleware\ThrottleRequests::class);
         $response = $this->getJson('/api/ban-do/geocode');
         $response->assertStatus(422);
     }
@@ -192,5 +193,57 @@ class SecurityHardeningTest extends TestCase
         $response = $this->actingAs($owner2)->get("/chu-quan/quan/{$quan1->slug}/thuc-don");
         // Should not find or abort with 404/403
         $this->assertTrue(in_array($response->status(), [403, 404]));
+    }
+
+    public function test_admin_can_lock_and_unlock_user(): void
+    {
+        $adminRole = VaiTro::where('ten', 'admin')->first();
+        $admin = User::create([
+            'ho_ten' => 'Admin User',
+            'email' => 'admin_lock@quanmoi.com',
+            'mat_khau' => Hash::make('password123'),
+            'vai_tro_id' => $adminRole->id,
+            'da_xac_thuc' => true,
+            'trang_thai' => 'hoat_dong',
+        ]);
+
+        $userRole = VaiTro::where('ten', 'nguoi_dung')->first();
+        $targetUser = User::create([
+            'ho_ten' => 'Target User',
+            'email' => 'target@quanmoi.com',
+            'mat_khau' => Hash::make('password123'),
+            'vai_tro_id' => $userRole->id,
+            'da_xac_thuc' => true,
+            'trang_thai' => 'hoat_dong',
+        ]);
+
+        // 1. Admin locks target user
+        $response = $this->actingAs($admin)->putJson("/admin/nguoi-dung/{$targetUser->id}/toggle-khoa");
+        $response->assertStatus(200)
+            ->assertJson(['success' => true, 'is_locked' => true, 'trang_thai' => 'bi_khoa']);
+
+        $targetUser->refresh();
+        $this->assertEquals('bi_khoa', $targetUser->trang_thai);
+
+        // 2. Locked user cannot login
+        $this->post('/dang-xuat');
+        $loginResponse = $this->postJson('/dang-nhap', [
+            'email' => 'target@quanmoi.com',
+            'mat_khau' => 'password123',
+        ]);
+        $loginResponse->assertStatus(403)
+            ->assertJson(['success' => false, 'message' => 'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.']);
+
+        // 3. Admin unlocks target user
+        $unlockResponse = $this->actingAs($admin)->putJson("/admin/nguoi-dung/{$targetUser->id}/toggle-khoa");
+        $unlockResponse->assertStatus(200)
+            ->assertJson(['success' => true, 'is_locked' => false, 'trang_thai' => 'hoat_dong']);
+
+        $targetUser->refresh();
+        $this->assertEquals('hoat_dong', $targetUser->trang_thai);
+
+        // 4. Admin cannot lock themselves
+        $selfLockResponse = $this->actingAs($admin)->putJson("/admin/nguoi-dung/{$admin->id}/toggle-khoa");
+        $selfLockResponse->assertStatus(422);
     }
 }

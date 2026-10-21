@@ -31,9 +31,13 @@ class DangNhapController extends Controller
         if ($user->trang_thai !== 'hoat_dong' || ! $user->da_xac_thuc) {
             $this->invalidateAuthenticatedSession($request);
 
+            $message = $user->trang_thai === 'bi_khoa'
+                ? 'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.'
+                : 'Không thể đăng nhập bằng thông tin tài khoản này.';
+
             return response()->json([
                 'success' => false,
-                'message' => 'Không thể đăng nhập bằng thông tin tài khoản này.',
+                'message' => $message,
                 'require_otp' => $user->trang_thai === 'hoat_dong' && ! $user->da_xac_thuc,
                 'needs_verification' => $user->trang_thai === 'hoat_dong' && ! $user->da_xac_thuc,
                 'email' => $user->trang_thai === 'hoat_dong' && ! $user->da_xac_thuc ? $user->email : null,

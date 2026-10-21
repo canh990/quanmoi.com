@@ -235,7 +235,7 @@
                     @empty
                     <tr class="empty-blog-row">
                         <td colspan="6" class="px-3.5 py-10 text-center text-gray-400 font-medium">
-                            <span class="material-symbols-outlined text-3xl text-gray-300 block mb-2">article_off</span>
+                            <span class="material-symbols-outlined text-3xl text-gray-300 block mb-2">article</span>
                             Không tìm thấy bài viết nào phù hợp với bộ lọc hiện tại.
                         </td>
                     </tr>

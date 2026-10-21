@@ -2035,7 +2035,7 @@
                                 tbody.innerHTML = `
                                     <tr>
                                         <td colspan="6" class="px-6 py-12 text-center text-gray-400 font-medium">
-                                            <span class="material-symbols-outlined text-3xl text-gray-300 block mb-2">article_off</span>
+                                            <span class="material-symbols-outlined text-3xl text-gray-300 block mb-2">article</span>
                                             Không còn bài viết nào trong danh sách.
                                         </td>
                                     </tr>

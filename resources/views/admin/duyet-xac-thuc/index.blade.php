@@ -505,7 +505,7 @@
                         @empty
                             <tr id="rejected-quan-empty-row">
                                 <td colspan="6" class="p-12 text-center text-xs text-slate-500 font-medium">
-                                    <span class="material-symbols-outlined text-4xl text-slate-300 block mb-2">check_circle_outline</span>
+                                    <span class="material-symbols-outlined text-4xl text-slate-300 block mb-2">check_circle</span>
                                     Không có quán nào trong danh sách bị từ chối / không duyệt.
                                 </td>
                             </tr>

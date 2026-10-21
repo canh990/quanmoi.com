@@ -16,12 +16,57 @@
     <meta property="og:image" content="{{ $quan->anh_bia_url ?: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=600&q=80' }}" />
 
     <style>
+        /* Dynamic Gallery Styles */
+        .gallery-hero-single {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            max-height: 440px;
+        }
+        @media (min-width: 640px) {
+            .gallery-hero-single {
+                aspect-ratio: 21 / 9;
+            }
+        }
+
+        .gallery-grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            aspect-ratio: 16 / 9;
+            gap: 8px;
+        }
+        @media (min-width: 640px) {
+            .gallery-grid-2 {
+                aspect-ratio: 2.2 / 1;
+            }
+        }
+
+        .gallery-grid-3 {
+            display: grid;
+            grid-template-columns: 1.6fr 1fr;
+            grid-template-rows: repeat(2, minmax(0, 1fr));
+            aspect-ratio: 16 / 9;
+            gap: 8px;
+        }
+        @media (min-width: 640px) {
+            .gallery-grid-3 {
+                aspect-ratio: 2.6 / 1;
+            }
+        }
+        .gallery-grid-3-item-1 { grid-row: span 2; }
+        .gallery-grid-3-item-2 { grid-row: span 1; }
+        .gallery-grid-3-item-3 { grid-row: span 1; }
+
         .bento-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             grid-template-rows: repeat(2, minmax(0, 1fr));
-            aspect-ratio: 3.05 / 1;
+            aspect-ratio: 16 / 9;
             gap: 8px;
+        }
+        @media (min-width: 640px) {
+            .bento-grid {
+                aspect-ratio: 3.05 / 1;
+            }
         }
         .bento-item-1 { grid-column: span 2; grid-row: span 2; }
         .bento-item-2 { grid-column: span 2; grid-row: span 1; }
@@ -251,39 +296,148 @@
 
         <!-- Hero Gallery Section -->
         <section id="gallery-section" class="venue-section-anchor mb-5">
-            <div class="bento-grid">
-                @php
-                    $hinhAnhs = $quan->hinhAnh ?? collect();
-                    $biaUrl = $quan->anh_bia_url ?: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=600&q=80';
-                    $img2 = $hinhAnhs->count() > 0 ? $hinhAnhs[0]->duong_dan : 'https://lh3.googleusercontent.com/aida-public/AB6AXuD2Ck5qL2_TpbcOo7YGVfL4jIzyWsaWPJOLKDfi0oZ7KRgPjfwEjx3LlprQ1c5zoWBwwq3BNDE8s8h_IBpNRJY5PVvyTDdhgy-7Q5HRK1_o0rHP3G5iRdWrMB0YVFQBGQn4KE7XA_nBiEW3soOPvbhB8fOkpV9CxFQT6Bbm8ZlArhLdCx4a10froFQaLxTZatgH_PH2DzxuUOfaVEhgmpPhVtBYqD9HVRQNvXi9n9k5rXIhenIx5tmk';
-                    $img3 = $hinhAnhs->count() > 1 ? $hinhAnhs[1]->duong_dan : 'https://lh3.googleusercontent.com/aida-public/AB6AXuC3bzrIzaqyG4B_yvZnS4Po8P9iifDNOlmkoZW-CkCRe3OtnGLgU0uzl0qdjB4FDgI1TgyNX21O1P9hfh3SsUrzHSFJW4pWjH3ibrjomvnY5wtcYKOrNP-OruwGf5REKaxsF1IdXYH6kO1PzwhIycGIT8QbgiUZ-skSvJkioA7BbMyMZqIuDVBAebFYczNCNAJM0VKixfDVfLnhdo0plxXmad2kEjdIk01MEUN64cbsrgVlWJQOwaDd';
-                    $img4 = $hinhAnhs->count() > 2 ? $hinhAnhs[2]->duong_dan : 'https://lh3.googleusercontent.com/aida-public/AB6AXuCfnTVIpmnxpE0pdetcfCZ2GMfN5F0yivGeSsRcxiD7rBqLQE74yWLzaFDYm5kFq82e1RHUwK-PhICSALqS2DYMANoWXy_P0OwtlwoShLH7Qph3_oohL6bWg1e45CE6ysjbUE6jUdCAk9Pp7pz33obm5JKvdkL_yhOKl0dhugz0OpJ4SBiZ7eBY7AsUdiEk02wTOhXwHQPlCd48tbnR8l8iVyyeaJyVg4tX1Mg0eRC-N2o5akKrHUpI';
-                @endphp
-                <a href="{{ $biaUrl }}" data-fancybox="gallery" class="bento-item-1 rounded-xl overflow-hidden cursor-pointer group relative block">
-                    <div class="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-all z-10"></div>
-                    <div class="w-full h-full bg-cover bg-center" style="background-image: url('{{ $biaUrl }}')"></div>
-                </a>
-                <a href="{{ $img2 }}" data-fancybox="gallery" class="bento-item-2 rounded-xl overflow-hidden cursor-pointer group relative block">
-                    <div class="w-full h-full bg-cover bg-center" style="background-image: url('{{ $img2 }}')"></div>
-                </a>
-                <a href="{{ $img3 }}" data-fancybox="gallery" class="bento-item-3 rounded-xl overflow-hidden cursor-pointer group relative block">
-                    <div class="w-full h-full bg-cover bg-center" style="background-image: url('{{ $img3 }}')"></div>
-                </a>
-                <a href="{{ $img4 }}" data-fancybox="gallery" class="bento-item-4 rounded-xl overflow-hidden cursor-pointer group relative bg-on-background flex items-center justify-center text-white block">
-                    <div class="w-full h-full absolute inset-0 bg-cover bg-center opacity-40" style="background-image: url('{{ $img4 }}')"></div>
-                    <div class="absolute inset-0 flex flex-col items-center justify-center bg-black/40 group-hover:bg-black/20 transition-colors duration-500 z-10">
-                        <span class="material-symbols-outlined text-3xl">grid_view</span>
-                        <span class="font-label-md text-label-md mt-1">Xem tất cả</span>
+            @php
+                $hinhAnhs = $quan->hinhAnh ?? collect();
+                $galleryList = collect();
+
+                // 1. Ảnh bìa (Cover)
+                if (!empty($quan->anh_bia_url)) {
+                    $galleryList->push([
+                        'url' => $quan->anh_bia_url,
+                        'caption' => $quan->ten_quan . ' - Ảnh bìa'
+                    ]);
+                }
+
+                // 2. Các ảnh trong bộ sưu tập thực tế (Gallery) - Tuyệt đối không chèn ảnh stock giả mạo
+                foreach ($hinhAnhs as $idx => $ha) {
+                    $imgUrl = $ha->duong_dan ?? null;
+                    if (!empty($imgUrl) && $imgUrl !== $quan->anh_bia_url) {
+                        $galleryList->push([
+                            'url' => $imgUrl,
+                            'caption' => $ha->tieu_de ?: ($quan->ten_quan . ' - Ảnh ' . ($idx + 1))
+                        ]);
+                    }
+                }
+
+                // Nếu hoàn toàn không có ảnh nào, dùng 1 ảnh nhà hàng dự phòng chuẩn chất lượng cao
+                if ($galleryList->isEmpty()) {
+                    $galleryList->push([
+                        'url' => 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80',
+                        'caption' => $quan->ten_quan
+                    ]);
+                }
+
+                $totalImages = $galleryList->count();
+            @endphp
+
+            @if($totalImages === 1)
+                {{-- TRƯỜNG HỢP 1: DUY NHẤT 1 ẢNH (HERO BANNER TOÀN CẢNH CINEMATIC) --}}
+                <div class="gallery-hero-single rounded-2xl overflow-hidden relative group shadow-sm bg-gray-100 border border-gray-100">
+                    <a href="{{ $galleryList[0]['url'] }}" data-fancybox="gallery" data-caption="{{ $galleryList[0]['caption'] }}" class="block w-full h-full cursor-zoom-in relative">
+                        <div class="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-all z-10 pointer-events-none"></div>
+                        <img src="{{ $galleryList[0]['url'] }}" 
+                             alt="{{ $quan->ten_quan }}" 
+                             class="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700 ease-out" />
+                    </a>
+
+                    {{-- Nút xem toàn màn hình --}}
+                    <div class="absolute bottom-4 right-4 z-20 flex items-center gap-2">
+                        <a href="{{ $galleryList[0]['url'] }}" data-fancybox="gallery" data-caption="{{ $galleryList[0]['caption'] }}" 
+                           class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-black/60 hover:bg-black/80 backdrop-blur-md text-white text-xs font-bold transition-all shadow-md">
+                            <span class="material-symbols-outlined text-[17px]">fullscreen</span>
+                            <span>Xem ảnh phóng to</span>
+                        </a>
                     </div>
-                </a>
-                
-                {{-- Hidden gallery images for lightbox --}}
-                @if($hinhAnhs->count() > 3)
-                    @for($i = 3; $i < $hinhAnhs->count(); $i++)
-                        <a href="{{ $hinhAnhs[$i]->duong_dan }}" data-fancybox="gallery" class="hidden"></a>
-                    @endfor
-                @endif
-            </div>
+
+                    {{-- Badge góc trên --}}
+                    <div class="absolute top-4 right-4 z-20 pointer-events-none">
+                        <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-black/50 backdrop-blur-md text-white text-[11px] font-bold">
+                            <span class="material-symbols-outlined text-[14px]">photo_camera</span>
+                            <span>1 ảnh</span>
+                        </span>
+                    </div>
+                </div>
+
+            @elseif($totalImages === 2)
+                {{-- TRƯỜNG HỢP 2: ĐÚNG 2 ẢNH (CHIA ĐÔI CÂN XỨNG 50% - 50%) --}}
+                <div class="gallery-grid-2 rounded-2xl overflow-hidden relative group shadow-sm bg-gray-100 border border-gray-100">
+                    @foreach($galleryList as $idx => $img)
+                        <a href="{{ $img['url'] }}" data-fancybox="gallery" data-caption="{{ $img['caption'] }}" class="rounded-xl overflow-hidden cursor-zoom-in group/item relative block h-full">
+                            <div class="absolute inset-0 bg-black/10 group-hover/item:bg-transparent transition-all z-10 pointer-events-none"></div>
+                            <img src="{{ $img['url'] }}" alt="{{ $img['caption'] }}" class="w-full h-full object-cover group-hover/item:scale-105 transition-transform duration-500 ease-out" />
+                        </a>
+                    @endforeach
+
+                    <div class="absolute bottom-4 right-4 z-20 pointer-events-none">
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-black/60 backdrop-blur-md text-white text-xs font-bold shadow-md">
+                            <span class="material-symbols-outlined text-[16px]">grid_view</span>
+                            <span>Xem 2 ảnh</span>
+                        </span>
+                    </div>
+                </div>
+
+            @elseif($totalImages === 3)
+                {{-- TRƯỜNG HỢP 3: ĐÚNG 3 ẢNH (1 LỚN BÊN TRÁI + 2 NHỎ BÊN PHẢI) --}}
+                <div class="gallery-grid-3 rounded-2xl overflow-hidden relative group shadow-sm bg-gray-100 border border-gray-100">
+                    <a href="{{ $galleryList[0]['url'] }}" data-fancybox="gallery" data-caption="{{ $galleryList[0]['caption'] }}" class="gallery-grid-3-item-1 rounded-xl overflow-hidden cursor-zoom-in group/item relative block h-full">
+                        <div class="absolute inset-0 bg-black/10 group-hover/item:bg-transparent transition-all z-10 pointer-events-none"></div>
+                        <img src="{{ $galleryList[0]['url'] }}" alt="{{ $galleryList[0]['caption'] }}" class="w-full h-full object-cover group-hover/item:scale-105 transition-transform duration-500 ease-out" />
+                    </a>
+                    <a href="{{ $galleryList[1]['url'] }}" data-fancybox="gallery" data-caption="{{ $galleryList[1]['caption'] }}" class="gallery-grid-3-item-2 rounded-xl overflow-hidden cursor-zoom-in group/item relative block h-full">
+                        <div class="absolute inset-0 bg-black/10 group-hover/item:bg-transparent transition-all z-10 pointer-events-none"></div>
+                        <img src="{{ $galleryList[1]['url'] }}" alt="{{ $galleryList[1]['caption'] }}" class="w-full h-full object-cover group-hover/item:scale-105 transition-transform duration-500 ease-out" />
+                    </a>
+                    <a href="{{ $galleryList[2]['url'] }}" data-fancybox="gallery" data-caption="{{ $galleryList[2]['caption'] }}" class="gallery-grid-3-item-3 rounded-xl overflow-hidden cursor-zoom-in group/item relative block h-full">
+                        <div class="absolute inset-0 bg-black/10 group-hover/item:bg-transparent transition-all z-10 pointer-events-none"></div>
+                        <img src="{{ $galleryList[2]['url'] }}" alt="{{ $galleryList[2]['caption'] }}" class="w-full h-full object-cover group-hover/item:scale-105 transition-transform duration-500 ease-out" />
+                    </a>
+
+                    <div class="absolute bottom-4 right-4 z-20 pointer-events-none">
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-black/60 backdrop-blur-md text-white text-xs font-bold shadow-md">
+                            <span class="material-symbols-outlined text-[16px]">grid_view</span>
+                            <span>Xem tất cả (3 ảnh)</span>
+                        </span>
+                    </div>
+                </div>
+
+            @else
+                {{-- TRƯỜNG HỢP 4+: TỪ 4 ẢNH TRỞ LÊN (BENTO GRID 4 SLOT AIRBNB KÈM NÚT XEM TẤT CẢ) --}}
+                <div class="bento-grid relative">
+                    {{-- Ô 1: Lớn bên trái --}}
+                    <a href="{{ $galleryList[0]['url'] }}" data-fancybox="gallery" data-caption="{{ $galleryList[0]['caption'] }}" class="bento-item-1 rounded-xl overflow-hidden cursor-zoom-in group relative block h-full">
+                        <div class="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-all z-10 pointer-events-none"></div>
+                        <img src="{{ $galleryList[0]['url'] }}" alt="{{ $galleryList[0]['caption'] }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out" />
+                    </a>
+
+                    {{-- Ô 2: Trên bên phải --}}
+                    <a href="{{ $galleryList[1]['url'] }}" data-fancybox="gallery" data-caption="{{ $galleryList[1]['caption'] }}" class="bento-item-2 rounded-xl overflow-hidden cursor-zoom-in group relative block h-full">
+                        <div class="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-all z-10 pointer-events-none"></div>
+                        <img src="{{ $galleryList[1]['url'] }}" alt="{{ $galleryList[1]['caption'] }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out" />
+                    </a>
+
+                    {{-- Ô 3: Dưới trái --}}
+                    <a href="{{ $galleryList[2]['url'] }}" data-fancybox="gallery" data-caption="{{ $galleryList[2]['caption'] }}" class="bento-item-3 rounded-xl overflow-hidden cursor-zoom-in group relative block h-full">
+                        <div class="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-all z-10 pointer-events-none"></div>
+                        <img src="{{ $galleryList[2]['url'] }}" alt="{{ $galleryList[2]['caption'] }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out" />
+                    </a>
+
+                    {{-- Ô 4: Dưới phải + Lớp phủ "Xem tất cả" --}}
+                    <a href="{{ $galleryList[3]['url'] }}" data-fancybox="gallery" data-caption="{{ $galleryList[3]['caption'] }}" class="bento-item-4 rounded-xl overflow-hidden cursor-zoom-in group relative block h-full">
+                        <img src="{{ $galleryList[3]['url'] }}" alt="{{ $galleryList[3]['caption'] }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out" />
+                        <div class="absolute inset-0 flex flex-col items-center justify-center bg-black/45 group-hover:bg-black/30 transition-colors duration-300 z-10 text-white">
+                            <span class="material-symbols-outlined text-2xl sm:text-3xl">grid_view</span>
+                            <span class="font-bold text-xs sm:text-sm mt-1">Xem tất cả ({{ $totalImages }})</span>
+                        </div>
+                    </a>
+
+                    {{-- Các ảnh từ thứ 5 trở đi được ẩn để Lightbox Fancybox duyệt toàn bộ ảnh --}}
+                    @if($totalImages > 4)
+                        @for($i = 4; $i < $totalImages; $i++)
+                            <a href="{{ $galleryList[$i]['url'] }}" data-fancybox="gallery" data-caption="{{ $galleryList[$i]['caption'] }}" class="hidden"></a>
+                        @endfor
+                    @endif
+                </div>
+            @endif
         </section>
 
         <!-- Content Layout -->
@@ -750,10 +904,18 @@
                     </div>
 
                     <!-- Map Card -->
+                    @php
+                        $hasValidCoords = is_numeric($quan->vi_do) && is_numeric($quan->kinh_do) && abs((float)$quan->vi_do) <= 90 && abs((float)$quan->kinh_do) <= 180;
+                        $fullAddrQuery = urlencode(trim($quan->ten_quan . ', ' . $quan->dia_chi_chi_tiet . ', ' . $quan->ten_phuong_xa . ', ' . $quan->ten_quan_huyen . ', ' . $quan->ten_tinh_thanh, ', '));
+                        $mapEmbedQuery = $hasValidCoords ? ((float)$quan->vi_do . ',' . (float)$quan->kinh_do) : $fullAddrQuery;
+                        $directionsUrl = $hasValidCoords
+                            ? 'https://www.google.com/maps/dir/?api=1&destination=' . ((float)$quan->vi_do . ',' . (float)$quan->kinh_do)
+                            : 'https://maps.google.com/?q=' . $fullAddrQuery;
+                    @endphp
                     <div class="venue-side-card bg-surface-card rounded-xl overflow-hidden shadow-[0px_4px_20px_rgba(0,0,0,0.05)] border border-gray-100">
                         <div class="venue-map-frame h-36 w-full bg-surface-variant relative">
                             <iframe 
-                                src="https://maps.google.com/maps?q={{ urlencode($quan->ten_quan . ', ' . $quan->dia_chi_chi_tiet . ', ' . $quan->ten_phuong_xa . ', ' . $quan->ten_quan_huyen . ', ' . $quan->ten_tinh_thanh) }}&t=&z=16&ie=UTF8&iwloc=&output=embed" 
+                                src="https://maps.google.com/maps?q={{ $mapEmbedQuery }}&t=&z=16&ie=UTF8&iwloc=&output=embed" 
                                 width="100%" 
                                 height="100%" 
                                 style="border:0;" 
@@ -765,9 +927,9 @@
                         <div class="p-3 bg-white">
                             <div class="flex flex-col gap-2">
                                 <div class="flex justify-between items-center gap-1">
-                                    <span class="text-[10px] text-gray-500 font-bold uppercase tracking-wide">Chỉ đường</span>
-                                    <a href="https://maps.google.com/?q={{ urlencode($quan->ten_quan . ', ' . $quan->dia_chi_chi_tiet . ', ' . $quan->ten_phuong_xa . ', ' . $quan->ten_quan_huyen . ', ' . $quan->ten_tinh_thanh) }}" target="_blank" rel="noopener noreferrer" class="text-primary font-bold text-[10px] flex items-center gap-1 hover:underline">
-                                        Google Maps <span class="material-symbols-outlined text-xs">open_in_new</span>
+                                    <span class="text-[10px] text-gray-500 font-bold uppercase tracking-wide">Vị trí & Chỉ đường</span>
+                                    <a href="{{ $directionsUrl }}" target="_blank" rel="noopener noreferrer" class="text-primary font-bold text-[10.5px] flex items-center gap-1 hover:underline">
+                                        Chỉ đường Google Maps <span class="material-symbols-outlined text-xs">directions</span>
                                     </a>
                                 </div>
                                 <div class="flex items-start gap-2.5">

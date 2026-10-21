@@ -766,6 +766,32 @@
                            class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm transition">
                 </div>
 
+                {{-- Địa chỉ chi tiết & Vị trí GPS trên bản đồ --}}
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Số nhà, Tên đường</label>
+                    <input type="text" name="dia_chi_chi_tiet" id="edit-dia-chi-chi-tiet"
+                           value="{{ $quan->dia_chi_chi_tiet }}"
+                           placeholder="VD: 123 Nguyễn Huệ"
+                           class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm transition">
+                    <input type="hidden" id="edit-ten-phuong-xa" value="{{ $quan->ten_phuong_xa }}">
+                    <input type="hidden" id="edit-ten-quan-huyen" value="{{ $quan->ten_quan_huyen }}">
+                    <input type="hidden" id="edit-ten-tinh-thanh" value="{{ $quan->ten_tinh_thanh }}">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Vị trí ghim trên bản đồ (Hiển thị trên Quét quán lân cận)</label>
+                    <x-map-picker
+                        :lat="$quan->vi_do ?? 10.7769"
+                        :lng="$quan->kinh_do ?? 106.7009"
+                        mapId="owner-edit-map-picker"
+                        latId="edit-vi-do"
+                        lngId="edit-kinh-do"
+                        height="h-[230px]"
+                        :showCoordInputs="true"
+                        :addressSelectors="['#edit-dia-chi-chi-tiet', '#edit-ten-phuong-xa', '#edit-ten-quan-huyen', '#edit-ten-tinh-thanh']"
+                    />
+                </div>
+
                 {{-- Mô tả --}}
                 <div>
                     <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Mô tả quán</label>

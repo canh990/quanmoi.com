@@ -97,8 +97,8 @@ class QuanController extends Controller
                     'ten_quan_huyen' => $validated['ten_quan_huyen'],
                     'phuong_xa_id' => $validated['phuong_xa_id'] ?? null,
                     'ten_phuong_xa' => $validated['ten_phuong_xa'] ?? null,
-                    'kinh_do' => $validated['kinh_do'] ?? 10.7769,
-                    'vi_do' => $validated['vi_do'] ?? 106.7009,
+                    'kinh_do' => $validated['kinh_do'] ?? 106.7009,
+                    'vi_do' => $validated['vi_do'] ?? 10.7769,
                     'gio_mo_cua' => $validated['gio_mo_cua'],
                     'gio_dong_cua' => $validated['gio_dong_cua'],
                     'gia_nho_nhat' => $validated['gia_nho_nhat'] ?? 0,
@@ -284,6 +284,9 @@ class QuanController extends Controller
 
         $validated = $request->validate([
             'so_dien_thoai' => 'required|string|max:20',
+            'dia_chi_chi_tiet' => 'nullable|string|max:255',
+            'vi_do' => 'nullable|numeric|between:-90,90',
+            'kinh_do' => 'nullable|numeric|between:-180,180',
             'mo_ta' => 'nullable|string|max:2000',
             'gio_mo_cua' => 'required|string',
             'gio_dong_cua' => 'required|string',
@@ -295,6 +298,10 @@ class QuanController extends Controller
         ], [
             'so_dien_thoai.required' => 'Số điện thoại không được để trống.',
             'so_dien_thoai.max' => 'Số điện thoại không được vượt quá 20 ký tự.',
+            'vi_do.numeric' => 'Vĩ độ (latitude) phải là định dạng số.',
+            'vi_do.between' => 'Vĩ độ (latitude) phải nằm trong khoảng từ -90 đến 90.',
+            'kinh_do.numeric' => 'Kinh độ (longitude) phải là định dạng số.',
+            'kinh_do.between' => 'Kinh độ (longitude) phải nằm trong khoảng từ -180 đến 180.',
             'gio_mo_cua.required' => 'Vui lòng chọn giờ mở cửa.',
             'gio_dong_cua.required' => 'Vui lòng chọn giờ đóng cửa.',
             'gia_nho_nhat.numeric' => 'Giá nhỏ nhất phải là định dạng số.',
@@ -304,6 +311,13 @@ class QuanController extends Controller
             'anh_bia.image' => 'Ảnh bìa phải là định dạng hình ảnh.',
             'anh_bia.max' => 'Dung lượng ảnh bìa không được vượt quá 5MB.',
         ]);
+
+        // Chỉ ghi đè các trường tùy chọn khi được gửi kèm giá trị hợp lệ
+        foreach (['dia_chi_chi_tiet', 'vi_do', 'kinh_do'] as $optionalField) {
+            if (array_key_exists($optionalField, $validated) && ($validated[$optionalField] === null || $validated[$optionalField] === '')) {
+                unset($validated[$optionalField]);
+            }
+        }
 
         // Upload ảnh bìa mới nếu có
         if ($request->hasFile('anh_bia')) {

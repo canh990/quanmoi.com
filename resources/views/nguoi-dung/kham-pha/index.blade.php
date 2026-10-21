@@ -657,56 +657,7 @@
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                             @foreach($quansGoiY as $quan)
-                                <a href="{{ route('quan.detail', $quan->slug) }}" class="block bg-white rounded-2xl shadow-sm overflow-hidden group cursor-pointer hover:shadow-xl transition-all border border-gray-100 flex flex-col h-full">
-                                    <div class="relative h-48 w-full overflow-hidden flex-shrink-0">
-                                        <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="{{ $quan->anh_bia_url ?: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=600&q=80' }}" alt="{{ $quan->ten_quan }}"/>
-                                        
-                                        <div class="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-xl text-primary font-bold text-xs flex items-center gap-1 shadow-sm">
-                                            <span class="material-symbols-outlined text-[15px] text-amber-500" style="font-variation-settings: 'FILL' 1;">star</span> 4.9
-                                        </div>
-
-                                        @if(isset($quan->khoang_cach_km) && $quan->khoang_cach_km !== null)
-                                            <div class="absolute bottom-3 left-3 z-10 bg-primary/95 text-white backdrop-blur-md px-2.5 py-1 rounded-xl font-bold text-xs flex items-center gap-1 shadow-sm" title="Cách vị trí của bạn {{ $quan->khoang_cach_km }} km">
-                                                <span class="material-symbols-outlined text-[14px]">near_me</span>
-                                                {{ $quan->khoang_cach_km }} km
-                                            </div>
-                                        @endif
-
-                                        @if($quan->is_noi_bat)
-                                            <div class="absolute top-3 right-3 bg-amber-500 text-white font-bold text-[11px] px-2 py-0.5 rounded-lg shadow-sm flex items-center gap-1">
-                                                <span class="material-symbols-outlined text-[13px]" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
-                                                Nổi bật
-                                            </div>
-                                        @endif
-                                    </div>
-                                    <div class="p-5 flex flex-col flex-grow">
-                                        <div class="flex items-center justify-between mb-2">
-                                            <h3 class="min-w-0 flex-1 font-bold text-[17px] text-on-surface break-words [overflow-wrap:anywhere] group-hover:text-primary transition-colors pr-2">{{ $quan->ten_quan }}</h3>
-                                            @if($quan->is_xac_thuc)
-                                                <span class="material-symbols-outlined text-tick-xanh text-[18px] flex-shrink-0" style="font-variation-settings: 'FILL' 1;" title="Đã xác thực">verified</span>
-                                            @endif
-                                        </div>
-                                        <p class="text-text-muted text-[13px] flex items-start gap-1.5 mb-4 flex-grow">
-                                            <span class="material-symbols-outlined text-[16px] text-gray-400 mt-0.5">location_on</span>
-                                            <span class="line-clamp-2 leading-relaxed">{{ $quan->dia_chi_chi_tiet }}, {{ $quan->ten_phuong_xa }}, {{ $quan->ten_quan_huyen }}</span>
-                                        </p>
-                                        <div class="flex items-center justify-between pt-3 border-t border-gray-100 mt-auto gap-2 min-w-0">
-                                            <div class="flex items-center gap-1.5 min-w-0 flex-shrink">
-                                                <span class="bg-gray-100 px-2 py-0.5 rounded-md text-gray-600 text-[11px] font-medium whitespace-nowrap truncate max-w-[100px]" title="{{ str_replace('_', ' ', \Illuminate\Support\Str::title($quan->loai_hinh_kinh_doanh ?? 'Quán ăn')) }}">
-                                                    {{ str_replace('_', ' ', \Illuminate\Support\Str::title($quan->loai_hinh_kinh_doanh ?? 'Quán ăn')) }}
-                                                </span>
-                                                @if(!empty($quan->shopeefood_url))
-                                                    <span class="bg-orange-50 text-[#EE4D2D] border border-orange-200/60 px-1.5 py-0.5 rounded text-[10.5px] font-bold whitespace-nowrap flex items-center gap-0.5" title="Có đặt trên ShopeeFood">
-                                                        <span class="material-symbols-outlined text-[12px]">moped</span>
-                                                    </span>
-                                                @endif
-                                            </div>
-                                            <span class="text-primary font-bold text-[12.5px] sm:text-[13px] whitespace-nowrap flex-shrink-0 ml-auto">
-                                                {{ number_format($quan->gia_nho_nhat, 0, ',', '.') }}đ - {{ number_format($quan->gia_lon_nhat, 0, ',', '.') }}đ
-                                            </span>
-                                        </div>
-                                    </div>
-                                </a>
+                                <x-venue-card :quan="$quan" :saved-quan-ids="$savedQuanIds ?? []" />
                             @endforeach
                         </div>
                     </div>
@@ -716,77 +667,7 @@
             {{-- Grid quán ăn --}}
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 @foreach($quans as $quan)
-                    <a href="{{ route('quan.detail', $quan->slug) }}" class="block bg-white rounded-2xl shadow-sm overflow-hidden group cursor-pointer hover:shadow-xl transition-all border border-gray-100 flex flex-col h-full">
-                        <div class="relative h-48 w-full overflow-hidden flex-shrink-0">
-                            <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="{{ $quan->anh_bia_url ?: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=600&q=80' }}" alt="{{ $quan->ten_quan }}"/>
-                            
-                            {{-- Rating badge --}}
-                            <div class="absolute top-3 left-3 z-10">
-                                <div class="bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-xl text-primary font-bold text-xs flex items-center gap-1 shadow-sm">
-                                    <span class="material-symbols-outlined text-[15px] text-amber-500" style="font-variation-settings: 'FILL' 1;">star</span> 4.9
-                                </div>
-                            </div>
-
-                            {{-- Distance badge (Góc trái ở dưới) --}}
-                            @if(isset($quan->khoang_cach_km) && $quan->khoang_cach_km !== null)
-                                <div class="absolute bottom-3 left-3 z-10 bg-primary/95 text-white backdrop-blur-md px-2.5 py-1 rounded-xl font-bold text-xs flex items-center gap-1 shadow-sm" title="Cách vị trí của bạn {{ $quan->khoang_cach_km }} km">
-                                    <span class="material-symbols-outlined text-[14px]">near_me</span>
-                                    {{ $quan->khoang_cach_km }} km
-                                </div>
-                            @endif
-
-                            {{-- Badges: Video Review, Open, Hot --}}
-                            <div class="absolute top-3 right-3 flex items-center gap-1 z-10">
-                                @php
-                                    $hasVideo = $quan->co_video_review ?? ($quan->relationLoaded('videos') ? $quan->videos->isNotEmpty() : (method_exists($quan, 'videos') && $quan->videos()->exists()));
-                                @endphp
-                                @if($hasVideo)
-                                    <span class="bg-purple-600/95 backdrop-blur-md text-white px-2 py-0.5 rounded-lg text-[10.5px] font-bold flex items-center gap-0.5 shadow-sm" title="Có video review">
-                                        <span class="material-symbols-outlined text-[13px]">play_circle</span>
-                                        Video
-                                    </span>
-                                @endif
-                                @if(method_exists($quan, 'isDangMoCua') && $quan->isDangMoCua())
-                                    <span class="bg-emerald-600/90 backdrop-blur-md text-white px-2 py-0.5 rounded-lg text-[10.5px] font-bold flex items-center gap-1 shadow-sm">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-white"></span>
-                                        Mở cửa
-                                    </span>
-                                @endif
-                                @if($quan->is_noi_bat)
-                                    <span class="bg-amber-500 text-white font-bold text-[10.5px] px-2 py-0.5 rounded-lg shadow-sm flex items-center gap-0.5" title="Quán nổi bật">
-                                        <span class="material-symbols-outlined text-[12px]" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
-                                    </span>
-                                @endif
-                            </div>
-                        </div>
-                        <div class="p-5 flex flex-col flex-grow">
-                            <div class="flex items-center justify-between mb-2">
-                                <h3 class="min-w-0 flex-1 font-bold text-[17px] text-on-surface break-words [overflow-wrap:anywhere] group-hover:text-primary transition-colors pr-2">{{ $quan->ten_quan }}</h3>
-                                @if($quan->is_xac_thuc)
-                                    <span class="material-symbols-outlined text-tick-xanh text-[18px] flex-shrink-0" style="font-variation-settings: 'FILL' 1;" title="Đã xác thực">verified</span>
-                                @endif
-                            </div>
-                            <p class="text-text-muted text-[13px] flex items-start gap-1.5 mb-4 flex-grow">
-                                <span class="material-symbols-outlined text-[16px] text-gray-400 mt-0.5">location_on</span>
-                                <span class="line-clamp-2 leading-relaxed">{{ $quan->dia_chi_chi_tiet }}, {{ $quan->ten_phuong_xa }}, {{ $quan->ten_quan_huyen }}</span>
-                            </p>
-                            <div class="flex items-center justify-between pt-3 border-t border-gray-100 mt-auto gap-2 min-w-0">
-                                <div class="flex items-center gap-1.5 min-w-0 flex-shrink">
-                                    <span class="bg-gray-100 px-2 py-0.5 rounded-md text-gray-600 text-[11px] font-medium whitespace-nowrap truncate max-w-[100px]" title="{{ str_replace('_', ' ', \Illuminate\Support\Str::title($quan->loai_hinh_kinh_doanh ?? 'Quán ăn')) }}">
-                                        {{ str_replace('_', ' ', \Illuminate\Support\Str::title($quan->loai_hinh_kinh_doanh ?? 'Quán ăn')) }}
-                                    </span>
-                                    @if(!empty($quan->shopeefood_url))
-                                        <span class="bg-orange-50 text-[#EE4D2D] border border-orange-200/60 px-1.5 py-0.5 rounded text-[10.5px] font-bold whitespace-nowrap flex items-center gap-0.5" title="Có đặt trên ShopeeFood">
-                                            <span class="material-symbols-outlined text-[12px]">moped</span>
-                                        </span>
-                                    @endif
-                                </div>
-                                <span class="text-primary font-bold text-[12.5px] sm:text-[13px] whitespace-nowrap flex-shrink-0 ml-auto">
-                                    {{ number_format($quan->gia_nho_nhat, 0, ',', '.') }}đ - {{ number_format($quan->gia_lon_nhat, 0, ',', '.') }}đ
-                                </span>
-                            </div>
-                        </div>
-                    </a>
+                    <x-venue-card :quan="$quan" :saved-quan-ids="$savedQuanIds ?? []" />
                 @endforeach
             </div>
 

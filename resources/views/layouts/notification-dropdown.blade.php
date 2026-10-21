@@ -57,7 +57,7 @@
                 @endforeach
             @else
                 <div class="py-10 px-4 text-center text-gray-400 text-xs">
-                    <span class="material-symbols-outlined text-4xl text-gray-300 block mb-2">notifications_none</span>
+                    <span class="material-symbols-outlined text-4xl text-gray-300 block mb-2">notifications</span>
                     <p class="font-medium text-gray-600">Bạn chưa có thông báo quản trị nào</p>
                     <p class="text-[11px] text-gray-400 mt-1">Khi có quán, bài viết hoặc tài khoản cần duyệt, thông báo sẽ xuất hiện tại đây.</p>
                 </div>
@@ -111,7 +111,7 @@
                             $nBadgeClass = 'bg-amber-100 text-amber-700';
                             $nStatusLabel = 'Quán nổi bật';
                         } elseif ($nAction === 'featured_revoked') {
-                            $nIcon = 'star_border';
+                            $nIcon = 'star';
                             $nIconClass = 'bg-slate-200 text-slate-700';
                             $nBadgeClass = 'bg-slate-200 text-slate-700';
                             $nStatusLabel = 'Hết nổi bật';
@@ -229,7 +229,7 @@
                 @endforeach
             @else
                 <div class="py-10 px-4 text-center text-gray-400 text-xs">
-                    <span class="material-symbols-outlined text-4xl text-gray-300 block mb-2">notifications_none</span>
+                    <span class="material-symbols-outlined text-4xl text-gray-300 block mb-2">notifications</span>
                     <p class="font-medium text-gray-600">Bạn chưa có thông báo nào</p>
                     <p class="text-[11px] text-gray-400 mt-1">Các thông báo duyệt quán, bài viết và đánh giá sẽ xuất hiện tại đây.</p>
                 </div>

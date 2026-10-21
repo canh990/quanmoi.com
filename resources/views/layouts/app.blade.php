@@ -52,6 +52,130 @@
         <span class="material-symbols-outlined text-[24px] group-hover:-translate-y-0.5 transition-transform">arrow_upward</span>
     </button>
 
+    <script>
+        window.toggleSave = async function(btn, quanId) {
+            const card = btn.closest('a, article, .group');
+            const quanName = card?.querySelector('h3, h4')?.textContent?.trim() || '';
+            const quanImg = card?.querySelector('img')?.getAttribute('src') || null;
+
+            @guest
+                if (window.showToast) {
+                    window.showToast({
+                        eyebrow: 'Lưu địa điểm yêu thích',
+                        title: 'Đăng nhập để lưu quán',
+                        message: quanName ? `Đăng nhập ngay để lưu "${quanName}" vào bộ sưu tập của bạn.` : 'Vui lòng đăng nhập để lưu quán vào danh sách yêu thích.',
+                        type: 'warning',
+                        image: quanImg,
+                        actionText: 'Đăng nhập ngay',
+                        actionUrl: "{{ route('login') }}"
+                    });
+                } else {
+                    window.location.href = "{{ route('login') }}";
+                }
+                return;
+            @endguest
+
+            if (btn.dataset.loading === 'true') return;
+
+            // Đồng bộ trạng thái tất cả các nút lưu cùng ID quán trên trang
+            const matchingButtons = document.querySelectorAll(`button[data-quan-id="${quanId}"]`);
+            const primaryIcon = btn.querySelector('.material-symbols-outlined');
+            const currentlySaved = primaryIcon ? primaryIcon.style.fontVariationSettings.includes("'FILL' 1") : false;
+            const targetSaved = !currentlySaved;
+
+            // 1. Phản hồi giao diện tức thì (Optimistic UI)
+            matchingButtons.forEach(b => {
+                const icon = b.querySelector('.material-symbols-outlined');
+                if (icon) {
+                    icon.style.fontVariationSettings = targetSaved ? "'FILL' 1" : "'FILL' 0";
+                }
+                b.style.transform = 'scale(1.25)';
+                setTimeout(() => { b.style.transform = 'scale(1)'; }, 180);
+            });
+
+            // 2. Hiển thị Toast thông báo
+            if (window.showToast) {
+                if (targetSaved) {
+                    window.showToast({
+                        eyebrow: 'Bộ sưu tập yêu thích',
+                        title: quanName ? `Đã lưu "${quanName}"` : 'Đã lưu quán thành công!',
+                        message: 'Địa điểm đã được thêm vào danh sách quán yêu thích của bạn.',
+                        type: 'saved',
+                        image: quanImg,
+                        actionText: 'Xem quán đã lưu',
+                        actionUrl: "{{ route('quan-da-luu.index') }}"
+                    });
+                } else {
+                    window.showToast({
+                        eyebrow: 'Đã cập nhật danh sách',
+                        title: quanName ? `Đã bỏ lưu "${quanName}"` : 'Đã bỏ lưu quán',
+                        message: 'Địa điểm đã được gỡ khỏi danh sách yêu thích.',
+                        type: 'unsaved',
+                        image: quanImg
+                    });
+                }
+            }
+
+            btn.dataset.loading = 'true';
+
+            try {
+                const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                const res = await fetch(`/quan-da-luu/${quanId}/toggle`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': token,
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (res.status === 401) {
+                    matchingButtons.forEach(b => {
+                        const icon = b.querySelector('.material-symbols-outlined');
+                        if (icon) icon.style.fontVariationSettings = currentlySaved ? "'FILL' 1" : "'FILL' 0";
+                    });
+                    window.location.href = "{{ route('login') }}";
+                    return;
+                }
+
+                const data = await res.json();
+                if (data.success) {
+                    const finalSaved = data.status === 'saved';
+                    matchingButtons.forEach(b => {
+                        const icon = b.querySelector('.material-symbols-outlined');
+                        if (icon) icon.style.fontVariationSettings = finalSaved ? "'FILL' 1" : "'FILL' 0";
+                    });
+                } else {
+                    matchingButtons.forEach(b => {
+                        const icon = b.querySelector('.material-symbols-outlined');
+                        if (icon) icon.style.fontVariationSettings = currentlySaved ? "'FILL' 1" : "'FILL' 0";
+                    });
+                    if (window.showToast) {
+                        window.showToast({
+                            title: 'Không thể thực hiện',
+                            message: data.message || 'Đã có lỗi xảy ra, vui lòng thử lại.',
+                            type: 'error'
+                        });
+                    }
+                }
+            } catch (err) {
+                console.error(err);
+                matchingButtons.forEach(b => {
+                    const icon = b.querySelector('.material-symbols-outlined');
+                    if (icon) icon.style.fontVariationSettings = currentlySaved ? "'FILL' 1" : "'FILL' 0";
+                });
+                if (window.showToast) {
+                    window.showToast({
+                        title: 'Lỗi kết nối',
+                        message: 'Không thể gửi yêu cầu đến máy chủ, vui lòng thử lại.',
+                        type: 'error'
+                    });
+                }
+            } finally {
+                btn.dataset.loading = 'false';
+            }
+        };
+    </script>
     @stack('scripts')
     
     <script>

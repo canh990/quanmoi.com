@@ -13,10 +13,12 @@ use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Frontend\BlogController as FrontendBlogController;
 use App\Http\Controllers\NguoiDung\BlogController as UserBlogController;
+use App\Http\Controllers\NguoiDung\BanDoController as WebBanDoController;
 use App\Http\Controllers\NguoiDung\KhamPhaController;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/kham-pha', [KhamPhaController::class, 'index'])->name('kham-pha');
+Route::get('/ban-do', [WebBanDoController::class, 'index'])->name('ban-do');
 Route::get('/danh-muc/{slug}', [KhamPhaController::class, 'danhMuc'])->name('danh-muc');
 Route::get('/quan-moi', [KhamPhaController::class, 'quanMoi'])->name('quan-moi');
 Route::get('/quan-noi-bat', [KhamPhaController::class, 'quanNoiBat'])->name('quan-noi-bat');
@@ -100,6 +102,11 @@ Route::prefix('api')->group(function () {
     
     // Giới hạn 20 request/phút để chống spam bào tiền API Google Maps
     Route::get('/ban-do/geocode', [BanDoController::class, 'geocode'])->middleware('throttle:20,1');
+
+    // API quét quán ăn lân cận từ Database Quán Mới (Giới hạn 30 request/phút chống spam)
+    Route::get('/ban-do/quan-lan-can', [BanDoController::class, 'quanLanCan'])
+        ->middleware('throttle:30,1')
+        ->name('api.ban-do.quan-lan-can');
 });
 
 Route::middleware('auth')->group(function () {

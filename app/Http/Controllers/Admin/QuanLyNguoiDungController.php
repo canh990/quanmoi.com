@@ -295,6 +295,65 @@ class QuanLyNguoiDungController extends Controller
         return back()->with('success', $verified ? 'Đã cấp Tick Xanh cho người dùng.' : 'Đã gỡ Tick Xanh của người dùng.');
     }
 
+    public function toggleKhoa(Request $request, string $id)
+    {
+        $actor = $request->user();
+        $user = DB::transaction(function () use ($id, $actor, $request) {
+            $user = User::withTrashed()->whereKey($id)->lockForUpdate()->firstOrFail();
+            $user->load('vaiTro');
+            $this->authorize('update', $user);
+
+            $isCurrentlyLocked = ($user->trang_thai === 'bi_khoa');
+            $newStatus = $isCurrentlyLocked ? 'hoat_dong' : 'bi_khoa';
+
+            // Không cho phép tự khóa tài khoản của chính mình hoặc khóa admin hoạt động cuối cùng
+            $removesActiveAdminAccess = $user->isAdmin() && $newStatus === 'bi_khoa';
+            $this->ensureAdministrativeAccessRemains($actor, $user, $removesActiveAdminAccess);
+
+            $user->trang_thai = $newStatus;
+            $user->save();
+
+            // Nếu khóa tài khoản, lập tức xóa tất cả phiên đăng nhập trong bảng sessions để ngắt truy cập ngay
+            if ($newStatus === 'bi_khoa') {
+                DB::table(config('session.table', 'sessions'))
+                    ->where('user_id', $user->getAuthIdentifier())
+                    ->delete();
+            }
+
+            $action = $newStatus === 'bi_khoa' ? 'user.locked' : 'user.unlocked';
+            $this->adminAudit->record($actor, $action, $user, $request, ['trang_thai' => $newStatus]);
+            $user->clearPermissionCache();
+
+            try {
+                $msg = $newStatus === 'bi_khoa'
+                    ? 'Tài khoản của bạn đã bị quản trị viên khóa. Bạn sẽ không thể tiếp tục thực hiện các thao tác trên hệ thống.'
+                    : 'Tài khoản của bạn đã được quản trị viên mở khóa. Bạn có thể đăng nhập và sử dụng bình thường.';
+                $notifyAction = $newStatus === 'bi_khoa' ? 'locked' : 'unlocked';
+                $user->notify(new \App\Notifications\UserRoleStatusUpdatedNotification($notifyAction, $msg));
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('User lock/unlock toggle notification error: ' . $e->getMessage());
+            }
+
+            return $user;
+        });
+
+        $isLocked = ($user->trang_thai === 'bi_khoa');
+        $message = $isLocked
+            ? "Đã khóa tài khoản của '{$user->ho_ten}' thành công."
+            : "Đã mở khóa tài khoản của '{$user->ho_ten}' thành công.";
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'is_locked' => $isLocked,
+                'trang_thai' => $user->trang_thai,
+                'message' => $message,
+            ]);
+        }
+
+        return back()->with('success', $message);
+    }
+
     private function ensureAdministrativeAccessRemains(User $actor, User $target, bool $removesActiveAdminAccess): void
     {
         if (! $removesActiveAdminAccess) {

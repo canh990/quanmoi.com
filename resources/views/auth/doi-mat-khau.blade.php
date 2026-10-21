@@ -74,7 +74,7 @@
                 <div id="step-success" class="hidden">
                     <div class="flex flex-col items-center text-center space-y-4 py-6">
                         <div class="w-20 h-20 bg-tick-xanh/15 rounded-full flex items-center justify-center" style="animation: successBounce 0.5s ease-out">
-                            <span class="material-symbols-outlined text-tick-xanh text-5xl" style="font-variation-settings: 'FILL' 1;">shield_check</span>
+                            <span class="material-symbols-outlined text-tick-xanh text-5xl" style="font-variation-settings: 'FILL' 1;">verified_user</span>
                         </div>
                         <h2 class="text-xl font-black text-on-surface">Đổi mật khẩu thành công! 🔐</h2>
                         <p class="text-[14px] text-on-surface-variant max-w-xs">Mật khẩu của bạn đã được cập nhật. Bảo mật tài khoản đã được tăng cường.</p>
