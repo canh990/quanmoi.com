@@ -203,11 +203,11 @@
             <div class="w-full overflow-x-auto custom-scrollbar">
                 <table class="w-full text-left text-xs text-slate-700 min-w-[850px] table-fixed-enterprise">
                     <colgroup>
-                        <col class="w-[30%]">
+                        <col class="w-[34%]">
                         <col class="w-[18%]">
-                        <col class="w-[18%]">
-                        <col class="w-[14%]">
                         <col class="w-[20%]">
+                        <col class="w-[10%]">
+                        <col class="w-[18%]">
                     </colgroup>
                     <thead class="bg-slate-50/80 text-slate-600 font-bold uppercase tracking-wider border-b border-slate-200 text-[11px]">
                         <tr>
@@ -313,32 +313,32 @@
                                         @endif
                                     </div>
                                 </td>
-                                <td class="px-3.5 py-3 text-slate-500 whitespace-nowrap overflow-visible">
-                                    <div class="font-bold text-slate-800 text-xs whitespace-nowrap">{{ $q->created_at ? $q->created_at->diffForHumans() : 'Vừa xong' }}</div>
-                                    <div class="text-[10px] text-slate-400 mt-0.5 whitespace-nowrap">{{ $q->created_at ? $q->created_at->format('d/m/Y H:i') : '' }}</div>
+                                <td class="px-3.5 py-3 text-slate-500 whitespace-nowrap overflow-hidden">
+                                    <div class="font-bold text-slate-800 text-xs truncate">{{ $q->created_at ? $q->created_at->diffForHumans() : 'Vừa xong' }}</div>
+                                    <div class="text-[10px] text-slate-400 mt-0.5 truncate">{{ $q->created_at ? $q->created_at->format('d/m/Y H:i') : '' }}</div>
                                 </td>
                                 <td class="px-3.5 py-3 text-right whitespace-nowrap">
-                                    <div class="inline-flex items-center justify-end gap-1.5 flex-nowrap shrink-0">
+                                    <div class="flex items-center justify-end gap-1 flex-nowrap">
                                         {{-- 1. Xem phần cần phê duyệt --}}
-                                        <button type="button" onclick='openVenueMediaModal(@json($mediaPayload))' class="btn-enterprise btn-enterprise-secondary btn-action-compact font-semibold w-[72px] justify-center shrink-0" title="Xem chi tiết hồ sơ & thẩm định ảnh">
+                                        <button type="button" onclick='openVenueMediaModal(@json($mediaPayload))' class="btn-enterprise btn-enterprise-secondary btn-action-compact font-semibold" title="Xem chi tiết hồ sơ & thẩm định ảnh">
                                             <span class="material-symbols-outlined text-[14px]">visibility</span>
                                             <span>Xem</span>
                                         </button>
 
                                         {{-- 2. Phê duyệt --}}
-                                        <button type="button" onclick="confirmApproveQuan('{{ $q->id }}', '{{ addslashes($q->ten_quan) }}')" class="btn-enterprise btn-enterprise-success btn-action-compact font-bold shadow-2xs w-[76px] justify-center shrink-0" title="Phê duyệt hồ sơ quán này">
+                                        <button type="button" onclick="confirmApproveQuan('{{ $q->id }}', '{{ addslashes($q->ten_quan) }}')" class="btn-enterprise btn-enterprise-success btn-action-compact font-bold shadow-2xs" title="Phê duyệt hồ sơ quán này">
                                             <span class="material-symbols-outlined text-[14px]">check_circle</span>
                                             <span>Duyệt</span>
                                         </button>
 
                                         {{-- 3. Không duyệt --}}
-                                        <button type="button" onclick="confirmRejectQuan('{{ $q->id }}', '{{ addslashes($q->ten_quan) }}')" class="btn-enterprise btn-enterprise-danger btn-action-compact font-semibold shadow-2xs w-[105px] justify-center shrink-0" title="Không duyệt hồ sơ quán này">
+                                        <button type="button" onclick="confirmRejectQuan('{{ $q->id }}', '{{ addslashes($q->ten_quan) }}')" class="btn-enterprise btn-enterprise-danger btn-action-compact font-semibold shadow-2xs" title="Không duyệt hồ sơ quán này">
                                             <span class="material-symbols-outlined text-[14px]">cancel</span>
                                             <span>Không duyệt</span>
                                         </button>
 
                                         {{-- 4. Xóa quán chờ duyệt --}}
-                                        <button type="button" onclick="confirmDeletePendingQuan('{{ $q->id }}', '{{ addslashes($q->ten_quan) }}')" class="btn-enterprise btn-enterprise-secondary btn-action-compact text-gray-400 hover:text-rose-600 hover:bg-rose-50 border-gray-200 w-8 h-8 p-0 flex items-center justify-center shrink-0" title="Xóa bỏ quán khỏi danh sách chờ duyệt">
+                                        <button type="button" onclick="confirmDeletePendingQuan('{{ $q->id }}', '{{ addslashes($q->ten_quan) }}')" class="btn-enterprise btn-enterprise-secondary btn-action-compact text-gray-400 hover:text-rose-600 hover:bg-rose-50 border-gray-200" title="Xóa bỏ quán khỏi danh sách chờ duyệt">
                                             <span class="material-symbols-outlined text-[14px]">delete</span>
                                         </button>
                                     </div>
@@ -375,11 +375,11 @@
             <div class="w-full overflow-x-auto custom-scrollbar">
                 <table class="w-full text-left text-xs text-slate-700 min-w-[850px] table-fixed-enterprise">
                     <colgroup>
-                        <col class="w-[28%]">
+                        <col class="w-[30%]">
+                        <col class="w-[18%]">
                         <col class="w-[17%]">
-                        <col class="w-[17%]">
-                        <col class="w-[10%]">
-                        <col class="w-[13%]">
+                        <col class="w-[11%]">
+                        <col class="w-[9%]">
                         <col class="w-[15%]">
                     </colgroup>
                     <thead class="bg-rose-50/50 text-slate-600 font-bold uppercase tracking-wider border-b border-rose-100 text-[11px]">
@@ -479,23 +479,23 @@
                                         <span>Bị từ chối</span>
                                     </span>
                                 </td>
-                                <td class="px-3.5 py-3 text-slate-500 whitespace-nowrap overflow-visible">
-                                    <div class="font-bold text-slate-800 text-xs whitespace-nowrap">{{ $q->updated_at ? $q->updated_at->diffForHumans() : '' }}</div>
-                                    <div class="text-[10px] text-slate-400 mt-0.5 whitespace-nowrap">{{ $q->updated_at ? $q->updated_at->format('d/m/Y H:i') : '' }}</div>
+                                <td class="px-3.5 py-3 text-slate-500 whitespace-nowrap overflow-hidden">
+                                    <div class="font-bold text-slate-800 text-xs truncate">{{ $q->updated_at ? $q->updated_at->diffForHumans() : '' }}</div>
+                                    <div class="text-[10px] text-slate-400 mt-0.5 truncate">{{ $q->updated_at ? $q->updated_at->format('d/m/Y H:i') : '' }}</div>
                                 </td>
                                 <td class="px-3.5 py-3 text-right whitespace-nowrap overflow-hidden">
-                                    <div class="inline-flex items-center justify-end gap-1.5 flex-nowrap shrink-0">
-                                        <button type="button" onclick='openVenueMediaModal(@json($mediaPayload))' class="btn-enterprise btn-enterprise-secondary btn-action-compact font-semibold w-[72px] justify-center shrink-0" title="Xem lại chi tiết hồ sơ quán">
+                                    <div class="flex items-center justify-end gap-1 flex-nowrap">
+                                        <button type="button" onclick='openVenueMediaModal(@json($mediaPayload))' class="btn-enterprise btn-enterprise-secondary btn-action-compact font-semibold" title="Xem lại chi tiết hồ sơ quán">
                                             <span class="material-symbols-outlined text-[14px]">visibility</span>
                                             <span>Xem</span>
                                         </button>
 
-                                        <button type="button" onclick="confirmReapproveQuan('{{ $q->id }}', '{{ addslashes($q->ten_quan) }}')" class="btn-enterprise btn-enterprise-success btn-action-compact font-bold shadow-2xs w-[105px] justify-center shrink-0" title="Duyệt lại quán này">
+                                        <button type="button" onclick="confirmReapproveQuan('{{ $q->id }}', '{{ addslashes($q->ten_quan) }}')" class="btn-enterprise btn-enterprise-success btn-action-compact font-bold shadow-2xs" title="Duyệt lại quán này">
                                             <span class="material-symbols-outlined text-[14px]">published_with_changes</span>
                                             <span>Duyệt Lại</span>
                                         </button>
 
-                                        <button type="button" onclick="confirmDeleteRejectedQuan('{{ $q->id }}', '{{ addslashes($q->ten_quan) }}')" class="btn-enterprise btn-enterprise-danger btn-action-compact font-semibold shadow-2xs w-[90px] justify-center shrink-0" title="Xóa bỏ quán khỏi hệ thống">
+                                        <button type="button" onclick="confirmDeleteRejectedQuan('{{ $q->id }}', '{{ addslashes($q->ten_quan) }}')" class="btn-enterprise btn-enterprise-danger btn-action-compact font-semibold shadow-2xs" title="Xóa bỏ quán khỏi hệ thống">
                                             <span class="material-symbols-outlined text-[14px]">delete</span>
                                             <span>Xóa Bỏ</span>
                                         </button>
@@ -537,12 +537,12 @@
             <div class="w-full overflow-x-auto custom-scrollbar">
                 <table class="w-full text-left text-xs text-slate-700 min-w-[850px] table-fixed-enterprise">
                     <colgroup>
-                        <col class="w-[28%]">
-                        <col class="w-[17%]">
+                        <col class="w-[32%]">
                         <col class="w-[18%]">
+                        <col class="w-[18%]">
+                        <col class="w-[12%]">
                         <col class="w-[10%]">
-                        <col class="w-[14%]">
-                        <col class="w-[13%]">
+                        <col class="w-[10%]">
                     </colgroup>
                     <thead class="bg-emerald-50/50 text-slate-600 font-bold uppercase tracking-wider border-b border-emerald-100 text-[11px]">
                         <tr>
@@ -639,15 +639,15 @@
                                         <span>Hoạt động</span>
                                     </span>
                                 </td>
-                                <td class="px-3.5 py-3 text-slate-500 whitespace-nowrap overflow-visible">
-                                    <div class="font-bold text-slate-800 text-xs whitespace-nowrap">{{ $q->updated_at ? $q->updated_at->diffForHumans() : '' }}</div>
-                                    <div class="text-[10px] text-slate-400 mt-0.5 whitespace-nowrap">{{ $q->updated_at ? $q->updated_at->format('d/m/Y H:i') : '' }}</div>
+                                <td class="px-3.5 py-3 text-slate-500 whitespace-nowrap overflow-hidden">
+                                    <div class="font-bold text-slate-800 text-xs truncate">{{ $q->updated_at ? $q->updated_at->diffForHumans() : '' }}</div>
+                                    <div class="text-[10px] text-slate-400 mt-0.5 truncate">{{ $q->updated_at ? $q->updated_at->format('d/m/Y H:i') : '' }}</div>
                                 </td>
-                                <td class="px-3.5 py-3 text-right whitespace-nowrap">
-                                    <div class="inline-flex items-center justify-end gap-1 flex-nowrap shrink-0">
-                                        <a href="{{ route('admin.quan.edit', $q->id) }}" class="btn-enterprise btn-enterprise-dark btn-action-compact w-[92px] justify-center shrink-0" title="Chỉnh sửa và quản lý hồ sơ quán">
-                                            <span class="material-symbols-outlined text-[14px] text-emerald-400 shrink-0">edit</span>
-                                            <span class="whitespace-nowrap">Quản Lý</span>
+                                <td class="px-3.5 py-3 text-right whitespace-nowrap overflow-hidden">
+                                    <div class="flex items-center justify-end gap-1 flex-nowrap">
+                                        <a href="{{ route('admin.quan.edit', $q->id) }}" class="btn-enterprise btn-enterprise-dark btn-action-compact" title="Chỉnh sửa và quản lý hồ sơ quán">
+                                            <span class="material-symbols-outlined text-[14px] text-emerald-400">edit</span>
+                                            <span>Quản Lý</span>
                                         </a>
                                     </div>
                                 </td>
@@ -681,11 +681,11 @@
             <div class="w-full overflow-x-auto custom-scrollbar">
                 <table class="w-full text-left text-xs text-slate-700 min-w-[850px] table-fixed-enterprise">
                     <colgroup>
-                        <col class="w-[22%]">
                         <col class="w-[24%]">
-                        <col class="w-[16%]">
-                        <col class="w-[14%]">
-                        <col class="w-[24%]">
+                        <col class="w-[26%]">
+                        <col class="w-[18%]">
+                        <col class="w-[12%]">
+                        <col class="w-[20%]">
                     </colgroup>
                     <thead class="bg-indigo-50/40 text-slate-600 font-bold uppercase tracking-wider border-b border-indigo-100 text-[11px]">
                         <tr>
@@ -711,15 +711,15 @@
                                     <div class="cell-wrap-1line text-xs block" title="{{ $u->email }}">{{ $u->email }}</div>
                                 </td>
                                 <td class="px-3.5 py-3 text-slate-600 font-medium whitespace-nowrap overflow-hidden">{{ $u->so_dien_thoai ?? 'Chưa cập nhật' }}</td>
-                                <td class="px-3.5 py-3 text-slate-500 whitespace-nowrap overflow-visible">{{ $u->created_at ? $u->created_at->format('d/m/Y') : '' }}</td>
+                                <td class="px-3.5 py-3 text-slate-500 whitespace-nowrap overflow-hidden">{{ $u->created_at ? $u->created_at->format('d/m/Y') : '' }}</td>
                                 <td class="px-3.5 py-3 text-right whitespace-nowrap overflow-hidden">
-                                    <div class="inline-flex items-center justify-end gap-1.5 flex-nowrap shrink-0">
-                                        <button type="button" onclick="confirmVerifyUser('{{ $u->id }}', '{{ addslashes($u->ho_ten) }}')" class="btn-enterprise btn-enterprise-indigo btn-action-compact font-bold w-[95px] justify-center shrink-0" title="Xác thực người dùng">
+                                    <div class="flex items-center justify-end gap-1 flex-nowrap">
+                                        <button type="button" onclick="confirmVerifyUser('{{ $u->id }}', '{{ addslashes($u->ho_ten) }}')" class="btn-enterprise btn-enterprise-indigo btn-action-compact" title="Xác thực người dùng">
                                             <span class="material-symbols-outlined text-[14px]">verified</span>
                                             <span>Xác Thực</span>
                                         </button>
 
-                                        <button type="button" onclick="confirmRejectUser('{{ $u->id }}', '{{ addslashes($u->ho_ten) }}')" class="btn-enterprise btn-enterprise-danger btn-action-compact font-semibold shadow-2xs w-[105px] justify-center shrink-0" title="Từ chối duyệt tài khoản">
+                                        <button type="button" onclick="confirmRejectUser('{{ $u->id }}', '{{ addslashes($u->ho_ten) }}')" class="btn-enterprise btn-enterprise-danger btn-action-compact" title="Từ chối duyệt tài khoản">
                                             <span class="material-symbols-outlined text-[14px]">block</span>
                                             <span>Không Duyệt</span>
                                         </button>
