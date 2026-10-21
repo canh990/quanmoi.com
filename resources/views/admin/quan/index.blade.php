@@ -37,9 +37,9 @@
     <div class="bg-white p-3 rounded-2xl border border-slate-200/90 shadow-2xs">
         <form method="GET" action="{{ route('admin.quan.index') }}" class="flex flex-wrap items-center gap-2.5 w-full">
             {{-- Search Keyword --}}
-            <div class="relative flex-1 min-w-[200px]">
-                <input type="text" name="q" value="{{ request('q') }}" placeholder="Tìm tên quán, địa chỉ, sđt, chủ sở hữu..." class="w-full pl-8 pr-3 py-1.5 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-amber-500 bg-slate-50/70">
-                <span class="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 text-[16px]">search</span>
+            <div class="admin-search-wrapper flex-1 min-w-[200px] shadow-2xs">
+                <span class="material-symbols-outlined text-[16px] text-slate-400">search</span>
+                <input type="text" name="q" value="{{ request('q') }}" placeholder="Tìm tên quán, địa chỉ, sđt, chủ sở hữu..." class="w-full bg-transparent border-0 p-0 text-xs font-medium outline-none text-slate-800 placeholder:text-slate-400">
             </div>
 
             {{-- Status Filter --}}

@@ -101,9 +101,9 @@
 
         {{-- Search & Filter Toolbar --}}
         <form method="GET" action="{{ route('admin.phan-quyen.index') }}" class="mb-4 flex flex-col sm:flex-row items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
-            <div class="relative flex-1 w-full">
-                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
-                <input type="text" name="q" value="{{ request('q') }}" placeholder="Tìm kiếm người dùng theo họ tên, email hoặc số điện thoại..." class="w-full pl-9 pr-4 py-2 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <div class="admin-search-wrapper flex-1 w-full shadow-2xs">
+                <span class="material-symbols-outlined text-slate-400 text-[18px]">search</span>
+                <input type="text" name="q" value="{{ request('q') }}" placeholder="Tìm kiếm người dùng theo họ tên, email hoặc số điện thoại..." class="w-full bg-transparent border-0 p-0 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-0 font-medium leading-normal">
             </div>
 
             <div class="w-full sm:w-56">

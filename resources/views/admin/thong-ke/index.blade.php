@@ -319,9 +319,9 @@
                     <option value="that_bai" {{ $statusFilter === 'that_bai' ? 'selected' : '' }}>Thất bại</option>
                 </select>
 
-                <div class="relative">
-                    <input type="text" name="search" value="{{ $searchKey }}" placeholder="Tìm mã GD, user, quán..." class="pl-8 pr-3 py-2 bg-slate-100 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 outline-none w-48 sm:w-60 focus:ring-2 focus:ring-indigo-500">
-                    <span class="material-symbols-outlined text-slate-400 text-[18px] absolute left-2.5 top-2">search</span>
+                <div class="admin-search-wrapper w-48 sm:w-60 shadow-2xs">
+                    <span class="material-symbols-outlined text-[18px] text-slate-400">search</span>
+                    <input type="text" name="search" value="{{ $searchKey }}" placeholder="Tìm mã GD, user, quán..." class="w-full bg-transparent border-0 p-0 text-xs font-medium text-slate-800 outline-none placeholder:text-slate-400">
                 </div>
             </form>
         </div>
