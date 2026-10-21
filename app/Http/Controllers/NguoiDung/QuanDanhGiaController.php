@@ -26,6 +26,13 @@ class QuanDanhGiaController extends Controller
             ->where('trang_thai', 'da_duyet')
             ->firstOrFail();
 
+        // Ngăn chặn chủ quán tự đánh giá quán của chính mình (chống thao túng điểm số)
+        if ($quan->chu_quan_id === $request->user()->id) {
+            return back()->with('error', 'Chủ quán không thể tự đánh giá quán của chính mình.');
+        }
+
+        $validated['binh_luan'] = trim(strip_tags($validated['binh_luan']));
+
         $review = $quan->danhGia()->updateOrCreate(
             ['nguoi_dung_id' => $request->user()->id],
             $validated,

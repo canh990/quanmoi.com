@@ -2,8 +2,12 @@
 
 namespace App\Providers;
 
+use App\Models\Blog;
+use App\Models\Quan;
 use App\Models\User;
+use App\Policies\BlogPolicy;
 use App\Policies\NguoiDungPolicy;
+use App\Policies\QuanPolicy;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -49,6 +53,8 @@ class AppServiceProvider extends ServiceProvider
         });
 
         Gate::policy(User::class, NguoiDungPolicy::class);
+        Gate::policy(Quan::class, QuanPolicy::class);
+        Gate::policy(Blog::class, BlogPolicy::class);
 
         RateLimiter::for('login', fn (Request $request) => Limit::perMinute(5)->by($this->rateLimitKey($request)));
         RateLimiter::for('register', fn (Request $request) => Limit::perMinutes(10, 3)->by($this->rateLimitKey($request)));

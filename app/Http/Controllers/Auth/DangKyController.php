@@ -33,26 +33,25 @@ class DangKyController extends Controller
         $data = $request->validated();
         $user = User::withTrashed()->where('email', $data['email'])->first();
 
-        if (! $user) {
-            $roleId = DB::table('vai_tro')->where('ten', 'nguoi_dung')->value('id');
-
-            $user = User::create([
-                'ho_ten' => $data['ho_ten'],
-                'email' => $data['email'],
-                'mat_khau' => Hash::make($data['mat_khau']),
-                'da_xac_thuc' => true,
-                'ngay_xac_thuc' => now(),
-                'vai_tro_id' => $roleId,
-                'trang_thai' => 'hoat_dong',
-            ]);
-        } else {
-            $user->update([
-                'ho_ten' => $data['ho_ten'],
-                'mat_khau' => Hash::make($data['mat_khau']),
-                'da_xac_thuc' => true,
-                'ngay_xac_thuc' => $user->ngay_xac_thuc ?? now(),
-            ]);
+        if ($user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Email đã được sử dụng.',
+                'errors' => ['email' => ['Email đã được sử dụng.']],
+            ], 422);
         }
+
+        $roleId = DB::table('vai_tro')->where('ten', 'nguoi_dung')->value('id');
+
+        $user = User::create([
+            'ho_ten' => $data['ho_ten'],
+            'email' => $data['email'],
+            'mat_khau' => Hash::make($data['mat_khau']),
+            'da_xac_thuc' => true,
+            'ngay_xac_thuc' => now(),
+            'vai_tro_id' => $roleId,
+            'trang_thai' => 'hoat_dong',
+        ]);
 
         Auth::login($user);
         $request->session()->regenerate();

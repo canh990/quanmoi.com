@@ -13,10 +13,14 @@ class BanDoController extends Controller
      */
     public function geocode(Request $request)
     {
-        $address = $request->query('address');
+        $validated = $request->validate([
+            'address' => ['required', 'string', 'max:255'],
+        ]);
         
-        if (!$address) {
-            return response()->json(['success' => false, 'message' => 'Vui lòng cung cấp địa chỉ.'], 400);
+        $address = trim(strip_tags($validated['address']));
+        
+        if ($address === '') {
+            return response()->json(['success' => false, 'message' => 'Vui lòng cung cấp địa chỉ hợp lệ.'], 400);
         }
 
         $apiKey = config('services.google.maps_api_key') ?? env('GOOGLE_MAPS_API_KEY');

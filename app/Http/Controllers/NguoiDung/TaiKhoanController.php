@@ -258,15 +258,6 @@ class TaiKhoanController extends Controller
             ]);
         } catch (\Throwable $e) {}
 
-        try {
-            $user->notify(new \App\Notifications\UserRoleStatusUpdatedNotification(
-                'verification_requested',
-                'Yêu cầu xác thực tài khoản của bạn đã được gửi thành công và đang chờ ban quản trị kiểm duyệt.',
-                $validated['ly_do'] ?? null,
-                route('tai-khoan.index')
-            ));
-        } catch (\Throwable $e) {}
-
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
