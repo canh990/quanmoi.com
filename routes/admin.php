@@ -38,6 +38,7 @@ Route::middleware(['auth', 'KiemTraQuyenHan:admin'])->group(function () {
     Route::post('/nguoi-dung/{id}/restore', [QuanLyNguoiDungController::class, 'restore'])->name('nguoi-dung.restore');
     Route::delete('/nguoi-dung/{id}/force', [QuanLyNguoiDungController::class, 'forceDestroy'])->name('nguoi-dung.force-destroy');
     Route::put('/nguoi-dung/{id}/toggle-xac-thuc', [QuanLyNguoiDungController::class, 'toggleXacThuc'])->name('nguoi-dung.toggle-xac-thuc');
+    Route::put('/nguoi-dung/{id}/toggle-khoa', [QuanLyNguoiDungController::class, 'toggleKhoa'])->name('nguoi-dung.toggle-khoa');
 
     // 4. Quản lý Vai trò
     Route::get('/vai-tro', [VaiTroController::class, 'index'])->name('vai-tro.index');
