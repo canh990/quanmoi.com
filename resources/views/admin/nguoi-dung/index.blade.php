@@ -90,11 +90,11 @@
                                     {{ $user->ten_vai_tro_hien_thi }}
                                 </span>
                             </td>
-                            <td class="py-3.5 px-4">
+                            <td class="py-3.5 px-4" id="user-status-cell-{{ $user->id }}">
                                 @if($user->trashed())
                                     <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700">Đã xóa tạm thời</span>
                                 @elseif($user->trang_thai === 'bi_khoa')
-                                    <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-gray-200 text-gray-700">Bị khóa</span>
+                                    <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700">Bị khóa</span>
                                 @else
                                     <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">Hoạt động</span>
                                 @endif
@@ -105,6 +105,14 @@
                             <td class="py-3.5 px-4 text-right whitespace-nowrap min-w-[160px]">
                                 <div class="inline-flex items-center justify-end gap-1 flex-nowrap shrink-0">
                                     @if(!$user->trashed())
+                                        <button type="button" 
+                                                id="btn-lock-user-{{ $user->id }}"
+                                                onclick="adminToggleUserLock('{{ $user->id }}', '{{ addslashes($user->ho_ten) }}', {{ $user->trang_thai === 'bi_khoa' ? 'true' : 'false' }})" 
+                                                class="w-8 h-8 flex items-center justify-center rounded-lg transition-all cursor-pointer shrink-0 {{ $user->trang_thai === 'bi_khoa' ? 'text-amber-600 hover:bg-amber-50' : 'text-gray-400 hover:text-amber-600 hover:bg-gray-100' }}" 
+                                                title="{{ $user->trang_thai === 'bi_khoa' ? 'Mở khóa tài khoản' : 'Khóa tài khoản' }}">
+                                            <span class="material-symbols-outlined text-lg">{{ $user->trang_thai === 'bi_khoa' ? 'lock' : 'lock_open' }}</span>
+                                        </button>
+
                                         <button type="button" onclick="adminToggleUserVerification('{{ $user->id }}', this)" class="w-8 h-8 flex items-center justify-center rounded-lg transition-all cursor-pointer shrink-0 {{ $user->da_xac_thuc ? 'text-blue-500 hover:bg-blue-50' : 'text-gray-400 hover:text-blue-500 hover:bg-gray-100' }}" title="{{ $user->da_xac_thuc ? 'Gỡ Tick Xanh' : 'Cấp Tick Xanh' }}">
                                             <span class="material-symbols-outlined text-lg" {!! $user->da_xac_thuc ? 'style="font-variation-settings: \'FILL\' 1;"' : '' !!}>verified</span>
                                         </button>
@@ -314,6 +322,76 @@
                 .catch(err => {
                     if (typeof showRealtimeToast === 'function') {
                         showRealtimeToast('Không Thể Xóa', err.message || 'Có lỗi xảy ra khi xóa vĩnh viễn.', '', 'error', 'bg-rose-500');
+                    }
+                });
+            }
+        });
+    }
+
+    function adminToggleUserLock(userId, userName, isCurrentlyLocked) {
+        const actionTitle = isCurrentlyLocked ? 'Mở Khóa Tài Khoản' : 'Khóa Tài Khoản';
+        const actionMessage = isCurrentlyLocked
+            ? `Bạn có chắc muốn mở khóa cho tài khoản <b class="text-slate-900 font-bold">"${userName}"</b>? Người dùng này sẽ có thể đăng nhập lại hệ thống.`
+            : `Bạn có chắc muốn khóa tài khoản <b class="text-slate-900 font-bold">"${userName}"</b>?<br><span class="text-amber-600 text-[11px] font-medium">Người dùng sẽ bị ngắt phiên đăng nhập ngay lập tức và không thể tiếp tục sử dụng hệ thống cho đến khi được mở khóa.</span>`;
+        const actionBtnText = isCurrentlyLocked ? 'Xác Nhận Mở Khóa' : 'Xác Nhận Khóa';
+        const actionIcon = isCurrentlyLocked ? 'lock_open' : 'lock';
+        const actionIconBg = isCurrentlyLocked ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-amber-100 text-amber-800 border border-amber-200';
+        const confirmClass = isCurrentlyLocked ? 'bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-xs' : 'bg-amber-600 hover:bg-amber-700 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-xs';
+
+        openConfirmModal({
+            title: actionTitle,
+            message: actionMessage,
+            icon: actionIcon,
+            iconBg: actionIconBg,
+            confirmText: actionBtnText,
+            confirmClass: confirmClass,
+            confirmIcon: actionIcon,
+            onConfirm: () => {
+                const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+                fetch(`/admin/nguoi-dung/${userId}/toggle-khoa`, {
+                    method: 'PUT',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrf
+                    }
+                })
+                .then(async res => {
+                    const data = await res.json().catch(() => ({}));
+                    if (!res.ok) throw new Error(data.message || `Lỗi HTTP ${res.status}`);
+                    return data;
+                })
+                .then(data => {
+                    if (typeof showRealtimeToast === 'function') {
+                        showRealtimeToast('Trạng Thái Tài Khoản', data.message, '', data.is_locked ? 'lock' : 'lock_open', data.is_locked ? 'bg-amber-600' : 'bg-emerald-600');
+                    }
+                    clearAdminPageCache();
+
+                    const statusCell = document.getElementById(`user-status-cell-${userId}`);
+                    if (statusCell) {
+                        statusCell.innerHTML = data.is_locked
+                            ? '<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700">Bị khóa</span>'
+                            : '<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">Hoạt động</span>';
+                    }
+
+                    const btn = document.getElementById(`btn-lock-user-${userId}`);
+                    if (btn) {
+                        if (data.is_locked) {
+                            btn.className = 'w-8 h-8 flex items-center justify-center rounded-lg transition-all cursor-pointer shrink-0 text-amber-600 hover:bg-amber-50';
+                            btn.title = 'Mở khóa tài khoản';
+                            btn.innerHTML = '<span class="material-symbols-outlined text-lg">lock</span>';
+                            btn.setAttribute('onclick', `adminToggleUserLock('${userId}', '${userName}', true)`);
+                        } else {
+                            btn.className = 'w-8 h-8 flex items-center justify-center rounded-lg transition-all cursor-pointer shrink-0 text-gray-400 hover:text-amber-600 hover:bg-gray-100';
+                            btn.title = 'Khóa tài khoản';
+                            btn.innerHTML = '<span class="material-symbols-outlined text-lg">lock_open</span>';
+                            btn.setAttribute('onclick', `adminToggleUserLock('${userId}', '${userName}', false)`);
+                        }
+                    }
+                })
+                .catch(err => {
+                    if (typeof showRealtimeToast === 'function') {
+                        showRealtimeToast('Lỗi Khóa Tài Khoản', err.message || 'Không thể thay đổi trạng thái tài khoản.', '', 'error', 'bg-rose-500');
                     }
                 });
             }
