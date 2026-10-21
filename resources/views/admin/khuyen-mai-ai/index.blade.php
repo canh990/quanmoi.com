@@ -252,8 +252,11 @@
                 <p class="text-xs text-slate-500 mt-1">Quản lý, kích hoạt hoặc xóa các voucher ưu đãi đã được lưu cho các quán ăn trên Quán Mới.</p>
             </div>
             <div>
-                <input type="text" id="admin-search-promo" onkeyup="filterAdminPromotions()" placeholder="🔍 Tìm mã voucher, tên quán..."
-                       class="px-3.5 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none w-full sm:w-64">
+                <div class="admin-search-wrapper w-full sm:w-64 shadow-2xs">
+                    <span class="material-symbols-outlined text-[18px] text-slate-400">search</span>
+                    <input type="text" id="admin-search-promo" onkeyup="filterAdminPromotions()" placeholder="Tìm mã voucher, tên quán..."
+                           class="w-full bg-transparent border-0 p-0 text-xs font-medium outline-none text-slate-800 placeholder:text-slate-400">
+                </div>
             </div>
         </div>
 

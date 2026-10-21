@@ -29,20 +29,20 @@
 
         {{-- Quick Toolbar --}}
         <div class="flex flex-col sm:flex-row sm:items-center gap-2.5 relative z-10 shrink-0">
-            <div class="relative w-full sm:w-64">
-                <span class="material-symbols-outlined text-[18px] text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">search</span>
+            <div class="admin-search-wrapper w-full sm:w-64 shadow-2xs">
+                <span class="material-symbols-outlined text-[18px] text-slate-400">search</span>
                 <input 
                     type="text" 
                     id="duyet-quick-search" 
                     oninput="filterCurrentTabTable(this.value)" 
                     placeholder="Lọc nhanh quán, chủ quán, địa chỉ..." 
-                    class="w-full pl-9 pr-8 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 transition-all placeholder:text-slate-400 font-medium"
+                    class="w-full bg-transparent border-0 p-0 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-0 font-medium leading-normal"
                 >
                 <button 
                     type="button" 
                     id="clear-search-btn" 
                     onclick="clearSearchInput()" 
-                    class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                    class="hidden text-slate-400 hover:text-slate-600 cursor-pointer shrink-0"
                 >
                     <span class="material-symbols-outlined text-[16px]">close</span>
                 </button>

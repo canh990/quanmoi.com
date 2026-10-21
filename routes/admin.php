@@ -90,7 +90,11 @@ Route::middleware(['auth', 'KiemTraQuyenHan:admin'])->group(function () {
 
     // 11. Quán Nổi Bật
     Route::get('/quan-noi-bat', [QuanNoiBatController::class, 'index'])->name('quan-noi-bat.index');
-    Route::put('/quan-noi-bat/{id}/toggle', [QuanNoiBatController::class, 'toggle'])->name('quan-noi-bat.toggle');
+    Route::get('/quan-noi-bat/search-available', [QuanNoiBatController::class, 'searchAvailable'])->name('quan-noi-bat.search-available');
+    Route::post('/quan-noi-bat', [QuanNoiBatController::class, 'store'])->name('quan-noi-bat.store');
+    Route::put('/quan-noi-bat/{id}', [QuanNoiBatController::class, 'update'])->name('quan-noi-bat.update')->where('id', '[0-9a-fA-F\-]+');
+    Route::put('/quan-noi-bat/{id}/toggle', [QuanNoiBatController::class, 'toggle'])->name('quan-noi-bat.toggle')->where('id', '[0-9a-fA-F\-]+');
+    Route::delete('/quan-noi-bat/{id}', [QuanNoiBatController::class, 'destroy'])->name('quan-noi-bat.destroy')->where('id', '[0-9a-fA-F\-]+');
 
     // 12. AI Tools
     Route::get('/ai-tools', [AiToolsController::class, 'index'])->name('ai-tools.index');

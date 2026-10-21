@@ -39,6 +39,70 @@
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 9999px; }
 
+        /* ==========================================================================
+           ENTERPRISE SEARCH BOX & ICON ALIGNMENT STANDARD (ANTI-CONFLICT)
+           Đảm bảo 100% icon tìm kiếm luôn nằm chính giữa hàng dọc, không bị lệch, 
+           không bị đè lên text, không bị văng lên viền.
+           ========================================================================== */
+        .admin-search-wrapper {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 0.5rem !important;
+            background-color: #ffffff !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 0.75rem !important;
+            padding: 0.375rem 0.625rem !important;
+            transition: all 0.15s ease-in-out !important;
+            min-height: 2.125rem !important;
+            box-sizing: border-box !important;
+        }
+        .admin-search-wrapper:focus-within {
+            border-color: #f59e0b !important;
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.18) !important;
+            background-color: #ffffff !important;
+        }
+        .admin-search-wrapper .material-symbols-outlined {
+            font-size: 17px !important;
+            line-height: 1 !important;
+            color: #94a3b8 !important;
+            flex-shrink: 0 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            user-select: none !important;
+            pointer-events: none !important;
+        }
+        .admin-search-wrapper input {
+            width: 100% !important;
+            background: transparent !important;
+            border: 0 !important;
+            padding: 0 !important;
+            font-size: 0.75rem !important;
+            font-weight: 500 !important;
+            line-height: 1.25rem !important;
+            color: #0f172a !important;
+            outline: none !important;
+            box-shadow: none !important;
+        }
+        .admin-search-wrapper input::placeholder {
+            color: #94a3b8 !important;
+            opacity: 1 !important;
+        }
+
+        /* Fix triệt để mọi icon tìm kiếm có class search-icon-centered */
+        .search-icon-centered {
+            position: absolute !important;
+            left: 0.625rem !important;
+            top: 50% !important;
+            transform: translateY(-50%) !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            line-height: 1 !important;
+            pointer-events: none !important;
+        }
+
+
         @media (min-width: 768px) {
             #admin-sidebar {
                 display: flex !important;

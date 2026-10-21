@@ -124,9 +124,9 @@
 
             {{-- Instant Search Input --}}
             <div class="flex items-center gap-2">
-                <div class="relative w-full md:w-64">
-                    <span class="material-symbols-outlined text-[18px] text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">search</span>
-                    <input type="text" id="notif-search-input" oninput="handleSearchNotifs(this.value)" placeholder="Tìm kiếm thông báo..." class="w-full pl-9 pr-3 py-1.5 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all">
+                <div class="admin-search-wrapper w-full md:w-64 shadow-2xs">
+                    <span class="material-symbols-outlined text-[18px] text-slate-400">search</span>
+                    <input type="text" id="notif-search-input" oninput="handleSearchNotifs(this.value)" placeholder="Tìm kiếm thông báo..." class="w-full bg-transparent border-0 p-0 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-0 font-medium leading-normal">
                 </div>
             </div>
         </div>
