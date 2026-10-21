@@ -42,6 +42,29 @@ class DuyetXacThucController extends Controller
             'unverified_users' => User::where('da_xac_thuc', false)->count(),
         ];
 
+        // Tự động đánh dấu các thông báo quán chờ duyệt và user chưa xác thực đã được admin xem qua
+        $admin = auth()->user();
+        if ($admin) {
+            $caiDat = $admin->cai_dat ?? [];
+            if (is_string($caiDat)) {
+                $caiDat = json_decode($caiDat, true) ?: [];
+            }
+            $readIds = array_map('strval', $caiDat['read_admin_notifs'] ?? []);
+            $venueIds = $pendingQuan->pluck('id')->map(fn($id) => 'quan_' . $id)->all();
+            $userIds = $unverifiedUsers->pluck('id')->map(fn($id) => 'user_' . $id)->all();
+            $newReadIds = array_unique(array_merge($readIds, $venueIds, $userIds));
+            if (count($newReadIds) > 500) {
+                $newReadIds = array_slice($newReadIds, -500);
+            }
+            if (count($newReadIds) !== count($readIds)) {
+                $caiDat['read_admin_notifs'] = array_values($newReadIds);
+                \Illuminate\Support\Facades\DB::table('nguoi_dung')
+                    ->where('id', $admin->id)
+                    ->update(['cai_dat' => json_encode($caiDat, JSON_UNESCAPED_UNICODE)]);
+                $admin->cai_dat = $caiDat;
+            }
+        }
+
         return view('admin.duyet-xac-thuc.index', compact(
             'pendingQuan',
             'rejectedQuan',
@@ -53,12 +76,37 @@ class DuyetXacThucController extends Controller
 
     private function getStats(): array
     {
+        $realtime = ThongBaoAdminController::buildRealtimeNotificationData(auth()->user());
+
         return [
             'pending_quan' => Quan::where('trang_thai', 'chua_duyet')->count(),
             'rejected_quan' => Quan::where('trang_thai', 'bi_khoa')->count(),
             'approved_quan' => Quan::where('trang_thai', 'da_duyet')->count(),
             'unverified_users' => User::where('da_xac_thuc', false)->count(),
+            'unread_count' => $realtime['unread_count'] ?? 0,
         ];
+    }
+
+    private function markItemAsRead(Request $request, string $notifId): void
+    {
+        $admin = $request->user();
+        if (!$admin) return;
+        $caiDat = $admin->cai_dat ?? [];
+        if (is_string($caiDat)) {
+            $caiDat = json_decode($caiDat, true) ?: [];
+        }
+        $readIds = array_map('strval', $caiDat['read_admin_notifs'] ?? []);
+        if (!in_array($notifId, $readIds, true)) {
+            $readIds[] = $notifId;
+            if (count($readIds) > 500) {
+                $readIds = array_slice($readIds, -500);
+            }
+            $caiDat['read_admin_notifs'] = array_values($readIds);
+            \Illuminate\Support\Facades\DB::table('nguoi_dung')
+                ->where('id', $admin->id)
+                ->update(['cai_dat' => json_encode($caiDat, JSON_UNESCAPED_UNICODE)]);
+            $admin->cai_dat = $caiDat;
+        }
     }
 
     public function approveQuan(Request $request, $id)
@@ -66,6 +114,8 @@ class DuyetXacThucController extends Controller
         if ($request->input('action') === 'reject' || $request->input('action') === 'khong_duyet') {
             return $this->rejectQuan($request, $id);
         }
+
+        $this->markItemAsRead($request, 'quan_' . $id);
 
         $quan = Quan::findOrFail($id);
         $quan->update([
@@ -122,6 +172,8 @@ class DuyetXacThucController extends Controller
 
     public function rejectQuan(Request $request, $id)
     {
+        $this->markItemAsRead($request, 'quan_' . $id);
+
         $quan = Quan::findOrFail($id);
         $quan->update([
             'trang_thai' => 'bi_khoa',
@@ -160,12 +212,23 @@ class DuyetXacThucController extends Controller
 
     public function destroyQuan(Request $request, $id)
     {
+        $this->markItemAsRead($request, 'quan_' . $id);
+
         $quan = Quan::findOrFail($id);
         $quan->update(['trang_thai' => 'bi_khoa']);
         $quan->delete(); // Soft delete qua ngay_xoa
 
         if ($this->adminAudit && $request->user()) {
             $this->adminAudit->record($request->user(), 'venue.deleted', $quan, $request);
+        }
+
+        $owner = $quan->chuQuan;
+        if ($owner) {
+            try {
+                $owner->notify(new \App\Notifications\QuanStatusUpdatedNotification($quan, 'deleted'));
+            } catch (\Throwable $notifEx) {
+                \Illuminate\Support\Facades\Log::warning('Quan deletion notification error: ' . $notifEx->getMessage());
+            }
         }
 
         if ($request->wantsJson()) {
@@ -188,6 +251,8 @@ class DuyetXacThucController extends Controller
         if ($request->input('action') === 'reject' || $request->input('action') === 'khong_duyet') {
             return $this->rejectUser($request, $id);
         }
+
+        $this->markItemAsRead($request, 'user_' . $id);
 
         $user = User::findOrFail($id);
         $settings = $user->cai_dat ?? [];
@@ -233,6 +298,8 @@ class DuyetXacThucController extends Controller
 
     public function rejectUser(Request $request, $id)
     {
+        $this->markItemAsRead($request, 'user_' . $id);
+
         $user = User::findOrFail($id);
         $settings = $user->cai_dat ?? [];
         if (isset($settings['yeu_cau_xac_thuc'])) {

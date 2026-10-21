@@ -132,6 +132,23 @@ class QuanLyNguoiDungController extends Controller
                     \Illuminate\Support\Facades\Log::warning('User verification change notification error: ' . $e->getMessage());
                 }
             }
+
+            if ($user->wasChanged('trang_thai')) {
+                try {
+                    $statusLabels = [
+                        'hoat_dong' => 'Đang hoạt động',
+                        'tam_khoa' => 'Tạm khóa',
+                        'khoa_vinh_vien' => 'Khóa vĩnh viễn',
+                    ];
+                    $tenTrangThai = $statusLabels[$user->trang_thai] ?? $user->trang_thai;
+                    $user->notify(new \App\Notifications\UserRoleStatusUpdatedNotification(
+                        'status_updated',
+                        "Trạng thái tài khoản của bạn đã được quản trị viên cập nhật thành '{$tenTrangThai}'."
+                    ));
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::warning('User status change notification error: ' . $e->getMessage());
+                }
+            }
         });
 
         if ($request->wantsJson()) {
@@ -163,6 +180,15 @@ class QuanLyNguoiDungController extends Controller
 
             $user->delete();
             $this->adminAudit->record($actor, 'user.deleted', $user, $request, ['soft_deleted_venues' => $venueCount]);
+
+            try {
+                $user->notify(new \App\Notifications\UserRoleStatusUpdatedNotification(
+                    'deleted',
+                    'Tài khoản của bạn đã bị quản trị viên tạm khóa và các cơ sở liên quan đã được tạm ẩn.'
+                ));
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('User deleted notification error: ' . $e->getMessage());
+            }
         });
 
         if ($request->wantsJson()) {
@@ -188,6 +214,15 @@ class QuanLyNguoiDungController extends Controller
             }
 
             $this->adminAudit->record($actor, 'user.restored', $user, $request, ['restored_venues' => $venueCount]);
+
+            try {
+                $user->notify(new \App\Notifications\UserRoleStatusUpdatedNotification(
+                    'restored',
+                    'Tài khoản của bạn và các cơ sở liên quan đã được quản trị viên khôi phục thành công.'
+                ));
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('User restored notification error: ' . $e->getMessage());
+            }
         });
 
         if ($request->wantsJson()) {

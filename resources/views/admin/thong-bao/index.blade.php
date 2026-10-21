@@ -25,6 +25,11 @@
                 <span>Trực tiếp (Real-time Live)</span>
             </div>
 
+            <button type="button" onclick="markAllAdminNotifsReadDropdown(event)" class="btn-enterprise btn-enterprise-secondary" title="Đánh dấu tất cả thông báo là đã đọc">
+                <span class="material-symbols-outlined text-[16px] text-slate-500">done_all</span>
+                <span>Đã đọc tất cả</span>
+            </button>
+
             <button type="button" id="btn-manual-sync" onclick="manualSyncNotifs()" class="btn-enterprise btn-enterprise-secondary" title="Lấy dữ liệu thông báo mới nhất ngay lập tức">
                 <span id="sync-icon" class="material-symbols-outlined text-[16px] text-slate-500 group-hover:rotate-180 transition-transform duration-500">sync</span>
                 <span>Làm mới tức thì</span>
@@ -306,7 +311,7 @@
         }
 
         tbody.innerHTML = filtered.map(item => `
-            <tr id="feed-row-${item.id}" class="hover:bg-slate-50/80 transition-colors group">
+            <tr id="feed-row-${item.id}" class="hover:bg-slate-50/80 transition-colors group ${item.read ? 'opacity-70' : ''}">
                 <td class="p-3">
                     <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold ${item.badge_class || 'bg-slate-100 text-slate-700'}">
                         <span class="material-symbols-outlined text-[15px]">${item.icon || 'notifications'}</span>
@@ -314,7 +319,10 @@
                     </span>
                 </td>
                 <td class="p-3">
-                    <p class="font-bold text-slate-900 group-hover:text-amber-700 transition-colors text-xs">${item.title}</p>
+                    <div class="flex items-center gap-1.5">
+                        ${!item.read ? '<span class="w-2 h-2 rounded-full bg-amber-500 shrink-0" title="Chưa đọc"></span>' : ''}
+                        <p class="font-bold text-slate-900 group-hover:text-amber-700 transition-colors text-xs">${item.title}</p>
+                    </div>
                     <p class="text-[11px] text-slate-500 mt-0.5 line-clamp-2">${item.description || 'Không có mô tả chi tiết'}</p>
                 </td>
                 <td class="p-3 whitespace-nowrap">
@@ -323,7 +331,7 @@
                 </td>
                 <td class="p-3 text-right whitespace-nowrap">
                     <div class="inline-flex items-center justify-end">
-                        <a href="${item.url}" class="btn-enterprise btn-enterprise-dark btn-action-compact w-[80px] justify-center shrink-0">
+                        <a href="${item.url}" onclick="handleAdminNotifClick(event, '${item.id}', '${item.url}')" class="btn-enterprise btn-enterprise-dark btn-action-compact w-[80px] justify-center shrink-0">
                             <span>Xử lý</span>
                             <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
                         </a>

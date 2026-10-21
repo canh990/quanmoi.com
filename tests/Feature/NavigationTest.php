@@ -56,4 +56,53 @@ class NavigationTest extends TestCase
         $response->assertDontSee('Đăng quán');
         $response->assertSee(route('chu-quan.quan.index'), false);
     }
+
+    public function test_admin_outside_admin_panel_sees_admin_notifications_in_navigation(): void
+    {
+        $roleAdmin = VaiTro::create(['ten' => 'admin']);
+        $admin = User::factory()->create([
+            'vai_tro_id' => $roleAdmin->id,
+        ]);
+
+        Quan::create([
+            'chu_quan_id' => $admin->id,
+            'ten_quan' => 'Quán Chờ Duyệt Test',
+            'loai_hinh_kinh_doanh' => 'Quán cà phê',
+            'slug' => 'quan-cho-duyet-test',
+            'dia_chi_chi_tiet' => '100 Nguyễn Huệ',
+            'ten_tinh_thanh' => 'TP. Hồ Chí Minh',
+            'ten_quan_huyen' => 'Quận 1',
+            'so_dien_thoai' => '0909999999',
+            'gio_mo_cua' => '07:00',
+            'gio_dong_cua' => '22:00',
+            'trang_thai' => 'chua_duyet',
+            'la_nhap' => false,
+        ]);
+
+        $response = $this->actingAs($admin)->get('/');
+
+        $response->assertOk();
+        $response->assertSee('Trang quản trị');
+        $response->assertSee('Thông báo Quản trị');
+        $response->assertSee('Quán Chờ Duyệt Test');
+        $response->assertSee(route('admin.thong-bao.index'), false);
+    }
+
+    public function test_admin_realtime_check_returns_valid_data(): void
+    {
+        $roleAdmin = VaiTro::create(['ten' => 'admin']);
+        $admin = User::factory()->create([
+            'vai_tro_id' => $roleAdmin->id,
+        ]);
+
+        $response = $this->actingAs($admin)->getJson(route('admin.realtime-check'));
+
+        $response->assertOk();
+        $response->assertJsonStructure([
+            'success',
+            'unread_count',
+            'all_notifications',
+        ]);
+        $response->assertJson(['success' => true]);
+    }
 }

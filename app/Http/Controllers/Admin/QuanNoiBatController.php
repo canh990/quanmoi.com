@@ -25,6 +25,28 @@ class QuanNoiBatController extends Controller
 
         $status = $quan->is_noi_bat ? 'Đã bật' : 'Đã tắt';
 
+        if ($request->user()) {
+            \App\Models\AdminAuditLog::create([
+                'actor_id' => $request->user()->id,
+                'action' => 'venue.featured_toggled',
+                'target_type' => Quan::class,
+                'target_id' => (string) $quan->id,
+                'metadata' => ['featured' => $quan->is_noi_bat],
+                'ip_address' => $request->ip(),
+            ]);
+        }
+
+        if ($quan->chuQuan) {
+            try {
+                $quan->chuQuan->notify(new \App\Notifications\QuanStatusUpdatedNotification(
+                    $quan,
+                    $quan->is_noi_bat ? 'featured_granted' : 'featured_revoked'
+                ));
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('QuanNoiBat toggle notification error: ' . $e->getMessage());
+            }
+        }
+
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,

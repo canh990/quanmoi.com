@@ -204,6 +204,26 @@ class MenuController extends Controller
                 DanhMucMenu::where('quan_id', $quan->id)->whereNotIn('id', $keptCategoryIds)->delete();
             });
 
+            try {
+                $request->user()->notify(new \App\Notifications\QuanStatusUpdatedNotification($quan, 'menu_updated'));
+            } catch (\Throwable $e) {
+                Log::warning('Menu update notification error: ' . $e->getMessage());
+            }
+
+            try {
+                \App\Models\AdminAuditLog::create([
+                    'actor_id' => $request->user()->id,
+                    'action' => 'venue.menu_updated',
+                    'target_type' => Quan::class,
+                    'target_id' => (string) $quan->id,
+                    'metadata' => [
+                        'ten_quan' => $quan->ten_quan,
+                        'chu_quan' => $request->user()->ho_ten,
+                    ],
+                    'ip_address' => $request->ip(),
+                ]);
+            } catch (\Throwable $e) {}
+
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => true,

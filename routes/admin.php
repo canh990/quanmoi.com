@@ -76,6 +76,9 @@ Route::middleware(['auth', 'KiemTraQuyenHan:admin'])->group(function () {
     Route::get('/thong-bao', [ThongBaoAdminController::class, 'index'])->name('thong-bao.index');
     Route::post('/thong-bao', [ThongBaoAdminController::class, 'sendSystemNotification'])->name('thong-bao.send');
     Route::get('/realtime-check', [ThongBaoAdminController::class, 'realtimeCheck'])->name('realtime-check');
+    Route::get('/thong-bao/{id}/doc-va-chuyen', [ThongBaoAdminController::class, 'readAndRedirect'])->name('thong-bao.read-and-redirect');
+    Route::post('/thong-bao/mark-all-read', [ThongBaoAdminController::class, 'markAllAsRead'])->name('thong-bao.mark-all-read');
+    Route::post('/thong-bao/{id}/mark-read', [ThongBaoAdminController::class, 'markAsRead'])->name('thong-bao.mark-read');
 
     // 9. Bảo mật
     Route::get('/bao-mat', [BaoMatController::class, 'index'])->name('bao-mat.index');

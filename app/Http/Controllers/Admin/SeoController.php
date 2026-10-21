@@ -40,6 +40,17 @@ class SeoController extends Controller
             'og_image'         => $request->og_image,
         ]);
 
+        if ($request->user()) {
+            \App\Models\AdminAuditLog::create([
+                'actor_id' => $request->user()->id,
+                'action' => 'seo.updated',
+                'target_type' => SeoSetting::class,
+                'target_id' => (string) $trang,
+                'metadata' => ['trang' => $trang, 'meta_title' => $request->meta_title],
+                'ip_address' => $request->ip(),
+            ]);
+        }
+
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,

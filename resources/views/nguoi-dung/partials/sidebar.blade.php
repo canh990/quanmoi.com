@@ -34,6 +34,20 @@
                 <span class="material-symbols-outlined">article</span>
                 <span class="font-body-lg text-body-lg">Quản lý bài viết</span>
             </a>
+            <a class="flex items-center justify-between px-4 py-3 rounded-lg {{ request()->routeIs('nguoi-dung.thong-bao.*') ? 'bg-primary-container/10 text-primary font-bold' : 'text-on-surface-variant hover:bg-surface-container' }} transition-all" href="{{ route('nguoi-dung.thong-bao.index') }}">
+                <div class="flex items-center gap-3">
+                    <span class="material-symbols-outlined">notifications</span>
+                    <span class="font-body-lg text-body-lg">Thông báo</span>
+                </div>
+                @php
+                    $sidebarUnreadCount = Auth::user() ? Auth::user()->unreadNotifications()->count() : 0;
+                @endphp
+                @if($sidebarUnreadCount > 0)
+                    <span class="px-2 py-0.5 text-[11px] font-bold bg-primary text-white rounded-full">
+                        {{ $sidebarUnreadCount > 99 ? '99+' : $sidebarUnreadCount }}
+                    </span>
+                @endif
+            </a>
             <a class="flex items-center gap-3 px-4 py-3 rounded-lg {{ request()->routeIs('tai-khoan.cai-dat*') ? 'bg-primary-container/10 text-primary font-bold' : 'text-on-surface-variant hover:bg-surface-container' }} transition-all" href="{{ route('tai-khoan.cai-dat') }}">
                 <span class="material-symbols-outlined">settings</span>
                 <span class="font-body-lg text-body-lg">Cài đặt</span>

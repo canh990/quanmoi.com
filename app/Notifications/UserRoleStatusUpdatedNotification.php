@@ -33,18 +33,26 @@ class UserRoleStatusUpdatedNotification extends Notification
             'role_updated' => 'Thay đổi vai trò tài khoản',
             'verified' => 'Tài khoản đã được xác thực',
             'verification_rejected' => 'Yêu cầu xác thực chưa được duyệt',
+            'verification_requested' => 'Yêu cầu xác thực tài khoản đã được gửi',
             'permission_granted' => 'Cấp quyền truy cập mới',
             'permission_denied' => 'Thu hồi quyền truy cập',
             'permission_reset' => 'Cập nhật phân quyền mặc định',
+            'status_updated' => 'Cập nhật trạng thái tài khoản',
+            'deleted' => 'Tài khoản đã bị tạm khóa',
+            'restored' => 'Tài khoản đã được khôi phục',
         ];
 
         $statusLabels = [
             'role_updated' => 'Đổi vai trò',
             'verified' => 'Đã xác thực',
             'verification_rejected' => 'Từ chối xác thực',
+            'verification_requested' => 'Chờ xác thực',
             'permission_granted' => 'Được cấp quyền',
             'permission_denied' => 'Bị tước quyền',
             'permission_reset' => 'Quyền mặc định',
+            'status_updated' => 'Đổi trạng thái',
+            'deleted' => 'Đã khóa',
+            'restored' => 'Đã mở lại',
         ];
 
         $defaultLink = route('tai-khoan.index');
