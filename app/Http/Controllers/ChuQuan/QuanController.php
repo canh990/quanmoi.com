@@ -133,6 +133,25 @@ class QuanController extends Controller
             throw $e;
         }
 
+        try {
+            $user->notify(new \App\Notifications\QuanStatusUpdatedNotification($quan, 'submitted'));
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Venue submit notification error: ' . $e->getMessage());
+        }
+
+        try {
+            \App\Models\AdminAuditLog::create([
+                'actor_id' => $user->id,
+                'action' => 'venue.submitted',
+                'target_type' => Quan::class,
+                'target_id' => (string) $quan->id,
+                'metadata' => ['ten_quan' => $quan->ten_quan, 'chu_quan' => $user->ho_ten],
+                'ip_address' => $request->ip(),
+            ]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Venue submit audit log error: ' . $e->getMessage());
+        }
+
         if ($request->wantsJson()) {
             $roleChuQuan = DB::table('vai_tro')->where('ten', 'chu_quan')->value('id');
             if ($roleChuQuan && ! $user->hasRole('admin')) {
@@ -304,6 +323,26 @@ class QuanController extends Controller
         }
 
         $quan->update($validated);
+
+        try {
+            Auth::user()->notify(new \App\Notifications\QuanStatusUpdatedNotification($quan, 'updated'));
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Venue update notification error: ' . $e->getMessage());
+        }
+
+        try {
+            \App\Models\AdminAuditLog::create([
+                'actor_id' => Auth::id(),
+                'action' => 'venue.updated',
+                'target_type' => Quan::class,
+                'target_id' => (string) $quan->id,
+                'metadata' => [
+                    'name' => $quan->ten_quan,
+                    'owner' => Auth::user()?->ho_ten ?? 'Chủ quán',
+                ],
+                'ip_address' => $request->ip(),
+            ]);
+        } catch (\Throwable $e) {}
 
         if ($request->wantsJson()) {
             return response()->json([

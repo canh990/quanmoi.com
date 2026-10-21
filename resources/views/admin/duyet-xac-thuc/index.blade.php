@@ -189,7 +189,7 @@
 
     {{-- ==================== TAB 1: PENDING QUAN ==================== --}}
     <div id="tab-pane-pending" class="duyet-tab-pane">
-        <div class="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-xs">
+        <div class="bg-white rounded-3xl border border-slate-200/90 p-4 sm:p-5 shadow-xs">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
                 <div>
                     <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
@@ -201,21 +201,21 @@
             </div>
 
             <div class="w-full overflow-x-auto custom-scrollbar">
-                <table class="w-full text-left text-xs text-slate-700 min-w-[850px] table-fixed-enterprise">
+                <table class="w-full text-left text-xs text-slate-700 table-fixed-enterprise">
                     <colgroup>
-                        <col class="w-[34%]">
+                        <col class="w-[27%]">
                         <col class="w-[18%]">
-                        <col class="w-[20%]">
+                        <col class="w-[18%]">
                         <col class="w-[10%]">
-                        <col class="w-[18%]">
+                        <col class="w-[27%]">
                     </colgroup>
                     <thead class="bg-slate-50/80 text-slate-600 font-bold uppercase tracking-wider border-b border-slate-200 text-[11px]">
                         <tr>
-                            <th class="px-3.5 py-3">Hồ Sơ Quán & Hình Ảnh</th>
-                            <th class="px-3.5 py-3">Chủ Quán / Liên Hệ</th>
-                            <th class="px-3.5 py-3">Khu Vực & Địa Chỉ</th>
-                            <th class="px-3.5 py-3 whitespace-nowrap">Thời Gian</th>
-                            <th class="px-3.5 py-3 text-right whitespace-nowrap">Thao Tác Thẩm Định</th>
+                            <th class="px-2.5 py-3">Hồ Sơ Quán & Hình Ảnh</th>
+                            <th class="px-2.5 py-3">Chủ Quán / Liên Hệ</th>
+                            <th class="px-2.5 py-3">Khu Vực & Địa Chỉ</th>
+                            <th class="px-2.5 py-3 whitespace-nowrap">Thời Gian</th>
+                            <th class="px-2.5 py-3 text-right whitespace-nowrap">Thao Tác Thẩm Định</th>
                         </tr>
                     </thead>
                     <tbody id="pending-quan-tbody" class="divide-y divide-slate-100">
@@ -242,13 +242,13 @@
                                 ];
                             @endphp
                             <tr id="quan-row-{{ $q->id }}" class="duyet-table-row hover:bg-slate-50/80 transition-colors" data-search="{{ strtolower($q->ten_quan . ' ' . ($q->chuQuan->ho_ten ?? '') . ' ' . ($q->dia_chi_chi_tiet ?? '') . ' ' . ($q->loai_hinh_kinh_doanh ?? '')) }}">
-                                <td class="px-3.5 py-3 font-medium overflow-hidden">
-                                    <div class="flex items-center gap-3 min-w-0">
+                                <td class="px-2.5 py-3 font-medium overflow-hidden">
+                                    <div class="flex items-center gap-2.5 min-w-0">
                                         {{-- Thumbnail With Zoom --}}
-                                        <div onclick='openVenueMediaModal(@json($mediaPayload))' class="w-12 h-12 rounded-xl overflow-hidden bg-slate-100 shrink-0 border border-slate-200/90 cursor-pointer group relative shadow-2xs hover:ring-2 hover:ring-amber-500 hover:border-amber-400 transition-all" title="Bấm để xem ảnh và thẩm định chi tiết">
+                                        <div onclick='openVenueMediaModal(@json($mediaPayload))' class="w-11 h-11 rounded-xl overflow-hidden bg-slate-100 shrink-0 border border-slate-200/90 cursor-pointer group relative shadow-2xs hover:ring-2 hover:ring-amber-500 hover:border-amber-400 transition-all" title="Bấm để xem ảnh và thẩm định chi tiết">
                                             <img src="{{ $q->anh_bia_url }}" alt="{{ $q->ten_quan }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&auto=format&fit=crop&q=80';">
                                             <div class="absolute inset-0 bg-black/35 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white">
-                                                <span class="material-symbols-outlined text-[16px]">zoom_in</span>
+                                                <span class="material-symbols-outlined text-[15px]">zoom_in</span>
                                             </div>
                                             <span class="absolute bottom-0.5 right-0.5 bg-black/70 backdrop-blur-xs text-white text-[8px] font-bold px-1 py-0.2 rounded">
                                                 {{ count($galleryUrls) + 1 }}
@@ -276,7 +276,7 @@
                                                     <span>Ảnh ({{ count($galleryUrls) + 1 }})</span>
                                                 </button>
                                                 @if($q->slug)
-                                                    <a href="{{ route('quan.detail', $q->slug) }}" class="btn-enterprise btn-enterprise-secondary btn-action-compact" title="Xem trang quán thực tế ngoài website">
+                                                    <a href="{{ route('quan.detail', $q->slug) }}" target="_blank" class="btn-enterprise btn-enterprise-secondary btn-action-compact" title="Xem trang quán thực tế ngoài website">
                                                         <span>Trang quán</span>
                                                         <span class="material-symbols-outlined text-[13px]">arrow_forward</span>
                                                     </a>
@@ -285,7 +285,7 @@
                                         </div>
                                     </div>
                                 </td>
-                                <td class="px-3.5 py-3 overflow-hidden">
+                                <td class="px-2.5 py-3 overflow-hidden">
                                     <div class="flex items-center gap-2 min-w-0">
                                         <div class="w-7 h-7 rounded-full bg-slate-100 border border-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center shrink-0">
                                             {{ strtoupper(substr($q->chuQuan->ho_ten ?? 'U', 0, 1)) }}
@@ -300,7 +300,7 @@
                                         </div>
                                     </div>
                                 </td>
-                                <td class="px-3.5 py-3 text-slate-600 overflow-hidden">
+                                <td class="px-2.5 py-3 text-slate-600 overflow-hidden">
                                     <div class="space-y-0.5 min-w-0">
                                         <div class="font-semibold text-slate-800 text-xs cell-wrap-2line" title="{{ $q->dia_chi_chi_tiet ?? $q->dia_chi }}">
                                             {{ $q->dia_chi_chi_tiet ?? $q->dia_chi ?: 'Chưa cập nhật chi tiết' }}
@@ -313,16 +313,16 @@
                                         @endif
                                     </div>
                                 </td>
-                                <td class="px-3.5 py-3 text-slate-500 whitespace-nowrap overflow-hidden">
+                                <td class="px-2.5 py-3 text-slate-500 whitespace-nowrap overflow-hidden">
                                     <div class="font-bold text-slate-800 text-xs truncate">{{ $q->created_at ? $q->created_at->diffForHumans() : 'Vừa xong' }}</div>
                                     <div class="text-[10px] text-slate-400 mt-0.5 truncate">{{ $q->created_at ? $q->created_at->format('d/m/Y H:i') : '' }}</div>
                                 </td>
-                                <td class="px-3.5 py-3 text-right whitespace-nowrap">
-                                    <div class="flex items-center justify-end gap-1 flex-nowrap">
+                                <td class="px-2.5 py-3 text-right whitespace-nowrap overflow-hidden">
+                                    <div class="inline-flex items-center justify-end gap-1 flex-nowrap">
                                         {{-- 1. Xem phần cần phê duyệt --}}
                                         <button type="button" onclick='openVenueMediaModal(@json($mediaPayload))' class="btn-enterprise btn-enterprise-secondary btn-action-compact font-semibold" title="Xem chi tiết hồ sơ & thẩm định ảnh">
                                             <span class="material-symbols-outlined text-[14px]">visibility</span>
-                                            <span>Xem</span>
+                                            <span class="hidden sm:inline">Xem</span>
                                         </button>
 
                                         {{-- 2. Phê duyệt --}}
@@ -361,7 +361,7 @@
 
     {{-- ==================== TAB 2: REJECTED QUAN ==================== --}}
     <div id="tab-pane-rejected" class="duyet-tab-pane hidden">
-        <div class="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-xs">
+        <div class="bg-white rounded-3xl border border-slate-200/90 p-4 sm:p-5 shadow-xs">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
                 <div>
                     <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
@@ -373,23 +373,23 @@
             </div>
 
             <div class="w-full overflow-x-auto custom-scrollbar">
-                <table class="w-full text-left text-xs text-slate-700 min-w-[850px] table-fixed-enterprise">
+                <table class="w-full text-left text-xs text-slate-700 table-fixed-enterprise">
                     <colgroup>
-                        <col class="w-[30%]">
-                        <col class="w-[18%]">
+                        <col class="w-[26%]">
                         <col class="w-[17%]">
-                        <col class="w-[11%]">
-                        <col class="w-[9%]">
-                        <col class="w-[15%]">
+                        <col class="w-[17%]">
+                        <col class="w-[10%]">
+                        <col class="w-[10%]">
+                        <col class="w-[20%]">
                     </colgroup>
                     <thead class="bg-rose-50/50 text-slate-600 font-bold uppercase tracking-wider border-b border-rose-100 text-[11px]">
                         <tr>
-                            <th class="px-3.5 py-3">Hồ Sơ Quán & Hình Ảnh</th>
-                            <th class="px-3.5 py-3">Chủ Quán / Liên Hệ</th>
-                            <th class="px-3.5 py-3">Khu Vực & Địa Chỉ</th>
-                            <th class="px-3.5 py-3 whitespace-nowrap">Trạng Thái</th>
-                            <th class="px-3.5 py-3 whitespace-nowrap">Thời Gian Cập Nhật</th>
-                            <th class="px-3.5 py-3 text-right whitespace-nowrap">Thao Tác</th>
+                            <th class="px-2.5 py-3">Hồ Sơ Quán & Hình Ảnh</th>
+                            <th class="px-2.5 py-3">Chủ Quán / Liên Hệ</th>
+                            <th class="px-2.5 py-3">Khu Vực & Địa Chỉ</th>
+                            <th class="px-2.5 py-3 whitespace-nowrap">Trạng Thái</th>
+                            <th class="px-2.5 py-3 whitespace-nowrap">Thời Gian Cập Nhật</th>
+                            <th class="px-2.5 py-3 text-right whitespace-nowrap">Thao Tác</th>
                         </tr>
                     </thead>
                     <tbody id="rejected-quan-tbody" class="divide-y divide-slate-100">
@@ -483,11 +483,11 @@
                                     <div class="font-bold text-slate-800 text-xs truncate">{{ $q->updated_at ? $q->updated_at->diffForHumans() : '' }}</div>
                                     <div class="text-[10px] text-slate-400 mt-0.5 truncate">{{ $q->updated_at ? $q->updated_at->format('d/m/Y H:i') : '' }}</div>
                                 </td>
-                                <td class="px-3.5 py-3 text-right whitespace-nowrap overflow-hidden">
-                                    <div class="flex items-center justify-end gap-1 flex-nowrap">
+                                <td class="px-2.5 py-3 text-right whitespace-nowrap overflow-hidden">
+                                    <div class="inline-flex items-center justify-end gap-1 flex-nowrap">
                                         <button type="button" onclick='openVenueMediaModal(@json($mediaPayload))' class="btn-enterprise btn-enterprise-secondary btn-action-compact font-semibold" title="Xem lại chi tiết hồ sơ quán">
                                             <span class="material-symbols-outlined text-[14px]">visibility</span>
-                                            <span>Xem</span>
+                                            <span class="hidden sm:inline">Xem</span>
                                         </button>
 
                                         <button type="button" onclick="confirmReapproveQuan('{{ $q->id }}', '{{ addslashes($q->ten_quan) }}')" class="btn-enterprise btn-enterprise-success btn-action-compact font-bold shadow-2xs" title="Duyệt lại quán này">
@@ -519,7 +519,7 @@
 
     {{-- ==================== TAB 3: RECENT APPROVED ==================== --}}
     <div id="tab-pane-approved" class="duyet-tab-pane hidden">
-        <div class="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-xs">
+        <div class="bg-white rounded-3xl border border-slate-200/90 p-4 sm:p-5 shadow-xs">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
                 <div>
                     <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
@@ -535,23 +535,23 @@
             </div>
 
             <div class="w-full overflow-x-auto custom-scrollbar">
-                <table class="w-full text-left text-xs text-slate-700 min-w-[850px] table-fixed-enterprise">
+                <table class="w-full text-left text-xs text-slate-700 table-fixed-enterprise">
                     <colgroup>
-                        <col class="w-[32%]">
+                        <col class="w-[28%]">
                         <col class="w-[18%]">
                         <col class="w-[18%]">
                         <col class="w-[12%]">
-                        <col class="w-[10%]">
-                        <col class="w-[10%]">
+                        <col class="w-[12%]">
+                        <col class="w-[12%]">
                     </colgroup>
                     <thead class="bg-emerald-50/50 text-slate-600 font-bold uppercase tracking-wider border-b border-emerald-100 text-[11px]">
                         <tr>
-                            <th class="px-3.5 py-3">Hồ Sơ Quán & Hình Ảnh</th>
-                            <th class="px-3.5 py-3">Chủ Quán / Liên Hệ</th>
-                            <th class="px-3.5 py-3">Khu Vực & Địa Chỉ</th>
-                            <th class="px-3.5 py-3 whitespace-nowrap">Trạng Thái</th>
-                            <th class="px-3.5 py-3 whitespace-nowrap">Thời Điểm Duyệt</th>
-                            <th class="px-3.5 py-3 text-right whitespace-nowrap">Quản Lý</th>
+                            <th class="px-2.5 py-3">Hồ Sơ Quán & Hình Ảnh</th>
+                            <th class="px-2.5 py-3">Chủ Quán / Liên Hệ</th>
+                            <th class="px-2.5 py-3">Khu Vực & Địa Chỉ</th>
+                            <th class="px-2.5 py-3 whitespace-nowrap">Trạng Thái</th>
+                            <th class="px-2.5 py-3 whitespace-nowrap">Thời Điểm Duyệt</th>
+                            <th class="px-2.5 py-3 text-right whitespace-nowrap">Quản Lý</th>
                         </tr>
                     </thead>
                     <tbody id="approved-quan-tbody" class="divide-y divide-slate-100">
@@ -667,7 +667,7 @@
 
     {{-- ==================== TAB 4: UNVERIFIED USERS ==================== --}}
     <div id="tab-pane-users" class="duyet-tab-pane hidden">
-        <div class="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-xs">
+        <div class="bg-white rounded-3xl border border-slate-200/90 p-4 sm:p-5 shadow-xs">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
                 <div>
                     <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
@@ -679,27 +679,27 @@
             </div>
 
             <div class="w-full overflow-x-auto custom-scrollbar">
-                <table class="w-full text-left text-xs text-slate-700 min-w-[850px] table-fixed-enterprise">
+                <table class="w-full text-left text-xs text-slate-700 table-fixed-enterprise">
                     <colgroup>
-                        <col class="w-[24%]">
+                        <col class="w-[22%]">
                         <col class="w-[26%]">
                         <col class="w-[18%]">
                         <col class="w-[12%]">
-                        <col class="w-[20%]">
+                        <col class="w-[22%]">
                     </colgroup>
                     <thead class="bg-indigo-50/40 text-slate-600 font-bold uppercase tracking-wider border-b border-indigo-100 text-[11px]">
                         <tr>
-                            <th class="px-3.5 py-3">Họ và Tên</th>
-                            <th class="px-3.5 py-3">Email</th>
-                            <th class="px-3.5 py-3 whitespace-nowrap">Số Điện Thoại</th>
-                            <th class="px-3.5 py-3 whitespace-nowrap">Ngày Đăng Ký</th>
-                            <th class="px-3.5 py-3 text-right whitespace-nowrap">Thao Tác</th>
+                            <th class="px-2.5 py-3">Họ và Tên</th>
+                            <th class="px-2.5 py-3">Email</th>
+                            <th class="px-2.5 py-3 whitespace-nowrap">Số Điện Thoại</th>
+                            <th class="px-2.5 py-3 whitespace-nowrap">Ngày Đăng Ký</th>
+                            <th class="px-2.5 py-3 text-right whitespace-nowrap">Thao Tác</th>
                         </tr>
                     </thead>
                     <tbody id="unverified-users-tbody" class="divide-y divide-slate-100">
                         @forelse($unverifiedUsers as $u)
                             <tr id="user-row-{{ $u->id }}" class="duyet-table-row hover:bg-slate-50 transition-all duration-300" data-search="{{ strtolower(($u->ho_ten ?? '') . ' ' . ($u->email ?? '') . ' ' . ($u->so_dien_thoai ?? '')) }}">
-                                <td class="px-3.5 py-3 overflow-hidden">
+                                <td class="px-2.5 py-3 overflow-hidden">
                                     <div class="flex items-center gap-2 min-w-0">
                                         <div class="w-7 h-7 rounded-full bg-indigo-100 text-indigo-700 font-bold flex items-center justify-center shrink-0 border border-indigo-200/50 text-xs">
                                             {{ strtoupper(substr($u->ho_ten ?? 'U', 0, 1)) }}
@@ -707,12 +707,12 @@
                                         <div class="font-bold text-slate-900 cell-wrap-1line text-xs block" title="{{ $u->ho_ten }}">{{ $u->ho_ten }}</div>
                                     </div>
                                 </td>
-                                <td class="px-3.5 py-3 text-slate-600 font-medium overflow-hidden">
+                                <td class="px-2.5 py-3 text-slate-600 font-medium overflow-hidden">
                                     <div class="cell-wrap-1line text-xs block" title="{{ $u->email }}">{{ $u->email }}</div>
                                 </td>
-                                <td class="px-3.5 py-3 text-slate-600 font-medium whitespace-nowrap overflow-hidden">{{ $u->so_dien_thoai ?? 'Chưa cập nhật' }}</td>
-                                <td class="px-3.5 py-3 text-slate-500 whitespace-nowrap overflow-hidden">{{ $u->created_at ? $u->created_at->format('d/m/Y') : '' }}</td>
-                                <td class="px-3.5 py-3 text-right whitespace-nowrap overflow-hidden">
+                                <td class="px-2.5 py-3 text-slate-600 font-medium whitespace-nowrap overflow-hidden">{{ $u->so_dien_thoai ?? 'Chưa cập nhật' }}</td>
+                                <td class="px-2.5 py-3 text-slate-500 whitespace-nowrap overflow-hidden">{{ $u->created_at ? $u->created_at->format('d/m/Y') : '' }}</td>
+                                <td class="px-2.5 py-3 text-right whitespace-nowrap overflow-hidden">
                                     <div class="flex items-center justify-end gap-1 flex-nowrap">
                                         <button type="button" onclick="confirmVerifyUser('{{ $u->id }}', '{{ addslashes($u->ho_ten) }}')" class="btn-enterprise btn-enterprise-indigo btn-action-compact" title="Xác thực người dùng">
                                             <span class="material-symbols-outlined text-[14px]">verified</span>

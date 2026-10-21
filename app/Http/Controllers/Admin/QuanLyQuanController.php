@@ -8,6 +8,7 @@ use App\Http\Requests\TaoQuanRequest;
 use App\Models\Quan;
 use App\Models\User;
 use App\Models\VaiTro;
+use App\Notifications\QuanStatusUpdatedNotification;
 use App\Services\AdminAuditService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -144,6 +145,15 @@ class QuanLyQuanController extends Controller
             'status' => $quan->trang_thai,
         ]);
 
+        if ($quan->chu_quan_id && $quan->chu_quan_id !== $request->user()->id) {
+            try {
+                $owner = User::find($quan->chu_quan_id);
+                $owner?->notify(new QuanStatusUpdatedNotification($quan, 'created'));
+            } catch (\Throwable $e) {
+                Log::warning('Quan store notification error: ' . $e->getMessage());
+            }
+        }
+
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
@@ -261,6 +271,14 @@ class QuanLyQuanController extends Controller
             'status' => $quan->trang_thai,
         ]);
 
+        if ($quan->chuQuan) {
+            try {
+                $quan->chuQuan->notify(new QuanStatusUpdatedNotification($quan, 'updated'));
+            } catch (\Throwable $e) {
+                Log::warning('Quan update notification error: ' . $e->getMessage());
+            }
+        }
+
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
@@ -281,6 +299,14 @@ class QuanLyQuanController extends Controller
         $quan->delete(); // Soft delete via ngay_xoa
         $this->adminAudit->record($request->user(), 'venue.deleted', $quan, $request);
 
+        if ($quan->chuQuan) {
+            try {
+                $quan->chuQuan->notify(new QuanStatusUpdatedNotification($quan, 'deleted'));
+            } catch (\Throwable $e) {
+                Log::warning('Quan delete notification error: ' . $e->getMessage());
+            }
+        }
+
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
@@ -299,6 +325,14 @@ class QuanLyQuanController extends Controller
         $quan->restore();
         $quan->update(['trang_thai' => 'da_duyet']);
         $this->adminAudit->record($request->user(), 'venue.restored', $quan, $request);
+
+        if ($quan->chuQuan) {
+            try {
+                $quan->chuQuan->notify(new QuanStatusUpdatedNotification($quan, 'restored'));
+            } catch (\Throwable $e) {
+                Log::warning('Quan restore notification error: ' . $e->getMessage());
+            }
+        }
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -320,6 +354,14 @@ class QuanLyQuanController extends Controller
         $this->deleteVenueImage($quan->anh_bia_key);
 
         $this->adminAudit->record($request->user(), 'venue.force_deleted', $quan, $request);
+
+        if ($quan->chuQuan) {
+            try {
+                $quan->chuQuan->notify(new QuanStatusUpdatedNotification($quan, 'force_deleted'));
+            } catch (\Throwable $e) {
+                Log::warning('Quan force delete notification error: ' . $e->getMessage());
+            }
+        }
         $quan->forceDelete();
 
         if ($request->wantsJson()) {
@@ -343,6 +385,14 @@ class QuanLyQuanController extends Controller
             'featured' => $quan->is_noi_bat,
         ]);
 
+        if ($quan->chuQuan) {
+            try {
+                $quan->chuQuan->notify(new QuanStatusUpdatedNotification($quan, $quan->is_noi_bat ? 'featured_granted' : 'featured_revoked'));
+            } catch (\Throwable $e) {
+                Log::warning('Quan featured notification error: ' . $e->getMessage());
+            }
+        }
+
         $statusStr = $quan->is_noi_bat ? 'Đã thêm quán vào danh sách nổi bật' : 'Đã gỡ quán khỏi danh sách nổi bật';
 
         if ($request->wantsJson()) {
@@ -365,6 +415,14 @@ class QuanLyQuanController extends Controller
         $this->adminAudit->record($request->user(), 'venue.verification_toggled', $quan, $request, [
             'verified' => $quan->is_xac_thuc,
         ]);
+
+        if ($quan->chuQuan) {
+            try {
+                $quan->chuQuan->notify(new QuanStatusUpdatedNotification($quan, $quan->is_xac_thuc ? 'verified_granted' : 'verified_revoked'));
+            } catch (\Throwable $e) {
+                Log::warning('Quan verified notification error: ' . $e->getMessage());
+            }
+        }
 
         $statusStr = $quan->is_xac_thuc ? 'Đã cấp Tick Xanh cho quán' : 'Đã gỡ Tick Xanh của quán';
 

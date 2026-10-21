@@ -303,6 +303,41 @@ class BlogController extends Controller
         $totalComments = $blog->activeComments()->count();
         $blog->update(['comment_count' => $totalComments]);
 
+        // Gửi thông báo đến người được phản hồi nếu đây là reply
+        if (!empty($parentComment) && $parentComment->user && $parentComment->user->id !== $user->id) {
+            try {
+                $parentComment->user->notify(new \App\Notifications\BlogCommentNotification($blog, $comment, $user, true));
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Blog reply comment notification error: ' . $e->getMessage());
+            }
+        }
+
+        // Gửi thông báo đến tác giả bài viết nếu người bình luận không phải là tác giả
+        if ($blog->user && $blog->user->id !== $user->id && (empty($parentComment) || $parentComment->user_id !== $blog->user->id)) {
+            try {
+                $blog->user->notify(new \App\Notifications\BlogCommentNotification($blog, $comment, $user, false));
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Blog author comment notification error: ' . $e->getMessage());
+            }
+        }
+
+        // Ghi log hoạt động hệ thống cho Quản trị viên
+        try {
+            \App\Models\AdminAuditLog::create([
+                'actor_id' => $user->id,
+                'action' => 'blog.commented',
+                'target_type' => \App\Models\Blog::class,
+                'target_id' => (string) $blog->id,
+                'metadata' => [
+                    'blog_title' => $blog->title,
+                    'blog_slug' => $blog->slug,
+                    'user_name' => $user->ho_ten,
+                    'content' => \Illuminate\Support\Str::limit($comment->content, 100),
+                ],
+                'ip_address' => $request->ip(),
+            ]);
+        } catch (\Throwable $e) {}
+
         $isAuthor = ($blog->user_id === $user->id);
         $isAdmin = $user->isAdmin();
 

@@ -162,6 +162,25 @@ class BlogController extends Controller
                 } catch (\Throwable $logEx) {
                     \Illuminate\Support\Facades\Log::error('BlogModerationLog error: ' . $logEx->getMessage());
                 }
+
+                try {
+                    $blog->user->notify(new \App\Notifications\BlogStatusUpdatedNotification($blog, 'submitted'));
+                } catch (\Throwable $notiEx) {
+                    \Illuminate\Support\Facades\Log::warning('Blog submission notification error: ' . $notiEx->getMessage());
+                }
+
+                try {
+                    \App\Models\AdminAuditLog::create([
+                        'actor_id' => Auth::id(),
+                        'action' => 'blog.submitted',
+                        'target_type' => Blog::class,
+                        'target_id' => (string) $blog->id,
+                        'metadata' => ['title' => $blog->title, 'author' => Auth::user()?->ho_ten],
+                        'ip_address' => $request->ip(),
+                    ]);
+                } catch (\Throwable $auditEx) {
+                    \Illuminate\Support\Facades\Log::warning('Blog submit audit log error: ' . $auditEx->getMessage());
+                }
             }
             
             $msg = $blog->status === 'pending'
@@ -285,6 +304,25 @@ class BlogController extends Controller
             } catch (\Throwable $logEx) {
                 \Illuminate\Support\Facades\Log::warning('BlogModerationLog update error: ' . $logEx->getMessage());
             }
+
+            try {
+                $blog->user->notify(new \App\Notifications\BlogStatusUpdatedNotification($blog, 'submitted'));
+            } catch (\Throwable $notiEx) {}
+
+            try {
+                \App\Models\AdminAuditLog::create([
+                    'actor_id' => Auth::id(),
+                    'action' => 'blog.submitted',
+                    'target_type' => Blog::class,
+                    'target_id' => (string) $blog->id,
+                    'metadata' => ['title' => $blog->title, 'author' => Auth::user()?->ho_ten],
+                    'ip_address' => $request->ip(),
+                ]);
+            } catch (\Throwable $auditEx) {}
+        } else {
+            try {
+                $blog->user->notify(new \App\Notifications\BlogStatusUpdatedNotification($blog, 'updated'));
+            } catch (\Throwable $notiEx) {}
         }
         
         return redirect()->route('nguoi-dung.blog.index')->with('success', 'Đã cập nhật bài viết thành công.');

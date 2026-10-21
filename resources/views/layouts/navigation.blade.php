@@ -10,7 +10,7 @@
 @endpush
 
 {{-- Desktop Header --}}
-<header class="hidden md:block fixed top-0 left-0 right-0 w-full z-50 bg-white border-b border-gray-100 shadow-sm transition-all duration-300">
+<header class="hidden md:block fixed top-0 left-0 right-0 w-full z-50 bg-white border-b border-gray-100 shadow-sm transition-all duration-300" style="z-index: 9999;">
     <div class="w-full px-4 md:px-4 lg:px-10 h-18 py-3 flex justify-between items-center">
         <a href="/" class="flex items-center gap-1.5 group">
             <svg class="w-8 h-8 lg:w-10 lg:h-10 transition-transform duration-300 group-hover:scale-105 drop-shadow-sm" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -49,43 +49,18 @@
             </a>
 
             @auth
-                {{-- Desktop Notification Button & Dropdown --}}
+                @php
+                    $isAdmin = $navIsAdmin ?? (Auth::user()->isAdmin());
+                    $navCount = $navUnreadCount ?? ($isAdmin ? (\App\Http\Controllers\Admin\ThongBaoAdminController::buildRealtimeNotificationData(Auth::user())['unread_count'] ?? 0) : Auth::user()->unreadNotifications()->count());
+                    $navList = $navNotifications ?? ($isAdmin ? (\App\Http\Controllers\Admin\ThongBaoAdminController::buildRealtimeNotificationData(Auth::user())['all_notifications'] ?? []) : Auth::user()->notifications()->latest()->take(20)->get());
+                @endphp
+                {{-- Desktop Notification Button --}}
                 <div class="relative" id="user-notif-wrapper">
-                    <button id="user-notif-bell-btn" type="button" onclick="toggleUserNotifDropdown()" class="relative p-2.5 rounded-full hover:bg-primary/5 text-on-surface-variant hover:text-primary transition-all active:scale-90 group cursor-pointer" title="Thông báo của bạn" aria-expanded="false">
+                    <button id="user-notif-bell-btn" type="button" onclick="toggleUserNotifDropdown(event)" class="relative p-2.5 rounded-full hover:bg-primary/5 text-on-surface-variant hover:text-primary transition-all active:scale-90 group cursor-pointer" title="{{ $isAdmin ? 'Thông báo Quản trị' : 'Thông báo của bạn' }}" aria-expanded="false">
                         <span class="material-symbols-outlined text-[22px] group-hover:rotate-12 transition-transform">notifications</span>
-                        <span id="user-notif-badge" class="hidden absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 bg-red-600 text-white text-[10px] font-extrabold rounded-full ring-2 ring-white flex items-center justify-center animate-pulse shadow-sm">0</span>
+                        <span id="user-notif-badge" class="{{ $navCount > 0 ? '' : 'hidden' }} absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 bg-red-600 text-white text-[10px] font-extrabold rounded-full ring-2 ring-white flex items-center justify-center animate-pulse shadow-sm">{{ $navCount > 99 ? '99+' : $navCount }}</span>
                     </button>
-
-                    {{-- Dropdown Container --}}
-                    <div id="user-notif-dropdown" class="hidden absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.12)] border border-gray-100 overflow-hidden z-50 transition-all duration-200">
-                        {{-- Header --}}
-                        <div class="p-3.5 bg-slate-50/80 border-b border-gray-100 flex items-center justify-between">
-                            <div class="flex items-center gap-2">
-                                <span class="font-bold text-sm text-gray-900">Thông báo</span>
-                                <span id="user-notif-badge-pill" class="text-[11px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">0 mới</span>
-                            </div>
-                            <button type="button" onclick="markAllUserNotifsRead()" class="text-[11px] font-semibold text-primary hover:text-primary-hover transition-colors cursor-pointer flex items-center gap-1">
-                                <span class="material-symbols-outlined text-[14px]">done_all</span>
-                                <span>Đọc tất cả</span>
-                            </button>
-                        </div>
-
-                        {{-- Notification List --}}
-                        <div id="user-notif-list" class="max-h-[380px] overflow-y-auto divide-y divide-gray-100 custom-scrollbar">
-                            <div class="p-8 text-center text-gray-400 text-xs">
-                                <span class="material-symbols-outlined text-3xl text-gray-300 block mb-2">notifications_none</span>
-                                Đang tải thông báo...
-                            </div>
-                        </div>
-
-                        {{-- Footer --}}
-                        <div class="p-2.5 bg-gray-50/80 border-t border-gray-100 text-center">
-                            <a href="{{ route('nguoi-dung.blog.index') }}" class="text-xs font-bold text-gray-700 hover:text-primary transition-colors flex items-center justify-center gap-1">
-                                <span>Quản lý bài viết của tôi</span>
-                                <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
-                            </a>
-                        </div>
-                    </div>
+                    @include('layouts.notification-dropdown', ['isMobile' => false, 'isAdmin' => $isAdmin, 'navUnreadCount' => $navCount, 'navNotifications' => $navList])
                 </div>
 
                 <div class="w-px h-6 bg-outline-variant/40 mx-1"></div>
@@ -136,7 +111,7 @@
 </header>
 
 {{-- Mobile Top App Bar --}}
-<header class="flex md:hidden justify-between items-center px-4 h-14 w-full fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100 shadow-sm">
+<header class="flex md:hidden justify-between items-center px-4 h-14 w-full fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100 shadow-sm" style="z-index: 9999;">
     <button class="p-2 rounded-full hover:bg-surface-container active:scale-90 transition-all" aria-label="Menu">
         <span class="material-symbols-outlined text-on-surface-variant text-[22px]">menu</span>
     </button>
@@ -151,10 +126,13 @@
     </a>
     <div class="flex items-center gap-1">
         @auth
-            <button id="user-mobile-notif-btn" type="button" onclick="toggleUserNotifDropdown()" class="relative p-2 rounded-full hover:bg-surface-container active:scale-90 transition-all text-on-surface-variant hover:text-primary cursor-pointer" title="Thông báo">
-                <span class="material-symbols-outlined text-[22px]">notifications</span>
-                <span id="user-mobile-notif-badge" class="hidden absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 bg-red-600 text-white text-[9px] font-extrabold rounded-full ring-2 ring-white flex items-center justify-center animate-pulse">0</span>
-            </button>
+            <div class="relative" id="user-mobile-notif-wrapper">
+                <button id="user-mobile-notif-btn" type="button" onclick="toggleUserNotifDropdown(event)" class="relative p-2 rounded-full hover:bg-surface-container active:scale-90 transition-all text-on-surface-variant hover:text-primary cursor-pointer" title="{{ $isAdmin ? 'Thông báo Quản trị' : 'Thông báo' }}">
+                    <span class="material-symbols-outlined text-[22px]">notifications</span>
+                    <span id="user-mobile-notif-badge" class="{{ ($navCount ?? 0) > 0 ? '' : 'hidden' }} absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 bg-red-600 text-white text-[9px] font-extrabold rounded-full ring-2 ring-white flex items-center justify-center animate-pulse">{{ ($navCount ?? 0) > 99 ? '99+' : ($navCount ?? 0) }}</span>
+                </button>
+                @include('layouts.notification-dropdown', ['isMobile' => true, 'isAdmin' => $isAdmin, 'navUnreadCount' => $navCount, 'navNotifications' => $navList])
+            </div>
         @endauth
         <a href="{{ route('kham-pha') }}" class="p-2 rounded-full hover:bg-surface-container active:scale-90 transition-all text-on-surface-variant hover:text-primary" title="Tìm món ăn">
             <span class="material-symbols-outlined text-[22px]">search</span>
@@ -214,19 +192,22 @@
     </div>
 </nav>
 
+
 {{-- Floating Vietnamese Toast Container for Users --}}
 <div id="user-floating-toast-container" class="fixed top-20 right-4 sm:right-6 z-[9999] flex flex-col gap-3 max-w-sm w-[calc(100vw-32px)] sm:w-96 pointer-events-none"></div>
 
 @auth
 <script>
     (function() {
-        let userNotifs = [];
-        let isUserNotifLoaded = false;
+        const isAdmin = {{ $isAdmin ? 'true' : 'false' }};
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+        let currentNotifs = [];
+        let isNotifLoaded = false;
         let lastSeenNotifId = null;
         let pollTimer = null;
 
         // Play gentle audio chime
-        function playUserChime() {
+        function playChime() {
             try {
                 const ctx = new (window.AudioContext || window.webkitAudioContext)();
                 const osc = ctx.createOscillator();
@@ -250,7 +231,7 @@
             const container = document.getElementById('user-floating-toast-container');
             if (!container) return;
 
-            playUserChime();
+            playChime();
 
             const toast = document.createElement('div');
             toast.className = 'pointer-events-auto bg-white rounded-2xl p-4 shadow-[0_12px_36px_rgba(0,0,0,0.14)] border border-gray-100 flex items-start gap-3.5 transform translate-x-full transition-all duration-300 ease-out cursor-pointer hover:shadow-xl hover:border-primary/30';
@@ -272,7 +253,7 @@
                 </div>
                 <div class="flex-1 min-w-0">
                     <div class="flex items-center justify-between gap-1 mb-0.5">
-                        <span class="text-[10px] font-bold uppercase tracking-wider text-primary">Thông báo mới</span>
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-primary">${isAdmin ? 'Thông báo Quản trị' : 'Thông báo mới'}</span>
                         <span class="text-[10px] text-gray-400">Vừa xong</span>
                     </div>
                     <h4 class="text-xs font-bold text-gray-900 truncate">${title}</h4>
@@ -292,36 +273,12 @@
             }, 8000);
         };
 
-        // Toggle dropdown
-        window.toggleUserNotifDropdown = function() {
-            const dropdown = document.getElementById('user-notif-dropdown');
-            if (!dropdown) return;
-            const isHidden = dropdown.classList.contains('hidden');
-            if (isHidden) {
-                dropdown.classList.remove('hidden');
-                loadUserNotifications();
-            } else {
-                dropdown.classList.add('hidden');
-            }
-        };
-
-        // Close dropdown when clicking outside
-        document.addEventListener('click', function(e) {
-            const wrapper = document.getElementById('user-notif-wrapper');
-            const mobileBtn = document.getElementById('user-mobile-notif-btn');
-            const dropdown = document.getElementById('user-notif-dropdown');
-            if (dropdown && !dropdown.classList.contains('hidden')) {
-                if (wrapper && !wrapper.contains(e.target) && (!mobileBtn || !mobileBtn.contains(e.target))) {
-                    dropdown.classList.add('hidden');
-                }
-            }
-        });
-
         // Update badge counts on desktop and mobile
         function updateBadgeCount(count) {
             const badge = document.getElementById('user-notif-badge');
             const mobileBadge = document.getElementById('user-mobile-notif-badge');
             const pill = document.getElementById('user-notif-badge-pill');
+            const mobilePill = document.getElementById('user-mobile-notif-badge-pill');
 
             if (count > 0) {
                 const text = count > 99 ? '99+' : count;
@@ -336,30 +293,134 @@
                 if (pill) {
                     pill.textContent = count + ' mới';
                 }
+                if (mobilePill) {
+                    mobilePill.textContent = count + ' mới';
+                }
             } else {
                 if (badge) badge.classList.add('hidden');
                 if (mobileBadge) mobileBadge.classList.add('hidden');
                 if (pill) pill.textContent = '0 mới';
+                if (mobilePill) mobilePill.textContent = '0 mới';
             }
         }
 
+        // Toggle dropdown
+        window.toggleUserNotifDropdown = function(e) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            const isMobile = window.innerWidth < 768;
+            const targetDropdown = isMobile ? document.getElementById('user-mobile-notif-dropdown') : document.getElementById('user-notif-dropdown');
+            const otherDropdown = isMobile ? document.getElementById('user-notif-dropdown') : document.getElementById('user-mobile-notif-dropdown');
+
+            if (otherDropdown) otherDropdown.classList.add('hidden');
+            if (!targetDropdown) return;
+
+            const willBeVisible = targetDropdown.classList.contains('hidden');
+            if (willBeVisible) {
+                targetDropdown.classList.remove('hidden');
+                if (!isNotifLoaded || !currentNotifs || currentNotifs.length === 0) {
+                    loadAllNotifications();
+                }
+            } else {
+                targetDropdown.classList.add('hidden');
+            }
+        };
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            const desktopDropdown = document.getElementById('user-notif-dropdown');
+            const mobileDropdown = document.getElementById('user-mobile-notif-dropdown');
+            const desktopBell = document.getElementById('user-notif-bell-btn');
+            const mobileBell = document.getElementById('user-mobile-notif-btn');
+            const desktopWrapper = document.getElementById('user-notif-wrapper');
+            const mobileWrapper = document.getElementById('user-mobile-notif-wrapper');
+
+            if (desktopDropdown && !desktopDropdown.classList.contains('hidden')) {
+                const isTrigger = (desktopBell && desktopBell.contains(e.target)) ||
+                                  (desktopWrapper && desktopWrapper.contains(e.target));
+                const isInside = desktopDropdown.contains(e.target);
+                if (!isTrigger && !isInside) {
+                    desktopDropdown.classList.add('hidden');
+                }
+            }
+
+            if (mobileDropdown && !mobileDropdown.classList.contains('hidden')) {
+                const isTrigger = (mobileBell && mobileBell.contains(e.target)) ||
+                                  (mobileWrapper && mobileWrapper.contains(e.target));
+                const isInside = mobileDropdown.contains(e.target);
+                if (!isTrigger && !isInside) {
+                    mobileDropdown.classList.add('hidden');
+                }
+            }
+        });
+
+        // Close on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.getElementById('user-notif-dropdown')?.classList.add('hidden');
+                document.getElementById('user-mobile-notif-dropdown')?.classList.add('hidden');
+            }
+        });
+
         // Render notification list inside dropdown
-        function renderUserNotifList(items) {
+        function renderDropdownContent(items) {
             const listEl = document.getElementById('user-notif-list');
-            if (!listEl) return;
+            const mobileListEl = document.getElementById('user-mobile-notif-list');
+            if (!listEl && !mobileListEl) return;
 
             if (!items || items.length === 0) {
-                listEl.innerHTML = `
+                const emptyHtml = `
                     <div class="py-10 px-4 text-center text-gray-400 text-xs">
                         <span class="material-symbols-outlined text-4xl text-gray-300 block mb-2">notifications_none</span>
-                        <p class="font-medium text-gray-600">Bạn chưa có thông báo nào</p>
-                        <p class="text-[11px] text-gray-400 mt-1">Các thông báo duyệt bài viết sẽ xuất hiện tại đây.</p>
+                        <p class="font-medium text-gray-600">${isAdmin ? 'Bạn chưa có thông báo quản trị nào' : 'Bạn chưa có thông báo nào'}</p>
+                        <p class="text-[11px] text-gray-400 mt-1">${isAdmin ? 'Khi có quán, bài viết hoặc tài khoản cần duyệt, thông báo sẽ xuất hiện tại đây.' : 'Các thông báo duyệt quán, bài viết và đánh giá sẽ xuất hiện tại đây.'}</p>
                     </div>
                 `;
+                if (listEl) listEl.innerHTML = emptyHtml;
+                if (mobileListEl) mobileListEl.innerHTML = emptyHtml;
                 return;
             }
 
-            listEl.innerHTML = items.map(item => {
+            if (isAdmin) {
+                // Render Admin Items
+                const html = items.map(item => {
+                    const isUnread = !item.read;
+                    const nId = item.id || '';
+                    const nTitle = item.title || 'Thông báo hệ thống';
+                    const nDesc = item.description || '';
+                    const nUrl = item.url || '{{ route("admin.thong-bao.index") }}';
+                    const nIcon = item.icon || 'notifications';
+                    const nBadgeClass = item.badge_class || 'bg-amber-100 text-amber-700';
+                    const nCatLabel = item.category_label || 'Hệ thống';
+                    const nTimeAgo = item.time_ago || '';
+
+                    return `
+                        <div onclick="handleNotifClick('${nId}', '${nUrl}')" class="p-3.5 hover:bg-gray-50/80 transition-colors cursor-pointer flex items-start gap-3 relative ${isUnread ? 'bg-amber-50/30' : ''}">
+                            <div class="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
+                                <span class="material-symbols-outlined text-[18px]">${nIcon}</span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center justify-between gap-1 mb-1">
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${nBadgeClass}">${nCatLabel}</span>
+                                    <span class="text-[10px] text-gray-400 whitespace-nowrap">${nTimeAgo}</span>
+                                </div>
+                                <h4 class="text-xs ${isUnread ? 'font-black text-gray-900' : 'font-normal text-gray-600'} leading-tight truncate mb-1" title="${nTitle}">${nTitle}</h4>
+                                <p class="text-[11px] ${isUnread ? 'text-gray-800 font-medium' : 'text-gray-500'} leading-relaxed line-clamp-2">${nDesc}</p>
+                            </div>
+                            ${isUnread ? '<span class="w-2.5 h-2.5 rounded-full bg-primary shrink-0 self-center ring-2 ring-white"></span>' : ''}
+                        </div>
+                    `;
+                }).join('');
+
+                if (listEl) listEl.innerHTML = html;
+                if (mobileListEl) mobileListEl.innerHTML = html;
+                return;
+            }
+
+            // Render User Items
+            const html = items.map(item => {
                 const isUnread = !item.read;
                 const status = item.status || '';
                 const action = item.action || '';
@@ -368,34 +429,70 @@
                 let iconClass = 'bg-primary/10 text-primary';
                 let statusBadge = '';
 
-                if (action === 'published' || status === 'published') {
+                if (action === 'approved' || status === 'approved') {
+                    iconName = 'check_circle';
+                    iconClass = 'bg-emerald-100 text-emerald-700';
+                    statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">' + (item.status_label || 'Đã duyệt') + '</span>';
+                } else if (action === 'published' || status === 'published') {
                     iconName = 'check_circle';
                     iconClass = 'bg-emerald-100 text-emerald-700';
                     statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">Đã xuất bản</span>';
                 } else if (action === 'rejected' || status === 'rejected') {
                     iconName = 'cancel';
                     iconClass = 'bg-rose-100 text-rose-700';
-                    statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700">Từ chối</span>';
+                    statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700">' + (item.status_label || 'Từ chối') + '</span>';
+                } else if (action === 'submitted' || status === 'pending') {
+                    iconName = 'schedule';
+                    iconClass = 'bg-blue-100 text-blue-700';
+                    statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700">' + (item.status_label || 'Chờ duyệt') + '</span>';
                 } else if (action === 'requested_revision' || status === 'need_revision') {
                     iconName = 'edit_note';
                     iconClass = 'bg-amber-100 text-amber-700';
                     statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700">Cần sửa</span>';
-                } else if (action === 'hidden' || status === 'hidden') {
-                    iconName = 'visibility_off';
-                    iconClass = 'bg-slate-200 text-slate-700';
-                    statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-700">Đã ẩn</span>';
+                } else if (action === 'hero') {
+                    iconName = 'auto_awesome';
+                    iconClass = 'bg-amber-100 text-amber-700';
+                    statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700">Hero Blog</span>';
+                } else if (action === 'featured_granted') {
+                    iconName = 'hotel_class';
+                    iconClass = 'bg-amber-100 text-amber-700';
+                    statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700">Quán nổi bật</span>';
+                } else if (action === 'verified_granted' || action === 'verified') {
+                    iconName = 'verified';
+                    iconClass = 'bg-emerald-100 text-emerald-700';
+                    statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">Đã xác thực</span>';
+                } else if (action === 'verified_revoked' || action === 'verification_rejected') {
+                    iconName = 'gpp_bad';
+                    iconClass = 'bg-rose-100 text-rose-700';
+                    statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700">Từ chối xác thực</span>';
+                } else if (action === 'created') {
+                    iconName = 'add_business';
+                    iconClass = 'bg-indigo-100 text-indigo-700';
+                    statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-700">Khởi tạo</span>';
+                } else if (action === 'updated') {
+                    iconName = 'store';
+                    iconClass = 'bg-amber-100 text-amber-700';
+                    statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700">Cập nhật quán</span>';
+                } else if (action === 'deleted' || action === 'force_deleted') {
+                    iconName = 'delete_forever';
+                    iconClass = 'bg-rose-100 text-rose-700';
+                    statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700">' + (item.status_label || 'Đã tạm xóa') + '</span>';
+                } else if (action === 'restored') {
+                    iconName = 'unarchive';
+                    iconClass = 'bg-emerald-100 text-emerald-700';
+                    statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">Đã khôi phục</span>';
+                } else if (action === 'new_review') {
+                    iconName = 'rate_review';
+                    iconClass = 'bg-amber-100 text-amber-700';
+                    statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700">' + (item.status_label || 'Đánh giá') + '</span>';
+                } else if (action === 'broadcast') {
+                    iconName = 'campaign';
+                    iconClass = 'bg-purple-100 text-purple-700';
+                    statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-700">Ban quản trị</span>';
                 } else if (action === 'role_updated') {
                     iconName = 'admin_panel_settings';
                     iconClass = 'bg-purple-100 text-purple-700';
                     statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-700">Đổi vai trò</span>';
-                } else if (action === 'verified') {
-                    iconName = 'verified';
-                    iconClass = 'bg-emerald-100 text-emerald-700';
-                    statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">Đã xác thực</span>';
-                } else if (action === 'verification_rejected') {
-                    iconName = 'gpp_bad';
-                    iconClass = 'bg-rose-100 text-rose-700';
-                    statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700">Từ chối xác thực</span>';
                 } else if (action === 'permission_granted') {
                     iconName = 'lock_open';
                     iconClass = 'bg-teal-100 text-teal-700';
@@ -408,10 +505,34 @@
                     iconName = 'refresh';
                     iconClass = 'bg-sky-100 text-sky-700';
                     statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-700">Quyền mặc định</span>';
+                } else if (action === 'status_updated') {
+                    iconName = 'manage_accounts';
+                    iconClass = 'bg-blue-100 text-blue-700';
+                    statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700">Đổi trạng thái</span>';
+                } else if (action === 'review_reply') {
+                    iconName = 'reply';
+                    iconClass = 'bg-blue-100 text-blue-700';
+                    statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700">Đã phản hồi</span>';
+                } else if (action === 'blog_comment') {
+                    iconName = 'chat';
+                    iconClass = 'bg-sky-100 text-sky-700';
+                    statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-700">Bình luận</span>';
+                } else if (action === 'comment_reply') {
+                    iconName = 'quickreply';
+                    iconClass = 'bg-teal-100 text-teal-700';
+                    statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-100 text-teal-700">Phản hồi</span>';
+                } else if (action === 'menu_updated') {
+                    iconName = 'restaurant_menu';
+                    iconClass = 'bg-teal-100 text-teal-700';
+                    statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-100 text-teal-700">Thực đơn</span>';
+                } else if (action === 'verification_requested') {
+                    iconName = 'verified_user';
+                    iconClass = 'bg-indigo-100 text-indigo-700';
+                    statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-700">Chờ xác thực</span>';
                 }
 
                 return `
-                    <div onclick="handleUserNotifClick('${item.id}', '${item.link || ''}')" class="p-3.5 hover:bg-gray-50/80 transition-colors cursor-pointer flex items-start gap-3 relative ${isUnread ? 'bg-amber-50/30' : ''}">
+                    <div onclick="handleNotifClick('${item.id}', '${item.link || ''}')" class="p-3.5 hover:bg-gray-50/80 transition-colors cursor-pointer flex items-start gap-3 relative ${isUnread ? 'bg-amber-50/30' : ''}">
                         <div class="w-9 h-9 rounded-xl ${iconClass} flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
                             <span class="material-symbols-outlined text-[18px]">${iconName}</span>
                         </div>
@@ -420,20 +541,25 @@
                                 ${statusBadge}
                                 <span class="text-[10px] text-gray-400 whitespace-nowrap">${item.time_ago || ''}</span>
                             </div>
-                            <h4 class="text-xs font-bold text-gray-900 leading-tight truncate mb-1" title="${item.title || ''}">${item.title || 'Thông báo bài viết'}</h4>
-                            <p class="text-[11px] text-gray-600 leading-relaxed line-clamp-2">${item.message || ''}</p>
+                            <h4 class="text-xs ${isUnread ? 'font-black text-gray-900' : 'font-normal text-gray-600'} leading-tight truncate mb-1" title="${item.title || ''}">${item.title || 'Thông báo hệ thống'}</h4>
+                            <p class="text-[11px] ${isUnread ? 'text-gray-800 font-medium' : 'text-gray-500'} leading-relaxed line-clamp-2">${item.message || ''}</p>
                             ${item.note ? `<div class="mt-1.5 p-2 rounded-lg bg-gray-100/80 text-[11px] text-gray-700 border-l-2 border-primary/50 italic line-clamp-2">"${item.note}"</div>` : ''}
                         </div>
-                        ${isUnread ? '<span class="w-2 h-2 rounded-full bg-primary shrink-0 self-center"></span>' : ''}
+                        ${isUnread ? '<span class="w-2.5 h-2.5 rounded-full bg-primary shrink-0 self-center ring-2 ring-white"></span>' : ''}
                     </div>
                 `;
             }).join('');
+
+            if (listEl) listEl.innerHTML = html;
+            if (mobileListEl) mobileListEl.innerHTML = html;
         }
 
-        // Fetch user notifications list
-        function loadUserNotifications() {
-            const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
-            fetch('{{ route("nguoi-dung.thong-bao.index") }}', {
+        // Fetch notifications list
+        function loadAllNotifications() {
+            const csrf = document.querySelector('meta[name="csrf-token"]')?.content || csrfToken;
+            const url = isAdmin ? '{{ route("admin.realtime-check") }}' : '{{ route("nguoi-dung.thong-bao.index") }}';
+
+            fetch(url, {
                 headers: {
                     'Accept': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
@@ -443,47 +569,120 @@
             .then(res => res.json())
             .then(data => {
                 if (data && data.success) {
-                    userNotifs = data.notifications || [];
-                    updateBadgeCount(data.unread_count || 0);
-                    renderUserNotifList(userNotifs);
-                    isUserNotifLoaded = true;
+                    currentNotifs = isAdmin ? (data.all_notifications || []) : (data.notifications || []);
+                    let unreadCount = data.unread_count || 0;
+                    if (window.__userJustMarkedAllReadAt && (Date.now() - window.__userJustMarkedAllReadAt < 4000)) {
+                        unreadCount = 0;
+                        currentNotifs.forEach(n => { n.read = true; });
+                    }
+                    updateBadgeCount(unreadCount);
+                    renderDropdownContent(currentNotifs);
+                    isNotifLoaded = true;
                 }
             })
             .catch(() => {});
         }
 
-        // Handle notification click: mark as read then redirect
-        window.handleUserNotifClick = function(id, link) {
-            const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
-            fetch(`/thanh-vien/thong-bao/${id}/danh-dau-da-doc`, {
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': csrf,
+        // Handle notification click: 1 click marks as read and redirects instantly
+        window.handleNotifClick = function(id, link) {
+            const csrf = document.querySelector('meta[name="csrf-token"]')?.content || csrfToken;
+
+            // 1. Phản hồi giao diện tức thì (0ms Optimistic UI)
+            const badge = document.getElementById('user-notif-badge');
+            const mobileBadge = document.getElementById('user-mobile-notif-badge');
+            let currentCount = parseInt(badge?.textContent || mobileBadge?.textContent || '0', 10);
+            if (isNaN(currentCount)) currentCount = 0;
+            if (currentCount > 0) {
+                updateBadgeCount(Math.max(0, currentCount - 1));
+            }
+
+            // Đổi trạng thái thẻ nếu đang ở trang Trung tâm thông báo
+            const card = document.getElementById(`notif-card-${id}`);
+            if (card) {
+                card.classList.remove('border-primary/40', 'bg-amber-50/20', 'bg-amber-50/25');
+                card.classList.add('border-gray-100');
+                const pulseBadge = card.querySelector('.animate-pulse, .animate-ping')?.closest('.inline-flex');
+                if (pulseBadge) pulseBadge.remove();
+                const markBtn = card.querySelector('button[onclick*="markSingleRead"]');
+                if (markBtn) markBtn.remove();
+            }
+
+            const pageBadge = document.getElementById('page-unread-badge');
+            if (pageBadge) {
+                let pCount = parseInt(pageBadge.textContent || '0', 10);
+                if (!isNaN(pCount) && pCount > 1) {
+                    pageBadge.textContent = `${pCount - 1} chưa đọc`;
+                } else {
+                    pageBadge.remove();
                 }
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data && data.success) {
-                    updateBadgeCount(data.unread_count || 0);
+            }
+
+            // 2. Gửi request lưu database ngầm không block bằng keepalive
+            try {
+                const markSingleUrl = isAdmin
+                    ? `/admin/thong-bao/${encodeURIComponent(id)}/mark-read`
+                    : `/thanh-vien/thong-bao/${encodeURIComponent(id)}/danh-dau-da-doc`;
+
+                fetch(markSingleUrl, {
+                    method: 'POST',
+                    keepalive: true,
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': csrf,
+                    }
+                }).catch(() => {});
+            } catch (e) {}
+
+            // 3. Chuyển hướng ngay lập tức (1 lần nhấn duy nhất)
+            if (link && link !== '#' && link !== 'javascript:void(0)') {
+                const currentUrl = window.location.href.split('#')[0].split('?')[0];
+                let isCurrentPage = false;
+                try {
+                    const parsedUrl = new URL(link, window.location.origin).href.split('#')[0].split('?')[0];
+                    if (parsedUrl === currentUrl) isCurrentPage = true;
+                } catch (e) {
+                    if (link === window.location.pathname) isCurrentPage = true;
                 }
-                if (link) {
-                    window.location.href = link;
+
+                if (isCurrentPage && link.includes('#')) {
+                    const hash = link.substring(link.indexOf('#'));
+                    const targetEl = document.querySelector(hash);
+                    if (targetEl) {
+                        targetEl.scrollIntoView({ behavior: 'smooth' });
+                        document.getElementById('user-notif-dropdown')?.classList.add('hidden');
+                        document.getElementById('user-mobile-notif-dropdown')?.classList.add('hidden');
+                        return;
+                    }
                 }
-            })
-            .catch(() => {
-                if (link) window.location.href = link;
-            });
+                window.location.href = link;
+            }
+        };
+
+        // Aliases for global handlers
+        window.handleUserNotifClick = window.handleNotifClick;
+        window.handleAdminNotifClick = function(e, id, url) {
+            if (e) { e.preventDefault(); }
+            window.handleNotifClick(id, url);
         };
 
         // Mark all as read
-        window.markAllUserNotifsRead = function() {
-            const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
-            fetch('{{ route("nguoi-dung.thong-bao.mark-all-read") }}', {
+        window.markAllNotifsRead = function() {
+            const csrf = document.querySelector('meta[name="csrf-token"]')?.content || csrfToken;
+            const markUrl = isAdmin ? '{{ route("admin.thong-bao.mark-all-read") }}' : '{{ route("nguoi-dung.thong-bao.mark-all-read") }}';
+
+            updateBadgeCount(0);
+            if (currentNotifs && Array.isArray(currentNotifs)) {
+                currentNotifs.forEach(n => { n.read = true; });
+                renderDropdownContent(currentNotifs);
+            }
+
+            fetch(markUrl, {
                 method: 'POST',
                 headers: {
                     'Accept': 'application/json',
+                    'Content-Type': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
                     'X-CSRF-TOKEN': csrf,
                 }
@@ -492,15 +691,72 @@
             .then(data => {
                 if (data && data.success) {
                     updateBadgeCount(0);
-                    loadUserNotifications();
+                    loadAllNotifications();
                 }
             })
             .catch(() => {});
         };
 
+        window.markAllUserNotifsRead = window.markAllNotifsRead;
+        window.markAllAdminNotifsReadDropdown = function(e) {
+            if (e) e.preventDefault();
+            window.markAllNotifsRead();
+        };
+
         // Realtime check polling engine
-        function checkUserRealtimeNotifications() {
-            const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+        function checkRealtimeNotifications() {
+            const csrf = document.querySelector('meta[name="csrf-token"]')?.content || csrfToken;
+
+            if (isAdmin) {
+                // Admin Real-time Polling
+                fetch('{{ route("admin.realtime-check") }}', {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': csrf,
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (!data || !data.success) return;
+
+                    let unreadCount = data.unread_count || 0;
+                    if (window.__userJustMarkedAllReadAt && (Date.now() - window.__userJustMarkedAllReadAt < 4000)) {
+                        unreadCount = 0;
+                    }
+                    updateBadgeCount(unreadCount);
+
+                    if (data.all_notifications && data.all_notifications.length > 0) {
+                        const top = data.all_notifications[0];
+                        if (lastSeenNotifId !== null && lastSeenNotifId !== top.id && !top.read) {
+                            window.showUserToast(
+                                top.title || 'Thông báo quản trị mới',
+                                top.description || 'Có dữ liệu mới cần duyệt trong hệ thống.',
+                                top.url || '{{ route("admin.thong-bao.index") }}',
+                                'info',
+                                top.icon || 'campaign'
+                            );
+
+                            window.dispatchEvent(new CustomEvent('admin:notifications-updated', { detail: data }));
+                            window.dispatchEvent(new CustomEvent('quanmoi:notification-received', { detail: top }));
+
+                            const desktopDropdown = document.getElementById('user-notif-dropdown');
+                            const mobileDropdown = document.getElementById('user-mobile-notif-dropdown');
+                            const isAnyOpen = (desktopDropdown && !desktopDropdown.classList.contains('hidden')) ||
+                                              (mobileDropdown && !mobileDropdown.classList.contains('hidden'));
+                            if (isAnyOpen) {
+                                currentNotifs = data.all_notifications;
+                                renderDropdownContent(currentNotifs);
+                            }
+                        }
+                        lastSeenNotifId = top.id;
+                    }
+                })
+                .catch(() => {});
+                return;
+            }
+
+            // User / Restaurant Owner Real-time Polling
             fetch('{{ route("nguoi-dung.thong-bao.realtime-check") }}', {
                 headers: {
                     'Accept': 'application/json',
@@ -512,7 +768,11 @@
             .then(data => {
                 if (!data || !data.success) return;
 
-                updateBadgeCount(data.unread_count || 0);
+                let unreadCount = data.unread_count || 0;
+                if (window.__userJustMarkedAllReadAt && (Date.now() - window.__userJustMarkedAllReadAt < 4000)) {
+                    unreadCount = 0;
+                }
+                updateBadgeCount(unreadCount);
 
                 if (data.latest) {
                     const top = data.latest;
@@ -521,18 +781,28 @@
                         const action = top.action || '';
                         let toastType = 'info';
                         let toastIcon = 'notifications';
-                        if (action === 'published' || action === 'approved' || action === 'verified' || action === 'permission_granted') {
+
+                        if (['published', 'approved', 'verified', 'verified_granted', 'permission_granted', 'restored', 'featured_granted'].includes(action)) {
                             toastType = 'success';
-                            toastIcon = action === 'verified' ? 'verified' : (action === 'permission_granted' ? 'lock_open' : 'check_circle');
+                            toastIcon = action === 'featured_granted' ? 'hotel_class' : (['verified', 'verified_granted'].includes(action) ? 'verified' : (action === 'permission_granted' ? 'lock_open' : (action === 'restored' ? 'unarchive' : 'check_circle')));
+                        } else if (['rejected', 'verification_rejected', 'permission_denied', 'deleted', 'force_deleted'].includes(action)) {
+                            toastType = 'error';
+                            toastIcon = action === 'permission_denied' ? 'lock' : (['deleted', 'force_deleted'].includes(action) ? 'delete_forever' : (action === 'verification_rejected' ? 'gpp_bad' : 'cancel'));
+                        } else if (['requested_revision', 'need_revision', 'featured_revoked', 'verified_revoked'].includes(action)) {
+                            toastType = 'warning';
+                            toastIcon = action === 'featured_revoked' ? 'star_border' : 'edit_note';
+                        } else if (action === 'new_review') {
+                            toastType = 'info';
+                            toastIcon = 'rate_review';
+                        } else if (action === 'broadcast') {
+                            toastType = 'info';
+                            toastIcon = 'campaign';
                         } else if (action === 'role_updated') {
                             toastType = 'info';
                             toastIcon = 'admin_panel_settings';
-                        } else if (action === 'rejected' || action === 'verification_rejected' || action === 'permission_denied') {
-                            toastType = 'error';
-                            toastIcon = action === 'permission_denied' ? 'lock' : 'cancel';
-                        } else if (action === 'requested_revision' || action === 'need_revision') {
-                            toastType = 'warning';
-                            toastIcon = 'edit_note';
+                        } else if (action === 'submitted') {
+                            toastType = 'info';
+                            toastIcon = 'schedule';
                         } else if (action === 'permission_reset') {
                             toastType = 'info';
                             toastIcon = 'refresh';
@@ -553,18 +823,21 @@
                         if (top.quan_id) {
                             window.dispatchEvent(new CustomEvent('quanmoi:quan-status-updated', { detail: top }));
                         }
-                        if (top.action && (top.action.startsWith('permission_') || top.action === 'role_updated' || top.action === 'verified' || top.action === 'verification_rejected')) {
+                        if (top.action && (top.action.startsWith('permission_') || top.action === 'role_updated' || top.action === 'verified' || top.action === 'verification_rejected' || top.action === 'status_updated')) {
                             window.dispatchEvent(new CustomEvent('quanmoi:role-permission-updated', { detail: top }));
                         }
-                        if (top.quan_id) {
-                            window.dispatchEvent(new CustomEvent('quanmoi:quan-status-updated', { detail: top }));
+                        if (top.action === 'new_review') {
+                            window.dispatchEvent(new CustomEvent('quanmoi:review-received', { detail: top }));
                         }
                         window.dispatchEvent(new CustomEvent('quanmoi:notification-received', { detail: top }));
 
                         // Refresh notification dropdown list if open
-                        const dropdown = document.getElementById('user-notif-dropdown');
-                        if (dropdown && !dropdown.classList.contains('hidden')) {
-                            loadUserNotifications();
+                        const desktopDropdown = document.getElementById('user-notif-dropdown');
+                        const mobileDropdown = document.getElementById('user-mobile-notif-dropdown');
+                        const isAnyOpen = (desktopDropdown && !desktopDropdown.classList.contains('hidden')) ||
+                                          (mobileDropdown && !mobileDropdown.classList.contains('hidden'));
+                        if (isAnyOpen) {
+                            loadAllNotifications();
                         }
                     }
                     lastSeenNotifId = top.id;
@@ -573,14 +846,27 @@
             .catch(() => {});
         }
 
-        // Initialize polling
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initial count check
-            checkUserRealtimeNotifications();
+        // Initialize notifications immediately
+        function initNotifications() {
+            loadAllNotifications();
+            checkRealtimeNotifications();
+            if (!pollTimer) {
+                pollTimer = setInterval(checkRealtimeNotifications, 2500);
+            }
+        }
 
-            // Periodic poll every 2.5 seconds for instant bi-directional sync
-            pollTimer = setInterval(checkUserRealtimeNotifications, 2500);
-        });
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initNotifications);
+        } else {
+            initNotifications();
+        }
+        document.addEventListener('turbo:load', initNotifications);
+
+        // Preload when hovering over bell button
+        const dBtn = document.getElementById('user-notif-bell-btn');
+        if (dBtn) dBtn.addEventListener('mouseenter', () => { if (!isNotifLoaded) loadAllNotifications(); });
+        const mBtn = document.getElementById('user-mobile-notif-btn');
+        if (mBtn) mBtn.addEventListener('mouseenter', () => { if (!isNotifLoaded) loadAllNotifications(); });
     })();
 </script>
 @endauth

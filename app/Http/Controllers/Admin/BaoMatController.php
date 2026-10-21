@@ -21,6 +21,17 @@ class BaoMatController extends Controller
 
     public function update(Request $request)
     {
+        if ($request->user()) {
+            \App\Models\AdminAuditLog::create([
+                'actor_id' => $request->user()->id,
+                'action' => 'security.updated',
+                'target_type' => \App\Models\User::class,
+                'target_id' => (string) $request->user()->id,
+                'metadata' => ['description' => 'Cập nhật cấu hình bảo mật hệ thống'],
+                'ip_address' => $request->ip(),
+            ]);
+        }
+
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,

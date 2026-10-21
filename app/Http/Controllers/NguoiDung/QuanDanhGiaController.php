@@ -26,10 +26,53 @@ class QuanDanhGiaController extends Controller
             ->where('trang_thai', 'da_duyet')
             ->firstOrFail();
 
-        $quan->danhGia()->updateOrCreate(
+        $review = $quan->danhGia()->updateOrCreate(
             ['nguoi_dung_id' => $request->user()->id],
             $validated,
         );
+
+        // Notify restaurant owner
+        if ($quan->chuQuan && $quan->chuQuan->id !== $request->user()->id) {
+            try {
+                $quan->chuQuan->notify(new \App\Notifications\QuanReviewNotification(
+                    $quan,
+                    $request->user(),
+                    $validated['so_sao'],
+                    $validated['binh_luan']
+                ));
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Review notification error: ' . $e->getMessage());
+            }
+        }
+
+        // Notify reviewer (confirmation)
+        try {
+            $request->user()->notify(new \App\Notifications\QuanReviewNotification(
+                $quan,
+                $request->user(),
+                $validated['so_sao'],
+                $validated['binh_luan']
+            ));
+        } catch (\Throwable $e) {}
+
+        // Record for Admin Activity Feed
+        try {
+            \App\Models\AdminAuditLog::create([
+                'actor_id' => $request->user()->id,
+                'action' => 'venue.reviewed',
+                'target_type' => Quan::class,
+                'target_id' => (string) $quan->id,
+                'metadata' => [
+                    'quan_name' => $quan->ten_quan,
+                    'so_sao' => $validated['so_sao'],
+                    'binh_luan' => \Illuminate\Support\Str::limit($validated['binh_luan'], 100),
+                    'user_name' => $request->user()->ho_ten,
+                ],
+                'ip_address' => $request->ip(),
+            ]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Review audit log error: ' . $e->getMessage());
+        }
 
         return redirect()->route('quan.detail', $quan->slug)
             ->withFragment('reviews-section')

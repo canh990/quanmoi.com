@@ -45,13 +45,13 @@
                 position: fixed !important;
                 top: 0 !important;
                 left: 0 !important;
-                width: 260px !important;
+                width: 216px !important;
                 height: 100vh !important;
                 z-index: 40 !important;
             }
             .admin-main-wrapper {
-                margin-left: 260px !important;
-                width: calc(100% - 260px) !important;
+                margin-left: 216px !important;
+                width: calc(100% - 216px) !important;
                 min-width: 0 !important;
             }
         }
@@ -533,18 +533,18 @@
             -webkit-overflow-scrolling: touch;
         }
         .btn-action-compact {
-            padding: 0.25rem 0.5rem !important;
-            font-size: 0.72rem !important;
-            line-height: 1rem !important;
+            padding: 0.2rem 0.35rem !important;
+            font-size: 0.7rem !important;
+            line-height: 0.95rem !important;
             display: inline-flex !important;
             align-items: center !important;
-            gap: 0.25rem !important;
+            gap: 0.2rem !important;
             white-space: nowrap !important;
             flex-shrink: 0 !important;
-            border-radius: 0.5rem !important;
+            border-radius: 0.375rem !important;
         }
         .btn-action-compact .material-symbols-outlined {
-            font-size: 14px !important;
+            font-size: 13px !important;
         }
 
         /* ==========================================================================
@@ -601,13 +601,13 @@
     <aside id="admin-sidebar-mobile" class="fixed inset-y-0 left-0 z-50 w-72 bg-slate-900 text-slate-300 flex md:hidden flex-col justify-between transform -translate-x-full transition-transform duration-300 ease-in-out border-r border-slate-800 shadow-2xl">
         <div class="flex flex-col h-full">
             <div class="flex items-center justify-between px-5 py-4 border-b border-slate-800 bg-slate-950/60">
-                <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-lg bg-[#F59E0B] flex items-center justify-center text-white shadow-sm font-bold">
+                <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 shrink-0 group">
+                    <div class="w-8 h-8 rounded-lg bg-[#F59E0B] flex items-center justify-center text-white shadow-sm font-bold shrink-0">
                         <span class="material-symbols-outlined text-[20px]">space_dashboard</span>
                     </div>
-                    <div>
-                        <h1 class="font-bold text-sm text-white tracking-tight leading-none">QuanMoi Admin</h1>
-                        <span class="text-[10px] text-slate-400 font-medium">trang quản trị hệ thống</span>
+                    <div class="min-w-0">
+                        <h1 class="font-bold text-sm text-white tracking-tight leading-none truncate">Quán Mới Quản Trị</h1>
+                        <span class="text-[10px] text-slate-400 font-medium truncate block mt-0.5">Trang quản trị hệ thống</span>
                     </div>
                 </a>
                 <button onclick="toggleSidebar()" class="text-slate-400 hover:text-white p-1 rounded-md">
@@ -640,27 +640,27 @@
     </aside>
 
     {{-- Desktop Sidebar --}}
-    <aside id="admin-sidebar" class="hidden md:flex flex-col justify-between fixed top-0 left-0 z-40 w-65 h-screen bg-slate-900 text-slate-300 border-r border-slate-800/80 flex-shrink-0">
+    <aside id="admin-sidebar" class="hidden md:flex flex-col justify-between fixed top-0 left-0 z-40 w-[216px] h-screen bg-slate-900 text-slate-300 border-r border-slate-800/80 flex-shrink-0">
         <div class="flex flex-col h-full">
-            <div class="flex items-center justify-between px-5 py-4 border-b border-slate-800/80 bg-slate-950/60">
-                <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-lg bg-[#F59E0B] flex items-center justify-center text-white shadow-sm font-bold">
+            <div class="flex items-center justify-between px-3.5 py-3.5 border-b border-slate-800/80 bg-slate-950/60">
+                <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2.5 shrink-0 group">
+                    <div class="w-8 h-8 rounded-lg bg-[#F59E0B] flex items-center justify-center text-white shadow-sm font-bold shrink-0">
                         <span class="material-symbols-outlined text-[20px]">space_dashboard</span>
                     </div>
-                    <div>
-                        <h1 class="font-bold text-sm text-white tracking-tight leading-none">QuanMoi Admin</h1>
-                        <span class="text-[10px] text-slate-400 font-medium">trang quản trị hệ thống</span>
+                    <div class="min-w-0">
+                        <h1 class="font-bold text-xs text-white tracking-tight leading-none truncate">Quán Mới Quản Trị</h1>
+                        <span class="text-[9px] text-slate-400 font-medium truncate block mt-0.5">Trang quản trị hệ thống</span>
                     </div>
                 </a>
             </div>
 
-            <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-5 custom-scrollbar">
+            <nav class="flex-1 overflow-y-auto px-2.5 py-3 space-y-4 custom-scrollbar">
                 @include('admin.partials.sidebar-nav')
             </nav>
 
-            <div class="p-3.5 border-t border-slate-800 bg-slate-950/40 flex items-center justify-between">
-                <div class="flex items-center gap-2.5 min-w-0">
-                    <div class="w-8 h-8 rounded-md bg-indigo-600 text-white font-bold flex items-center justify-center text-xs flex-shrink-0">
+            <div class="p-3 border-t border-slate-800 bg-slate-950/40 flex items-center justify-between">
+                <div class="flex items-center gap-2 min-w-0">
+                    <div class="w-7 h-7 rounded-md bg-indigo-600 text-white font-bold flex items-center justify-center text-xs flex-shrink-0">
                         {{ strtoupper(substr(auth()->user()->ho_ten ?? 'A', 0, 1)) }}
                     </div>
                     <div class="min-w-0 flex-1">
@@ -679,10 +679,10 @@
     </aside>
 
     {{-- Main Content Wrapper --}}
-    <div class="admin-main-wrapper flex-1 flex flex-col min-w-0 min-h-screen bg-[#f8fafc] md:ml-65 w-full md:w-[calc(100%-16.25rem)]">
+    <div class="admin-main-wrapper flex-1 flex flex-col min-w-0 min-h-screen bg-[#f8fafc] md:ml-[216px] w-full md:w-[calc(100%-216px)]">
         
         {{-- Header Topbar (Đảm bảo không bao giờ bị xuống hàng khi phóng to / zoom) --}}
-        <header class="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/90 px-3 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between gap-2 sm:gap-4 flex-nowrap min-w-0">
+        <header class="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/90 px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between gap-2 sm:gap-4 flex-nowrap min-w-0">
             <div class="flex items-center gap-2 sm:gap-3 shrink-0 min-w-0">
                 <button onclick="toggleSidebar()" class="md:hidden p-1.5 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors shrink-0">
                     <span class="material-symbols-outlined text-[22px]">menu</span>
@@ -719,7 +719,7 @@
                 <div class="relative shrink-0" id="admin-notif-container">
                     <button id="admin-notif-bell" onclick="toggleNotifDropdown()" class="relative p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors flex items-center justify-center shrink-0">
                         <span class="material-symbols-outlined text-[22px]">notifications</span>
-                        <span id="realtime-badge-count" class="hidden absolute -top-1 -right-1 min-w-[20px] h-[20px] px-1 bg-rose-500 text-white text-[11px] font-bold rounded-full flex items-center justify-center border-2 border-white shadow-xs">0</span>
+                        <span id="realtime-badge-count" class="{{ ($sidebarUnreadCount ?? 0) > 0 ? '' : 'hidden' }} absolute -top-1 -right-1 min-w-[20px] h-[20px] px-1 bg-rose-500 text-white text-[11px] font-bold rounded-full flex items-center justify-center border-2 border-white shadow-xs">{{ ($sidebarUnreadCount ?? 0) > 99 ? '99+' : ($sidebarUnreadCount ?? 0) }}</span>
                     </button>
 
                     {{-- Notification Dropdown Menu --}}
@@ -729,7 +729,12 @@
                                 <span class="material-symbols-outlined text-[18px] text-amber-400">notifications_active</span>
                                 <h3 class="text-xs font-bold uppercase tracking-wider">Thông Báo Thời Gian Thực</h3>
                             </div>
-                            <span id="realtime-badge-dropdown" class="px-2 py-0.5 text-[10px] font-bold bg-amber-500 text-slate-950 rounded-full">0 mới</span>
+                            <div class="flex items-center gap-2">
+                                <span id="realtime-badge-dropdown" class="px-2 py-0.5 text-[10px] font-bold bg-amber-500 text-slate-950 rounded-full">{{ $sidebarUnreadCount ?? 0 }} mới</span>
+                                <button type="button" onclick="markAllAdminNotifsReadDropdown(event)" class="text-[10px] font-medium text-slate-300 hover:text-white underline hover:no-underline cursor-pointer transition-colors" title="Đánh dấu tất cả thông báo là đã đọc">
+                                    Đã đọc tất cả
+                                </button>
+                            </div>
                         </div>
 
                         {{-- Quick Filter Buttons in Dropdown --}}
@@ -737,7 +742,7 @@
                             <button type="button" onclick="filterDropdownNotifs('all')" class="notif-tab-btn active px-2.5 py-1 rounded-lg font-bold bg-slate-900 text-white transition-colors" data-filter="all">Tất cả</button>
                             <button type="button" onclick="filterDropdownNotifs('quan')" class="notif-tab-btn px-2.5 py-1 rounded-lg font-medium text-slate-600 hover:bg-slate-200 transition-colors" data-filter="quan">Quán</button>
                             <button type="button" onclick="filterDropdownNotifs('blog')" class="notif-tab-btn px-2.5 py-1 rounded-lg font-medium text-slate-600 hover:bg-slate-200 transition-colors" data-filter="blog">Bài viết</button>
-                            <button type="button" onclick="filterDropdownNotifs('user')" class="notif-tab-btn px-2.5 py-1 rounded-lg font-medium text-slate-600 hover:bg-slate-200 transition-colors" data-filter="user">User</button>
+                            <button type="button" onclick="filterDropdownNotifs('user')" class="notif-tab-btn px-2.5 py-1 rounded-lg font-medium text-slate-600 hover:bg-slate-200 transition-colors" data-filter="user">Người dùng</button>
                             <button type="button" onclick="filterDropdownNotifs('broadcast')" class="notif-tab-btn px-2.5 py-1 rounded-lg font-medium text-slate-600 hover:bg-slate-200 transition-colors" data-filter="broadcast">Hệ thống</button>
                         </div>
 
@@ -802,7 +807,7 @@
         </header>
 
         {{-- Page Content --}}
-        <main id="admin-main-content" class="p-4 sm:p-6 flex-grow transition-opacity duration-150 min-w-0 w-full overflow-x-hidden">
+        <main id="admin-main-content" class="p-2 sm:p-3 flex-grow transition-opacity duration-150 min-w-0 w-full overflow-x-hidden">
             {{-- Flash Alerts Container (chỉ hiển thị tại chức năng phát sinh thông báo) --}}
             <div id="admin-flash-container" class="space-y-3 mb-4 empty:hidden">
                 @if(session('success'))
@@ -2168,27 +2173,32 @@
                 }
             });
 
-            // Update topbar badges & sidebar badges if any
-            const totalPending = ((stats.pending_quan || 0) + (stats.pending_blog || 0) + (stats.unverified_users || 0));
+            // Cập nhật huy hiệu thông báo Header & Sidebar theo số lượng thông báo CHƯA ĐỌC
+            const unreadCount = (stats.unread_count !== undefined && stats.unread_count !== null)
+                ? parseInt(stats.unread_count, 10)
+                : parseInt(document.getElementById('realtime-badge-count')?.textContent || '0', 10);
+
             const badgeCount = document.getElementById('realtime-badge-count');
             const badgeDropdown = document.getElementById('realtime-badge-dropdown');
             if (badgeCount) {
-                if (totalPending > 0) {
-                    badgeCount.textContent = totalPending;
+                if (unreadCount > 0) {
+                    badgeCount.textContent = (unreadCount > 99 ? '99+' : unreadCount);
                     badgeCount.classList.remove('hidden');
                 } else {
                     badgeCount.classList.add('hidden');
+                    badgeCount.textContent = '0';
                 }
             }
             if (badgeDropdown) {
-                badgeDropdown.textContent = totalPending + ' mới';
+                badgeDropdown.textContent = (unreadCount > 0 ? unreadCount : 0) + ' mới';
             }
             document.querySelectorAll('.sidebar-notif-badge').forEach(b => {
-                if (totalPending > 0) {
-                    b.textContent = totalPending;
+                if (unreadCount > 0) {
+                    b.textContent = (unreadCount > 99 ? '99+' : unreadCount);
                     b.classList.remove('hidden');
                 } else {
                     b.classList.add('hidden');
+                    b.textContent = '0';
                 }
             });
 
@@ -2312,13 +2322,57 @@
         let lastSeenBlogKey = null;
         let isNotifInit = false;
         let currentDropdownFilter = 'all';
-        window.__allNotifications = [];
+        window.__allNotifications = {!! json_encode($adminInitialNotifications ?? [], JSON_UNESCAPED_UNICODE) !!};
         window.__lastSeenTopNotifId = null;
+        window.__adminJustMarkedAllReadAt = null;
 
         function toggleNotifDropdown() {
             const dropdown = document.getElementById('admin-notif-dropdown');
-            if (dropdown) {
-                dropdown.classList.toggle('hidden');
+            if (!dropdown) return;
+
+            const isOpening = dropdown.classList.contains('hidden');
+            dropdown.classList.toggle('hidden');
+
+            if (isOpening) {
+                // Hành vi chuẩn YouTube: Khi nhấn vào nút thông báo thì ngay lập tức xóa số lượng thông báo chưa đọc
+                const badgeCount = document.getElementById('realtime-badge-count');
+                const badgeDropdown = document.getElementById('realtime-badge-dropdown');
+
+                // 1. Tức thì ẩn huy hiệu số thông báo trên nút chuông và sidebar
+                if (badgeCount) {
+                    badgeCount.classList.add('hidden');
+                    badgeCount.textContent = '0';
+                }
+                if (badgeDropdown) {
+                    badgeDropdown.textContent = '0 mới';
+                }
+                document.querySelectorAll('.sidebar-notif-badge').forEach(b => {
+                    b.classList.add('hidden');
+                    b.textContent = '0';
+                });
+
+                // 2. Đánh dấu tất cả thông báo hiện tại trong bộ nhớ là đã đọc (bỏ chấm vàng chưa đọc)
+                if (window.__allNotifications && Array.isArray(window.__allNotifications)) {
+                    window.__allNotifications.forEach(n => { n.read = true; });
+                    renderDropdownList(window.__allNotifications);
+                }
+
+                // 3. Ghi nhớ thời điểm đánh dấu đọc để tránh race condition với realtime check
+                window.__adminJustMarkedAllReadAt = Date.now();
+
+                // 4. Gửi yêu cầu lưu trạng thái đã đọc lên máy chủ ngầm (keepalive)
+                const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                try {
+                    fetch('{{ route("admin.thong-bao.mark-all-read") }}', {
+                        method: 'POST',
+                        keepalive: true,
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': token || '',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    }).catch(() => {});
+                } catch (e) {}
             }
         }
 
@@ -2342,6 +2396,110 @@
             renderDropdownList(window.__allNotifications);
         }
 
+        function handleAdminNotifClick(event, id, targetUrl) {
+            if (event) {
+                event.preventDefault();
+            }
+
+            // 1. Cập nhật trạng thái đã đọc cục bộ
+            if (window.__allNotifications && Array.isArray(window.__allNotifications)) {
+                const item = window.__allNotifications.find(n => String(n.id) === String(id));
+                if (item) item.read = true;
+            }
+
+            // 2. Giảm ngay số lượng hiển thị trên badge, nếu về 0 thì ẩn hoàn toàn
+            const badgeCount = document.getElementById('realtime-badge-count');
+            const badgeDropdown = document.getElementById('realtime-badge-dropdown');
+            let current = parseInt(badgeCount?.textContent || '0', 10);
+            let next = Math.max(0, current - 1);
+
+            if (badgeCount) {
+                if (next > 0) {
+                    badgeCount.textContent = (next > 99 ? '99+' : next);
+                    badgeCount.classList.remove('hidden');
+                } else {
+                    badgeCount.classList.add('hidden');
+                    badgeCount.textContent = '0';
+                }
+            }
+            if (badgeDropdown) {
+                badgeDropdown.textContent = (next > 0 ? next : 0) + ' mới';
+            }
+            document.querySelectorAll('.sidebar-notif-badge').forEach(b => {
+                if (next > 0) {
+                    b.textContent = (next > 99 ? '99+' : next);
+                    b.classList.remove('hidden');
+                } else {
+                    b.classList.add('hidden');
+                    b.textContent = '0';
+                }
+            });
+
+            // 3. Gửi request đánh dấu đã đọc lên máy chủ ngầm (keepalive: true để không bị gián đoạn)
+            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            try {
+                fetch(`/admin/thong-bao/${encodeURIComponent(id)}/mark-read`, {
+                    method: 'POST',
+                    keepalive: true,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': token || '',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                }).catch(() => {});
+            } catch(e) {}
+
+            // 4. Chuyển ngay đến trang nội dung thông báo
+            if (targetUrl) {
+                window.location.href = targetUrl;
+            }
+        }
+
+        function markAllAdminNotifsReadDropdown(event) {
+            if (event) event.preventDefault();
+
+            // Ẩn toàn bộ huy hiệu thông báo ngay lập tức
+            const badgeCount = document.getElementById('realtime-badge-count');
+            const badgeDropdown = document.getElementById('realtime-badge-dropdown');
+            if (badgeCount) {
+                badgeCount.classList.add('hidden');
+                badgeCount.textContent = '0';
+            }
+            if (badgeDropdown) {
+                badgeDropdown.textContent = '0 mới';
+            }
+            document.querySelectorAll('.sidebar-notif-badge').forEach(b => {
+                b.classList.add('hidden');
+                b.textContent = '0';
+            });
+
+            // Đánh dấu tất cả thông báo hiện tại là đã đọc trong bộ nhớ
+            if (window.__allNotifications && Array.isArray(window.__allNotifications)) {
+                window.__allNotifications.forEach(n => { n.read = true; });
+                renderDropdownList(window.__allNotifications);
+            }
+
+            // Gửi API lên máy chủ
+            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            fetch('{{ route("admin.thong-bao.mark-all-read") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': token || '',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.success) {
+                    if (typeof showRealtimeToast === 'function') {
+                        showRealtimeToast('Đã Đọc Tất Cả', 'Toàn bộ thông báo đã được đánh dấu là đã đọc thành công.', '', 'done_all', 'bg-emerald-500');
+                    }
+                }
+            })
+            .catch(() => {});
+        }
+
         function renderDropdownList(notifications) {
             const list = document.getElementById('realtime-notif-list');
             if (!list) return;
@@ -2362,20 +2520,28 @@
             }
 
             list.innerHTML = filtered.map(item => `
-                <a href="${item.url}" class="flex items-start gap-3 p-2.5 hover:bg-slate-50 rounded-xl transition-colors border-b border-slate-50 last:border-0 group">
+                <a href="${item.url}" onclick="handleAdminNotifClick(event, '${item.id}', '${item.url}')" class="flex items-start gap-3 p-2.5 hover:bg-slate-50 rounded-xl transition-colors border-b border-slate-50 last:border-0 group ${item.read ? 'opacity-70' : ''}">
                     <div class="w-8 h-8 rounded-lg ${item.badge_class || 'bg-slate-100 text-slate-700'} flex items-center justify-center flex-shrink-0 font-bold group-hover:scale-105 transition-transform">
                         <span class="material-symbols-outlined text-[18px]">${item.icon || 'notifications'}</span>
                     </div>
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center justify-between gap-1">
                             <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">${item.category_label}</span>
-                            <span class="text-[10px] text-slate-400 whitespace-nowrap">${item.time_ago || ''}</span>
+                            <div class="flex items-center gap-1.5">
+                                ${!item.read ? '<span class="w-2 h-2 rounded-full bg-amber-500 shrink-0" title="Chưa đọc"></span>' : ''}
+                                <span class="text-[10px] text-slate-400 whitespace-nowrap">${item.time_ago || ''}</span>
+                            </div>
                         </div>
                         <p class="text-[11px] font-bold text-slate-800 truncate group-hover:text-amber-700">${item.title}</p>
                         <p class="text-[10px] text-slate-500 truncate">${item.description || ''}</p>
                     </div>
                 </a>
             `).join('');
+        }
+
+        // Tải hiển thị dữ liệu thông báo ban đầu ngay lập tức
+        if (window.__allNotifications && window.__allNotifications.length > 0) {
+            renderDropdownList(window.__allNotifications);
         }
 
         // Web Audio Synthesizer Chime
@@ -2446,29 +2612,35 @@
             .then(data => {
                 if (!data || !data.success) return;
 
+                let unreadCount = parseInt(data.unread_count ?? 0, 10);
+                if (window.__adminJustMarkedAllReadAt && (Date.now() - window.__adminJustMarkedAllReadAt < 4000)) {
+                    unreadCount = 0;
+                }
                 const badgeCount = document.getElementById('realtime-badge-count');
                 const badgeDropdown = document.getElementById('realtime-badge-dropdown');
 
                 if (badgeCount) {
-                    if (data.total_pending > 0) {
-                        badgeCount.textContent = data.total_pending;
+                    if (unreadCount > 0) {
+                        badgeCount.textContent = (unreadCount > 99 ? '99+' : unreadCount);
                         badgeCount.classList.remove('hidden');
                     } else {
                         badgeCount.classList.add('hidden');
+                        badgeCount.textContent = '0';
                     }
                 }
 
                 if (badgeDropdown) {
-                    badgeDropdown.textContent = data.total_pending + ' mới';
+                    badgeDropdown.textContent = (unreadCount > 0 ? unreadCount : 0) + ' mới';
                 }
 
                 // Cập nhật tất cả badge thông báo tổng (cả desktop & mobile sidebar)
                 document.querySelectorAll('.sidebar-notif-badge').forEach(b => {
-                    if (data.total_pending > 0) {
-                        b.textContent = data.total_pending;
+                    if (unreadCount > 0) {
+                        b.textContent = (unreadCount > 99 ? '99+' : unreadCount);
                         b.classList.remove('hidden');
                     } else {
                         b.classList.add('hidden');
+                        b.textContent = '0';
                     }
                 });
 
@@ -2504,8 +2676,15 @@
                 const statBlogTotal = document.getElementById('stat-blog-total');
                 if (statBlogTotal && data.total_blogs !== undefined) statBlogTotal.textContent = data.total_blogs;
 
-                // Render toàn bộ thông báo vào dropdown bell
-                window.__allNotifications = data.notifications || [];
+                // Render toàn bộ thông báo vào dropdown bell (sử dụng all_notifications để không bị rỗng sau khi đánh dấu đọc)
+                window.__allNotifications = (data.all_notifications && data.all_notifications.length > 0)
+                    ? data.all_notifications
+                    : (data.notifications || []);
+
+                if (window.__adminJustMarkedAllReadAt && (Date.now() - window.__adminJustMarkedAllReadAt < 4000)) {
+                    window.__allNotifications.forEach(n => { n.read = true; });
+                }
+
                 renderDropdownList(window.__allNotifications);
 
                 // Phát tín hiệu cập nhật toàn bộ hệ thống cho các trang con (Duyệt xác thực, Thông báo...)
@@ -2648,23 +2827,31 @@
                                 ` : ''}
                             </div>
                         </td>
-                        <td class="px-3.5 py-3 text-emerald-600 font-bold whitespace-nowrap overflow-hidden">
+                        <td class="px-2 py-2 text-emerald-600 font-bold whitespace-nowrap overflow-hidden">
                             <div class="whitespace-nowrap font-bold text-xs">Vừa xong</div>
                             <div class="text-[10px] text-slate-400 font-normal whitespace-nowrap">Mới đăng</div>
                         </td>
-                        <td class="px-3.5 py-3 text-right whitespace-nowrap overflow-hidden">
-                            <div class="flex items-center justify-end gap-1 flex-nowrap">
-                                <button type="button" onclick="openVenueMediaModal(window.__venueMediaData['${qData.id}'])" class="btn-enterprise btn-enterprise-secondary btn-action-compact font-semibold" title="Xem chi tiết hồ sơ & thẩm định ảnh">
-                                    <span class="material-symbols-outlined text-[14px]">visibility</span>
-                                    <span>Xem</span>
-                                </button>
-                                <button type="button" onclick="confirmApproveQuan('${qData.id}', '${safeName}')" class="btn-enterprise btn-enterprise-success btn-action-compact font-bold shadow-2xs" title="Phê duyệt hồ sơ quán này">
-                                    <span class="material-symbols-outlined text-[14px]">check_circle</span>
+                        <td class="px-1.5 py-1.5 text-right whitespace-nowrap">
+                            <div class="grid grid-cols-2 gap-1 w-[150px] ml-auto">
+                                {{-- Hàng 1, Cột 1: Duyệt --}}
+                                <button type="button" onclick="confirmApproveQuan('${qData.id}', '${safeName}')" class="btn-enterprise btn-enterprise-success btn-action-compact font-bold shadow-2xs w-full justify-center text-[10.5px] py-1 px-1" title="Phê duyệt hồ sơ quán này">
+                                    <span class="material-symbols-outlined text-[13px]">check_circle</span>
                                     <span>Duyệt</span>
                                 </button>
-                                <button type="button" onclick="confirmRejectQuan('${qData.id}', '${safeName}')" class="btn-enterprise btn-enterprise-danger btn-action-compact font-semibold shadow-2xs" title="Không duyệt hồ sơ quán này">
-                                    <span class="material-symbols-outlined text-[14px]">cancel</span>
+                                {{-- Hàng 1, Cột 2: Không duyệt --}}
+                                <button type="button" onclick="confirmRejectQuan('${qData.id}', '${safeName}')" class="btn-enterprise btn-enterprise-danger btn-action-compact font-semibold shadow-2xs w-full justify-center text-[10.5px] py-1 px-1" title="Không duyệt hồ sơ quán này">
+                                    <span class="material-symbols-outlined text-[13px]">cancel</span>
                                     <span>Không duyệt</span>
+                                </button>
+                                {{-- Hàng 2, Cột 1: Xem --}}
+                                <button type="button" onclick="openVenueMediaModal(window.__venueMediaData['${qData.id}'])" class="btn-enterprise btn-enterprise-secondary btn-action-compact font-semibold w-full justify-center text-[10.5px] py-1 px-1" title="Xem chi tiết hồ sơ & thẩm định ảnh">
+                                    <span class="material-symbols-outlined text-[13px]">visibility</span>
+                                    <span>Xem</span>
+                                </button>
+                                {{-- Hàng 2, Cột 2: Xóa --}}
+                                <button type="button" onclick="confirmDeletePendingQuan('${qData.id}', '${safeName}')" class="btn-enterprise btn-enterprise-secondary btn-action-compact text-gray-500 hover:text-rose-600 hover:bg-rose-50 border-gray-200 w-full justify-center text-[10.5px] py-1 px-1" title="Xóa bỏ quán khỏi danh sách chờ duyệt">
+                                    <span class="material-symbols-outlined text-[13px]">delete</span>
+                                    <span>Xóa</span>
                                 </button>
                             </div>
                         </td>

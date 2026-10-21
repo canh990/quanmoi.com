@@ -32,6 +32,17 @@ class VaiTroController extends Controller
             'ten' => strtolower(trim($validated['ten'])),
         ]);
 
+        if ($request->user()) {
+            \App\Models\AdminAuditLog::create([
+                'actor_id' => $request->user()->id,
+                'action' => 'role.created',
+                'target_type' => VaiTro::class,
+                'target_id' => (string) $role->id,
+                'metadata' => ['ten' => $role->ten],
+                'ip_address' => $request->ip(),
+            ]);
+        }
+
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
@@ -60,6 +71,31 @@ class VaiTroController extends Controller
         }
 
         $role->quyenHan()->sync($syncData);
+
+        if ($request->user()) {
+            \App\Models\AdminAuditLog::create([
+                'actor_id' => $request->user()->id,
+                'action' => 'role.updated_permissions',
+                'target_type' => VaiTro::class,
+                'target_id' => (string) $role->id,
+                'metadata' => ['ten' => $role->ten, 'permissions_count' => count($permissionIds)],
+                'ip_address' => $request->ip(),
+            ]);
+        }
+
+        // Notify users with this role
+        try {
+            $usersWithRole = $role->nguoiDung()->get();
+            foreach ($usersWithRole as $targetUser) {
+                $targetUser->clearPermissionCache();
+                $targetUser->notify(new \App\Notifications\UserRoleStatusUpdatedNotification(
+                    'permission_reset',
+                    "Cơ cấu phân quyền cho vai trò '{$role->ten}' của bạn vừa được cập nhật."
+                ));
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Role update notification error: ' . $e->getMessage());
+        }
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -93,6 +129,17 @@ class VaiTroController extends Controller
                 return response()->json(['success' => false, 'message' => $msg], 422);
             }
             return redirect()->back()->with('error', $msg);
+        }
+
+        if ($request->user()) {
+            \App\Models\AdminAuditLog::create([
+                'actor_id' => $request->user()->id,
+                'action' => 'role.deleted',
+                'target_type' => VaiTro::class,
+                'target_id' => (string) $role->id,
+                'metadata' => ['ten' => $role->ten],
+                'ip_address' => $request->ip(),
+            ]);
         }
 
         $role->quyenHan()->detach();

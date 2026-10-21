@@ -63,15 +63,28 @@ class AppServiceProvider extends ServiceProvider
             $ownerNavLabel = 'Đăng quán';
             $ownerNavIcon = 'add_location_alt';
             $ownerNavUrl = route('chu-quan.dang-quan');
+            $navIsAdmin = false;
+            $navUnreadCount = 0;
+            $navNotifications = collect();
 
             if ($currentUser) {
                 if ($currentUser->isAdmin()) {
+                    $navIsAdmin = true;
                     $isOwnerNav = true;
                     $ownerNavLabel = 'Trang quản trị';
                     $ownerNavIcon = 'admin_panel_settings';
                     $ownerNavUrl = Route::has('admin.quan.index')
                         ? route('admin.quan.index')
                         : route('chu-quan.dang-quan');
+
+                    try {
+                        $adminNotifData = \App\Http\Controllers\Admin\ThongBaoAdminController::buildRealtimeNotificationData($currentUser);
+                        $navUnreadCount = $adminNotifData['unread_count'] ?? 0;
+                        $navNotifications = $adminNotifData['all_notifications'] ?? [];
+                    } catch (\Throwable $e) {
+                        $navUnreadCount = 0;
+                        $navNotifications = [];
+                    }
                 } else {
                     $isOwnerRole = $currentUser->hasRole('chu_quan');
 
@@ -83,6 +96,14 @@ class AppServiceProvider extends ServiceProvider
                             ? route('chu-quan.quan.index')
                             : route('chu-quan.dang-quan');
                     }
+
+                    try {
+                        $navUnreadCount = $currentUser->unreadNotifications()->count();
+                        $navNotifications = $currentUser->notifications()->latest()->take(20)->get();
+                    } catch (\Throwable $e) {
+                        $navUnreadCount = 0;
+                        $navNotifications = collect();
+                    }
                 }
             }
 
@@ -92,20 +113,25 @@ class AppServiceProvider extends ServiceProvider
                 'ownerNavLabel' => $ownerNavLabel,
                 'ownerNavIcon' => $ownerNavIcon,
                 'ownerNavUrl' => $ownerNavUrl,
+                'navIsAdmin' => $navIsAdmin,
+                'navUnreadCount' => $navUnreadCount,
+                'navNotifications' => $navNotifications,
             ]);
         });
 
         View::composer(['admin.*', 'admin.partials.sidebar-nav'], function ($view): void {
             if (Auth::check() && Auth::user()->isAdmin()) {
                 try {
-                    $pendingQuan = \App\Models\Quan::where('trang_thai', 'chua_duyet')->count();
-                    $pendingBlog = \App\Models\Blog::where('status', 'pending')->count();
-                    $unverifiedUser = \App\Models\User::where('da_xac_thuc', false)->count();
+                    $admin = Auth::user();
+                    $notifData = \App\Http\Controllers\Admin\ThongBaoAdminController::buildRealtimeNotificationData($admin);
+
                     $view->with([
-                        'sidebarPendingQuanCount' => $pendingQuan,
-                        'sidebarPendingBlogCount' => $pendingBlog,
-                        'sidebarUnverifiedUserCount' => $unverifiedUser,
-                        'sidebarTotalPending' => $pendingQuan + $pendingBlog + $unverifiedUser,
+                        'sidebarPendingQuanCount' => $notifData['pending_quan'],
+                        'sidebarPendingBlogCount' => $notifData['pending_blog'],
+                        'sidebarUnverifiedUserCount' => $notifData['unverified_user'],
+                        'sidebarTotalPending' => $notifData['total_pending'],
+                        'sidebarUnreadCount' => $notifData['unread_count'],
+                        'adminInitialNotifications' => app()->runningUnitTests() ? [] : $notifData['all_notifications'],
                     ]);
                 } catch (\Throwable $e) {
                     // Ignore during testing / setup

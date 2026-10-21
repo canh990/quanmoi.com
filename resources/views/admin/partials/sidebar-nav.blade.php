@@ -85,7 +85,7 @@
                 <span class="material-symbols-outlined text-[18px]">campaign</span>
                 <span>Thông Báo Hệ Thống</span>
             </div>
-            <span class="sidebar-notif-badge {{ ($sidebarTotalPending ?? 0) > 0 ? '' : 'hidden' }} px-1.5 py-0.5 text-[10px] font-bold bg-rose-500 text-white rounded-full">{{ $sidebarTotalPending ?? 0 }}</span>
+            <span class="sidebar-notif-badge {{ ($sidebarUnreadCount ?? 0) > 0 ? '' : 'hidden' }} px-1.5 py-0.5 text-[10px] font-bold bg-rose-500 text-white rounded-full">{{ ($sidebarUnreadCount ?? 0) > 99 ? '99+' : ($sidebarUnreadCount ?? 0) }}</span>
         </a>
         <a href="{{ route('admin.audit-log.index') }}" class="sidebar-item flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all {{ request()->routeIs('admin.audit-log.*') ? 'bg-[#F59E0B] text-white font-bold shadow-md' : 'text-slate-300 hover:bg-slate-800/80 hover:text-white' }}">
             <span class="material-symbols-outlined text-[18px]">reorder</span>

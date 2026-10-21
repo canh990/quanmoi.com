@@ -59,6 +59,28 @@ class BlogController extends Controller
     public function pending(Request $request)
     {
         $request->merge(['status' => 'pending']);
+
+        $admin = auth()->user();
+        if ($admin) {
+            $caiDat = $admin->cai_dat ?? [];
+            if (is_string($caiDat)) {
+                $caiDat = json_decode($caiDat, true) ?: [];
+            }
+            $readIds = array_map('strval', $caiDat['read_admin_notifs'] ?? []);
+            $blogIds = Blog::where('status', 'pending')->pluck('id')->map(fn($id) => 'blog_' . $id)->all();
+            $newReadIds = array_unique(array_merge($readIds, $blogIds));
+            if (count($newReadIds) > 500) {
+                $newReadIds = array_slice($newReadIds, -500);
+            }
+            if (count($newReadIds) !== count($readIds)) {
+                $caiDat['read_admin_notifs'] = array_values($newReadIds);
+                DB::table('nguoi_dung')
+                    ->where('id', $admin->id)
+                    ->update(['cai_dat' => json_encode($caiDat, JSON_UNESCAPED_UNICODE)]);
+                $admin->cai_dat = $caiDat;
+            }
+        }
+
         return $this->index($request);
     }
 
@@ -103,9 +125,33 @@ class BlogController extends Controller
         return view('admin.blog.show', compact('blog'));
     }
 
+    private function markBlogAsRead(Request $request, int|string $blogId): void
+    {
+        $admin = $request->user();
+        if (!$admin) return;
+        $caiDat = $admin->cai_dat ?? [];
+        if (is_string($caiDat)) {
+            $caiDat = json_decode($caiDat, true) ?: [];
+        }
+        $readIds = array_map('strval', $caiDat['read_admin_notifs'] ?? []);
+        $notifId = 'blog_' . $blogId;
+        if (!in_array($notifId, $readIds, true)) {
+            $readIds[] = $notifId;
+            if (count($readIds) > 500) {
+                $readIds = array_slice($readIds, -500);
+            }
+            $caiDat['read_admin_notifs'] = array_values($readIds);
+            DB::table('nguoi_dung')
+                ->where('id', $admin->id)
+                ->update(['cai_dat' => json_encode($caiDat, JSON_UNESCAPED_UNICODE)]);
+            $admin->cai_dat = $caiDat;
+        }
+    }
+
     public function updateStatus(Request $request, Blog $blog)
     {
         $this->authorize('update', $blog);
+        $this->markBlogAsRead($request, $blog->id);
         $request->validate([
             'status' => 'required|in:published,rejected,need_revision,hidden,scheduled',
             'note' => 'nullable|string|max:1000',
@@ -242,6 +288,25 @@ class BlogController extends Controller
             
             $blog->is_hero = true;
             $blog->save();
+
+            if ($request->user()) {
+                \App\Models\AdminAuditLog::create([
+                    'actor_id' => $request->user()->id,
+                    'action' => 'blog.hero_toggled',
+                    'target_type' => Blog::class,
+                    'target_id' => (string) $blog->id,
+                    'metadata' => ['title' => $blog->title],
+                    'ip_address' => $request->ip(),
+                ]);
+            }
+
+            try {
+                if ($blog->user) {
+                    $blog->user->notify(new BlogStatusUpdatedNotification($blog, 'hero'));
+                }
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Blog hero notification error: ' . $e->getMessage());
+            }
         });
         
         if ($request->expectsJson()) {
@@ -276,6 +341,28 @@ class BlogController extends Controller
                     // Ignore storage deletion errors
                 }
             }
+            $blogUser = $blog->user;
+            $blogTitle = $blog->title;
+
+            if ($request->user()) {
+                \App\Models\AdminAuditLog::create([
+                    'actor_id' => $request->user()->id,
+                    'action' => 'blog.deleted',
+                    'target_type' => Blog::class,
+                    'target_id' => (string) $blog->id,
+                    'metadata' => ['title' => $blogTitle, 'type' => 'force_delete'],
+                    'ip_address' => $request->ip(),
+                ]);
+            }
+
+            try {
+                if ($blogUser) {
+                    $blogUser->notify(new BlogStatusUpdatedNotification($blog, 'deleted'));
+                }
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Blog force delete notification error: ' . $e->getMessage());
+            }
+
             $blog->forceDelete();
             if ($request->expectsJson()) {
                 return response()->json([
@@ -295,6 +382,25 @@ class BlogController extends Controller
 
         $this->authorize('delete', $blog);
         
+        if ($request->user()) {
+            \App\Models\AdminAuditLog::create([
+                'actor_id' => $request->user()->id,
+                'action' => 'blog.deleted',
+                'target_type' => Blog::class,
+                'target_id' => (string) $blog->id,
+                'metadata' => ['title' => $blog->title, 'type' => 'soft_delete'],
+                'ip_address' => $request->ip(),
+            ]);
+        }
+
+        try {
+            if ($blog->user) {
+                $blog->user->notify(new BlogStatusUpdatedNotification($blog, 'deleted'));
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Blog delete notification error: ' . $e->getMessage());
+        }
+
         $blog->delete();
         if ($request->expectsJson()) {
             return response()->json([

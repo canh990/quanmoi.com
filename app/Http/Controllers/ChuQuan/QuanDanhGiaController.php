@@ -35,12 +35,42 @@ class QuanDanhGiaController extends Controller
                 ->withFragment('owner-reviews-section');
         }
 
+        $replyText = trim($validator->validated()[$field]);
         $danhGia->timestamps = false;
         $danhGia->update([
-            'phan_hoi' => trim($validator->validated()[$field]),
+            'phan_hoi' => $replyText,
             'phan_hoi_luc' => now(),
         ]);
         $danhGia->timestamps = true;
+
+        // Notify reviewer (customer)
+        if ($danhGia->nguoiDung && $danhGia->nguoiDung->id !== Auth::id()) {
+            try {
+                $danhGia->nguoiDung->notify(new \App\Notifications\QuanReviewReplyNotification(
+                    $quan,
+                    Auth::user(),
+                    $replyText
+                ));
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Review reply notification error: ' . $e->getMessage());
+            }
+        }
+
+        // Record for Admin Activity Feed
+        try {
+            \App\Models\AdminAuditLog::create([
+                'actor_id' => Auth::id(),
+                'action' => 'venue.review_replied',
+                'target_type' => Quan::class,
+                'target_id' => (string) $quan->id,
+                'metadata' => [
+                    'quan_name' => $quan->ten_quan,
+                    'customer_name' => $danhGia->nguoiDung?->ho_ten ?? 'Khách',
+                    'phan_hoi' => \Illuminate\Support\Str::limit($replyText, 100),
+                ],
+                'ip_address' => $request->ip(),
+            ]);
+        } catch (\Throwable $e) {}
 
         return redirect()
             ->route('chu-quan.quan.show', $quan->slug)

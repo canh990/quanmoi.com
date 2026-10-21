@@ -122,8 +122,10 @@ Route::middleware('auth')->group(function () {
     Route::prefix('thanh-vien/thong-bao')->name('nguoi-dung.thong-bao.')->group(function () {
         Route::get('/', [\App\Http\Controllers\NguoiDung\ThongBaoController::class, 'index'])->name('index');
         Route::get('/realtime-check', [\App\Http\Controllers\NguoiDung\ThongBaoController::class, 'realtimeCheck'])->name('realtime-check');
+        Route::get('/{id}/doc-va-chuyen', [\App\Http\Controllers\NguoiDung\ThongBaoController::class, 'readAndRedirect'])->name('read-and-redirect');
         Route::post('/{id}/danh-dau-da-doc', [\App\Http\Controllers\NguoiDung\ThongBaoController::class, 'markAsRead'])->name('mark-read');
         Route::post('/danh-dau-tat-ca-da-doc', [\App\Http\Controllers\NguoiDung\ThongBaoController::class, 'markAllAsRead'])->name('mark-all-read');
+        Route::delete('/{id}', [\App\Http\Controllers\NguoiDung\ThongBaoController::class, 'destroy'])->name('destroy');
     });
 });
 

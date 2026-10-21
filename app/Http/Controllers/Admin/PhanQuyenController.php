@@ -54,6 +54,17 @@ class PhanQuyenController extends Controller
             'mo_ta' => $validated['mo_ta'] ?? null,
         ]);
 
+        if ($request->user()) {
+            \App\Models\AdminAuditLog::create([
+                'actor_id' => $request->user()->id,
+                'action' => 'permission.created',
+                'target_type' => QuyenHan::class,
+                'target_id' => (string) $permission->id,
+                'metadata' => ['ten' => $permission->ten],
+                'ip_address' => $request->ip(),
+            ]);
+        }
+
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
@@ -142,6 +153,21 @@ class PhanQuyenController extends Controller
             ));
         } catch (\Throwable $th) {}
 
+        if ($request->user()) {
+            \App\Models\AdminAuditLog::create([
+                'actor_id' => $request->user()->id,
+                'action' => 'permission.overridden',
+                'target_type' => User::class,
+                'target_id' => (string) $targetUser->id,
+                'metadata' => [
+                    'permission' => $permission->ten,
+                    'action' => $action,
+                    'user_name' => $targetUser->ho_ten,
+                ],
+                'ip_address' => $request->ip(),
+            ]);
+        }
+
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
@@ -167,6 +193,17 @@ class PhanQuyenController extends Controller
                 return response()->json(['success' => false, 'message' => $msg], 422);
             }
             return redirect()->back()->with('error', $msg);
+        }
+
+        if ($request->user()) {
+            \App\Models\AdminAuditLog::create([
+                'actor_id' => $request->user()->id,
+                'action' => 'permission.deleted',
+                'target_type' => QuyenHan::class,
+                'target_id' => (string) $permission->id,
+                'metadata' => ['ten' => $permission->ten],
+                'ip_address' => $request->ip(),
+            ]);
         }
 
         $permission->delete();
