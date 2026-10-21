@@ -492,7 +492,7 @@ class BlogController extends Controller
         }
 
         $history = $request->input('history', []);
-        $result = $this->blogAiService->chatAssistant($message, $history);
+        $result = app(\App\Services\QuanAiChatbotService::class)->chat($message, $history);
 
         return response()->json($result);
     }

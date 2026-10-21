@@ -29,6 +29,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'blog/*/luot-xem',
             'blog/*/ai-tom-tat',
             'api/blog/*',
+            'api/ai-chatbot/*',
         ]);
 
         $middleware->alias([
