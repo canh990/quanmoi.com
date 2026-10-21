@@ -100,6 +100,13 @@ Route::prefix('api')->group(function () {
     
     // Giới hạn 20 request/phút để chống spam bào tiền API Google Maps
     Route::get('/ban-do/geocode', [BanDoController::class, 'geocode'])->middleware('throttle:20,1');
+
+    // Trợ lý AI Chatbot ẩm thực Quán Mới
+    Route::post('/ai-chatbot/chat', [\App\Http\Controllers\Api\AiChatbotController::class, 'chat'])
+        ->middleware('throttle:30,1')
+        ->name('api.ai-chatbot.chat');
+    Route::get('/ai-chatbot/suggestions', [\App\Http\Controllers\Api\AiChatbotController::class, 'suggestions'])
+        ->name('api.ai-chatbot.suggestions');
 });
 
 Route::middleware('auth')->group(function () {
