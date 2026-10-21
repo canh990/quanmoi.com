@@ -23,6 +23,8 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
+
         $middleware->validateCsrfTokens(except: [
             'blog/*/luot-xem',
             'blog/*/ai-tom-tat',

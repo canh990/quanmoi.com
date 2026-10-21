@@ -151,4 +151,14 @@ class Blog extends Model
 
         return '/storage/' . $cleanPath;
     }
+
+    /**
+     * Tự động làm sạch mã HTML của bài viết chống Stored XSS
+     */
+    public function setContentAttribute($value): void
+    {
+        $this->attributes['content'] = function_exists('clean')
+            ? clean($value)
+            : strip_tags((string) $value, '<h1><h2><h3><h4><h5><h6><p><br><strong><em><u><strike><s><del><ul><ol><li><blockquote><a><img><table><thead><tbody><tr><th><td><pre><code><hr>');
+    }
 }

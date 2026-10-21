@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Validation\Rule;
 
 class DangKyRequest extends FormRequest
 {
@@ -34,8 +35,20 @@ class DangKyRequest extends FormRequest
     {
         return [
             'ho_ten' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255'],
+            'email' => [
+                'required',
+                'email',
+                'max:255',
+                Rule::unique('nguoi_dung', 'email')->whereNull('ngay_xoa'),
+            ],
             'mat_khau' => ['required', 'string', 'min:6'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'email.unique' => 'Email này đã được sử dụng.',
         ];
     }
 }

@@ -38,21 +38,17 @@ class GoogleController extends Controller
         try {
             // Tìm user theo google_id trước (nhanh nhất), sau đó theo email
             $user = User::withTrashed()
-                ->where('google_id', $googleUser->getId())
-                ->orWhere('email', $googleUser->getEmail())
+                ->where(function ($query) use ($googleUser) {
+                    $query->where('google_id', $googleUser->getId())
+                        ->orWhere('email', $googleUser->getEmail());
+                })
                 ->first();
 
             if ($user) {
-                // Tài khoản bị xóa mềm
-                if ($user->trashed()) {
+                // Tài khoản bị xóa mềm hoặc không ở trạng thái hoạt động
+                if ($user->trashed() || ! $user->isActive()) {
                     return redirect()->route('login')
-                        ->with('social_error', 'Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên.');
-                }
-
-                // Tài khoản bị khóa
-                if ($user->trang_thai === 'bi_khoa') {
-                    return redirect()->route('login')
-                        ->with('social_error', 'Tài khoản của bạn đã bị khoá. Vui lòng liên hệ quản trị viên.');
+                        ->with('social_error', 'Tài khoản của bạn đã bị vô hiệu hóa hoặc khóa. Vui lòng liên hệ quản trị viên.');
                 }
 
                 // Liên kết google_id nếu chưa có (user đã đăng ký bằng email trước đó)
@@ -93,6 +89,14 @@ class GoogleController extends Controller
 
             Auth::login($user, remember: true);
             request()->session()->regenerate();
+
+            if (config('session.driver') === 'database') {
+                $currentSessionId = request()->session()->getId();
+                DB::table(config('session.table', 'sessions'))
+                    ->where('user_id', $user->getAuthIdentifier())
+                    ->where('id', '!=', $currentSessionId)
+                    ->delete();
+            }
 
             // Redirect theo vai trò
             if ($user->hasRole('admin')) {
