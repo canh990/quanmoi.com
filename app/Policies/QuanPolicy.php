@@ -9,8 +9,18 @@ class QuanPolicy
 {
     public function before(?User $user, string $ability): ?bool
     {
-        if ($user && ($user->isAdmin() || $user->hasRole('admin') || (method_exists($user, 'hasPermissionTo') && $user->hasPermissionTo('quan_ly_quan')))) {
-            return true;
+        if ($user) {
+            if (method_exists($user, 'hasPermissionExplicitlyDenied') && $user->hasPermissionExplicitlyDenied('quan_ly_quan')) {
+                return false;
+            }
+
+            if (method_exists($user, 'hasPermissionTo') && $user->hasPermissionTo('quan_ly_quan')) {
+                return true;
+            }
+
+            if ($user->isAdmin() || $user->hasRole('admin')) {
+                return true;
+            }
         }
 
         return null;
@@ -24,7 +34,7 @@ class QuanPolicy
     public function view(?User $user, Quan $quan): bool
     {
         if ($quan->trashed() || $quan->trang_thai !== 'da_duyet') {
-            return $user !== null && ($user->isAdmin() || $user->id === $quan->chu_quan_id);
+            return $user !== null && (($user->hasPermissionTo('quan_ly_quan')) || $user->id === $quan->chu_quan_id);
         }
 
         return true;
@@ -37,21 +47,21 @@ class QuanPolicy
 
     public function update(User $user, Quan $quan): bool
     {
-        return $user->isAdmin() || $user->id === $quan->chu_quan_id;
+        return ($user->hasPermissionTo('quan_ly_quan')) || $user->id === $quan->chu_quan_id;
     }
 
     public function delete(User $user, Quan $quan): bool
     {
-        return $user->isAdmin() || $user->id === $quan->chu_quan_id;
+        return ($user->hasPermissionTo('quan_ly_quan')) || $user->id === $quan->chu_quan_id;
     }
 
     public function restore(User $user, Quan $quan): bool
     {
-        return $user->isAdmin();
+        return $user->hasPermissionTo('quan_ly_quan');
     }
 
     public function forceDelete(User $user, Quan $quan): bool
     {
-        return $user->isAdmin();
+        return $user->hasPermissionTo('quan_ly_quan');
     }
 }

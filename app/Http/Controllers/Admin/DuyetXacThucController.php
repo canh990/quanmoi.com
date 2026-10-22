@@ -111,6 +111,8 @@ class DuyetXacThucController extends Controller
 
     public function approveQuan(Request $request, $id)
     {
+        $this->checkPermissionQuan($request);
+
         if ($request->input('action') === 'reject' || $request->input('action') === 'khong_duyet') {
             return $this->rejectQuan($request, $id);
         }
@@ -172,6 +174,8 @@ class DuyetXacThucController extends Controller
 
     public function rejectQuan(Request $request, $id)
     {
+        $this->checkPermissionQuan($request);
+
         $this->markItemAsRead($request, 'quan_' . $id);
 
         $quan = Quan::findOrFail($id);
@@ -212,6 +216,8 @@ class DuyetXacThucController extends Controller
 
     public function destroyQuan(Request $request, $id)
     {
+        $this->checkPermissionQuan($request);
+
         $this->markItemAsRead($request, 'quan_' . $id);
 
         $quan = Quan::findOrFail($id);
@@ -248,6 +254,8 @@ class DuyetXacThucController extends Controller
 
     public function verifyUser(Request $request, $id)
     {
+        $this->checkPermissionUser($request);
+
         if ($request->input('action') === 'reject' || $request->input('action') === 'khong_duyet') {
             return $this->rejectUser($request, $id);
         }
@@ -298,6 +306,8 @@ class DuyetXacThucController extends Controller
 
     public function rejectUser(Request $request, $id)
     {
+        $this->checkPermissionUser($request);
+
         $this->markItemAsRead($request, 'user_' . $id);
 
         $user = User::findOrFail($id);
@@ -344,5 +354,31 @@ class DuyetXacThucController extends Controller
         }
 
         return redirect()->back()->with('success', "Đã từ chối xác thực tài khoản người dùng '{$user->ho_ten}'!");
+    }
+
+    private function checkPermissionQuan(Request $request): void
+    {
+        $user = $request->user();
+        if ($user) {
+            if (method_exists($user, 'hasPermissionExplicitlyDenied') && $user->hasPermissionExplicitlyDenied('quan_ly_quan')) {
+                abort(403, 'Bạn không có quyền quản lý duyệt quán.');
+            }
+            if (! $user->hasPermissionTo('quan_ly_quan')) {
+                abort(403, 'Bạn không có quyền quản lý duyệt quán.');
+            }
+        }
+    }
+
+    private function checkPermissionUser(Request $request): void
+    {
+        $user = $request->user();
+        if ($user) {
+            if (method_exists($user, 'hasPermissionExplicitlyDenied') && $user->hasPermissionExplicitlyDenied('quan_ly_nguoi_dung')) {
+                abort(403, 'Bạn không có quyền quản lý xác thực người dùng.');
+            }
+            if (! $user->hasPermissionTo('quan_ly_nguoi_dung')) {
+                abort(403, 'Bạn không có quyền quản lý xác thực người dùng.');
+            }
+        }
     }
 }
