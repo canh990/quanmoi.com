@@ -11,7 +11,7 @@ class VaiTroController extends Controller
 {
     public function index()
     {
-        $roles = VaiTro::withCount(['nguoiDung', 'quyenHan'])->get();
+        $roles = VaiTro::with('quyenHan')->withCount(['nguoiDung', 'quyenHan'])->get();
         $permissions = QuyenHan::all();
 
         return view('admin.vai-tro.index', compact('roles', 'permissions'));
@@ -63,14 +63,32 @@ class VaiTroController extends Controller
             $permissionIds = [];
         }
 
-        $syncData = [];
+        // Xóa tất cả quyền cũ trước, sau đó gán lại để tránh lỗi UUID primary key với sync()
+        \Illuminate\Support\Facades\DB::table('vai_tro_quyen_han')
+            ->where('vai_tro_id', $role->id)
+            ->delete();
+
+        $now = now();
+        $insertRows = [];
         foreach ($permissionIds as $permId) {
-            $syncData[$permId] = [
-                'id' => (string) \Illuminate\Support\Str::uuid(),
-            ];
+            $perm = \App\Models\QuyenHan::find($permId);
+            if ($perm) {
+                $insertRows[] = [
+                    'id'           => (string) \Illuminate\Support\Str::uuid(),
+                    'vai_tro_id'   => $role->id,
+                    'quyen_han_id' => $perm->id,
+                    'created_at'   => $now,
+                    'updated_at'   => $now,
+                ];
+            }
         }
 
-        $role->quyenHan()->sync($syncData);
+        if (!empty($insertRows)) {
+            \Illuminate\Support\Facades\DB::table('vai_tro_quyen_han')->insert($insertRows);
+        }
+
+        // Reload relation để reflection đúng
+        $role->unsetRelation('quyenHan');
 
         if ($request->user()) {
             \App\Models\AdminAuditLog::create([

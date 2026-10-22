@@ -28,7 +28,11 @@ class KhuyenMaiAiController extends Controller
             abort(401, 'Vui lòng đăng nhập.');
         }
 
-        if (! $user->isAdmin() && ! $user->hasPermissionTo('quan_ly_khuyen_mai_ai')) {
+        if (method_exists($user, 'hasPermissionExplicitlyDenied') && $user->hasPermissionExplicitlyDenied('quan_ly_khuyen_mai_ai')) {
+            abort(403, 'Bạn không có quyền truy cập chức năng AI Tạo Khuyến Mãi & Voucher.');
+        }
+
+        if (! $user->hasPermissionTo('quan_ly_khuyen_mai_ai')) {
             abort(403, 'Bạn không có quyền truy cập chức năng AI Tạo Khuyến Mãi & Voucher.');
         }
     }

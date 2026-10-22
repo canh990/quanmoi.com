@@ -5,6 +5,12 @@
 @source '../views/**/*.blade.php';
 @source '../views/*.blade.php';
 
+/* ============================================================================
+   SAFELIST: Các class Tailwind ghép động từ PHP - xem resources/views/admin/_safelist.blade.php
+   @source trỏ vào file đó để Tailwind scan và giữ lại toàn bộ class cần thiết.
+   ============================================================================ */
+@source '../views/admin/_safelist.blade.php';
+
 @theme {
     --font-sans: 'Be Vietnam Pro', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';

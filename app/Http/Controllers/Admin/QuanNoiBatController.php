@@ -26,7 +26,11 @@ class QuanNoiBatController extends Controller
             abort(401, 'Vui lòng đăng nhập hệ thống.');
         }
 
-        if (! $user->isAdmin() && ! $user->hasRole('admin') && ! (method_exists($user, 'hasPermissionTo') && $user->hasPermissionTo('quan_ly_quan'))) {
+        if (method_exists($user, 'hasPermissionExplicitlyDenied') && $user->hasPermissionExplicitlyDenied('quan_ly_quan')) {
+            abort(403, 'Bạn không có quyền quản lý quán nổi bật.');
+        }
+
+        if (! $user->hasPermissionTo('quan_ly_quan')) {
             abort(403, 'Bạn không có quyền quản lý quán nổi bật.');
         }
     }

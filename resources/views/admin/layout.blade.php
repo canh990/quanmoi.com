@@ -8,27 +8,12 @@
     <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind = {
-            config: {
-                theme: {
-                    extend: {
-                        colors: {
-                            primary: '#a04100',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
     <link rel="dns-prefetch" href="//fonts.googleapis.com">
     <link rel="dns-prefetch" href="//fonts.gstatic.com">
-    <link rel="dns-prefetch" href="//cdn.tailwindcss.com">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=block" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
     
     <style>
         body { font-family: 'Inter', 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, sans-serif; }
@@ -3560,6 +3545,35 @@
                 prefetchUrl(link.href);
             }
         }, { passive: true });
+
+        // Intelligent Idle Prefetch: nạp ngầm các trang quản trị chính khi CPU/mạng rảnh (0ms click latency)
+        const idlePrefetchSidebar = () => {
+            try {
+                const links = Array.from(document.querySelectorAll('.sidebar-item, #admin-sidebar a[href^="/admin"]'))
+                    .map(a => a.href)
+                    .filter(h => h && !h.includes('#') && !h.includes('logout') && !adminPageCache.has(h));
+                let i = 0;
+                const prefetchNext = () => {
+                    if (i >= links.length) return;
+                    prefetchUrl(links[i++]);
+                    if ('requestIdleCallback' in window) {
+                        window.requestIdleCallback(prefetchNext, { timeout: 2000 });
+                    } else {
+                        setTimeout(prefetchNext, 350);
+                    }
+                };
+                if ('requestIdleCallback' in window) {
+                    window.requestIdleCallback(prefetchNext, { timeout: 1500 });
+                } else {
+                    setTimeout(prefetchNext, 600);
+                }
+            } catch (e) {}
+        };
+        if (document.readyState === 'complete') {
+            setTimeout(idlePrefetchSidebar, 600);
+        } else {
+            window.addEventListener('load', () => setTimeout(idlePrefetchSidebar, 600));
+        }
 
         // Handle Browser Back / Forward buttons instantly from cache
         window.addEventListener('popstate', function() {
