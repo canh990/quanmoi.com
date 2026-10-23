@@ -5,13 +5,6 @@
 @section('content')
 <main class="pt-6 pb-20 max-w-7xl mx-auto px-4 md:px-8 flex-grow">
 
-    {{-- Banner Toast Notification --}}
-    @if(session('success'))
-        <div class="mb-6 bg-tick-xanh/15 border border-tick-xanh/30 text-tick-xanh px-5 py-3.5 rounded-2xl flex items-center gap-3">
-            <span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
-            <span class="font-bold text-[15px]">{{ session('success') }}</span>
-        </div>
-    @endif
 
     @push('styles')
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css" />
@@ -21,6 +14,27 @@
                 color: #ea580c !important;
                 font-weight: 700;
                 margin-bottom: -1px;
+            }
+            .owner-confirm-btn-danger {
+                background-color: #dc2626 !important;
+                background-image: linear-gradient(135deg, #ef4444, #dc2626) !important;
+                color: #ffffff !important;
+                border: 1px solid #dc2626 !important;
+            }
+            .owner-confirm-btn-danger:hover {
+                background-color: #b91c1c !important;
+                background-image: linear-gradient(135deg, #dc2626, #b91c1c) !important;
+                color: #ffffff !important;
+            }
+            .owner-confirm-btn-cancel {
+                background-color: #ffffff !important;
+                color: #4b5563 !important;
+                border: 1px solid #e5e7eb !important;
+            }
+            .owner-confirm-btn-cancel:hover {
+                background-color: #f9fafb !important;
+                color: #1f2937 !important;
+                border-color: #d1d5db !important;
             }
         </style>
     @endpush
@@ -657,7 +671,7 @@
                             <div>
                                 <h4 class="text-lg font-extrabold text-on-surface flex items-center gap-2">
                                     Video Review TikTok Của Quán
-                                    <span class="text-xs bg-orange-100 text-orange-700 font-bold px-2.5 py-0.5 rounded-full">{{ $videos->count() }} video</span>
+                                    <span class="text-xs bg-orange-100 text-orange-700 font-bold px-2.5 py-0.5 rounded-full" id="owner-video-count-badge">{{ $videos->count() }} video</span>
                                 </h4>
                                 <p class="text-xs text-gray-400 mt-0.5">Quản lý và đăng tải các video review thực tế cho {{ $quan->ten_quan }}</p>
                             </div>
@@ -679,97 +693,99 @@
                     </div>
 
                     {{-- Danh sách Video --}}
-                    @if($videos->isEmpty())
-                        <div class="py-12 text-center bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
-                            <div class="w-16 h-16 rounded-full bg-orange-50 text-orange-500 flex items-center justify-center mx-auto mb-3">
-                                <span class="material-symbols-outlined text-3xl">smart_display</span>
+                    <div id="owner-videos-container">
+                        @if($videos->isEmpty())
+                            <div class="py-12 text-center bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
+                                <div class="w-16 h-16 rounded-full bg-orange-50 text-orange-500 flex items-center justify-center mx-auto mb-3">
+                                    <span class="material-symbols-outlined text-3xl">smart_display</span>
+                                </div>
+                                <h5 class="text-sm font-bold text-gray-800">Quán chưa có video review nào</h5>
+                                <p class="text-xs text-gray-500 max-w-md mx-auto mt-1 mb-4">Dán đường dẫn video TikTok review về quán để tự động tải video sạch, tăng lượng tương tác và thu hút thực khách đến quán!</p>
+                                <button type="button" onclick="openCreateVideoModal()"
+                                        class="px-4 py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs rounded-xl shadow-xs transition inline-flex items-center gap-1.5 cursor-pointer">
+                                    <span class="material-symbols-outlined text-base">add</span>
+                                    Đăng video review đầu tiên
+                                </button>
                             </div>
-                            <h5 class="text-sm font-bold text-gray-800">Quán chưa có video review nào</h5>
-                            <p class="text-xs text-gray-500 max-w-md mx-auto mt-1 mb-4">Dán đường dẫn video TikTok review về quán để tự động tải video sạch, tăng lượng tương tác và thu hút thực khách đến quán!</p>
-                            <button type="button" onclick="openCreateVideoModal()"
-                                    class="px-4 py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs rounded-xl shadow-xs transition inline-flex items-center gap-1.5 cursor-pointer">
-                                <span class="material-symbols-outlined text-base">add</span>
-                                Đăng video review đầu tiên
-                            </button>
-                        </div>
-                    @else
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            @foreach($videos as $v)
-                                <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-2xs hover:shadow-md transition flex flex-col justify-between" id="owner-video-card-{{ $v->id }}">
-                                    {{-- Video Card Header Thumbnail --}}
-                                    <div class="relative w-full aspect-[9/12] bg-gray-900 overflow-hidden group cursor-pointer" onclick="openPreviewVideoModal('{{ $v->clean_video_url ?: $v->embed_url }}', '{{ $v->video_id }}', '{{ addslashes($v->tieu_de) }}')">
-                                        <img src="{{ $v->effective_thumbnail }}"
-                                             alt="{{ $v->tieu_de }}"
-                                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                             onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=400&q=80';">
-                                        
-                                        <div class="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                                            <div class="w-11 h-11 rounded-full bg-white/90 text-gray-900 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                                                <span class="material-symbols-outlined text-2xl">play_arrow</span>
+                        @else
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="owner-videos-grid">
+                                @foreach($videos as $v)
+                                    <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-2xs hover:shadow-md transition flex flex-col h-full" id="owner-video-card-{{ $v->id }}">
+                                        {{-- Video Card Header Thumbnail --}}
+                                        <div class="relative w-full aspect-[9/13] shrink-0 bg-gray-900 overflow-hidden group cursor-pointer" style="aspect-ratio: 9/13;" onclick="openPreviewVideoModal('{{ $v->clean_video_url ?: $v->embed_url }}', '{{ $v->video_id }}', '{{ addslashes($v->tieu_de) }}')">
+                                            <img src="{{ $v->effective_thumbnail }}"
+                                                 alt="{{ $v->tieu_de }}"
+                                                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                                 onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=400&q=80';">
+                                            
+                                            <div class="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                                                <div class="w-11 h-11 rounded-full bg-white/90 text-gray-900 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                                                    <span class="material-symbols-outlined text-2xl">play_arrow</span>
+                                                </div>
                                             </div>
-                                        </div>
 
-                                        {{-- Badge Trạng Thái Phê Duyệt --}}
-                                        <div class="absolute top-2.5 left-2.5">
-                                            @if($v->trang_thai === 'da_duyet')
-                                                <span class="inline-flex items-center gap-1 bg-emerald-600/95 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
-                                                    <span class="material-symbols-outlined text-xs">check_circle</span>
-                                                    Đã duyệt
-                                                </span>
-                                            @elseif($v->trang_thai === 'cho_duyet')
-                                                <span class="inline-flex items-center gap-1 bg-amber-500/95 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
-                                                    <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
-                                                    Chờ duyệt
-                                                </span>
-                                            @else
-                                                <span class="inline-flex items-center gap-1 bg-gray-600/95 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
-                                                    <span class="material-symbols-outlined text-xs">visibility_off</span>
-                                                    Đang ẩn
-                                                </span>
+                                            {{-- Badge Trạng Thái Phê Duyệt --}}
+                                            <div class="absolute top-2.5 left-2.5" id="owner-video-badge-wrap-{{ $v->id }}">
+                                                @if($v->trang_thai === 'da_duyet')
+                                                    <span class="inline-flex items-center gap-1 bg-emerald-600/95 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+                                                        <span class="material-symbols-outlined text-xs">check_circle</span>
+                                                        Đã duyệt
+                                                    </span>
+                                                @elseif($v->trang_thai === 'cho_duyet')
+                                                    <span class="inline-flex items-center gap-1 bg-amber-500/95 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+                                                        <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+                                                        Chờ duyệt
+                                                    </span>
+                                                @else
+                                                    <span class="inline-flex items-center gap-1 bg-gray-600/95 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+                                                        <span class="material-symbols-outlined text-xs">visibility_off</span>
+                                                        Đang ẩn
+                                                    </span>
+                                                @endif
+                                            </div>
+
+                                            {{-- Lượt xem --}}
+                                            @if($v->luot_xem > 0)
+                                                <div class="absolute top-2.5 right-2.5">
+                                                    <span class="inline-flex items-center gap-1 bg-black/60 backdrop-blur-xs text-white text-[10px] font-medium px-2 py-0.5 rounded-full">
+                                                        <span class="material-symbols-outlined text-xs">visibility</span>
+                                                        {{ number_format($v->luot_xem) }}
+                                                    </span>
+                                                </div>
                                             @endif
                                         </div>
 
-                                        {{-- Lượt xem --}}
-                                        @if($v->luot_xem > 0)
-                                            <div class="absolute top-2.5 right-2.5">
-                                                <span class="inline-flex items-center gap-1 bg-black/60 backdrop-blur-xs text-white text-[10px] font-medium px-2 py-0.5 rounded-full">
-                                                    <span class="material-symbols-outlined text-xs">visibility</span>
-                                                    {{ number_format($v->luot_xem) }}
-                                                </span>
+                                        {{-- Video Card Content --}}
+                                        <div class="p-3.5 flex flex-col justify-between flex-1 min-h-[110px]">
+                                            <div>
+                                                <h5 class="font-bold text-xs text-gray-900 line-clamp-2 leading-snug h-8 sm:h-9 overflow-hidden mb-1.5" title="{{ $v->tieu_de }}">{{ $v->tieu_de }}</h5>
+                                                <div class="flex items-center gap-1.5 text-[11px] text-gray-500 mb-2">
+                                                    <span class="font-medium truncate">{{ $v->nguoi_dang ?: '@reviewer' }}</span>
+                                                    <span>•</span>
+                                                    <span>{{ $v->created_at ? $v->created_at->format('d/m/Y') : 'Mới đây' }}</span>
+                                                </div>
                                             </div>
-                                        @endif
-                                    </div>
 
-                                    {{-- Video Card Content --}}
-                                    <div class="p-3.5 flex flex-col justify-between flex-1">
-                                        <div>
-                                            <h5 class="font-bold text-xs text-gray-900 line-clamp-2 leading-snug mb-2" title="{{ $v->tieu_de }}">{{ $v->tieu_de }}</h5>
-                                            <div class="flex items-center gap-1.5 text-[11px] text-gray-500 mb-2">
-                                                <span class="font-medium truncate">{{ $v->nguoi_dang ?: '@reviewer' }}</span>
-                                                <span>•</span>
-                                                <span>{{ $v->created_at ? $v->created_at->format('d/m/Y') : 'Mới đây' }}</span>
+                                            {{-- Nút Thao tác --}}
+                                            <div class="pt-2 border-t border-gray-100 flex items-center justify-between gap-2 mt-auto">
+                                                <button type="button" onclick="openPreviewVideoModal('{{ $v->clean_video_url ?: $v->embed_url }}', '{{ $v->video_id }}', '{{ addslashes($v->tieu_de) }}')"
+                                                        class="text-xs font-bold text-primary hover:underline flex items-center gap-1 cursor-pointer">
+                                                    <span class="material-symbols-outlined text-[15px]">play_circle</span>
+                                                    Xem thử
+                                                </button>
+
+                                                <button type="button" onclick="deleteOwnerVideo('{{ $v->id }}', '{{ addslashes($v->tieu_de) }}')"
+                                                        class="text-xs font-bold text-red-500 hover:text-red-700 flex items-center gap-1 p-1 hover:bg-red-50 rounded-lg transition cursor-pointer" title="Xóa video này">
+                                                    <span class="material-symbols-outlined text-[16px]">delete</span>
+                                                    Xóa
+                                                </button>
                                             </div>
                                         </div>
-
-                                        {{-- Nút Thao tác --}}
-                                        <div class="pt-2 border-t border-gray-100 flex items-center justify-between gap-2 mt-auto">
-                                            <button type="button" onclick="openPreviewVideoModal('{{ $v->clean_video_url ?: $v->embed_url }}', '{{ $v->video_id }}', '{{ addslashes($v->tieu_de) }}')"
-                                                    class="text-xs font-bold text-primary hover:underline flex items-center gap-1 cursor-pointer">
-                                                <span class="material-symbols-outlined text-[15px]">play_circle</span>
-                                                Xem thử
-                                            </button>
-
-                                            <button type="button" onclick="deleteOwnerVideo('{{ $v->id }}', '{{ addslashes($v->tieu_de) }}')"
-                                                    class="text-xs font-bold text-red-500 hover:text-red-700 flex items-center gap-1 p-1 hover:bg-red-50 rounded-lg transition cursor-pointer" title="Xóa video này">
-                                                <span class="material-symbols-outlined text-[16px]">delete</span>
-                                                Xóa
-                                            </button>
-                                        </div>
                                     </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    @endif
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
                 </div>
             </section>
         </div>
@@ -1252,42 +1268,70 @@
        GALLERY DELETE
     ========================================================= */
     async function deleteGalleryImage(imgId) {
-        if (!confirm('Bạn có chắc chắn muốn xóa hình ảnh này không?')) return;
-
-        const card = document.getElementById('img-' + imgId);
-        if (card) {
-            card.style.opacity = '0.4';
-            card.style.pointerEvents = 'none';
-        }
-
-        try {
-            const res = await fetch(`/chu-quan/hinh-anh/${imgId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+        openOwnerConfirmModal({
+            title: 'Xác Nhận Xóa Ảnh',
+            message: 'Bạn có chắc chắn muốn xóa hình ảnh này khỏi không gian quán không?',
+            icon: 'delete',
+            iconClass: 'bg-red-100 text-red-600',
+            confirmText: 'Xác Nhận Xóa',
+            confirmIcon: 'delete',
+            confirmClass: 'owner-confirm-btn-danger',
+            onConfirm: async () => {
+                const card = document.getElementById('img-' + imgId);
+                if (card) {
+                    card.style.opacity = '0.4';
+                    card.style.pointerEvents = 'none';
                 }
-            });
-            const data = await res.json();
-            if (res.ok && data.success) {
-                // Xóa card khỏi DOM
-                if (card) card.remove();
-                // Nếu không còn ảnh nào → hiện placeholder
-                const grid = document.getElementById('gallery-grid');
-                if (grid.children.length === 0) {
-                    grid.innerHTML = `<div class="col-span-full py-8 text-center text-gray-400 text-sm" id="gallery-empty">
-                        <span class="material-symbols-outlined text-4xl block mb-2 text-gray-300">photo_library</span>
-                        Chưa có hình ảnh nào. Bấm "Thêm ảnh" để tải lên.
-                    </div>`;
+
+                try {
+                    const res = await fetch(`/chu-quan/hinh-anh/${imgId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                        }
+                    });
+                    const data = await res.json();
+                    if (res.ok && data.success) {
+                        // Xóa card khỏi DOM
+                        if (card) card.remove();
+                        // Nếu không còn ảnh nào → hiện placeholder
+                        const grid = document.getElementById('gallery-grid');
+                        if (grid && grid.children.length === 0) {
+                            grid.innerHTML = `<div class="col-span-full py-8 text-center text-gray-400 text-sm" id="gallery-empty">
+                                <span class="material-symbols-outlined text-4xl block mb-2 text-gray-300">photo_library</span>
+                                Chưa có hình ảnh nào. Bấm "Thêm ảnh" để tải lên.
+                            </div>`;
+                        }
+                        if (window.showToast) {
+                            window.showToast({
+                                title: 'Đã xóa ảnh',
+                                message: 'Hình ảnh đã được gỡ bỏ khỏi quán thành công.',
+                                type: 'success'
+                            });
+                        }
+                    } else {
+                        if (window.showToast) {
+                            window.showToast({
+                                title: 'Không thể xóa ảnh',
+                                message: data.message || 'Không thể xóa ảnh.',
+                                type: 'error'
+                            });
+                        }
+                        if (card) { card.style.opacity = '1'; card.style.pointerEvents = 'auto'; }
+                    }
+                } catch (e) {
+                    if (window.showToast) {
+                        window.showToast({
+                            title: 'Lỗi kết nối',
+                            message: 'Không thể kết nối máy chủ.',
+                            type: 'error'
+                        });
+                    }
+                    if (card) { card.style.opacity = '1'; card.style.pointerEvents = 'auto'; }
                 }
-            } else {
-                alert(data.message || 'Không thể xóa ảnh.');
-                if (card) { card.style.opacity = '1'; card.style.pointerEvents = 'auto'; }
             }
-        } catch (e) {
-            alert('Không thể kết nối máy chủ.');
-            if (card) { card.style.opacity = '1'; card.style.pointerEvents = 'auto'; }
-        }
+        });
     }
 
     /* =========================================================
@@ -1679,45 +1723,80 @@
     }
 
     async function deleteOwnerPromotion(id, title = '') {
-        if (!confirm(`Bạn có chắc chắn muốn xóa vĩnh viễn voucher/ưu đãi "${title || 'này'}" không?`)) return;
+        openOwnerConfirmModal({
+            title: 'Xác Nhận Xóa Voucher',
+            message: `Bạn có chắc chắn muốn xóa vĩnh viễn voucher "<strong>${(title || 'này').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</strong>" khỏi quán không?`,
+            icon: 'delete',
+            iconClass: 'bg-red-100 text-red-600',
+            confirmText: 'Xác Nhận Xóa',
+            confirmIcon: 'delete',
+            confirmClass: 'owner-confirm-btn-danger',
+            onConfirm: async () => {
+                try {
+                    const res = await fetch('/chu-quan/quan/{{ $quan->slug }}/khuyen-mai/' + id, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}'
+                        }
+                    });
 
-        try {
-            const res = await fetch('/chu-quan/quan/{{ $quan->slug }}/khuyen-mai/' + id, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}'
+                    const data = await res.json();
+                    if (res.ok && data.success) {
+                        const card = document.getElementById('km-card-' + id);
+                        if (card) {
+                            card.style.transition = 'all 0.3s ease';
+                            card.style.opacity = '0';
+                            card.style.transform = 'scale(0.95)';
+                            setTimeout(() => card.remove(), 300);
+                        }
+                        const countElem = document.getElementById('promo-total-count');
+                        if (countElem) {
+                            const current = parseInt(countElem.innerText) || 1;
+                            countElem.innerText = Math.max(0, current - 1);
+                        }
+                        if (window.showToast) {
+                            window.showToast({
+                                title: 'Đã xóa voucher',
+                                message: 'Đã xóa ưu đãi khỏi quán thành công!',
+                                type: 'success'
+                            });
+                        }
+                    } else {
+                        if (window.showToast) {
+                            window.showToast({
+                                title: 'Không thể xóa',
+                                message: data.message || 'Không thể xóa ưu đãi.',
+                                type: 'error'
+                            });
+                        }
+                    }
+                } catch (err) {
+                    if (window.showToast) {
+                        window.showToast({
+                            title: 'Lỗi kết nối',
+                            message: 'Không thể kết nối máy chủ để xóa voucher.',
+                            type: 'error'
+                        });
+                    }
                 }
-            });
-
-            const data = await res.json();
-            if (res.ok && data.success) {
-                const card = document.getElementById('km-card-' + id);
-                if (card) {
-                    card.style.transition = 'all 0.3s ease';
-                    card.style.opacity = '0';
-                    card.style.transform = 'scale(0.95)';
-                    setTimeout(() => card.remove(), 300);
-                }
-                const countElem = document.getElementById('promo-total-count');
-                if (countElem) {
-                    const current = parseInt(countElem.innerText) || 1;
-                    countElem.innerText = Math.max(0, current - 1);
-                }
-                alert('✅ Đã xóa voucher thành công!');
-            } else {
-                alert('Lỗi: ' + (data.message || 'Không thể xóa ưu đãi.'));
             }
-        } catch (err) {
-            alert('Lỗi kết nối khi xóa.');
-        }
+        });
     }
 
     function copyOwnerGeneratedVoucher() {
         const val = document.getElementById('owner-res-voucher')?.value;
         if (!val) return;
-        navigator.clipboard.writeText(val).then(() => alert('Đã sao chép mã voucher: ' + val));
+        navigator.clipboard.writeText(val).then(() => {
+            if (window.showToast) {
+                window.showToast({
+                    title: 'Đã sao chép',
+                    message: 'Mã voucher: ' + val,
+                    type: 'success'
+                });
+            }
+        });
     }
 
     function copyOwnerGeneratedPost() {
@@ -1727,13 +1806,29 @@
         const hashtags = document.getElementById('owner-res-hashtags')?.innerText || '';
 
         const full = tieuDe + "\n\n" + noiDung + "\n\n📋 THỂ LỆ & ĐIỀU KIỆN:\n" + theLe + "\n\n" + hashtags;
-        navigator.clipboard.writeText(full).then(() => alert('Đã sao chép toàn bộ bài đăng quảng bá mạng xã hội!'));
+        navigator.clipboard.writeText(full).then(() => {
+            if (window.showToast) {
+                window.showToast({
+                    title: 'Đã sao chép bài đăng',
+                    message: 'Đã sao chép toàn bộ bài đăng quảng bá mạng xã hội!',
+                    type: 'success'
+                });
+            }
+        });
     }
 
     function copyExistingPromoPost(id) {
         const box = document.getElementById('promo-full-content-' + id);
         if (!box) return;
-        navigator.clipboard.writeText(box.innerText.trim()).then(() => alert('Đã sao chép nội dung bài viết ưu đãi!'));
+        navigator.clipboard.writeText(box.innerText.trim()).then(() => {
+            if (window.showToast) {
+                window.showToast({
+                    title: 'Đã sao chép',
+                    message: 'Đã sao chép nội dung bài viết ưu đãi!',
+                    type: 'success'
+                });
+            }
+        });
     }
 
     function togglePromoContent(id) {
@@ -1872,7 +1967,13 @@
         if (input.files && input.files.length > 0) {
             const file = input.files[0];
             if (file.size > 200 * 1024 * 1024) {
-                alert(`File video "${file.name}" quá lớn (${(file.size / (1024 * 1024)).toFixed(1)}MB). Vui lòng chọn file dung lượng nhỏ hơn 200MB.`);
+                if (window.showToast) {
+                    window.showToast({
+                        title: 'File quá lớn',
+                        message: `File video "${file.name}" (${(file.size / (1024 * 1024)).toFixed(1)}MB) vượt quá giới hạn 200MB. Vui lòng chọn file dung lượng nhỏ hơn hoặc dán link TikTok.`,
+                        type: 'error'
+                    });
+                }
                 input.value = '';
                 if (fileBox) fileBox.classList.add('hidden');
                 return;
@@ -1948,7 +2049,13 @@
         const titleInput = document.getElementById('owner_video_title');
 
         if (!input || !input.value.trim()) {
-            alert('Vui lòng nhập đường dẫn video TikTok trước.');
+            if (window.showToast) {
+                window.showToast({
+                    title: 'Chưa nhập liên kết',
+                    message: 'Vui lòng dán đường dẫn link video TikTok trước khi lấy thông tin.',
+                    type: 'warning'
+                });
+            }
             return;
         }
 
@@ -1984,11 +2091,30 @@
                     document.getElementById('owner-preview-author').textContent = info.author_name || '@tiktok_creator';
                     document.getElementById('owner-preview-views').textContent = `${Number(info.views || 0).toLocaleString('vi-VN')} lượt xem • ${Number(info.likes || 0).toLocaleString('vi-VN')} thích`;
                 }
+                if (window.showToast) {
+                    window.showToast({
+                        title: 'Đã nhận diện video',
+                        message: 'Đã tải thông tin video TikTok thành công!',
+                        type: 'success'
+                    });
+                }
             } else {
-                alert(data.message || 'Không thể lấy thông tin video. Bạn vẫn có thể gửi link này để Admin kiểm duyệt.');
+                if (window.showToast) {
+                    window.showToast({
+                        title: 'Thông báo TikTok',
+                        message: data.message || 'Không thể tự động lấy thông tin video. Bạn vẫn có thể gửi link này để Ban quản trị kiểm duyệt.',
+                        type: 'info'
+                    });
+                }
             }
         } catch (err) {
-            alert('Lỗi kết nối khi lấy thông tin video TikTok.');
+            if (window.showToast) {
+                window.showToast({
+                    title: 'Lỗi kết nối',
+                    message: 'Không thể kết nối máy chủ khi lấy thông tin video TikTok.',
+                    type: 'error'
+                });
+            }
         } finally {
             btn.disabled = false;
             btn.innerHTML = oldBtnText;
@@ -2001,7 +2127,13 @@
             const file = fileInput.files[0];
             if (file.size > 200 * 1024 * 1024) {
                 e.preventDefault();
-                alert(`File video "${file.name}" quá lớn (${(file.size / (1024 * 1024)).toFixed(1)}MB). Vui lòng chọn file dung lượng nhỏ hơn 200MB hoặc dán link TikTok.`);
+                if (window.showToast) {
+                    window.showToast({
+                        title: 'File quá lớn',
+                        message: `File video "${file.name}" dung lượng ${(file.size / (1024 * 1024)).toFixed(1)}MB quá lớn. Vui lòng chọn file nhỏ hơn 200MB hoặc dán link TikTok.`,
+                        type: 'error'
+                    });
+                }
                 return;
             }
         }
@@ -2012,31 +2144,308 @@
         }
     });
 
-    async function deleteOwnerVideo(id, title) {
-        if (!confirm(`Bạn có chắc chắn muốn xóa video "${title || 'này'}" khỏi quán không?`)) return;
+    // Enterprise Confirmation Modal Engine cho Chủ Quán
+    let ownerConfirmCallback = null;
 
-        try {
-            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-            const res = await fetch(`/chu-quan/quan/{{ $quan->slug }}/videos/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': token,
-                    'Accept': 'application/json'
-                }
-            });
+    function openOwnerConfirmModal(options) {
+        const modal = document.getElementById('owner-confirm-modal');
+        const box = document.getElementById('owner-confirm-box');
+        const titleEl = document.getElementById('owner-confirm-title');
+        const msgEl = document.getElementById('owner-confirm-message');
+        const iconEl = document.getElementById('owner-confirm-icon');
+        const iconWrap = document.getElementById('owner-confirm-icon-wrap');
+        const submitBtn = document.getElementById('owner-confirm-submit-btn');
+        const btnText = document.getElementById('owner-confirm-btn-text');
+        const btnIcon = document.getElementById('owner-confirm-btn-icon');
 
-            const data = await res.json();
-            if (data.success) {
-                document.getElementById(`owner-video-card-${id}`)?.remove();
-                alert('Đã xóa video thành công.');
-            } else {
-                alert(data.message || 'Không thể xóa video.');
+        if (!modal) return;
+
+        ownerConfirmCallback = options.onConfirm || null;
+        titleEl.textContent = options.title || 'Xác nhận thao tác';
+        msgEl.innerHTML = options.message || 'Bạn có chắc chắn muốn thực hiện hành động này?';
+        iconEl.textContent = options.icon || 'help';
+        btnText.textContent = options.confirmText || 'Xác nhận';
+        btnIcon.textContent = options.confirmIcon || 'check';
+
+        const cClass = (options.confirmClass || '').toLowerCase();
+        const isDanger = cClass.includes('danger') || cClass.includes('red') || cClass.includes('delete') || (options.confirmIcon === 'delete');
+
+        if (isDanger) {
+            iconWrap.className = 'w-14 h-14 rounded-2xl mx-auto flex items-center justify-center ' + (options.iconClass || '');
+            iconWrap.style.backgroundColor = '#fee2e2';
+            iconWrap.style.color = '#dc2626';
+
+            submitBtn.className = 'owner-confirm-btn-danger flex-1 py-2.5 px-4 rounded-xl font-bold text-xs shadow-md shadow-red-500/25 transition flex items-center justify-center gap-1.5 cursor-pointer ' + (options.confirmClass || '');
+            submitBtn.style.backgroundColor = '#dc2626';
+            submitBtn.style.color = '#ffffff';
+        } else {
+            iconWrap.className = 'w-14 h-14 rounded-2xl mx-auto flex items-center justify-center ' + (options.iconClass || '');
+            iconWrap.style.backgroundColor = options.iconBgColor || '#fef3c7';
+            iconWrap.style.color = options.iconColor || '#d97706';
+
+            submitBtn.className = 'flex-1 py-2.5 px-4 rounded-xl font-bold text-xs shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer ' + (options.confirmClass || '');
+            submitBtn.style.backgroundColor = options.bgColor || '#059669';
+            submitBtn.style.color = options.textColor || '#ffffff';
+        }
+
+        submitBtn.style.display = 'inline-flex';
+
+        modal.classList.remove('hidden');
+        setTimeout(() => {
+            box.classList.remove('scale-95');
+            box.classList.add('scale-100');
+        }, 10);
+    }
+
+    function closeOwnerConfirmModal() {
+        const modal = document.getElementById('owner-confirm-modal');
+        const box = document.getElementById('owner-confirm-box');
+        ownerConfirmCallback = null;
+        if (!modal) return;
+
+        box.classList.remove('scale-100');
+        box.classList.add('scale-95');
+        setTimeout(() => {
+            modal.classList.add('hidden');
+        }, 150);
+    }
+
+    let isOwnerConfirmSubmitting = false;
+
+    function handleOwnerConfirmSubmit() {
+        if (isOwnerConfirmSubmitting) return;
+        if (typeof ownerConfirmCallback === 'function') {
+            isOwnerConfirmSubmitting = true;
+            const cb = ownerConfirmCallback;
+            ownerConfirmCallback = null;
+            closeOwnerConfirmModal();
+            try {
+                cb();
+            } finally {
+                setTimeout(() => {
+                    isOwnerConfirmSubmitting = false;
+                }, 600);
             }
-        } catch (e) {
-            alert('Lỗi kết nối khi xóa video.');
+        } else {
+            closeOwnerConfirmModal();
         }
     }
+
+    const ownerDeletingVideos = new Set();
+    async function deleteOwnerVideo(id, title) {
+        if (ownerDeletingVideos.has(id)) return;
+        openOwnerConfirmModal({
+            title: 'Xác Nhận Xóa Video',
+            message: `Bạn có chắc chắn muốn xóa video "<strong>${(title || 'này').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</strong>" khỏi quán không?<br><span class="text-xs text-red-500 font-medium">Video sẽ bị xóa vĩnh viễn và không còn xuất hiện trên quán của bạn.</span>`,
+            icon: 'delete',
+            iconClass: 'bg-red-100 text-red-600',
+            confirmText: 'Xác Nhận Xóa',
+            confirmIcon: 'delete',
+            confirmClass: 'owner-confirm-btn-danger',
+            onConfirm: async () => {
+                if (ownerDeletingVideos.has(id)) return;
+                ownerDeletingVideos.add(id);
+                try {
+                    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                    const res = await fetch(`/chu-quan/quan/{{ $quan->slug }}/videos/${id}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': token,
+                            'Accept': 'application/json'
+                        }
+                    });
+
+                    const data = await res.json();
+                    if (data.success) {
+                        const card = document.getElementById(`owner-video-card-${id}`);
+                        if (card) {
+                            card.style.transition = 'all 0.3s ease';
+                            card.style.opacity = '0';
+                            card.style.transform = 'scale(0.9)';
+                            setTimeout(() => {
+                                card.remove();
+                                const container = document.getElementById('owner-videos-grid');
+                                if (container && container.querySelectorAll('[id^="owner-video-card-"]').length === 0) {
+                                    window.location.reload();
+                                }
+                            }, 300);
+                        }
+                        if (window.showToast) {
+                            window.showToast({
+                                title: 'Đã xóa video',
+                                message: 'Video review đã được gỡ bỏ khỏi quán thành công.',
+                                type: 'success'
+                            });
+                        }
+                    } else {
+                        if (window.showToast) {
+                            window.showToast({
+                                title: 'Không thể xóa',
+                                message: data.message || 'Có lỗi xảy ra khi xóa video.',
+                                type: 'error'
+                            });
+                        }
+                    }
+                } catch (e) {
+                    if (window.showToast) {
+                        window.showToast({
+                            title: 'Lỗi kết nối',
+                            message: 'Không thể kết nối máy chủ để xóa video.',
+                            type: 'error'
+                        });
+                    }
+                } finally {
+                    setTimeout(() => {
+                        ownerDeletingVideos.delete(id);
+                    }, 1200);
+                }
+            }
+        });
+    }
+
+    // ========================================================
+    // TỰ ĐỘNG ĐỒNG BỘ REALTIME KHI ADMIN DUYỆT HOẶC TỪ CHỐI VIDEO
+    // ========================================================
+    let isSyncingOwnerVideos = false;
+
+    function syncOwnerVideosGrid(highlightVideoId = null) {
+        if (isSyncingOwnerVideos) return;
+        isSyncingOwnerVideos = true;
+
+        fetch(window.location.href, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(res => res.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+
+            const newContainer = doc.getElementById('owner-videos-container');
+            const curContainer = document.getElementById('owner-videos-container');
+            if (newContainer && curContainer) {
+                curContainer.innerHTML = newContainer.innerHTML;
+            }
+
+            const newBadge = doc.getElementById('owner-video-count-badge');
+            const curBadge = document.getElementById('owner-video-count-badge');
+            if (newBadge && curBadge) {
+                curBadge.innerHTML = newBadge.innerHTML;
+            }
+
+            if (highlightVideoId) {
+                const card = document.getElementById(`owner-video-card-${highlightVideoId}`);
+                if (card) {
+                    card.classList.add('ring-2', 'ring-emerald-500', 'bg-emerald-50/30');
+                    setTimeout(() => {
+                        card.classList.remove('ring-2', 'ring-emerald-500', 'bg-emerald-50/30');
+                    }, 4000);
+                }
+            }
+        })
+        .catch(err => console.warn('Lỗi đồng bộ video:', err))
+        .finally(() => {
+            isSyncingOwnerVideos = false;
+        });
+    }
+
+    // Lắng nghe sự kiện Realtime khi Admin duyệt hoặc từ chối video
+    window.addEventListener('quanmoi:video-status-updated', function(e) {
+        if (!e.detail) return;
+        const detail = e.detail;
+
+        // 1. Nếu video được Admin phê duyệt -> Chuyển ngay badge thành "Đã duyệt" không cần load trang
+        if (detail.action === 'video_approved' || detail.status === 'approved') {
+            const videoId = detail.video_db_id;
+            let updated = false;
+
+            if (videoId) {
+                const badgeWrap = document.getElementById(`owner-video-badge-wrap-${videoId}`);
+                if (badgeWrap) {
+                    badgeWrap.innerHTML = `
+                        <span class="inline-flex items-center gap-1 bg-emerald-600/95 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm animate-pulse">
+                            <span class="material-symbols-outlined text-xs">check_circle</span>
+                            Đã duyệt
+                        </span>
+                    `;
+                    const card = document.getElementById(`owner-video-card-${videoId}`);
+                    if (card) {
+                        card.classList.add('ring-2', 'ring-emerald-500', 'bg-emerald-50/30');
+                        setTimeout(() => {
+                            card.classList.remove('ring-2', 'ring-emerald-500', 'bg-emerald-50/30');
+                        }, 4000);
+                    }
+                    updated = true;
+                }
+            }
+
+            // Fallback nếu không có ID: tìm thẻ theo tiêu đề video
+            if (!updated && detail.video_title) {
+                const cards = document.querySelectorAll('[id^="owner-video-card-"]');
+                cards.forEach(card => {
+                    const titleText = card.querySelector('h5')?.textContent?.trim() || '';
+                    if (titleText && (titleText === detail.video_title.trim() || titleText.includes(detail.video_title.trim()) || detail.video_title.trim().includes(titleText))) {
+                        const badgeWrap = card.querySelector('[id^="owner-video-badge-wrap-"]') || card.querySelector('.absolute.top-2\\.5.left-2\\.5');
+                        if (badgeWrap) {
+                            badgeWrap.innerHTML = `
+                                <span class="inline-flex items-center gap-1 bg-emerald-600/95 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm animate-pulse">
+                                    <span class="material-symbols-outlined text-xs">check_circle</span>
+                                    Đã duyệt
+                                </span>
+                            `;
+                            card.classList.add('ring-2', 'ring-emerald-500', 'bg-emerald-50/30');
+                            setTimeout(() => {
+                                card.classList.remove('ring-2', 'ring-emerald-500', 'bg-emerald-50/30');
+                            }, 4000);
+                        }
+                    }
+                });
+            }
+
+            // Đồng bộ ngầm toàn bộ lại sau 800ms
+            setTimeout(() => syncOwnerVideosGrid(videoId), 800);
+        }
+
+        // 2. Nếu video của quán bị Admin từ chối -> Gỡ bỏ card khỏi giao diện ngay lập tức
+        if (detail.action === 'video_rejected' || detail.status === 'rejected') {
+            const videoId = detail.video_db_id;
+            let targetCard = null;
+
+            if (videoId) {
+                targetCard = document.getElementById(`owner-video-card-${videoId}`);
+            }
+
+            if (!targetCard && detail.video_title) {
+                const cards = document.querySelectorAll('[id^="owner-video-card-"]');
+                cards.forEach(card => {
+                    const titleText = card.querySelector('h5')?.textContent?.trim() || '';
+                    if (titleText && (titleText === detail.video_title.trim() || titleText.includes(detail.video_title.trim()) || detail.video_title.trim().includes(titleText))) {
+                        targetCard = card;
+                    }
+                });
+            }
+
+            if (targetCard) {
+                targetCard.style.transition = 'all 0.4s ease';
+                targetCard.style.opacity = '0';
+                targetCard.style.transform = 'scale(0.85)';
+                setTimeout(() => {
+                    targetCard.remove();
+                    const container = document.getElementById('owner-videos-grid');
+                    if (container && container.querySelectorAll('[id^="owner-video-card-"]').length === 0) {
+                        syncOwnerVideosGrid();
+                    }
+                }, 400);
+            }
+        }
+    });
+
+    // Tự động kiểm tra đồng bộ ngầm trạng thái video mỗi 4 giây khi tab đang mở
+    setInterval(function() {
+        if (!document.hidden && document.getElementById('owner-videos-container')) {
+            syncOwnerVideosGrid();
+        }
+    }, 4000);
 
     function openPreviewVideoModal(videoUrl, videoId, title) {
         const modal = document.getElementById('modal-owner-preview-player');
@@ -2044,6 +2453,7 @@
         if (!modal || !container) return;
 
         modal.classList.remove('hidden');
+        modal.style.display = 'flex';
         document.body.classList.add('overflow-hidden');
         container.innerHTML = '';
 
@@ -2053,7 +2463,7 @@
             video.controls = true;
             video.autoplay = true;
             video.playsInline = true;
-            video.className = 'w-full h-full object-cover';
+            video.className = 'w-full h-full object-contain';
             container.appendChild(video);
         } else {
             const iframe = document.createElement('iframe');
@@ -2069,9 +2479,16 @@
         if (container) container.innerHTML = '';
         if (modal) {
             modal.classList.add('hidden');
+            modal.style.display = 'none';
             document.body.classList.remove('overflow-hidden');
         }
     }
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closePreviewVideoModal();
+        }
+    });
 </script>
 
 {{-- Modal Đăng Video Review Mới Cho Chủ Quán --}}
@@ -2207,12 +2624,36 @@
 </div>
 
 {{-- Modal Xem Thử Video Review Cho Chủ Quán --}}
-<div id="modal-owner-preview-player" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md hidden transition-opacity" onclick="if(event.target === this) closePreviewVideoModal()">
-    <button type="button" onclick="closePreviewVideoModal()" class="fixed top-4 right-4 text-white hover:text-gray-300 w-11 h-11 rounded-full bg-white/20 flex items-center justify-center transition cursor-pointer z-50">
+<div id="modal-owner-preview-player" class="fixed inset-0 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md hidden transition-opacity" style="z-index: 100000;" onclick="if(event.target === this) closePreviewVideoModal()">
+    <button type="button" onclick="closePreviewVideoModal()" class="fixed top-5 right-5 text-white hover:text-gray-300 w-11 h-11 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition cursor-pointer" style="z-index: 100001;" title="Đóng (Esc)">
         <span class="material-symbols-outlined text-2xl font-black">close</span>
     </button>
-    <div class="rounded-3xl overflow-hidden shadow-2xl bg-black border border-white/10" style="width: min(440px, 92vw); height: min(780px, 86vh); position: relative;">
+    <div class="rounded-3xl overflow-hidden shadow-2xl bg-black border border-white/10 flex items-center justify-center" style="width: min(480px, calc(86vh * 9 / 16), 94vw); height: min(780px, 86vh); position: relative;">
         <div id="owner-player-container" class="w-full h-full flex items-center justify-center bg-black"></div>
+    </div>
+</div>
+
+{{-- MODAL XÁC NHẬN CHUNG DÀNH CHO CHỦ QUÁN (THAY THẾ TOÀN BỘ CONFIRM NATIVE) --}}
+<div id="owner-confirm-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+    <div id="owner-confirm-box" class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center space-y-4 transform transition-transform scale-95 duration-200">
+        <div id="owner-confirm-icon-wrap" class="w-14 h-14 rounded-2xl mx-auto flex items-center justify-center bg-red-100 text-red-600" style="background-color: #fee2e2; color: #dc2626;">
+            <span id="owner-confirm-icon" class="material-symbols-outlined text-3xl">delete</span>
+        </div>
+        <div class="space-y-1.5">
+            <h3 id="owner-confirm-title" class="text-base font-bold text-gray-900">Xác Nhận Thao Tác</h3>
+            <div id="owner-confirm-message" class="text-xs text-gray-600 leading-relaxed"></div>
+        </div>
+        <div class="pt-2 flex items-center justify-center gap-2.5">
+            <button type="button" onclick="closeOwnerConfirmModal()" class="owner-confirm-btn-cancel flex-1 py-2.5 px-4 rounded-xl border border-gray-200 text-gray-600 font-bold text-xs hover:bg-gray-50 transition cursor-pointer" style="background-color: #ffffff; color: #4b5563; border: 1px solid #e5e7eb;">
+                Hủy bỏ
+            </button>
+            <button type="button" id="owner-confirm-submit-btn" onclick="handleOwnerConfirmSubmit()"
+                    style="background-color: #dc2626 !important; color: #ffffff !important; border: 1px solid #dc2626 !important;"
+                    class="owner-confirm-btn-danger flex-1 py-2.5 px-4 rounded-xl font-bold text-xs shadow-md shadow-red-500/25 transition flex items-center justify-center gap-1.5 cursor-pointer hover:opacity-95 active:scale-95">
+                <span id="owner-confirm-btn-icon" class="material-symbols-outlined text-base" style="color: #ffffff !important;">delete</span>
+                <span id="owner-confirm-btn-text" style="color: #ffffff !important; font-weight: 700;">Xác Nhận Xóa</span>
+            </button>
+        </div>
     </div>
 </div>
 @endpush

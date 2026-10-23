@@ -905,15 +905,14 @@
 
                                 <style>
                                     .quan-review-grid {
-                                        display: flex;
-                                        flex-wrap: wrap;
-                                        gap: 1.25rem;
+                                        display: grid;
+                                        grid-template-columns: repeat(3, minmax(0, 1fr));
+                                        gap: 1rem;
                                     }
                                     .quan-review-card {
                                         position: relative;
-                                        width: 260px;
-                                        height: 440px;
-                                        max-width: 100%;
+                                        width: 100%;
+                                        aspect-ratio: 9 / 14;
                                         border-radius: 1.25rem;
                                         overflow: hidden;
                                         background: #0f172a;
@@ -923,7 +922,6 @@
                                         display: flex;
                                         flex-direction: column;
                                         justify-content: space-between;
-                                        flex-shrink: 0;
                                     }
                                     .quan-review-card:hover {
                                         transform: translateY(-6px);
@@ -931,13 +929,11 @@
                                     }
                                     @media (max-width: 640px) {
                                         .quan-review-grid {
-                                            display: grid;
                                             grid-template-columns: repeat(2, minmax(0, 1fr));
                                             gap: 0.75rem;
                                         }
                                         .quan-review-card {
-                                            width: 100%;
-                                            height: 300px;
+                                            aspect-ratio: 9 / 13;
                                         }
                                     }
                                 </style>
@@ -946,7 +942,7 @@
                                     @foreach($quan->videos as $idx => $v)
                                         <div onclick="openQuanVideoModal({{ $idx }})"
                                              class="quan-review-card group border border-white/10"
-                                             style="height: 440px; width: 260px; position: relative;">
+                                             style="position: relative;">
                                             {{-- Thumbnail --}}
                                             <img src="{{ $v->effective_thumbnail }}"
                                                  alt="{{ $v->tieu_de }}"
@@ -1087,29 +1083,29 @@
         </div>
     {{-- Modal Xem Video Review của Quán (Chỉ phát video sạch hoặc fallback Iframe) --}}
     @if(isset($quan->videos) && $quan->videos->isNotEmpty())
-        <div id="quan-video-modal" class="fixed inset-0 hidden opacity-0 transition-opacity duration-300" style="display:none; z-index: 9999;">
+        <div id="quan-video-modal" class="fixed inset-0 hidden opacity-0 transition-opacity duration-300" style="display:none; z-index: 100000;">
             {{-- Backdrop --}}
             <div class="absolute inset-0 bg-black/85 backdrop-blur-md" onclick="closeQuanVideoModal()"></div>
 
             {{-- Nút Đóng --}}
             <button type="button" onclick="event.stopPropagation(); closeQuanVideoModal()"
                     class="fixed top-4 right-4 md:top-6 md:right-6 text-gray-900 bg-white hover:bg-gray-200 hover:scale-110 rounded-full w-12 h-12 flex items-center justify-center transition-transform shadow-2xl cursor-pointer"
-                    style="z-index: 10000;" title="Đóng (Esc)">
+                    style="z-index: 100001;" title="Đóng (Esc)">
                 <span class="material-symbols-outlined text-2xl font-black">close</span>
             </button>
 
             {{-- Nút Chuyển Trái / Phải nếu có nhiều video --}}
             @if($quan->videos->count() > 1)
-                <button type="button" onclick="event.stopPropagation(); changeQuanVideo(-1)" class="fixed left-2 md:left-8 top-1/2 -translate-y-1/2 text-gray-900 bg-white hover:bg-gray-200 hover:scale-110 rounded-full w-12 h-12 md:w-14 md:h-14 flex items-center justify-center transition-transform shadow-2xl cursor-pointer" style="z-index: 10000;" title="Video trước">
+                <button type="button" onclick="event.stopPropagation(); changeQuanVideo(-1)" class="fixed left-2 md:left-8 top-1/2 -translate-y-1/2 text-gray-900 bg-white hover:bg-gray-200 hover:scale-110 rounded-full w-12 h-12 md:w-14 md:h-14 flex items-center justify-center transition-transform shadow-2xl cursor-pointer" style="z-index: 100001;" title="Video trước">
                     <span class="material-symbols-outlined text-3xl md:text-4xl font-black">chevron_left</span>
                 </button>
-                <button type="button" onclick="event.stopPropagation(); changeQuanVideo(1)" class="fixed right-2 md:right-8 top-1/2 -translate-y-1/2 text-gray-900 bg-white hover:bg-gray-200 hover:scale-110 rounded-full w-12 h-12 md:w-14 md:h-14 flex items-center justify-center transition-transform shadow-2xl cursor-pointer" style="z-index: 10000;" title="Video kế tiếp">
+                <button type="button" onclick="event.stopPropagation(); changeQuanVideo(1)" class="fixed right-2 md:right-8 top-1/2 -translate-y-1/2 text-gray-900 bg-white hover:bg-gray-200 hover:scale-110 rounded-full w-12 h-12 md:w-14 md:h-14 flex items-center justify-center transition-transform shadow-2xl cursor-pointer" style="z-index: 100001;" title="Video kế tiếp">
                     <span class="material-symbols-outlined text-3xl md:text-4xl font-black">chevron_right</span>
                 </button>
             @endif
 
             {{-- Khung Video căn giữa --}}
-            <div class="fixed inset-0 flex items-center justify-center pointer-events-none" style="z-index: 10000;">
+            <div class="fixed inset-0 flex items-center justify-center pointer-events-none" style="z-index: 100001;">
                 <div class="pointer-events-auto rounded-3xl overflow-hidden shadow-2xl bg-black border border-white/10"
                      style="width: min(480px, calc(90vh * 9 / 16), 94vw); height: min(860px, 90vh); aspect-ratio: 9/16; position: relative;">
 
@@ -1465,6 +1461,7 @@
 
             if (!modal || !container) return;
 
+            modal.classList.remove('hidden');
             modal.style.display = 'block';
             setTimeout(() => modal.classList.remove('opacity-0'), 10);
             if (loading) loading.style.display = 'flex';
@@ -1478,7 +1475,7 @@
 
                 const videoElem = document.createElement('video');
                 videoElem.src = video.clean_url;
-                videoElem.className = 'w-full h-full object-cover';
+                videoElem.className = 'w-full h-full object-contain';
                 videoElem.autoplay = true;
                 videoElem.loop = true;
                 videoElem.playsInline = true;
@@ -1638,6 +1635,7 @@
             if (modal) {
                 modal.classList.add('opacity-0');
                 setTimeout(() => {
+                    modal.classList.add('hidden');
                     modal.style.display = 'none';
                     if (container) container.innerHTML = '';
                     if (loading) loading.style.display = 'flex';

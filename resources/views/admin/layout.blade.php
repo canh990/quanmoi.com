@@ -1308,8 +1308,8 @@
         </div>
     </div>
 
-    {{-- Floating Toast Notification Container --}}
-    <div id="realtime-toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-3 max-w-sm pointer-events-auto"></div>
+    {{-- Floating Toast Notification Container (Góc trên bên phải) --}}
+    <div id="realtime-toast-container" class="fixed top-5 right-5 z-[99999] flex flex-col gap-3 max-w-sm pointer-events-auto"></div>
 
     <script>
         function escapeHtml(text) {
@@ -2622,24 +2622,44 @@
 
             playChimeSound();
 
+            let bgHex = '#10b981'; // Emerald (mặc định)
+            let shadowHex = 'rgba(16, 185, 129, 0.45)';
+
+            if (iconName === 'error' || iconName === 'close' || iconName === 'block' || badgeBg.includes('rose') || badgeBg.includes('red')) {
+                bgHex = '#f43f5e'; // Rose
+                shadowHex = 'rgba(244, 63, 94, 0.45)';
+            } else if (iconName === 'wifi_off' || iconName === 'warning' || badgeBg.includes('amber')) {
+                bgHex = '#f59e0b'; // Amber
+                shadowHex = 'rgba(245, 158, 11, 0.45)';
+            } else if (badgeBg.includes('blue') || iconName === 'info' || iconName === 'visibility_off') {
+                bgHex = '#3b82f6'; // Bright Blue
+                shadowHex = 'rgba(59, 130, 246, 0.45)';
+            } else if (badgeBg.includes('emerald') || iconName === 'check_circle' || iconName === 'check') {
+                bgHex = '#10b981'; // Emerald
+                shadowHex = 'rgba(16, 185, 129, 0.45)';
+            }
+
             const toast = document.createElement('div');
-            toast.className = 'bg-slate-900 text-white rounded-2xl p-4 shadow-2xl border border-slate-700/80 flex items-start gap-3 transform translate-x-full transition-all duration-300 ease-out hover:border-amber-400 ' + (url && url !== '#' ? 'cursor-pointer' : '');
+            toast.className = 'bg-slate-900 text-white rounded-2xl p-4 shadow-2xl border border-slate-700/80 flex items-start gap-3.5 transform translate-x-full transition-all duration-300 ease-out hover:border-amber-400/80 ' + (url && url !== '#' ? 'cursor-pointer' : '');
             if (url && url !== '#') {
                 toast.onclick = () => window.location.href = url;
             }
             toast.innerHTML = `
-                <div class="w-9 h-9 rounded-xl ${badgeBg} text-slate-950 flex items-center justify-center flex-shrink-0 font-bold">
-                    <span class="material-symbols-outlined text-[20px]">${iconName}</span>
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 font-bold shadow-lg transition-transform hover:scale-105" style="background-color: ${bgHex} !important; box-shadow: 0 4px 14px ${shadowHex};">
+                    <span class="material-symbols-outlined text-[22px]" style="color: #ffffff !important; font-variation-settings: 'FILL' 1;">${iconName}</span>
                 </div>
-                <div class="flex-1 min-w-0">
-                    <div class="flex items-center justify-between gap-2">
-                        <span class="text-[10px] font-bold uppercase tracking-wider text-amber-400">🔔 Thông Báo Mới</span>
-                        <span class="text-[10px] text-slate-400">Vừa xong</span>
+                <div class="flex-1 min-w-0 pr-1">
+                    <div class="flex items-center justify-between gap-2 mb-1">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1">
+                            <span class="material-symbols-outlined text-[13px]">notifications_active</span>
+                            <span>THÔNG BÁO MỚI</span>
+                        </span>
+                        <span class="text-[10px] text-slate-400 whitespace-nowrap">Vừa xong</span>
                     </div>
-                    <h4 class="text-xs font-bold text-white truncate mt-0.5">${title}</h4>
-                    <p class="text-[11px] text-slate-300 mt-0.5 line-clamp-2 leading-tight">${body}</p>
+                    <h4 class="text-xs font-bold text-white truncate">${title}</h4>
+                    <p class="text-[11px] text-slate-300 mt-0.5 line-clamp-2 leading-relaxed">${body}</p>
                 </div>
-                <button onclick="event.stopPropagation(); this.parentElement.remove()" class="text-slate-400 hover:text-white p-1">
+                <button onclick="event.stopPropagation(); this.parentElement.remove()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors shrink-0 -mr-1 -mt-1 cursor-pointer" title="Đóng thông báo">
                     <span class="material-symbols-outlined text-[16px]">close</span>
                 </button>
             `;
@@ -3620,4 +3640,3 @@
     @stack('scripts')
 </body>
 </html>
-

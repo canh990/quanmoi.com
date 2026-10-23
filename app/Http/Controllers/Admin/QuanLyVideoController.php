@@ -427,9 +427,25 @@ class QuanLyVideoController extends Controller
     {
         $this->authorizeAccess();
 
-        $video = VideoShort::with('quan')->findOrFail($id);
+        $video = VideoShort::with(['quan.chuQuan'])->findOrFail($id);
         $video->trang_thai = 'da_duyet';
         $video->save();
+
+        // Gửi thông báo đến chủ quán
+        try {
+            $owner = $video->quan?->chuQuan ?? \App\Models\NguoiDung::find($video->nguoi_dung_id ?? null);
+            if ($owner) {
+                $owner->notify(new \App\Notifications\VideoStatusNotification([
+                    'id' => $video->id,
+                    'tieu_de' => $video->tieu_de,
+                    'quan_id' => $video->quan_id,
+                    'ten_quan' => $video->quan?->ten_quan ?? 'Quán',
+                    'quan_slug' => $video->quan?->slug ?? '',
+                ], 'video_approved'));
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Lỗi gửi thông báo video approve: ' . $e->getMessage());
+        }
 
         // Ghi nhận Audit Log
         try {
@@ -455,20 +471,70 @@ class QuanLyVideoController extends Controller
     }
 
     /**
-     * Từ chối / Tạm ẩn video review
+     * Từ chối video review - Gỡ video khỏi quán và thông báo cho chủ quán kèm lý do
      */
     public function reject(Request $request, string $id)
     {
         $this->authorizeAccess();
 
-        $video = VideoShort::with('quan')->findOrFail($id);
-        $video->trang_thai = 'an';
-        $video->save();
+        $reason = trim($request->input('reason', 'Nội dung video review chưa đạt tiêu chuẩn cộng đồng hoặc không phù hợp.'));
+        $video = VideoShort::with(['quan.chuQuan'])->findOrFail($id);
+
+        $videoData = [
+            'id' => $video->id,
+            'tieu_de' => $video->tieu_de,
+            'quan_id' => $video->quan_id,
+            'ten_quan' => $video->quan?->ten_quan ?? 'Quán',
+            'quan_slug' => $video->quan?->slug ?? '',
+        ];
+
+        // Gửi thông báo cho chủ quán trước khi xóa
+        try {
+            $owner = $video->quan?->chuQuan ?? \App\Models\NguoiDung::find($video->nguoi_dung_id ?? null);
+            if ($owner) {
+                $owner->notify(new \App\Notifications\VideoStatusNotification($videoData, 'video_rejected', $reason));
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Lỗi gửi thông báo video reject: ' . $e->getMessage());
+        }
+
+        // Xóa file local nếu có (chỉ xóa khi không còn video nào khác dùng chung video_id này)
+        if (! empty($video->video_id)) {
+            $countSame = VideoShort::where('video_id', $video->video_id)->where('id', '!=', $video->id)->count();
+            if ($countSame === 0) {
+                $localVideo = storage_path("app/public/videos/shorts/{$video->video_id}.mp4");
+                if (file_exists($localVideo)) {
+                    @unlink($localVideo);
+                }
+                $localThumb = storage_path("app/public/videos/thumbnails/{$video->video_id}.jpg");
+                if (file_exists($localThumb)) {
+                    @unlink($localThumb);
+                }
+            }
+        }
+
+        // Xóa hoàn toàn video khỏi hệ thống để không còn hiển thị bên quán
+        $video->delete();
+
+        // Ghi nhận Audit Log
+        try {
+            \App\Models\AdminAuditLog::create([
+                'actor_id' => auth()->id(),
+                'action' => 'video.rejected',
+                'target_type' => 'App\Models\VideoShort',
+                'target_id' => (string) $videoData['id'],
+                'metadata' => [
+                    'tieu_de' => $videoData['tieu_de'],
+                    'ten_quan' => $videoData['ten_quan'],
+                    'reason' => $reason,
+                ],
+                'ip_address' => $request->ip(),
+            ]);
+        } catch (\Throwable $e) {}
 
         return response()->json([
             'success' => true,
-            'trang_thai' => 'an',
-            'message' => 'Đã từ chối / tạm ẩn video review.',
+            'message' => 'Đã từ chối và gỡ bỏ video review thành công. Đã gửi thông báo lý do đến chủ quán.',
         ]);
     }
 }

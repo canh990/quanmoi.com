@@ -80,12 +80,12 @@
                         $iconClass = 'bg-primary/10 text-primary';
                         $badgeClass = 'bg-primary/10 text-primary';
 
-                        if (in_array($action, ['approved', 'published', 'verified', 'verified_granted', 'permission_granted', 'restored'])) {
-                            $icon = in_array($action, ['verified', 'verified_granted']) ? 'verified' : (in_array($action, ['permission_granted']) ? 'lock_open' : (in_array($action, ['restored']) ? 'unarchive' : 'check_circle'));
+                        if (in_array($action, ['approved', 'video_approved', 'published', 'verified', 'verified_granted', 'permission_granted', 'restored'])) {
+                            $icon = $action === 'video_approved' ? 'smart_display' : (in_array($action, ['verified', 'verified_granted']) ? 'verified' : (in_array($action, ['permission_granted']) ? 'lock_open' : (in_array($action, ['restored']) ? 'unarchive' : 'check_circle')));
                             $iconClass = 'bg-emerald-100 text-emerald-700';
                             $badgeClass = 'bg-emerald-100 text-emerald-800';
-                        } elseif (in_array($action, ['rejected', 'verification_rejected', 'verified_revoked', 'permission_denied', 'deleted', 'force_deleted'])) {
-                            $icon = in_array($action, ['deleted', 'force_deleted']) ? 'delete_forever' : (in_array($action, ['permission_denied']) ? 'lock' : (in_array($action, ['verification_rejected', 'verified_revoked']) ? 'gpp_bad' : 'cancel'));
+                        } elseif (in_array($action, ['rejected', 'video_rejected', 'verification_rejected', 'verified_revoked', 'permission_denied', 'deleted', 'force_deleted'])) {
+                            $icon = $action === 'video_rejected' ? 'videocam_off' : (in_array($action, ['deleted', 'force_deleted']) ? 'delete_forever' : (in_array($action, ['permission_denied']) ? 'lock' : (in_array($action, ['verification_rejected', 'verified_revoked']) ? 'gpp_bad' : 'cancel')));
                             $iconClass = 'bg-rose-100 text-rose-700';
                             $badgeClass = 'bg-rose-100 text-rose-800';
                         } elseif (in_array($action, ['requested_revision', 'need_revision', 'updated'])) {

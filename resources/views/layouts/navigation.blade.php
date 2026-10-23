@@ -199,8 +199,8 @@
 </nav>
 
 
-{{-- Floating Vietnamese Toast Container for Users --}}
-<div id="user-floating-toast-container" class="fixed top-20 right-4 sm:right-6 z-[9999] flex flex-col gap-3 max-w-sm w-[calc(100vw-32px)] sm:w-96 pointer-events-none"></div>
+{{-- Floating Vietnamese Toast Container for Users (Góc trên bên phải) --}}
+<div id="user-floating-toast-container" class="fixed top-20 right-4 sm:right-6 z-[99999] flex flex-col gap-3 max-w-sm w-[calc(100vw-32px)] sm:w-96 pointer-events-none"></div>
 
 @auth
 <script>
@@ -232,40 +232,49 @@
             }
         }
 
-        // Show floating toast in Vietnamese
-        window.showUserToast = function(title, message, link = '', type = 'info', icon = 'notifications') {
+        // Show floating toast in Vietnamese (Dark theme chuẩn Hình 3)
+        window.showUserToast = function(title, message, link = '', type = 'info', icon = 'notifications_active') {
             const container = document.getElementById('user-floating-toast-container');
             if (!container) return;
 
             playChime();
 
+            let bgHex = '#10b981'; // Emerald (thành công)
+            let shadowHex = 'rgba(16, 185, 129, 0.45)';
+
+            if (type === 'error') {
+                bgHex = '#f43f5e'; // Rose
+                shadowHex = 'rgba(244, 63, 94, 0.45)';
+            } else if (type === 'warning') {
+                bgHex = '#f59e0b'; // Amber
+                shadowHex = 'rgba(245, 158, 11, 0.45)';
+            } else if (type === 'info') {
+                bgHex = '#3b82f6'; // Bright Blue
+                shadowHex = 'rgba(59, 130, 246, 0.45)';
+            }
+
             const toast = document.createElement('div');
-            toast.className = 'pointer-events-auto bg-white rounded-2xl p-4 shadow-[0_12px_36px_rgba(0,0,0,0.14)] border border-gray-100 flex items-start gap-3.5 transform translate-x-full transition-all duration-300 ease-out cursor-pointer hover:shadow-xl hover:border-primary/30';
+            toast.className = 'pointer-events-auto bg-slate-900 text-white rounded-2xl p-4 shadow-2xl border border-slate-700/80 flex items-start gap-3.5 transform translate-x-full transition-all duration-300 ease-out hover:border-amber-400/80 ' + (link ? 'cursor-pointer' : '');
             if (link) {
                 toast.onclick = () => window.location.href = link;
             }
 
-            const iconColors = {
-                'success': 'bg-emerald-100 text-emerald-600',
-                'error': 'bg-rose-100 text-rose-600',
-                'warning': 'bg-amber-100 text-amber-600',
-                'info': 'bg-primary/10 text-primary',
-            };
-            const iconBg = iconColors[type] || iconColors.info;
-
             toast.innerHTML = `
-                <div class="w-10 h-10 rounded-xl ${iconBg} flex items-center justify-center shrink-0 font-bold">
-                    <span class="material-symbols-outlined text-[22px]">${icon}</span>
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 font-bold shadow-lg transition-transform hover:scale-105" style="background-color: ${bgHex} !important; box-shadow: 0 4px 14px ${shadowHex};">
+                    <span class="material-symbols-outlined text-[22px]" style="color: #ffffff !important; font-variation-settings: 'FILL' 1;">${icon}</span>
                 </div>
-                <div class="flex-1 min-w-0">
-                    <div class="flex items-center justify-between gap-1 mb-0.5">
-                        <span class="text-[10px] font-bold uppercase tracking-wider text-primary">${isAdmin ? 'Thông báo Quản trị' : 'Thông báo mới'}</span>
-                        <span class="text-[10px] text-gray-400">Vừa xong</span>
+                <div class="flex-1 min-w-0 pr-1">
+                    <div class="flex items-center justify-between gap-2 mb-1">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1">
+                            <span class="material-symbols-outlined text-[13px]">notifications_active</span>
+                            <span>${isAdmin ? 'THÔNG BÁO QUẢN TRỊ' : 'THÔNG BÁO MỚI'}</span>
+                        </span>
+                        <span class="text-[10px] text-slate-400 whitespace-nowrap">Vừa xong</span>
                     </div>
-                    <h4 class="text-xs font-bold text-gray-900 truncate">${title}</h4>
-                    <p class="text-[11px] text-gray-600 mt-0.5 line-clamp-2 leading-relaxed">${message}</p>
+                    <h4 class="text-xs font-bold text-white truncate">${title}</h4>
+                    <p class="text-[11px] text-slate-300 mt-0.5 line-clamp-2 leading-relaxed">${message}</p>
                 </div>
-                <button type="button" onclick="event.stopPropagation(); this.closest('div.pointer-events-auto').remove()" class="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100 transition-colors" title="Đóng">
+                <button type="button" onclick="event.stopPropagation(); this.closest('div.pointer-events-auto').remove()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors shrink-0 -mr-1 -mt-1 cursor-pointer" title="Đóng thông báo">
                     <span class="material-symbols-outlined text-[16px]">close</span>
                 </button>
             `;
