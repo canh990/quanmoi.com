@@ -37,13 +37,19 @@ class AiChatbotController extends Controller
     }
 
     /**
-     * Lấy danh sách câu hỏi gợi ý mở đầu
+     * Lấy danh sách câu hỏi gợi ý mở đầu tự động bám sát theo nhu cầu
      */
-    public function suggestions()
+    public function suggestions(Request $request)
     {
+        $context = [
+            'hour' => (int) $request->input('hour', now()->hour),
+            'day_of_week' => (int) $request->input('day_of_week', now()->dayOfWeek),
+            'location' => trim((string) $request->input('location', '')),
+        ];
+
         return response()->json([
             'success' => true,
-            'suggestions' => $this->chatbotService->getDefaultSuggestions(),
+            'suggestions' => $this->chatbotService->getDefaultSuggestions($context),
         ]);
     }
 }

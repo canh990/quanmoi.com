@@ -1,67 +1,37 @@
-{{-- Floating AI Chatbot Widget: Kira AI Assistant (Facebook Messenger Style) --}}
+{{-- Floating AI Chatbot Widget: Kira AI Assistant (Facebook Messenger Mini Style) --}}
+@php
+$botAvatarSvg = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: block;">
+    <path d="M12 2C6.48 2 2 6.03 2 11C2 13.84 3.42 16.36 5.61 17.99C5.89 18.2 6.05 18.53 5.99 18.88L5.47 21.26C5.38 21.68 5.8 22.03 6.17 21.82L8.97 20.25C9.23 20.1 9.54 20.05 9.84 20.12C10.5 20.27 11.2 20.34 11.93 20.34C17.45 20.34 21.93 16.31 21.93 11.34C21.93 6.37 17.48 2 12 2Z" fill="#FFFFFF"/>
+    <path d="M12 6.5C12 8.8 10.3 10.5 8 10.5C10.3 10.5 12 12.2 12 14.5C12 12.2 13.7 10.5 16 10.5C13.7 10.5 12 8.8 12 6.5Z" fill="#EA580C"/>
+    <circle cx="12" cy="10.5" r="1.1" fill="#F59E0B"/>
+</svg>';
+@endphp
 
-{{-- Global SVG Definition for Modern AI Kira Logo --}}
-<svg class="sr-only" aria-hidden="true">
-    <defs>
-        {{-- High-end Sunset Gradient for Messenger Bubble --}}
-        <linearGradient id="kiraLogoBg" x1="10%" y1="0%" x2="90%" y2="100%">
-            <stop offset="0%" stop-color="#FF7A00" />
-            <stop offset="45%" stop-color="#FF4D00" />
-            <stop offset="100%" stop-color="#B83200" />
-        </linearGradient>
-        {{-- Sparkling Gold / Pearl gradient for AI Star --}}
-        <linearGradient id="kiraSparkleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#FFFFFF" />
-            <stop offset="60%" stop-color="#FFF3E0" />
-            <stop offset="100%" stop-color="#FFE0B2" />
-        </linearGradient>
-        {{-- Subtle soft ambient shadow --}}
-        <filter id="kiraShadow" x="-10%" y="-10%" width="120%" height="120%">
-            <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#000000" flood-opacity="0.18" />
-        </filter>
-        {{-- Master Logo Vector Symbol --}}
-        <g id="kira-ai-logo">
-            <!-- Messenger-style smooth curved speech bubble -->
-            <path d="M50 8C26.8 8 8 24.8 8 45.5C8 57.3 13.9 67.8 23.2 74.6C24.4 75.5 25.1 76.9 24.8 78.4L22.6 88.5C22.2 90.3 24 91.8 25.6 90.9L37.5 84.1C38.6 83.5 39.9 83.3 41.2 83.6C44 84.2 47 84.5 50 84.5C73.2 84.5 92 67.7 92 47C92 26.3 73.2 8 50 8Z" 
-                  fill="url(#kiraLogoBg)" filter="url(#kiraShadow)" />
-            <!-- Soft inner glass highlight -->
-            <path d="M22 22C30 14 42 11 58 11C74 11 83 18 83 18" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-opacity="0.35" />
-            <!-- AI Multi-point Modern Sparkle in the center -->
-            <g transform="translate(50, 46.5)">
-                <path d="M0 -22 C0 -8 8 0 22 0 C8 0 0 8 0 22 C0 8 -8 0 -22 0 C-8 0 0 -8 0 -22 Z" 
-                      fill="url(#kiraSparkleGrad)" />
-                <path d="M15 -14 C15 -8 19 -5 25 -5 C19 -5 15 -1 15 5 C15 -1 11 -5 5 -5 C11 -5 15 -8 15 -14 Z" 
-                      fill="#FFFFFF" opacity="0.9" transform="scale(0.55)" />
-                <circle cx="0" cy="0" r="3.2" fill="#FF5722" opacity="0.8" />
-            </g>
-        </g>
-    </defs>
-</svg>
+<div id="aiChatbotContainer" style="position: fixed !important; bottom: 12px !important; right: 12px !important; z-index: 99999 !important;" class="fixed bottom-3 right-3 sm:bottom-4 sm:right-4 z-50 flex flex-col items-end print:hidden pointer-events-none">
 
-<div id="aiChatbotContainer" class="fixed bottom-4 right-4 sm:bottom-5 sm:right-5 z-50 flex flex-col items-end print:hidden pointer-events-none">
-
-    {{-- Chat Window (Facebook Messenger Pop-up Style - Compact & Sleek) --}}
+    {{-- Chat Window (Facebook Messenger Mini Pop-up Tab - Thu nhỏ gọn gàng, cố định khít khung màn hình) --}}
     <div id="aiChatWindow" 
-         class="hidden flex-col w-[332px] sm:w-[340px] max-w-[calc(100vw-24px)] h-[460px] max-h-[calc(100vh-80px)] bg-white rounded-2xl border border-gray-200/90 shadow-[0_12px_40px_rgba(0,0,0,0.16)] overflow-hidden transition-all duration-300 origin-bottom-right pointer-events-auto">
+         style="width: 320px !important; max-width: calc(100vw - 24px) !important; height: 420px !important; max-height: calc(100vh - 35px) !important;"
+         class="hidden flex-col bg-white rounded-2xl border border-gray-200/90 shadow-[0_8px_30px_rgba(0,0,0,0.14)] overflow-hidden transition-all duration-300 origin-bottom-right pointer-events-auto">
         
-        {{-- Messenger Clean White Header with Status & Action Buttons --}}
+        {{-- Messenger Compact Header (Cố định phía trên, cao 40px chuẩn Messenger) --}}
         <div id="aiChatHeader" 
              onclick="handleHeaderClick()" 
-             class="h-[50px] px-3.5 py-2 bg-white border-b border-gray-100 flex items-center justify-between shrink-0 shadow-[0_1px_3px_rgba(0,0,0,0.04)] select-none cursor-pointer">
+             class="h-[40px] px-2.5 py-1 bg-white border-b border-gray-100 flex items-center justify-between shrink-0 shadow-[0_1px_2px_rgba(0,0,0,0.03)] select-none cursor-pointer">
             
             {{-- Bot Avatar & Status Info --}}
-            <div class="flex items-center gap-2.5 min-w-0">
-                <div class="relative w-8 h-8 rounded-full shrink-0 flex items-center justify-center">
-                    <svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-2xs"><use href="#kira-ai-logo"></use></svg>
+            <div class="flex items-center gap-1.5 min-w-0">
+                <div class="kira-avatar-badge relative" style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; margin-top: 0;">
+                    {!! $botAvatarSvg !!}
                     {{-- Active status green dot --}}
-                    <span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white ring-1 ring-emerald-500/20"></span>
+                    <span class="absolute bottom-0 right-0 w-1.5 h-1.5 rounded-full bg-emerald-500 border-2 border-white ring-1 ring-emerald-500/20"></span>
                 </div>
                 <div class="min-w-0">
-                    <div class="flex items-center gap-1.5">
-                        <h4 class="font-bold text-[13px] tracking-tight truncate text-gray-900 leading-tight">Kira AI</h4>
-                        <span class="px-1.5 py-0.2 rounded-full bg-primary/10 text-[9px] font-bold text-primary">Trợ lý</span>
+                    <div class="flex items-center gap-1">
+                        <h4 class="font-bold text-[11.5px] tracking-tight truncate text-gray-900 leading-tight">Kira AI</h4>
+                        <span class="px-1.5 py-0.5 rounded-full bg-orange-100 text-[8px] font-bold text-primary">Trợ lý</span>
                     </div>
-                    <p class="text-[10.5px] text-emerald-600 font-medium truncate leading-tight mt-0.5 flex items-center gap-1">
+                    <p class="text-[9px] text-emerald-600 font-medium truncate leading-tight mt-0.5 flex items-center gap-1">
                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                         Đang hoạt động
                     </p>
@@ -72,100 +42,148 @@
             <div class="flex items-center gap-0.5 shrink-0" onclick="event.stopPropagation()">
                 <button type="button" 
                         onclick="clearAiChatHistory()" 
-                        class="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer" 
+                        class="kira-ctrl-btn text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer" 
+                        style="width: 24px; height: 24px; min-width: 24px; min-height: 24px;"
                         title="Làm mới cuộc trò chuyện">
-                    <span class="material-symbols-outlined text-[17px]">refresh</span>
+                    <span class="material-symbols-outlined text-[14px]">refresh</span>
                 </button>
                 <button type="button" 
                         id="aiChatMinBtn"
                         onclick="minimizeAiChatbot(event)" 
-                        class="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer" 
+                        class="kira-ctrl-btn text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer" 
+                        style="width: 24px; height: 24px; min-width: 24px; min-height: 24px;"
                         title="Thu nhỏ cửa sổ chat">
-                    <span id="aiChatMinIcon" class="material-symbols-outlined text-[18px]">remove</span>
+                    <span id="aiChatMinIcon" class="material-symbols-outlined text-[15px]">remove</span>
                 </button>
                 <button type="button" 
                         onclick="toggleAiChatbot(false)" 
-                        class="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer" 
+                        class="kira-ctrl-btn close-btn text-gray-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer" 
+                        style="width: 24px; height: 24px; min-width: 24px; min-height: 24px;"
                         title="Đóng cửa sổ chat">
-                    <span class="material-symbols-outlined text-[18px]">close</span>
+                    <span class="material-symbols-outlined text-[15px]">close</span>
                 </button>
             </div>
         </div>
 
-        {{-- Messages Scroll Area (Facebook Messenger Styled) --}}
-        <div id="aiChatMessages" class="flex-1 p-3 overflow-y-auto space-y-3 bg-[#f8f9fa] text-[12.5px] custom-scrollbar">
+        {{-- Messages Scroll Area (Facebook Messenger Styled - Chỉ vùng này được cuộn, không cuộn trang web) --}}
+        <div id="aiChatMessages" class="flex-1 min-h-0 p-2 space-y-2 bg-[#f0f2f5] text-[11.5px] custom-scrollbar overscroll-contain select-text">
             
-            {{-- Initial AI Greeting Message --}}
-            <div class="flex items-start gap-2 max-w-[92%]">
-                <div class="w-6 h-6 rounded-full shrink-0 mt-0.5 overflow-hidden flex items-center justify-center">
-                    <svg viewBox="0 0 100 100" class="w-full h-full"><use href="#kira-ai-logo"></use></svg>
+            {{-- Initial AI Greeting Message (Messenger Mini White Bubble) --}}
+            <div class="flex items-start gap-1.5 max-w-[96%]">
+                <div class="kira-avatar-badge" style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; margin-top: 2px;">
+                    {!! $botAvatarSvg !!}
                 </div>
-                <div class="bg-[#f0f2f5] text-[#050505] p-3 rounded-[18px] rounded-tl-[4px] leading-relaxed space-y-1.5 shadow-2xs">
-                    <p>Chào bạn! 👋 Mình là <b>Kira AI</b>. Mình có thể gợi ý quán lẩu nướng, cafe chill, quán ăn đêm hoặc món ngon theo ngân sách của bạn.</p>
-                    <p class="text-[11px] text-gray-500 font-medium">Bấm nhanh câu hỏi bên dưới hoặc nhắn tin cho mình nhé:</p>
+                <div class="bg-white text-gray-800 p-2 rounded-[14px] rounded-tl-[3px] leading-relaxed space-y-1 shadow-2xs border border-gray-100/90">
+                    <p class="text-[11px]">Hế lô bạn iu! 👋 Mình là <b>Kira AI</b> - trợ lý ẩm thực chuẩn gu Quán Mới đây! Bạn đang thèm món gì, cứ bảo mình một câu nha ✨</p>
+                    <p class="text-[9.5px] text-gray-500 font-medium">Bấm nhanh câu hỏi bên dưới hoặc nhắn tin cho mình nhé:</p>
                 </div>
             </div>
 
-            {{-- Quick Suggestion Chips Container --}}
-            <div id="aiSuggestionChips" class="flex flex-wrap gap-1.5 pl-8">
-                <button type="button" onclick="sendAiQuickMessage(this.innerText)" class="px-2.5 py-1 rounded-full bg-orange-50 border border-orange-200 hover:border-primary hover:text-primary text-primary text-[10.5px] font-semibold transition-all shadow-2xs hover:shadow-xs cursor-pointer flex items-center gap-1">
-                    <span>✨</span> Gợi ý quán mới
-                </button>
-                <button type="button" onclick="sendAiQuickMessage(this.innerText)" class="px-2.5 py-1 rounded-full bg-white border border-gray-200 hover:border-primary hover:text-primary text-gray-700 text-[10.5px] font-medium transition-all shadow-2xs hover:shadow-xs cursor-pointer flex items-center gap-1">
-                    <span>🔄</span> Làm mới quán khác
-                </button>
-                <button type="button" onclick="sendAiQuickMessage(this.innerText)" class="px-2.5 py-1 rounded-full bg-white border border-gray-200 hover:border-primary hover:text-primary text-gray-700 text-[10.5px] font-medium transition-all shadow-2xs hover:shadow-xs cursor-pointer flex items-center gap-1">
-                    <span>🔥</span> Lẩu nướng cuối tuần
-                </button>
-                <button type="button" onclick="sendAiQuickMessage(this.innerText)" class="px-2.5 py-1 rounded-full bg-white border border-gray-200 hover:border-primary hover:text-primary text-gray-700 text-[10.5px] font-medium transition-all shadow-2xs hover:shadow-xs cursor-pointer flex items-center gap-1">
-                    <span>☕</span> Cafe chill làm việc Q1
-                </button>
-                <button type="button" onclick="sendAiQuickMessage(this.innerText)" class="px-2.5 py-1 rounded-full bg-white border border-gray-200 hover:border-primary hover:text-primary text-gray-700 text-[10.5px] font-medium transition-all shadow-2xs hover:shadow-xs cursor-pointer flex items-center gap-1">
-                    <span>🍜</span> Món ngon dưới 50k
-                </button>
-                <button type="button" onclick="sendAiQuickMessage(this.innerText)" class="px-2.5 py-1 rounded-full bg-white border border-gray-200 hover:border-primary hover:text-primary text-gray-700 text-[10.5px] font-medium transition-all shadow-2xs hover:shadow-xs cursor-pointer flex items-center gap-1">
-                    <span>🌙</span> Quán ăn đêm 24/7
-                </button>
+            @php
+                $chatbotHour = now()->hour;
+                $chatbotIsWeekend = in_array(now()->dayOfWeek, [0, 6]);
+                if ($chatbotHour >= 5 && $chatbotHour < 10) {
+                    $initSuggestions = [
+                        ['text' => 'Ăn sáng ngon & nóng hổi gần đây', 'icon' => '☀️'],
+                        ['text' => 'Cà phê sáng tỉnh táo làm việc', 'icon' => '☕'],
+                        ['text' => 'Phở bò, bánh mì giòn ngon', 'icon' => '🍜'],
+                        ['text' => 'Bữa sáng bình dân dưới 35k', 'icon' => '💰'],
+                        ['text' => 'Quán có voucher giảm giá', 'icon' => '🏷️'],
+                    ];
+                } elseif ($chatbotHour >= 10 && $chatbotHour < 14) {
+                    $initSuggestions = [
+                        ['text' => 'Cơm trưa văn phòng có máy lạnh', 'icon' => '🍱'],
+                        ['text' => 'Món trưa nhanh gọn no bụng dưới 50k', 'icon' => '⚡'],
+                        ['text' => 'Cơm tấm, bún bò trưa nay', 'icon' => '🍛'],
+                        ['text' => 'Quán trưa có giao tận nơi', 'icon' => '🛵'],
+                        ['text' => 'Quán đang có khuyến mãi', 'icon' => '🏷️'],
+                    ];
+                } elseif ($chatbotHour >= 14 && $chatbotHour < 17) {
+                    $initSuggestions = [
+                        ['text' => 'Trà sữa mát lạnh xế chiều', 'icon' => '🧋'],
+                        ['text' => 'Quán cafe yên tĩnh làm việc chill', 'icon' => '☕'],
+                        ['text' => 'Đồ ăn vặt xế chiều chuẩn vị', 'icon' => '🍟'],
+                        ['text' => 'Bánh ngọt & trà giải nhiệt', 'icon' => '🍰'],
+                        ['text' => 'Quán có mã ưu đãi hôm nay', 'icon' => '🏷️'],
+                    ];
+                } elseif ($chatbotHour >= 17 && $chatbotHour < 21) {
+                    if ($chatbotIsWeekend) {
+                        $initSuggestions = [
+                            ['text' => 'Lẩu nướng tụ tập bạn bè cuối tuần', 'icon' => '🔥'],
+                            ['text' => 'Buffet nướng BBQ ăn thả ga', 'icon' => '🥩'],
+                            ['text' => 'Quán ăn gia đình ấm cúng cuối tuần', 'icon' => '🍲'],
+                            ['text' => 'Hải sản tươi sống chế biến ngon', 'icon' => '🍣'],
+                            ['text' => 'Săn voucher giảm giá cuối tuần', 'icon' => '🏷️'],
+                        ];
+                    } else {
+                        $initSuggestions = [
+                            ['text' => 'Bữa tối ấm cúng sau giờ làm', 'icon' => '🍲'],
+                            ['text' => 'Lẩu nướng ấm áp bạn bè', 'icon' => '🔥'],
+                            ['text' => 'Món ngon bình dân dưới 60k', 'icon' => '💰'],
+                            ['text' => 'Cơm gia đình đậm đà chuẩn vị', 'icon' => '🍚'],
+                            ['text' => 'Quán ăn có khuyến mãi tối nay', 'icon' => '🏷️'],
+                        ];
+                    }
+                } else {
+                    $initSuggestions = [
+                        ['text' => 'Quán ăn đêm mở khuya 24/7', 'icon' => '🌙'],
+                        ['text' => 'Cháo nóng, ốc đêm êm bụng', 'icon' => '🥣'],
+                        ['text' => 'Mì cay, lẩu đêm ấm bụng', 'icon' => '🍜'],
+                        ['text' => 'Quán ăn khuya giao nhanh', 'icon' => '🛵'],
+                        ['text' => 'Món ăn đêm giá sinh viên', 'icon' => '💰'],
+                    ];
+                }
+            @endphp
+
+            {{-- Quick Suggestion Chips Container (AI tự động tạo theo nhu cầu thực tế của người dùng) --}}
+            <div id="aiSuggestionChips" class="flex flex-wrap gap-1 pl-0 sm:pl-7">
+                @foreach ($initSuggestions as $chip)
+                    <button type="button" onclick="sendAiQuickMessage('{{ addslashes($chip['text']) }}')" class="ai-quick-chip cursor-pointer">
+                        <span class="text-[10px] shrink-0">{{ $chip['icon'] }}</span>
+                        <span class="truncate">{{ $chip['text'] }}</span>
+                    </button>
+                @endforeach
             </div>
 
             {{-- Dynamic Messages injected here by JavaScript --}}
-            <div id="aiDynamicMessagesContainer" class="space-y-3"></div>
+            <div id="aiDynamicMessagesContainer" class="space-y-2"></div>
 
             {{-- Loading / Typing Indicator (Facebook Messenger Style) --}}
-            <div id="aiChatTyping" class="hidden items-start gap-2 max-w-[85%]">
-                <div class="w-6 h-6 rounded-full shrink-0 mt-0.5 overflow-hidden flex items-center justify-center">
-                    <svg viewBox="0 0 100 100" class="w-full h-full"><use href="#kira-ai-logo"></use></svg>
+            <div id="aiChatTyping" class="hidden items-start gap-1.5 max-w-[85%]">
+                <div class="kira-avatar-badge" style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; margin-top: 2px;">
+                    {!! $botAvatarSvg !!}
                 </div>
-                <div class="bg-[#f0f2f5] px-3.5 py-2.5 rounded-[18px] rounded-tl-[4px] flex items-center gap-1 shadow-2xs">
+                <div class="bg-white px-2.5 py-1.5 rounded-[14px] rounded-tl-[3px] flex items-center gap-1 shadow-2xs border border-gray-100/90">
                     <span class="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce" style="animation-delay: 0ms;"></span>
                     <span class="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce" style="animation-delay: 150ms;"></span>
                     <span class="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce" style="animation-delay: 300ms;"></span>
-                    <span class="text-[10px] text-gray-400 font-medium ml-1">Kira đang tìm quán...</span>
+                    <span class="text-[9.5px] text-gray-400 font-medium ml-1">Kira đang tìm quán...</span>
                 </div>
             </div>
         </div>
 
-        {{-- Facebook Messenger Input Bar --}}
-        <div id="aiChatFooter" class="p-2.5 bg-white border-t border-gray-100 shrink-0">
-            <form id="aiChatForm" onsubmit="handleAiChatSubmit(event)" class="relative flex items-center gap-1.5">
-                <div class="flex-1 bg-[#f0f2f5] hover:bg-[#e4e6eb] focus-within:bg-white focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/15 border border-transparent rounded-full px-3.5 py-1.5 flex items-center transition-all">
+        {{-- Facebook Messenger Input Bar (Cố định phía dưới cùng, thu nhỏ gọn) --}}
+        <div id="aiChatFooter" class="p-1.5 bg-white border-t border-gray-100 shrink-0">
+            <form id="aiChatForm" onsubmit="handleAiChatSubmit(event)" class="relative flex items-center gap-1">
+                <div class="flex-1 bg-[#f0f2f5] hover:bg-[#e4e6eb] focus-within:bg-white focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/15 border border-transparent rounded-full px-2.5 py-1 flex items-center transition-all">
                     <input type="text" 
                            id="aiChatInput" 
                            placeholder="Hỏi quán ngon, cafe chill..." 
                            autocomplete="off"
                            maxlength="1000"
-                           class="w-full bg-transparent outline-none text-[12.5px] text-gray-800 placeholder-gray-400" />
+                           class="w-full bg-transparent outline-none text-[11.5px] text-gray-800 placeholder-gray-400" />
                 </div>
                 
                 <button type="submit" 
                         id="aiChatSendBtn"
-                        class="w-8 h-8 rounded-full bg-primary hover:bg-primary/90 text-white flex items-center justify-center transition-all shadow-2xs hover:scale-105 active:scale-95 cursor-pointer shrink-0 disabled:opacity-30 disabled:pointer-events-none"
+                        style="width: 28px; height: 28px; min-width: 28px; min-height: 28px;"
+                        class="rounded-full bg-primary hover:bg-primary/90 text-white flex items-center justify-center transition-all shadow-2xs hover:scale-105 active:scale-95 cursor-pointer shrink-0 disabled:opacity-30 disabled:pointer-events-none"
                         title="Gửi câu hỏi (Enter)">
-                    <span class="material-symbols-outlined text-[16px]">send</span>
+                    <span class="material-symbols-outlined text-[13px]">send</span>
                 </button>
             </form>
-            <div class="flex items-center justify-between mt-1.5 px-1.5 text-[9.5px] text-gray-400 select-none">
-                <span>Dữ liệu thực tế Quán Mới</span>
+            <div class="flex items-center justify-between mt-0.5 px-1 text-[8.5px] text-gray-400 select-none">
+                <span>Dữ liệu Quán Mới</span>
                 <span>Enter để gửi</span>
             </div>
         </div>
@@ -183,20 +201,29 @@
         <button type="button" 
                 id="aiChatToggleBtn"
                 onclick="toggleAiChatbot(true)" 
-                class="relative w-13 h-13 rounded-full bg-gradient-to-tr from-primary via-[#b94a00] to-orange-500 text-white flex items-center justify-center shadow-[0_8px_25px_rgba(160,65,0,0.35)] hover:shadow-[0_12px_32px_rgba(160,65,0,0.5)] hover:scale-106 active:scale-95 transition-all duration-300 cursor-pointer group"
+                style="width: 52px; height: 52px; min-width: 52px; min-height: 52px; background: linear-gradient(135deg, #FF6B00 0%, #EA580C 50%, #C2410C 100%) !important; box-shadow: 0 8px 24px rgba(234, 88, 12, 0.45) !important;"
+                class="relative rounded-full text-white flex items-center justify-center transition-all duration-300 hover:scale-108 active:scale-95 cursor-pointer group pointer-events-auto"
                 title="Mở Trợ lý AI Quán Mới"
                 aria-label="Mở Trợ lý AI Quán Mới">
             
             {{-- Breathing ambient glow --}}
-            <span class="absolute inset-0 rounded-full bg-primary/40 animate-ping -z-10 opacity-70"></span>
+            <span class="absolute inset-0 rounded-full bg-orange-500/40 animate-ping -z-10 opacity-70"></span>
 
-            {{-- Modern AI Logo SVG inside floating button --}}
-            <div class="w-8 h-8 transition-transform group-hover:scale-110 group-hover:rotate-6">
-                <svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-sm"><use href="#kira-ai-logo"></use></svg>
+            {{-- Modern High-End White Messenger Bubble + Orange & Golden AI Sparkle --}}
+            <div class="w-8 h-8 flex items-center justify-center transition-transform group-hover:scale-110 group-hover:rotate-6 pointer-events-none">
+                <svg viewBox="0 0 32 32" width="30" height="30" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: block; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.22));">
+                    <!-- Messenger Chat Bubble in Pure Crisp White -->
+                    <path d="M16 3C8.82 3 3 8.37 3 15C3 18.78 4.9 22.14 7.88 24.32C8.26 24.6 8.48 25.05 8.39 25.52L7.68 28.77C7.55 29.35 8.13 29.83 8.64 29.54L12.47 27.39C12.83 27.19 13.25 27.12 13.67 27.22C14.57 27.42 15.53 27.52 16.53 27.52C23.71 27.52 29.53 22.15 29.53 15.52C29.53 8.37 23.18 3 16 3Z" fill="#FFFFFF"/>
+                    <!-- Vibrant Sunset Orange AI Sparkle -->
+                    <path d="M16 8.5C16 11.8 13.5 14.2 10.2 14.2C13.5 14.2 16 16.6 16 20C16 16.6 18.5 14.2 21.8 14.2C18.5 14.2 16 11.8 16 8.5Z" fill="#EA580C"/>
+                    <!-- Golden secondary accent sparkle -->
+                    <path d="M21.5 8C21.5 9.4 20.4 10.5 19 10.5C20.4 10.5 21.5 11.6 21.5 13C21.5 11.6 22.6 10.5 24 10.5C22.6 10.5 21.5 9.4 21.5 8Z" fill="#F59E0B"/>
+                    <circle cx="16" cy="14.2" r="1.6" fill="#FBBF24"/>
+                </svg>
             </div>
 
             {{-- Unread Sparkle Badge --}}
-            <span class="absolute -top-0.5 -right-0.5 w-4.5 h-4.5 rounded-full bg-amber-400 text-slate-950 font-bold text-[9px] flex items-center justify-center border-2 border-white shadow-xs">
+            <span class="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-gradient-to-tr from-amber-400 to-yellow-300 text-slate-900 font-extrabold text-[10px] flex items-center justify-center border-2 border-white shadow-md">
                 ✨
             </span>
         </button>
@@ -205,15 +232,187 @@
 
 {{-- Chatbot Styles & Client-side Script --}}
 <style>
-    .ai-chat-markdown p { margin-bottom: 0.35rem; line-height: 1.5; }
+    #aiChatbotContainer {
+        position: fixed !important;
+        bottom: 12px !important;
+        right: 12px !important;
+        z-index: 99999 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: flex-end !important;
+        pointer-events: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    @media (min-width: 640px) {
+        #aiChatbotContainer {
+            bottom: 16px !important;
+            right: 16px !important;
+        }
+    }
+    #aiChatWindow {
+        width: 320px !important;
+        max-width: calc(100vw - 24px) !important;
+        height: 420px !important;
+        max-height: calc(100vh - 35px) !important;
+        background-color: #ffffff !important;
+        border-radius: 16px !important;
+        border: 1px solid rgba(229, 231, 235, 0.95) !important;
+        box-shadow: 0 10px 35px rgba(0, 0, 0, 0.18) !important;
+        overflow: hidden !important;
+        pointer-events: auto !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+    #aiChatWindow.hidden {
+        display: none !important;
+    }
+    .kira-avatar-badge {
+        width: 24px !important;
+        height: 24px !important;
+        min-width: 24px !important;
+        min-height: 24px !important;
+        max-width: 24px !important;
+        max-height: 24px !important;
+        flex-shrink: 0 !important;
+        border-radius: 9999px !important;
+        overflow: hidden !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background: linear-gradient(135deg, #FF6B00 0%, #EA580C 100%) !important;
+        box-shadow: 0 2px 6px rgba(234, 88, 12, 0.28) !important;
+    }
+    .kira-avatar-badge svg {
+        width: 16px !important;
+        height: 16px !important;
+        min-width: 16px !important;
+        min-height: 16px !important;
+        max-width: 16px !important;
+        max-height: 16px !important;
+        display: block !important;
+    }
+    .ai-quick-chip {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+        padding: 3px 8px !important;
+        border-radius: 9999px !important;
+        background: #ffffff !important;
+        border: 1px solid rgba(229, 231, 235, 0.95) !important;
+        color: #374151 !important;
+        font-size: 9.5px !important;
+        font-weight: 500 !important;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+        transition: all 0.18s ease-in-out !important;
+        cursor: pointer !important;
+        white-space: nowrap !important;
+        max-width: 100% !important;
+        user-select: none !important;
+    }
+    .ai-quick-chip:hover {
+        background: #fff7ed !important;
+        border-color: #fb923c !important;
+        color: #c2410c !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 2px 5px rgba(234, 88, 12, 0.12) !important;
+    }
+    .ai-quick-chip.primary-chip {
+        background: #fff7ed !important;
+        border-color: #fdba74 !important;
+        color: #c2410c !important;
+        font-weight: 600 !important;
+    }
+    .kira-ctrl-btn {
+        width: 24px !important;
+        height: 24px !important;
+        min-width: 24px !important;
+        min-height: 24px !important;
+        max-width: 24px !important;
+        max-height: 24px !important;
+        border-radius: 9999px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        flex-shrink: 0 !important;
+    }
+    #aiChatSendBtn {
+        width: 28px !important;
+        height: 28px !important;
+        min-width: 28px !important;
+        min-height: 28px !important;
+        max-width: 28px !important;
+        max-height: 28px !important;
+        border-radius: 9999px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        flex-shrink: 0 !important;
+    }
+    .kira-venue-thumb {
+        width: 38px !important;
+        height: 38px !important;
+        min-width: 38px !important;
+        min-height: 38px !important;
+        max-width: 38px !important;
+        max-height: 38px !important;
+        border-radius: 6px !important;
+        overflow: hidden !important;
+        flex-shrink: 0 !important;
+    }
+    .kira-venue-thumb img {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+        display: block !important;
+    }
+    .kira-venue-arrow {
+        width: 18px !important;
+        height: 18px !important;
+        min-width: 18px !important;
+        min-height: 18px !important;
+        border-radius: 9999px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        flex-shrink: 0 !important;
+    }
+    .ai-chat-markdown p { margin-bottom: 0.25rem; line-height: 1.45; word-break: break-word; }
     .ai-chat-markdown p:last-child { margin-bottom: 0; }
-    .ai-chat-markdown ul { padding-left: 1.15rem; margin-top: 0.25rem; margin-bottom: 0.35rem; list-style-type: disc; }
-    .ai-chat-markdown ol { padding-left: 1.25rem; margin-top: 0.25rem; margin-bottom: 0.35rem; list-style-type: decimal; }
-    .ai-chat-markdown li { margin-bottom: 0.2rem; line-height: 1.45; }
+    .ai-chat-markdown ul { padding-left: 1rem; margin-top: 0.2rem; margin-bottom: 0.25rem; list-style-type: disc; }
+    .ai-chat-markdown ol { padding-left: 1.1rem; margin-top: 0.2rem; margin-bottom: 0.25rem; list-style-type: decimal; }
+    .ai-chat-markdown li { margin-bottom: 0.15rem; line-height: 1.4; word-break: break-word; }
     .ai-chat-markdown strong, .ai-chat-markdown b { font-weight: 700; color: #0f172a; }
-    .ai-chat-markdown a { color: #b94a00; font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
+    .ai-chat-markdown a { color: #b94a00; font-weight: 600; text-decoration: underline; text-underline-offset: 2px; word-break: break-word; }
     .ai-chat-markdown a:hover { color: #ea580c; }
     .ai-chat-markdown h4, .ai-chat-markdown h5 { font-weight: 700; color: #1e293b; }
+    #aiDynamicMessagesContainer {
+        overflow: visible !important;
+    }
+    #aiChatMessages {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(148, 163, 184, 0.45) transparent;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+        touch-action: pan-y;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+    }
+    #aiChatMessages::-webkit-scrollbar {
+        width: 4px;
+    }
+    #aiChatMessages::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    #aiChatMessages::-webkit-scrollbar-thumb {
+        background-color: rgba(148, 163, 184, 0.45);
+        border-radius: 9999px;
+    }
+    #aiChatMessages::-webkit-scrollbar-thumb:hover {
+        background-color: rgba(100, 116, 139, 0.7);
+    }
 </style>
 
 <script>
@@ -221,6 +420,120 @@
     let aiConversationHistory = [];
     let isAiChatMinimized = false;
     let isAiChatLoading = false;
+
+    const BOT_AVATAR_SVG = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: block;">
+        <path d="M12 2C6.48 2 2 6.03 2 11C2 13.84 3.42 16.36 5.61 17.99C5.89 18.2 6.05 18.53 5.99 18.88L5.47 21.26C5.38 21.68 5.8 22.03 6.17 21.82L8.97 20.25C9.23 20.1 9.54 20.05 9.84 20.12C10.5 20.27 11.2 20.34 11.93 20.34C17.45 20.34 21.93 16.31 21.93 11.34C21.93 6.37 17.48 2 12 2Z" fill="#FFFFFF"/>
+        <path d="M12 6.5C12 8.8 10.3 10.5 8 10.5C10.3 10.5 12 12.2 12 14.5C12 12.2 13.7 10.5 16 10.5C13.7 10.5 12 8.8 12 6.5Z" fill="#EA580C"/>
+        <circle cx="12" cy="10.5" r="1.1" fill="#F59E0B"/>
+    </svg>`;
+
+    function getSuggestionIcon(text) {
+        const t = (text || '').toLowerCase();
+        if (t.includes('lẩu') || t.includes('nướng') || t.includes('bbq')) return '🔥';
+        if (t.includes('cafe') || t.includes('cà phê') || t.includes('chill')) return '☕';
+        if (t.includes('rẻ') || t.includes('sinh viên') || t.includes('50k') || t.includes('35k') || t.includes('60k') || t.includes('tiền')) return '💰';
+        if (t.includes('đêm') || t.includes('khuya') || t.includes('24/7')) return '🌙';
+        if (t.includes('hải sản') || t.includes('sushi') || t.includes('ốc')) return '🍣';
+        if (t.includes('quận') || t.includes('huyện') || t.includes('khu vực') || t.includes('gần')) return '📍';
+        if (t.includes('trà sữa') || t.includes('nước') || t.includes('uống') || t.includes('kem')) return '🧋';
+        if (t.includes('pizza') || t.includes('mì') || t.includes('phở') || t.includes('bún')) return '🍜';
+        if (t.includes('cơm') || t.includes('sườn')) return '🍱';
+        if (t.includes('chay') || t.includes('thanh đạm') || t.includes('gỏi')) return '🥗';
+        if (t.includes('voucher') || t.includes('khuyến mãi') || t.includes('giảm') || t.includes('ưu đãi')) return '🏷️';
+        return '✨';
+    }
+
+    // AI tự động sinh câu hỏi gợi ý phù hợp nhất với nhu cầu & thời gian của người dùng (Không cần nút đổi thủ công)
+    function renderSmartInitialSuggestions() {
+        const chipsContainer = document.getElementById('aiSuggestionChips');
+        if (!chipsContainer) return;
+
+        const now = new Date();
+        const hour = now.getHours();
+        const day = now.getDay();
+        const isWeekend = (day === 0 || day === 5 || day === 6);
+
+        // Lấy lịch sử tìm kiếm từ localStorage
+        let searchHistory = [];
+        try {
+            const raw = localStorage.getItem('qm_search_history');
+            if (raw) searchHistory = JSON.parse(raw);
+        } catch (e) {}
+        const historyStr = (searchHistory || []).join(' ').toLowerCase();
+
+        // Lấy địa điểm nếu người dùng đang chọn trên web
+        let loc = '';
+        const locSelect = document.getElementById('provinceSelect') || document.querySelector('select[name="tinh_thanh_id"]');
+        if (locSelect && locSelect.selectedIndex > 0) {
+            loc = locSelect.options[locSelect.selectedIndex]?.text?.trim() || '';
+        }
+
+        let smartChips = [];
+
+        // 1. Gợi ý theo khung giờ sinh hoạt ẩm thực thực tế
+        if (hour >= 5 && hour < 10) {
+            smartChips.push({ text: 'Ăn sáng ngon & nóng hổi gần đây', icon: '☀️' });
+            smartChips.push({ text: 'Cà phê sáng tỉnh táo làm việc', icon: '☕' });
+            smartChips.push({ text: 'Phở bò, bánh mì giòn ngon', icon: '🍜' });
+            smartChips.push({ text: 'Bữa sáng bình dân dưới 35k', icon: '💰' });
+        } else if (hour >= 10 && hour < 14) {
+            smartChips.push({ text: 'Cơm trưa văn phòng có máy lạnh', icon: '🍱' });
+            smartChips.push({ text: 'Món trưa nhanh gọn no bụng dưới 50k', icon: '⚡' });
+            smartChips.push({ text: 'Cơm tấm, bún bò trưa nay', icon: '🍛' });
+            smartChips.push({ text: 'Quán trưa có giao tận nơi', icon: '🛵' });
+        } else if (hour >= 14 && hour < 17) {
+            smartChips.push({ text: 'Trà sữa mát lạnh xế chiều', icon: '🧋' });
+            smartChips.push({ text: 'Quán cafe yên tĩnh làm việc chill', icon: '☕' });
+            smartChips.push({ text: 'Đồ ăn vặt xế chiều chuẩn vị', icon: '🍟' });
+            smartChips.push({ text: 'Bánh ngọt & trà giải nhiệt', icon: '🍰' });
+        } else if (hour >= 17 && hour < 21) {
+            if (isWeekend) {
+                smartChips.push({ text: 'Lẩu nướng tụ tập bạn bè cuối tuần', icon: '🔥' });
+                smartChips.push({ text: 'Buffet nướng BBQ ăn thả ga', icon: '🥩' });
+                smartChips.push({ text: 'Quán ăn gia đình ấm cúng cuối tuần', icon: '🍲' });
+                smartChips.push({ text: 'Hải sản tươi sống chế biến ngon', icon: '🍣' });
+            } else {
+                smartChips.push({ text: 'Bữa tối ấm cúng sau giờ làm', icon: '🍲' });
+                smartChips.push({ text: 'Lẩu nướng ấm áp bạn bè', icon: '🔥' });
+                smartChips.push({ text: 'Món ngon bình dân dưới 60k', icon: '💰' });
+                smartChips.push({ text: 'Cơm gia đình đậm đà chuẩn vị', icon: '🍚' });
+            }
+        } else {
+            smartChips.push({ text: 'Quán ăn đêm mở khuya 24/7', icon: '🌙' });
+            smartChips.push({ text: 'Cháo nóng, ốc đêm êm bụng', icon: '🥣' });
+            smartChips.push({ text: 'Mì cay, lẩu đêm ấm bụng', icon: '🍜' });
+            smartChips.push({ text: 'Quán ăn khuya giao nhanh', icon: '🛵' });
+        }
+
+        // 2. Tự động cá nhân hóa theo thói quen lịch sử tìm kiếm
+        if (historyStr.includes('chay')) {
+            smartChips.unshift({ text: 'Quán chay thanh đạm gần đây', icon: '🥗' });
+        } else if (historyStr.includes('hải sản') || historyStr.includes('ốc')) {
+            smartChips.unshift({ text: 'Hải sản tươi ngon chuẩn vị', icon: '🍣' });
+        } else if (historyStr.includes('trà sữa') || historyStr.includes('cafe')) {
+            smartChips.unshift({ text: 'Trà sữa, cafe view đẹp check-in', icon: '🧋' });
+        } else if (historyStr.includes('lẩu') || historyStr.includes('nướng')) {
+            smartChips.unshift({ text: 'Lẩu nướng ngon đang hot', icon: '🔥' });
+        }
+
+        // 3. Ưu đãi / Khuyến mãi
+        smartChips.push({ text: 'Quán nào đang có voucher giảm giá?', icon: '🏷️' });
+
+        if (loc) {
+            smartChips.push({ text: `Tìm quán ngon nhất tại ${loc}`, icon: '📍' });
+        }
+
+        // Lấy 5 gợi ý phù hợp nhất
+        const selectedChips = smartChips.slice(0, 5);
+        chipsContainer.innerHTML = selectedChips.map(item => `
+            <button type="button" 
+                    onclick="sendAiQuickMessage('${escapeHtml(item.text)}')" 
+                    class="ai-quick-chip cursor-pointer">
+                <span class="text-[10px] shrink-0">${item.icon}</span>
+                <span class="truncate">${escapeHtml(item.text)}</span>
+            </button>
+        `).join('');
+    }
 
     // Tải lịch sử chat từ sessionStorage khi tải trang
     document.addEventListener('DOMContentLoaded', () => {
@@ -242,11 +555,18 @@
                                 appendAiMessageBubble(item.content, item.venues || [], false);
                             }
                         });
+                        const area = document.getElementById('aiChatMessages');
+                        if (area) area.scrollTop = 0;
                     }
                 }
             }
         } catch (e) {
             console.warn('Lỗi đọc session AI chat:', e);
+        }
+
+        // Tự động sinh gợi ý câu hỏi thông minh theo nhu cầu & thời gian nếu chưa có hội thoại cũ
+        if (aiConversationHistory.length === 0) {
+            renderSmartInitialSuggestions();
         }
 
         // Tự động ẩn tooltip sau 8 giây để không che màn hình
@@ -266,9 +586,6 @@
                     e.preventDefault();
                     handleAiChatSubmit(e);
                 }
-            });
-            inputEl.addEventListener('focus', () => {
-                scrollAiChatToBottom();
             });
         }
     });
@@ -291,17 +608,32 @@
             if (launcherBtn) launcherBtn.classList.add('hidden');
             if (tooltip) tooltip.style.display = 'none';
 
+            // Khi mở khung chat, nếu chưa có hội thoại thì tự động tạo gợi ý bám sát nhu cầu & thời gian
+            if (aiConversationHistory.length === 0) {
+                renderSmartInitialSuggestions();
+            }
+
+            // Khóa cuộn trang web nền trên màn hình nhỏ để ngăn chặn thanh cuộn kép
+            if (window.innerWidth < 640) {
+                document.body.style.overflow = 'hidden';
+            }
+
             // Phục hồi kích thước nếu đang ở trạng thái thu nhỏ
             if (isAiChatMinimized) {
                 minimizeAiChatbot();
             }
 
-            if (input) setTimeout(() => input.focus(), 150);
-            scrollAiChatToBottom();
+            if (input) setTimeout(() => input.focus({ preventScroll: true }), 150);
+            const area = document.getElementById('aiChatMessages');
+            if (area) {
+                // Đảm bảo mở khung chat thì thấy toàn bộ nội dung từ trên xuống, không tự ý trôi tuột xuống đáy
+                area.scrollTop = 0;
+            }
         } else {
             chatWindow.classList.remove('flex');
             chatWindow.classList.add('hidden');
             if (launcherBtn) launcherBtn.classList.remove('hidden');
+            document.body.style.overflow = '';
         }
     }
 
@@ -319,20 +651,26 @@
         isAiChatMinimized = !isAiChatMinimized;
 
         if (isAiChatMinimized) {
-            chatWindow.style.height = '50px';
+            chatWindow.style.setProperty('height', '40px', 'important');
+            chatWindow.style.setProperty('max-height', '40px', 'important');
+            document.body.style.overflow = '';
             if (messages) messages.classList.add('hidden');
             if (footer) footer.classList.add('hidden');
             if (minIcon) minIcon.innerText = 'crop_square';
             if (minBtn) minBtn.title = 'Mở rộng cửa sổ chat';
         } else {
-            chatWindow.style.height = '';
+            chatWindow.style.setProperty('height', '420px', 'important');
+            chatWindow.style.setProperty('max-height', 'calc(100vh - 35px)', 'important');
+            if (window.innerWidth < 640) {
+                document.body.style.overflow = 'hidden';
+            }
             if (messages) messages.classList.remove('hidden');
             if (footer) footer.classList.remove('hidden');
             if (minIcon) minIcon.innerText = 'remove';
             if (minBtn) minBtn.title = 'Thu nhỏ cửa sổ chat';
-            scrollAiChatToBottom();
             const input = document.getElementById('aiChatInput');
-            if (input) setTimeout(() => input.focus(), 100);
+            if (input) setTimeout(() => input.focus({ preventScroll: true }), 100);
+            setTimeout(() => scrollAiChatToBottom(false), 50);
         }
     }
 
@@ -359,20 +697,27 @@
         const input = document.getElementById('aiChatInput');
         if (input) {
             input.disabled = false;
-            input.focus();
+            input.focus({ preventScroll: true });
         }
+        const area = document.getElementById('aiChatMessages');
+        if (area) area.scrollTop = 0;
         isAiChatLoading = false;
         const sendBtn = document.getElementById('aiChatSendBtn');
         if (sendBtn) sendBtn.disabled = false;
     }
 
-    // Gửi câu hỏi nhanh từ chip gợi ý (chống spam bấm nhiều lần khi đang tải)
+    // Gửi câu hỏi nhanh từ chip gợi ý (chống spam bấm nhiều lần khi đang tải, không gián đoạn ngữ cảnh)
     function sendAiQuickMessage(text) {
         if (isAiChatLoading) return;
         const cleanText = text.replace(/^[^\p{L}\p{N}]+/u, '').trim();
         const input = document.getElementById('aiChatInput');
         if (input) {
             input.value = cleanText;
+            // Vô hiệu hóa ngay các nút gợi ý để tránh click lặp ngoài ý muốn
+            document.querySelectorAll('.ai-suggestion-pills-row button').forEach(b => {
+                b.disabled = true;
+                b.style.pointerEvents = 'none';
+            });
             handleAiChatSubmit(new Event('submit'));
         }
     }
@@ -407,14 +752,18 @@
         }));
 
         // Hiển thị bóng chat của người dùng
-        appendUserMessageBubble(message, true);
+        const userBubble = appendUserMessageBubble(message, true);
         input.value = '';
 
         if (typing) {
             typing.classList.remove('hidden');
             typing.classList.add('flex');
         }
-        scrollAiChatToBottom();
+
+        // Định vị nhẹ nhàng ở tin nhắn người dùng vừa gửi
+        if (userBubble) {
+            scrollToMessage(userBubble, true);
+        }
 
         // Lấy CSRF token nếu có
         const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
@@ -445,7 +794,7 @@
             }
             if (input) {
                 input.disabled = false;
-                input.focus();
+                input.focus({ preventScroll: true });
             }
             if (sendBtn) sendBtn.disabled = false;
 
@@ -453,14 +802,17 @@
             const venues = data.venues || [];
 
             // Hiển thị tin nhắn AI và các card quán đề xuất
-            appendAiMessageBubble(reply, venues, true);
+            const aiBubble = appendAiMessageBubble(reply, venues, true);
 
             // Cập nhật gợi ý tiếp theo nếu có
             if (data.suggestions && Array.isArray(data.suggestions) && data.suggestions.length > 0) {
                 appendSuggestionPills(data.suggestions);
             }
 
-            scrollAiChatToBottom();
+            // Định vị ngay phần đầu tin nhắn phản hồi của Kira để người dùng đọc tự nhiên từ trên xuống, không tự ý trôi tuột xuống đáy
+            if (aiBubble) {
+                setTimeout(() => scrollToMessage(aiBubble, true), 40);
+            }
         })
         .catch(err => {
             console.error('Lỗi gọi trợ lý AI:', err);
@@ -471,7 +823,7 @@
             }
             if (input) {
                 input.disabled = false;
-                input.focus();
+                input.focus({ preventScroll: true });
             }
             if (sendBtn) sendBtn.disabled = false;
 
@@ -481,20 +833,22 @@
                 saveAiSession();
             }
 
-            appendAiMessageBubble("Xin lỗi bạn, kết nối trợ lý AI hiện đang bận hoặc gián đoạn. Bạn vui lòng thử lại câu hỏi sau giây lát nhé!", [], false);
-            scrollAiChatToBottom();
+            const errBubble = appendAiMessageBubble("Xin lỗi bạn, kết nối trợ lý AI hiện đang bận hoặc gián đoạn. Bạn vui lòng thử lại câu hỏi sau giây lát nhé!", [], false);
+            if (errBubble) {
+                setTimeout(() => scrollToMessage(errBubble, true), 40);
+            }
         });
     }
 
-    // Thêm bong bóng chat người dùng (Facebook Messenger Style)
+    // Thêm bong bóng chat người dùng (Facebook Messenger Mini Style)
     function appendUserMessageBubble(text, saveHistory) {
         const container = document.getElementById('aiDynamicMessagesContainer');
-        if (!container) return;
+        if (!container) return null;
 
         const bubble = document.createElement('div');
         bubble.className = 'flex justify-end';
         bubble.innerHTML = `
-            <div class="bg-gradient-to-r from-primary via-[#b94a00] to-orange-500 text-white px-3.5 py-2 rounded-[18px] rounded-br-[4px] shadow-2xs max-w-[82%] text-[12.5px] leading-relaxed break-words">
+            <div class="bg-gradient-to-r from-orange-500 via-primary to-orange-600 text-white px-2.5 py-1.5 rounded-[14px] rounded-br-[3px] shadow-2xs max-w-[85%] text-[11.5px] leading-relaxed break-words select-text">
                 ${escapeHtml(text)}
             </div>
         `;
@@ -504,30 +858,29 @@
             aiConversationHistory.push({ role: 'user', content: text });
             saveAiSession();
         }
+
+        return bubble;
     }
 
-    // Thêm bong bóng chat AI (Facebook Messenger Style kèm Avatar Logo hiện đại)
+    // Thêm bong bóng chat AI (Facebook Messenger Mini Style kèm Avatar Logo)
     function appendAiMessageBubble(markdownText, venues, saveHistory) {
         const container = document.getElementById('aiDynamicMessagesContainer');
-        if (!container) return;
+        if (!container) return null;
 
         const wrapper = document.createElement('div');
-        wrapper.className = 'flex items-start gap-2 max-w-[95%]';
+        wrapper.className = 'flex items-start gap-1.5 max-w-[96%]';
 
         let venuesHtml = '';
         if (venues && venues.length > 0) {
             venuesHtml = `
-                <div class="mt-2.5 space-y-2">
+                <div class="mt-1.5 space-y-1">
                     <div class="flex items-center justify-between">
-                        <p class="text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1">
-                            <span class="material-symbols-outlined text-[13px] text-primary">storefront</span>
-                            Địa điểm đề xuất (${venues.length})
+                        <p class="text-[9px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1">
+                            <span class="material-symbols-outlined text-[11px] text-primary">storefront</span>
+                            Địa điểm AI đề xuất (${venues.length})
                         </p>
-                        <button type="button" onclick="sendAiQuickMessage('Làm mới gợi ý quán khác')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange-50 hover:bg-orange-100 text-primary text-[9.5px] font-semibold border border-orange-200 transition-colors cursor-pointer" title="Làm mới quán khác không trùng lặp">
-                            <span class="material-symbols-outlined text-[11px]">refresh</span> Đổi quán khác
-                        </button>
                     </div>
-                    <div class="space-y-1.5">
+                    <div class="space-y-1">
                         ${venues.map(v => renderVenueCard(v)).join('')}
                     </div>
                 </div>
@@ -535,10 +888,10 @@
         }
 
         wrapper.innerHTML = `
-            <div class="w-6 h-6 rounded-full shrink-0 mt-0.5 overflow-hidden flex items-center justify-center">
-                <svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-2xs"><use href="#kira-ai-logo"></use></svg>
+            <div class="kira-avatar-badge" style="width: 24px; height: 24px; min-width: 24px; min-height: 24px; margin-top: 2px;">
+                ${BOT_AVATAR_SVG}
             </div>
-            <div class="bg-[#f0f2f5] text-[#050505] px-3.5 py-2.5 rounded-[18px] rounded-tl-[4px] text-[12.5px] leading-relaxed break-words flex-1 min-w-0 shadow-2xs">
+            <div class="bg-white text-[#111827] px-2.5 py-1.5 rounded-[14px] rounded-tl-[3px] text-[11.5px] leading-relaxed break-words flex-1 min-w-0 shadow-2xs border border-gray-100/90 select-text">
                 <div class="ai-chat-markdown space-y-1">${renderSimpleMarkdown(markdownText)}</div>
                 ${venuesHtml}
             </div>
@@ -550,6 +903,8 @@
             aiConversationHistory.push({ role: 'assistant', content: markdownText, venues: venues });
             saveAiSession();
         }
+
+        return wrapper;
     }
 
     // Render thẻ quán ăn trực quan thu nhỏ như link preview Facebook Messenger
@@ -559,65 +914,69 @@
         const reviews = (v.review_count && Number(v.review_count) > 0) ? `(${v.review_count} review)` : '';
 
         const statusBadge = v.is_open_now 
-            ? `<span class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-full text-[8.5px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>Đang mở</span>`
-            : `<span class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-full text-[8.5px] font-medium bg-gray-100 text-gray-500"><span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span>Đóng cửa</span>`;
+            ? `<span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[8px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>Đang mở</span>`
+            : `<span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[8px] font-medium bg-gray-100 text-gray-500"><span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span>Đóng cửa</span>`;
         
         const verifiedBadge = v.is_verified 
-            ? `<span class="material-symbols-outlined text-[13px] text-sky-500 shrink-0" title="Quán đã xác thực">verified</span>` 
+            ? `<span class="material-symbols-outlined text-[12px] text-sky-500 shrink-0" title="Quán đã xác thực">verified</span>` 
             : '';
 
         const featuredBadge = v.is_featured 
-            ? `<span class="px-1 py-0.2 rounded text-[8px] font-bold bg-amber-50 text-amber-700 border border-amber-200 shrink-0">Nổi bật</span>` 
+            ? `<span class="px-1 py-0.5 rounded text-[8px] font-bold bg-amber-50 text-amber-700 border border-amber-200 shrink-0">Nổi bật</span>` 
             : '';
 
         const promoBadge = v.promotion 
-            ? `<div class="mt-1 text-[9.5px] text-rose-600 font-semibold truncate flex items-center gap-1 bg-rose-50/70 px-1.5 py-0.5 rounded border border-rose-100">
-                    <span class="material-symbols-outlined text-[11px] shrink-0">local_offer</span>
+            ? `<div class="mt-0.5 text-[9px] text-rose-600 font-semibold truncate flex items-center gap-0.5 bg-rose-50/70 px-1.5 py-0.5 rounded border border-rose-100">
+                    <span class="material-symbols-outlined text-[10px] shrink-0">local_offer</span>
                     <span class="truncate">${escapeHtml(v.promotion)}</span>
                </div>`
             : '';
 
         const hoursLine = (v.open_hours && v.open_hours !== 'Chưa cập nhật giờ')
-            ? `<div class="flex items-center gap-1 text-[9.5px] text-gray-500 truncate mt-0.5">
-                    <span class="material-symbols-outlined text-[11px] text-gray-400 shrink-0">schedule</span>
+            ? `<div class="flex items-center gap-1 text-[9px] text-gray-500 truncate mt-0.5">
+                    <span class="material-symbols-outlined text-[10px] text-gray-400 shrink-0">schedule</span>
                     <span class="truncate">${escapeHtml(v.open_hours)}</span>
                </div>`
             : '';
 
         const dishesBadge = (v.highlight_dishes && v.highlight_dishes.length > 0)
-            ? `<div class="flex flex-wrap gap-1 mt-1.5">
-                    ${v.highlight_dishes.slice(0, 3).map(d => `<span class="px-1.5 py-0.2 rounded bg-slate-100 text-slate-700 text-[8.5px] font-medium border border-slate-200/60">${escapeHtml(d)}</span>`).join('')}
+            ? `<div class="flex flex-wrap gap-1 mt-1">
+                    ${v.highlight_dishes.slice(0, 3).map(d => `<span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 text-[8.5px] font-medium border border-slate-200/60">${escapeHtml(d)}</span>`).join('')}
                </div>`
             : '';
 
+        let safeUrl = (v.url || '').replace(/^https?:\/\/[^\/]+/i, '');
+        if (!safeUrl.startsWith('/')) safeUrl = '/' + safeUrl;
+
         return `
-            <a href="${v.url}" target="_blank" rel="noopener" class="block p-2.5 rounded-xl border border-gray-200/80 hover:border-primary/50 bg-white hover:bg-orange-50/15 transition-all group shadow-2xs hover:shadow-xs">
-                <div class="flex items-start gap-2.5">
-                    <div class="relative w-12 h-12 rounded-lg overflow-hidden shrink-0 border border-gray-100">
+            <a href="${safeUrl}" target="_self" class="block p-2 rounded-lg border border-gray-200/80 hover:border-primary/50 bg-[#f9fafb] hover:bg-orange-50/25 transition-all group shadow-2xs hover:shadow-xs">
+                <div class="flex items-start gap-2">
+                    <div class="kira-venue-thumb relative" style="width: 38px; height: 38px; min-width: 38px; min-height: 38px;">
                         <img src="${v.image}" 
                              alt="${escapeHtml(v.name)}" 
-                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                             onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=200&q=80';" />
+                             style="width: 100%; height: 100%; object-fit: cover;"
+                             class="group-hover:scale-105 transition-transform duration-300"
+                             onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=160&q=80';" />
                     </div>
                     
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center justify-between gap-1">
                             <div class="flex items-center gap-1 min-w-0">
-                                <h5 class="font-bold text-[11.5px] text-gray-900 truncate group-hover:text-primary transition-colors">${escapeHtml(v.name)}</h5>
+                                <h5 class="font-bold text-[11px] text-gray-900 truncate group-hover:text-primary transition-colors">${escapeHtml(v.name)}</h5>
                                 ${verifiedBadge}
                                 ${featuredBadge}
                             </div>
                             ${statusBadge}
                         </div>
                         
-                        <p class="text-[10px] text-gray-500 truncate mt-0.5 flex items-center gap-0.5">
-                            <span class="material-symbols-outlined text-[10.5px] text-gray-400 shrink-0">location_on</span>
+                        <p class="text-[9.5px] text-gray-500 truncate mt-0.5 flex items-center gap-0.5">
+                            <span class="material-symbols-outlined text-[10px] text-gray-400 shrink-0">location_on</span>
                             <span class="truncate">${escapeHtml(v.address)}</span>
                         </p>
 
                         ${hoursLine}
 
-                        <div class="flex items-center gap-1.5 mt-1 text-[9.5px]">
+                        <div class="flex items-center gap-1 mt-0.5 text-[9px]">
                             <span class="font-bold text-amber-600">${star} ${reviews}</span>
                             <span class="text-gray-300">•</span>
                             <span class="font-semibold text-gray-700 truncate">${escapeHtml(v.price_range)}</span>
@@ -626,8 +985,8 @@
                         ${promoBadge}
                     </div>
 
-                    <div class="w-5 h-5 rounded-full bg-gray-100 group-hover:bg-primary group-hover:text-white flex items-center justify-center shrink-0 transition-colors text-gray-400 self-center">
-                        <span class="material-symbols-outlined text-[13px]">chevron_right</span>
+                    <div class="kira-venue-arrow bg-white group-hover:bg-primary group-hover:text-white transition-colors text-gray-400 self-center border border-gray-200/60 shadow-2xs" style="width: 18px; height: 18px; min-width: 18px; min-height: 18px;">
+                        <span class="material-symbols-outlined text-[11px]">chevron_right</span>
                     </div>
                 </div>
                 ${dishesBadge}
@@ -635,18 +994,39 @@
         `;
     }
 
-    // Hiển thị hàng nút gợi ý câu hỏi tiếp theo
+    // Hiển thị hàng nút gợi ý câu hỏi tiếp theo bám sát cuộc trò chuyện (Không có nút đổi thủ công)
     function appendSuggestionPills(suggestions) {
         const container = document.getElementById('aiDynamicMessagesContainer');
-        if (!container || !suggestions || suggestions.length === 0) return;
+        if (!container) return;
+
+        // Xóa gợi ý cũ trước đó
+        const oldPills = container.querySelectorAll('.ai-suggestion-pills-row');
+        oldPills.forEach(p => p.remove());
+
+        let list = Array.isArray(suggestions) && suggestions.length > 0 ? suggestions : [];
+        if (list.length === 0) {
+            list = [
+                'Xem menu và giá các món',
+                'Quán này có khuyến mãi gì không?',
+                'Tìm quán tương tự ở gần hơn',
+                'Chỉ đường tới quán gần nhất'
+            ];
+        }
 
         const row = document.createElement('div');
-        row.className = 'flex flex-wrap gap-1.5 pl-8 pt-1';
-        row.innerHTML = suggestions.map(s => `
-            <button type="button" onclick="sendAiQuickMessage(this.innerText)" class="px-2.5 py-1 rounded-full bg-white border border-gray-200 hover:border-primary hover:text-primary text-gray-600 text-[10px] font-medium transition-all shadow-2xs hover:shadow-xs cursor-pointer flex items-center gap-1">
-                <span>👉</span> ${escapeHtml(s)}
-            </button>
-        `).join('');
+        row.className = 'ai-suggestion-pills-row flex flex-wrap items-center gap-1 pl-0 sm:pl-7 pt-1';
+        row.innerHTML = list.slice(0, 4).map(s => {
+            const clean = s.replace(/^[^\p{L}\p{N}]+/u, '').trim();
+            const icon = getSuggestionIcon(clean);
+            return `
+                <button type="button" 
+                        onclick="sendAiQuickMessage('${escapeHtml(clean)}')" 
+                        class="ai-quick-chip cursor-pointer">
+                    <span class="text-[10px] shrink-0">${icon}</span>
+                    <span class="truncate">${escapeHtml(clean)}</span>
+                </button>
+            `;
+        }).join('');
 
         container.appendChild(row);
     }
@@ -658,17 +1038,37 @@
         } catch (e) {}
     }
 
-    // Cuộn xuống đáy chat
-    function scrollAiChatToBottom() {
+    // Cuộn tập trung vào phần đầu tin nhắn mới để người dùng đọc tự nhiên từ trên xuống, không tự ý trôi tuột xuống đáy
+    function scrollToMessage(element, smooth = true) {
         const area = document.getElementById('aiChatMessages');
-        if (area) {
-            setTimeout(() => {
-                area.scrollTop = area.scrollHeight;
-            }, 60);
+        if (!area || !element) return;
+        requestAnimationFrame(() => {
+            try {
+                const areaRect = area.getBoundingClientRect();
+                const elemRect = element.getBoundingClientRect();
+                const offset = elemRect.top - areaRect.top + area.scrollTop - 6;
+                area.scrollTo({
+                    top: Math.max(0, offset),
+                    behavior: smooth ? 'smooth' : 'auto'
+                });
+            } catch (e) {
+                element.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'nearest' });
+            }
+        });
+    }
+
+    // Cuộn nhẹ nhàng tới tin nhắn mới nhất trong chuỗi
+    function scrollAiChatToBottom(smooth = true) {
+        const area = document.getElementById('aiChatMessages');
+        if (!area) return;
+        const lastMsg = area.querySelector('#aiDynamicMessagesContainer > div:last-child');
+        if (lastMsg) {
+            scrollToMessage(lastMsg, smooth);
         }
     }
 
     // Chuyển đổi Markdown có cấu trúc sang HTML an toàn, gọn gàng, chuẩn xác (Hỗ trợ tiêu đề, bảng, danh sách, khối code)
+    // Gom các dòng văn bản liền kề thành đoạn văn thống nhất, không ngắt dòng hay chia nhỏ câu tùy tiện
     function renderSimpleMarkdown(md) {
         if (!md) return '';
 
@@ -678,6 +1078,17 @@
         let inOl = false;
         let inCodeBlock = false;
         let inTable = false;
+        let paragraphBuffer = [];
+
+        function flushParagraph() {
+            if (paragraphBuffer.length > 0) {
+                const text = paragraphBuffer.join(' ').trim();
+                if (text) {
+                    html += `<p class="leading-relaxed mb-1.5 text-gray-800 text-[12px]">${formatInlineMarkdown(text)}</p>`;
+                }
+                paragraphBuffer = [];
+            }
+        }
 
         for (let i = 0; i < rawLines.length; i++) {
             let line = rawLines[i];
@@ -685,6 +1096,7 @@
 
             // Khối code đa dòng (```)
             if (/^```/.test(trimmed)) {
+                flushParagraph();
                 if (inUl) { html += '</ul>'; inUl = false; }
                 if (inOl) { html += '</ol>'; inOl = false; }
                 if (inTable) { html += '</tbody></table></div>'; inTable = false; }
@@ -693,7 +1105,7 @@
                     html += '</code></pre>';
                     inCodeBlock = false;
                 } else {
-                    html += '<pre class="bg-gray-800 text-gray-100 p-2.5 rounded-lg text-[11px] overflow-x-auto my-1.5 font-mono shadow-inner"><code>';
+                    html += '<pre class="bg-gray-800 text-gray-100 p-2 rounded-lg text-[10.5px] overflow-x-auto my-1 font-mono shadow-inner"><code>';
                     inCodeBlock = true;
                 }
                 continue;
@@ -705,6 +1117,7 @@
             }
 
             if (!trimmed) {
+                flushParagraph();
                 if (inUl) { html += '</ul>'; inUl = false; }
                 if (inOl) { html += '</ol>'; inOl = false; }
                 if (inTable) { html += '</tbody></table></div>'; inTable = false; }
@@ -713,32 +1126,36 @@
 
             // Headers
             if (/^###\s+(.+)$/.test(trimmed)) {
+                flushParagraph();
                 if (inUl) { html += '</ul>'; inUl = false; }
                 if (inOl) { html += '</ol>'; inOl = false; }
                 if (inTable) { html += '</tbody></table></div>'; inTable = false; }
                 const content = trimmed.replace(/^###\s+/, '');
-                html += `<h5 class="font-bold text-[12px] text-gray-900 mt-2 mb-1">${formatInlineMarkdown(content)}</h5>`;
+                html += `<h5 class="font-bold text-[11.5px] text-gray-900 mt-1.5 mb-0.5">${formatInlineMarkdown(content)}</h5>`;
                 continue;
             }
             if (/^##\s+(.+)$/.test(trimmed)) {
+                flushParagraph();
                 if (inUl) { html += '</ul>'; inUl = false; }
                 if (inOl) { html += '</ol>'; inOl = false; }
                 if (inTable) { html += '</tbody></table></div>'; inTable = false; }
                 const content = trimmed.replace(/^##\s+/, '');
-                html += `<h4 class="font-bold text-[12.5px] text-gray-900 mt-2.5 mb-1">${formatInlineMarkdown(content)}</h4>`;
+                html += `<h4 class="font-bold text-[12px] text-gray-900 mt-2 mb-0.5">${formatInlineMarkdown(content)}</h4>`;
                 continue;
             }
             if (/^#\s+(.+)$/.test(trimmed)) {
+                flushParagraph();
                 if (inUl) { html += '</ul>'; inUl = false; }
                 if (inOl) { html += '</ol>'; inOl = false; }
                 if (inTable) { html += '</tbody></table></div>'; inTable = false; }
                 const content = trimmed.replace(/^#\s+/, '');
-                html += `<h4 class="font-bold text-[13px] text-gray-900 mt-2.5 mb-1.5">${formatInlineMarkdown(content)}</h4>`;
+                html += `<h4 class="font-bold text-[12.5px] text-gray-900 mt-2 mb-1">${formatInlineMarkdown(content)}</h4>`;
                 continue;
             }
 
             // Tables: Cột phân cách bằng |
             if (trimmed.startsWith('|') && trimmed.endsWith('|')) {
+                flushParagraph();
                 if (inUl) { html += '</ul>'; inUl = false; }
                 if (inOl) { html += '</ol>'; inOl = false; }
 
@@ -749,13 +1166,13 @@
 
                 const cells = trimmed.slice(1, -1).split('|').map(c => c.trim());
                 if (!inTable) {
-                    html += '<div class="overflow-x-auto my-1.5 rounded-lg border border-gray-200"><table class="w-full text-left text-[11px] border-collapse bg-white"><tbody class="divide-y divide-gray-100">';
+                    html += '<div class="overflow-x-auto my-1 rounded-lg border border-gray-200"><table class="w-full text-left text-[10.5px] border-collapse bg-white"><tbody class="divide-y divide-gray-100">';
                     inTable = true;
                 }
 
                 html += '<tr class="even:bg-gray-50/50">';
                 cells.forEach(cell => {
-                    html += `<td class="p-1.5 border-r border-gray-100 last:border-r-0 leading-tight">${formatInlineMarkdown(cell)}</td>`;
+                    html += `<td class="p-1 border-r border-gray-100 last:border-r-0 leading-tight">${formatInlineMarkdown(cell)}</td>`;
                 });
                 html += '</tr>';
                 continue;
@@ -766,36 +1183,41 @@
 
             // Bullet list (- or *)
             if (/^[-*]\s+(.+)$/.test(trimmed)) {
+                flushParagraph();
                 if (inOl) { html += '</ol>'; inOl = false; }
-                if (!inUl) { html += '<ul class="list-disc pl-4 my-1 space-y-0.5 text-gray-700">'; inUl = true; }
+                if (!inUl) { html += '<ul class="list-disc pl-3.5 my-1 space-y-0.5 text-gray-700 text-[12px]">'; inUl = true; }
                 const content = trimmed.replace(/^[-*]\s+/, '');
-                html += `<li>${formatInlineMarkdown(content)}</li>`;
+                html += `<li class="leading-relaxed">${formatInlineMarkdown(content)}</li>`;
                 continue;
             }
 
-            // Ordered list (1. 2. 3.)
-            if (/^\d+\.\s+(.+)$/.test(trimmed)) {
+            // Ordered list (1. 2. 3.) - Hiển thị số thứ tự chuẩn xác 1, 2, 3 bằng badge đẹp mắt, không bao giờ bị reset về 1
+            const olMatch = trimmed.match(/^(\d+)\.\s+(.+)$/);
+            if (olMatch) {
+                flushParagraph();
                 if (inUl) { html += '</ul>'; inUl = false; }
-                if (!inOl) { html += '<ol class="list-decimal pl-4 my-1 space-y-0.5 text-gray-700">'; inOl = true; }
-                const content = trimmed.replace(/^\d+\.\s+/, '');
-                html += `<li>${formatInlineMarkdown(content)}</li>`;
+                if (inOl) { html += '</ol>'; inOl = false; }
+                const num = olMatch[1];
+                const content = olMatch[2];
+                html += `<div class="mt-1.5 mb-1 leading-relaxed flex items-start gap-1.5"><span class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-orange-100 text-primary text-[9px] font-black shrink-0 mt-0.5 shadow-2xs">${num}</span><div class="min-w-0 flex-1 text-[12px] text-gray-800">${formatInlineMarkdown(content)}</div></div>`;
                 continue;
             }
-
-            // Regular line / paragraph
-            if (inUl) { html += '</ul>'; inUl = false; }
-            if (inOl) { html += '</ol>'; inOl = false; }
 
             // Blockquote
             if (/^>\s+(.+)$/.test(trimmed)) {
+                flushParagraph();
+                if (inUl) { html += '</ul>'; inUl = false; }
+                if (inOl) { html += '</ol>'; inOl = false; }
                 const content = trimmed.replace(/^>\s+/, '');
-                html += `<div class="border-l-2 border-primary/50 pl-2.5 py-0.5 my-1 text-gray-600 bg-orange-50/40 rounded-r text-[11px] leading-relaxed">${formatInlineMarkdown(content)}</div>`;
+                html += `<div class="border-l-2 border-primary/50 pl-2 py-0.5 my-1 text-gray-600 bg-orange-50/40 rounded-r text-[11px] leading-relaxed">${formatInlineMarkdown(content)}</div>`;
                 continue;
             }
 
-            html += `<p class="leading-relaxed mb-1">${formatInlineMarkdown(trimmed)}</p>`;
+            // Dòng văn bản bình thường: gom vào buffer đoạn văn hiện tại để tránh ngắt câu vô lý
+            paragraphBuffer.push(trimmed);
         }
 
+        flushParagraph();
         if (inUl) html += '</ul>';
         if (inOl) html += '</ol>';
         if (inTable) html += '</tbody></table></div>';
@@ -807,9 +1229,13 @@
     function formatInlineMarkdown(text) {
         let s = escapeHtml(text);
         // Inline code: `code`
-        s = s.replace(/`([^`\n]+)`/g, '<code class="px-1 py-0.2 bg-gray-200/80 rounded text-[11px] font-mono text-pink-700">$1</code>');
-        // Links: [Text](url)
-        s = s.replace(/\[(.*?)\]\((https?:\/\/[^\s)]+|\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener" class="font-bold text-primary hover:underline hover:text-orange-600 transition-colors">$1</a>');
+        s = s.replace(/`([^`\n]+)`/g, '<code class="px-1 py-0.2 bg-gray-200/80 rounded text-[10.5px] font-mono text-pink-700">$1</code>');
+        // Links: [Text](url) -> Chuyển trực tiếp trong cùng trang, không nhảy tab hay sang trang khác
+        s = s.replace(/\[(.*?)\]\((https?:\/\/[^\s)]+|\/[^\s)]+)\)/g, (match, label, url) => {
+            let safeUrl = url.replace(/^https?:\/\/[^\/]+/i, '');
+            if (!safeUrl.startsWith('/')) safeUrl = '/' + safeUrl;
+            return `<a href="${safeUrl}" target="_self" class="font-bold text-primary hover:underline hover:text-orange-600 transition-colors">${label}</a>`;
+        });
         // Bold: **text**
         s = s.replace(/\*\*(.*?)\*\*/g, '<b class="font-bold text-gray-900">$1</b>');
         // Italic: *text*
