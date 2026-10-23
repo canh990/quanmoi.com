@@ -3,7 +3,8 @@ FROM phpmyadmin:latest
 
 RUN apt-get update && apt-get install -y default-mysql-client \
     && docker-php-ext-install pdo_mysql exif pcntl \
-    && a2enmod rewrite
+    && a2enmod rewrite \
+    && echo "upload_max_filesize=250M\npost_max_size=250M\nmemory_limit=512M\nmax_execution_time=300" > /usr/local/etc/php/conf.d/zzz-custom-uploads.ini
 
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
 RUN sed -ri 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' \

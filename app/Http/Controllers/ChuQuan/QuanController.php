@@ -189,17 +189,27 @@ class QuanController extends Controller
      */
     public function show($slug)
     {
-        $quan = Quan::where('slug', $slug)
-            ->where('chu_quan_id', Auth::id())
-            ->with(['hinhAnh', 'danhMucMenu.monAn', 'danhGia.nguoiDung', 'khuyenMais'])
-            ->firstOrFail();
+        $user = Auth::user();
+        $query = Quan::where('slug', $slug);
+        if ($user && ! $user->isAdmin()) {
+            $query->where('chu_quan_id', $user->id);
+        }
+
+        $quan = $query->with([
+            'hinhAnh',
+            'danhMucMenu.monAn',
+            'danhGia.nguoiDung',
+            'khuyenMais',
+            'videos' => fn ($q) => $q->orderBy('created_at', 'desc'),
+        ])->firstOrFail();
 
         $this->authorize('update', $quan);
 
         $luotLuu = $quan->savedByUsers()->count();
-        $luotVideo = VideoShort::where('quan_id', $quan->id)->count();
+        $luotVideo = $quan->videos->count();
+        $videos = $quan->videos;
 
-        return view('chu-quan.chi-tiet-quan', compact('quan', 'luotLuu', 'luotVideo'));
+        return view('chu-quan.chi-tiet-quan', compact('quan', 'luotLuu', 'luotVideo', 'videos'));
     }
 
     private function storeVenueImage(string $objectKey, string $contents): array

@@ -29,7 +29,7 @@
             <a class="nav-link py-2 text-[13px] lg:text-[15px] font-semibold transition-all duration-200 {{ request()->routeIs('ban-do') ? 'active text-primary font-bold' : 'text-on-surface-variant hover:text-primary' }} flex items-center gap-1" href="{{ route('ban-do') }}">
                 Bản đồ
             </a>
-            <a class="nav-link py-2 text-[13px] lg:text-[15px] font-semibold transition-all duration-200 text-on-surface-variant hover:text-primary" href="#">
+            <a class="nav-link py-2 text-[13px] lg:text-[15px] font-semibold transition-all duration-200 {{ request()->routeIs('video-review.*') ? 'active text-primary font-bold' : 'text-on-surface-variant hover:text-primary' }}" href="{{ route('video-review.index') }}">
                 Video review
             </a>
             <a class="nav-link py-2 text-[13px] lg:text-[15px] font-semibold transition-all duration-200 {{ request()->routeIs('quan-da-luu.index') ? 'active text-primary font-bold' : 'text-on-surface-variant hover:text-primary' }} flex items-center gap-1" href="{{ route('quan-da-luu.index') }}">

@@ -226,8 +226,12 @@
 
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                 @forelse($videoShorts as $video)
-                <a href="{{ route('video-review.index') }}" class="relative h-96 rounded-2xl overflow-hidden group cursor-pointer shadow-md hover:shadow-xl transition-all block">
-                    <img src="{{ $video->thumbnail_url ?: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=500&q=80' }}" alt="{{ $video->tieu_de }}" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                <a href="{{ route('video-review.index') }}" class="relative h-96 rounded-2xl overflow-hidden group cursor-pointer shadow-md hover:shadow-xl transition-all block bg-gray-900">
+                    <img src="{{ $video->effective_thumbnail }}"
+                         alt="Video review {{ $video->nguoi_dang }}"
+                         loading="lazy"
+                         onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=500&q=80';"
+                         class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-black/20"></div>
                     <div class="absolute inset-0 flex items-center justify-center">
                         <div class="w-14 h-14 rounded-full bg-white/30 backdrop-blur-md flex items-center justify-center text-white group-hover:scale-110 group-hover:bg-primary transition-all">
@@ -430,8 +434,12 @@
             </div>
             <div class="flex overflow-x-auto no-scrollbar gap-3 snap-x snap-mandatory -mx-4 px-4 pb-2">
                 @forelse($videoShorts as $video)
-                <a href="{{ route('video-review.index') }}" class="min-w-[200px] w-[55%] snap-center relative h-72 rounded-2xl overflow-hidden group cursor-pointer shadow-sm border border-gray-100 flex-shrink-0 block">
-                    <img src="{{ $video->thumbnail_url ?: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=400&q=80' }}" alt="{{ $video->tieu_de }}" class="absolute inset-0 w-full h-full object-cover" />
+                <a href="{{ route('video-review.index') }}" class="min-w-[200px] w-[55%] snap-center relative h-72 rounded-2xl overflow-hidden group cursor-pointer shadow-sm border border-gray-100 flex-shrink-0 block bg-gray-900">
+                    <img src="{{ $video->effective_thumbnail }}"
+                         alt="Video review {{ $video->nguoi_dang }}"
+                         loading="lazy"
+                         onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=400&q=80';"
+                         class="absolute inset-0 w-full h-full object-cover" />
                     <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-black/20"></div>
                     <div class="absolute inset-0 flex items-center justify-center">
                         <div class="w-11 h-11 rounded-full bg-white/30 backdrop-blur-md flex items-center justify-center text-white">

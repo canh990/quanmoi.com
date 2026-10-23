@@ -28,6 +28,16 @@
             <span class="material-symbols-outlined text-[18px]">auto_awesome</span>
             <span>Quản Lý Quán Nổi Bật</span>
         </a>
+        <a href="{{ route('admin.video-shorts.index') }}" class="sidebar-item flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all {{ request()->routeIs('admin.video-shorts.*') ? 'bg-[#F59E0B] text-white font-bold shadow-md' : 'text-slate-300 hover:bg-slate-800/80 hover:text-white' }}">
+            <div class="flex items-center gap-2.5">
+                <span class="material-symbols-outlined text-[18px]">smart_display</span>
+                <span>Video TikTok / Shorts</span>
+            </div>
+            @php $pendingVideosCount = \App\Models\VideoShort::where('trang_thai', 'cho_duyet')->count(); @endphp
+            @if($pendingVideosCount > 0)
+                <span class="px-1.5 py-0.5 text-[10px] font-bold bg-amber-500/20 text-amber-300 rounded border border-amber-500/30">{{ $pendingVideosCount }}</span>
+            @endif
+        </a>
         <a href="{{ route('admin.seo.index') }}" class="sidebar-item flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all {{ request()->routeIs('admin.seo.*') ? 'bg-[#F59E0B] text-white font-bold shadow-md' : 'text-slate-300 hover:bg-slate-800/80 hover:text-white' }}">
             <span class="material-symbols-outlined text-[18px]">travel_explore</span>
             <span>Quản Lý SEO</span>

@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\KhuyenMaiAiController;
 use App\Http\Controllers\Admin\PhanQuyenController;
 use App\Http\Controllers\Admin\QuanLyNguoiDungController;
 use App\Http\Controllers\Admin\QuanLyQuanController;
+use App\Http\Controllers\Admin\QuanLyVideoController;
 use App\Http\Controllers\Admin\QuanNoiBatController;
 use App\Http\Controllers\Admin\SeoController;
 use App\Http\Controllers\Admin\ThongBaoAdminController;
@@ -112,6 +113,17 @@ Route::middleware(['auth', 'KiemTraQuyenHan:admin'])->group(function () {
         Route::post('/store', [KhuyenMaiAiController::class, 'store'])->name('store');
         Route::delete('/{id}', [KhuyenMaiAiController::class, 'destroy'])->name('destroy');
         Route::put('/{id}/toggle', [KhuyenMaiAiController::class, 'toggle'])->name('toggle');
+    });
+
+    // 14. Quản lý Video Shorts / TikTok Review
+    Route::prefix('video-shorts')->name('video-shorts.')->group(function () {
+        Route::get('/', [QuanLyVideoController::class, 'index'])->name('index');
+        Route::post('/', [QuanLyVideoController::class, 'store'])->name('store');
+        Route::post('/fetch-info', [QuanLyVideoController::class, 'ajaxFetchTikTokInfo'])->name('fetch-info');
+        Route::post('/{id}/sync-clean', [QuanLyVideoController::class, 'syncClean'])->name('sync-clean');
+        Route::put('/{id}', [QuanLyVideoController::class, 'update'])->name('update');
+        Route::delete('/{id}', [QuanLyVideoController::class, 'destroy'])->name('destroy');
+        Route::put('/{id}/toggle', [QuanLyVideoController::class, 'toggleStatus'])->name('toggle');
     });
 
     // Quản lý SEO

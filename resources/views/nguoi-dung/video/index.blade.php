@@ -116,7 +116,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="video-container">
             @foreach($videos as $video)
             @php
-                $thumbnail = $video->thumbnail_url ?: ($video->quan?->anh_bia_url ?: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80');
+                $thumbnail = $video->effective_thumbnail;
             @endphp
 
             <div class="video-item bg-white rounded-2xl shadow-sm hover:shadow-lg border border-gray-200 overflow-hidden cursor-pointer group flex flex-col h-[480px] transition-all duration-300 hover:-translate-y-1"
@@ -125,6 +125,7 @@
                 {{-- Phần Trên: Ảnh Thumbnail --}}
                 <div class="relative w-full overflow-hidden bg-gray-100" style="height: 350px;">
                     <img src="{{ $thumbnail }}"
+                         onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80';"
                          class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                          alt="Video Thumbnail">
 
@@ -192,53 +193,88 @@
     </div>
 </div>
 
-{{-- Modal Xem Video --}}
+{{-- Modal Xem Video (Chỉ phát video sạch hoặc fallback Iframe) --}}
 <div id="video-modal" class="fixed inset-0 hidden opacity-0 transition-opacity duration-300" style="display:none; z-index: 9999;">
     {{-- Backdrop --}}
-    <div class="absolute inset-0 bg-black/80 backdrop-blur-md" onclick="closeVideoModal()"></div>
+    <div class="absolute inset-0 bg-black/85 backdrop-blur-md" onclick="closeVideoModal()"></div>
 
     {{-- Nút Đóng ở góc trên phải màn hình --}}
     <button type="button" onclick="event.stopPropagation(); closeVideoModal()"
             class="fixed top-4 right-4 md:top-6 md:right-6 text-gray-900 bg-white hover:bg-gray-200 hover:scale-110 rounded-full w-12 h-12 flex items-center justify-center transition-transform shadow-2xl cursor-pointer"
-            style="z-index: 10000;">
+            style="z-index: 10000;" title="Đóng (Esc)">
         <span class="material-symbols-outlined text-2xl font-black">close</span>
     </button>
 
     {{-- Nút Chuyển Trái / Phải --}}
-    <button type="button" onclick="event.stopPropagation(); changeVideo(-1)" class="fixed left-2 md:left-8 top-1/2 -translate-y-1/2 text-gray-900 bg-white hover:bg-gray-200 hover:scale-110 rounded-full w-12 h-12 md:w-14 md:h-14 flex items-center justify-center transition-transform shadow-2xl cursor-pointer" style="z-index: 10000;">
+    <button type="button" onclick="event.stopPropagation(); changeVideo(-1)" class="fixed left-2 md:left-8 top-1/2 -translate-y-1/2 text-gray-900 bg-white hover:bg-gray-200 hover:scale-110 rounded-full w-12 h-12 md:w-14 md:h-14 flex items-center justify-center transition-transform shadow-2xl cursor-pointer" style="z-index: 10000;" title="Video trước">
         <span class="material-symbols-outlined text-3xl md:text-4xl font-black">chevron_left</span>
     </button>
-    <button type="button" onclick="event.stopPropagation(); changeVideo(1)" class="fixed right-2 md:right-8 top-1/2 -translate-y-1/2 text-gray-900 bg-white hover:bg-gray-200 hover:scale-110 rounded-full w-12 h-12 md:w-14 md:h-14 flex items-center justify-center transition-transform shadow-2xl cursor-pointer" style="z-index: 10000;">
+    <button type="button" onclick="event.stopPropagation(); changeVideo(1)" class="fixed right-2 md:right-8 top-1/2 -translate-y-1/2 text-gray-900 bg-white hover:bg-gray-200 hover:scale-110 rounded-full w-12 h-12 md:w-14 md:h-14 flex items-center justify-center transition-transform shadow-2xl cursor-pointer" style="z-index: 10000;" title="Video kế tiếp">
         <span class="material-symbols-outlined text-3xl md:text-4xl font-black">chevron_right</span>
     </button>
 
     {{-- Khung Video căn giữa hoàn hảo --}}
     <div class="fixed inset-0 flex items-center justify-center pointer-events-none" style="z-index: 10000;">
-        <div class="pointer-events-auto rounded-2xl overflow-hidden shadow-2xl bg-black"
-             style="width: 340px; height: min(680px, 86vh); position: relative;">
+        <div class="pointer-events-auto rounded-3xl overflow-hidden shadow-2xl bg-black border border-white/10"
+             style="width: min(480px, calc(90vh * 9 / 16), 94vw); height: min(860px, 90vh); aspect-ratio: 9/16; position: relative;">
 
             {{-- Loading Spinner --}}
             <div id="video-loading" class="absolute inset-0 flex items-center justify-center bg-black" style="z-index: 10;">
-                <div class="animate-spin rounded-full h-10 w-10 border-4 border-gray-600 border-t-white"></div>
+                <div class="flex flex-col items-center gap-3">
+                    <div class="animate-spin rounded-full h-10 w-10 border-4 border-gray-600 border-t-orange-500"></div>
+                    <span class="text-xs text-gray-400 font-medium">Đang tải video...</span>
+                </div>
             </div>
 
-            {{-- Nội dung Iframe --}}
-            <div id="modal-video-container" class="w-full h-full" style="position: relative; z-index: 20;"></div>
+            {{-- Container phát video (HTML5 thuần hoặc Iframe) --}}
+            <div id="modal-video-container" class="w-full h-full relative" style="z-index: 20;"></div>
         </div>
     </div>
+</div>
 
 <style>
     .hide-scrollbar::-webkit-scrollbar { display: none; }
     .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    @keyframes pingOnce {
+        0% { transform: scale(0.8); opacity: 0; }
+        50% { transform: scale(1.2); opacity: 1; }
+        100% { transform: scale(1.4); opacity: 0; }
+    }
+    .animate-ping-once {
+        animation: pingOnce 0.4s ease-out forwards;
+    }
 </style>
 
+@php
+    $jsonVideoData = $videos->map(function($v) {
+        return [
+            'id' => $v->id,
+            'video_id' => $v->video_id,
+            'clean_url' => $v->clean_video_url,
+            'embed_url' => $v->embed_url,
+            'watch_url' => $v->watch_url,
+            'title' => $v->tieu_de,
+            'author' => $v->nguoi_dang,
+            'avatar' => $v->avatar_nguoi_dang,
+            'views' => $v->luot_xem,
+            'quan_name' => $v->quan?->ten_quan,
+            'quan_url' => $v->quan ? route('quan.detail', $v->quan->slug) : null,
+            'quan_tag' => $v->quan?->loai_hinh_kinh_doanh,
+        ];
+    })->values()->all();
+@endphp
+
 <script>
-    const videoList = @json($videos->pluck('video_id'));
+    const videoDataList = {!! json_encode($jsonVideoData, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) !!};
+
     let currentVideoIndex = 0;
+    let activeVideoPlayer = null;
+    let isMuted = false;
 
     function openVideoModal(index) {
+        if (!videoDataList || videoDataList.length === 0) return;
         currentVideoIndex = index;
-        const videoId   = videoList[index];
+        const video     = videoDataList[index];
         const modal     = document.getElementById('video-modal');
         const container = document.getElementById('modal-video-container');
         const loading   = document.getElementById('video-loading');
@@ -247,23 +283,174 @@
         setTimeout(() => modal.classList.remove('opacity-0'), 10);
         loading.style.display = 'flex';
         container.innerHTML = '';
+        activeVideoPlayer = null;
 
-        const iframe = document.createElement('iframe');
-        iframe.src             = `https://www.tiktok.com/embed/v2/${videoId}`;
-        iframe.frameBorder     = '0';
-        iframe.allow           = 'autoplay; clipboard-write; encrypted-media; picture-in-picture';
-        iframe.allowFullscreen = true;
-        iframe.style.cssText   = 'width:100%;height:100%;border:none;display:block;background:#000;';
-        iframe.onload          = () => { loading.style.display = 'none'; };
+        // ƯU TIÊN 1: Phát bằng video HTML5 thuần nếu có link video MP4 sạch (Không dính bất kỳ nút/chữ TikTok nào)
+        if (video.clean_url) {
+            const playerWrapper = document.createElement('div');
+            playerWrapper.className = 'relative w-full h-full bg-black flex items-center justify-center select-none overflow-hidden';
 
-        container.appendChild(iframe);
+            const videoElem = document.createElement('video');
+            videoElem.src = video.clean_url;
+            videoElem.className = 'w-full h-full object-cover';
+            videoElem.autoplay = true;
+            videoElem.loop = true;
+            videoElem.playsInline = true;
+            videoElem.muted = isMuted;
+            videoElem.preload = 'auto';
+
+            // Top overlay: Quán ăn & Nút âm lượng
+            const topBar = document.createElement('div');
+            topBar.className = 'absolute top-3 inset-x-3 flex items-center justify-between z-30 pointer-events-none';
+            topBar.innerHTML = `
+                ${video.quan_name ? `
+                    <a href="${video.quan_url}" onclick="event.stopPropagation()" class="pointer-events-auto inline-flex items-center gap-1.5 bg-black/60 hover:bg-orange-600 backdrop-blur-md text-white text-xs font-bold px-3 py-1.5 rounded-full transition shadow-lg max-w-[240px]">
+                        <span class="material-symbols-outlined text-sm text-orange-400">restaurant</span>
+                        <span class="truncate">${video.quan_name}</span>
+                    </a>
+                ` : '<div></div>'}
+                <div class="flex items-center gap-2 pointer-events-auto">
+                    <button type="button" id="btn-toggle-sound" class="w-9 h-9 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-md text-white flex items-center justify-center transition shadow-lg cursor-pointer">
+                        <span class="material-symbols-outlined text-lg" id="icon-sound">${isMuted ? 'volume_off' : 'volume_up'}</span>
+                    </button>
+                </div>
+            `;
+
+            // Center indicator khi click play/pause
+            const centerIcon = document.createElement('div');
+            centerIcon.className = 'absolute inset-0 flex items-center justify-center pointer-events-none z-20';
+            centerIcon.innerHTML = `
+                <div id="play-pause-bubble" class="w-16 h-16 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center text-white opacity-0 transition-opacity">
+                    <span class="material-symbols-outlined text-4xl" id="play-pause-icon">pause</span>
+                </div>
+            `;
+
+            // Bottom overlay: Tiêu đề, tác giả & Thanh tiến trình
+            const bottomBar = document.createElement('div');
+            bottomBar.className = 'absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-4 pt-10 z-30 pointer-events-none';
+            bottomBar.innerHTML = `
+                <p class="text-white font-bold text-sm leading-snug line-clamp-2 drop-shadow-md mb-1">${video.title || 'Video Review'}</p>
+                <div class="flex items-center gap-2 text-white/80 text-xs">
+                    <span class="font-semibold">${video.author || '@reviewer'}</span>
+                    ${video.views > 0 ? `<span>• ${Number(video.views).toLocaleString('vi-VN')} lượt xem</span>` : ''}
+                </div>
+                <div id="video-progress-container" class="mt-2.5 w-full bg-white/20 hover:bg-white/40 h-1.5 rounded-full overflow-hidden cursor-pointer pointer-events-auto relative">
+                    <div id="video-progress-bar" class="bg-orange-500 h-full w-0 transition-all duration-75"></div>
+                </div>
+            `;
+
+            playerWrapper.appendChild(videoElem);
+            playerWrapper.appendChild(centerIcon);
+            playerWrapper.appendChild(topBar);
+            playerWrapper.appendChild(bottomBar);
+            container.appendChild(playerWrapper);
+
+            activeVideoPlayer = videoElem;
+
+            // Xử lý sự kiện video
+            videoElem.onloadeddata = () => { loading.style.display = 'none'; };
+            videoElem.onerror = () => {
+                loading.style.display = 'none';
+                console.warn('Lỗi phát MP4, tự động chuyển về nhúng Iframe TikTok');
+                container.innerHTML = '';
+                const iframe = document.createElement('iframe');
+                iframe.src = `https://www.tiktok.com/embed/v2/${video.video_id}`;
+                iframe.frameBorder = '0';
+                iframe.allow = 'autoplay; clipboard-write; encrypted-media; picture-in-picture';
+                iframe.allowFullscreen = true;
+                iframe.style.cssText = 'width:100%;height:100%;border:none;display:block;background:#000;';
+                container.appendChild(iframe);
+            };
+            videoElem.ontimeupdate = () => {
+                const prog = document.getElementById('video-progress-bar');
+                if (prog && videoElem.duration) {
+                    prog.style.width = `${(videoElem.currentTime / videoElem.duration) * 100}%`;
+                }
+            };
+
+            // Tự động phát mượt mà (nếu trình duyệt chặn âm thanh thì phát ở chế độ tắt tiếng)
+            videoElem.play().catch(() => {
+                videoElem.muted = true;
+                isMuted = true;
+                const icon = document.getElementById('icon-sound');
+                if (icon) icon.textContent = 'volume_off';
+                videoElem.play().catch(() => {});
+            });
+
+            // Click vào video để dừng/phát
+            playerWrapper.onclick = (e) => {
+                if (e.target.closest('#btn-toggle-sound') || e.target.closest('#video-progress-container') || e.target.closest('a')) return;
+                togglePlayPause(videoElem);
+            };
+
+            // Nút bật/tắt tiếng
+            const btnSound = topBar.querySelector('#btn-toggle-sound');
+            if (btnSound) {
+                btnSound.onclick = (e) => {
+                    e.stopPropagation();
+                    isMuted = !isMuted;
+                    videoElem.muted = isMuted;
+                    document.getElementById('icon-sound').textContent = isMuted ? 'volume_off' : 'volume_up';
+                };
+            }
+
+            // Click vào thanh timeline để tua
+            const progContainer = bottomBar.querySelector('#video-progress-container');
+            if (progContainer) {
+                progContainer.onclick = (e) => {
+                    e.stopPropagation();
+                    const rect = progContainer.getBoundingClientRect();
+                    const pos = (e.clientX - rect.left) / rect.width;
+                    if (videoElem.duration) {
+                        videoElem.currentTime = pos * videoElem.duration;
+                    }
+                };
+            }
+        }
+        // ƯU TIÊN 2: Fallback Iframe nếu chưa có bản MP4 sạch
+        else {
+            const iframe = document.createElement('iframe');
+            iframe.src             = `https://www.tiktok.com/embed/v2/${video.video_id}`;
+            iframe.frameBorder     = '0';
+            iframe.allow           = 'autoplay; clipboard-write; encrypted-media; picture-in-picture';
+            iframe.allowFullscreen = true;
+            iframe.style.cssText   = 'width:100%;height:100%;border:none;display:block;background:#000;';
+            iframe.onload          = () => { loading.style.display = 'none'; };
+            container.appendChild(iframe);
+        }
+
         document.body.style.overflow = 'hidden';
+    }
+
+    function togglePlayPause(videoElem) {
+        if (!videoElem) return;
+        const bubble = document.getElementById('play-pause-bubble');
+        const icon = document.getElementById('play-pause-icon');
+
+        if (videoElem.paused) {
+            videoElem.play();
+            if (icon) icon.textContent = 'play_arrow';
+        } else {
+            videoElem.pause();
+            if (icon) icon.textContent = 'pause';
+        }
+
+        if (bubble) {
+            bubble.classList.remove('opacity-0');
+            setTimeout(() => bubble.classList.add('opacity-0'), 500);
+        }
     }
 
     function closeVideoModal() {
         const modal     = document.getElementById('video-modal');
         const container = document.getElementById('modal-video-container');
         const loading   = document.getElementById('video-loading');
+
+        if (activeVideoPlayer) {
+            activeVideoPlayer.pause();
+            activeVideoPlayer.src = '';
+            activeVideoPlayer = null;
+        }
 
         modal.classList.add('opacity-0');
         setTimeout(() => {
@@ -276,10 +463,10 @@
     }
 
     function changeVideo(dir) {
-        if (videoList.length === 0) return;
+        if (!videoDataList || videoDataList.length === 0) return;
         let newIndex = currentVideoIndex + dir;
-        if (newIndex < 0) newIndex = videoList.length - 1;
-        if (newIndex >= videoList.length) newIndex = 0;
+        if (newIndex < 0) newIndex = videoDataList.length - 1;
+        if (newIndex >= videoDataList.length) newIndex = 0;
         openVideoModal(newIndex);
     }
 
@@ -287,16 +474,23 @@
         if (e.key === 'Escape') closeVideoModal();
         if (e.key === 'ArrowLeft')  changeVideo(-1);
         if (e.key === 'ArrowRight') changeVideo(1);
+        if (e.key === ' ' && activeVideoPlayer) {
+            e.preventDefault();
+            togglePlayPause(activeVideoPlayer);
+        }
     });
 
     // Auto-submit khi gõ tìm kiếm (debounce 500ms)
     let searchTimeout;
-    document.getElementById('search-input').addEventListener('input', function () {
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(() => {
-            document.getElementById('filter-form').submit();
-        }, 500);
-    });
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) {
+        searchInput.addEventListener('input', function () {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                document.getElementById('filter-form').submit();
+            }, 500);
+        });
+    }
 </script>
 
 @endsection

@@ -544,7 +544,14 @@
                             </a>
                         @endif
                         <a href="#reviews-section" class="text-on-surface-variant hover:text-primary py-3 font-label-md text-xs sm:text-sm whitespace-nowrap px-1 transition-colors">ĐÁNH GIÁ</a>
-                        <a href="#info-section" class="text-on-surface-variant hover:text-primary py-3 font-label-md text-xs sm:text-sm whitespace-nowrap px-1 transition-colors">THÔNG TIN CHI TIẾT</a>
+                        <a href="#info-section" class="text-on-surface-variant hover:text-primary py-3 font-label-md text-xs sm:text-sm whitespace-nowrap px-1 transition-colors flex items-center gap-1.5">
+                            THÔNG TIN CHI TIẾT
+                            @if(isset($quan->videos) && $quan->videos->isNotEmpty())
+                                <span class="bg-gradient-to-r from-orange-500 to-rose-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold shadow-2xs">
+                                    {{ $quan->videos->count() }} video
+                                </span>
+                            @endif
+                        </a>
                         <a href="#gallery-section" class="text-on-surface-variant hover:text-primary py-3 font-label-md text-xs sm:text-sm whitespace-nowrap px-1 transition-colors">HÌNH ẢNH</a>
                     </nav>
 
@@ -875,11 +882,126 @@
                                 <p><strong class="text-on-background">Email:</strong> {{ $quan->email }}</p>
                             @endif
                         </div>
-                        @if($quan->tiktok_url)
-                            <a href="{{ $quan->tiktok_url }}" target="_blank" rel="noopener noreferrer" class="mt-3 inline-flex items-center gap-1.5 text-primary hover:underline font-bold text-xs">
-                                <span class="material-symbols-outlined text-base">play_circle</span>
-                                Xem review trên TikTok
-                            </a>
+                        {{-- Danh sách video review thực tế liên kết với quán --}}
+                        @if(isset($quan->videos) && $quan->videos->isNotEmpty())
+                            <div class="mt-6 pt-5 border-t border-gray-100">
+                                <div class="flex items-center justify-between mb-3.5 flex-wrap gap-2">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-7 h-7 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center shadow-2xs">
+                                            <span class="material-symbols-outlined text-base">smart_display</span>
+                                        </div>
+                                        <h3 class="font-bold text-sm text-gray-900">Video review về quán</h3>
+                                        <span class="bg-gradient-to-r from-orange-500 to-rose-500 text-white text-[11px] font-bold px-2 py-0.5 rounded-full shadow-2xs">
+                                            {{ $quan->videos->count() }} video
+                                        </span>
+                                    </div>
+                                    @if($quan->tiktok_url)
+                                        <a href="{{ $quan->tiktok_url }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:text-orange-700 hover:underline">
+                                            <span>Xem kênh TikTok của quán</span>
+                                            <span class="material-symbols-outlined text-sm">open_in_new</span>
+                                        </a>
+                                    @endif
+                                </div>
+
+                                <style>
+                                    .quan-review-grid {
+                                        display: flex;
+                                        flex-wrap: wrap;
+                                        gap: 1.25rem;
+                                    }
+                                    .quan-review-card {
+                                        position: relative;
+                                        width: 260px;
+                                        height: 440px;
+                                        max-width: 100%;
+                                        border-radius: 1.25rem;
+                                        overflow: hidden;
+                                        background: #0f172a;
+                                        cursor: pointer;
+                                        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                                        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+                                        display: flex;
+                                        flex-direction: column;
+                                        justify-content: space-between;
+                                        flex-shrink: 0;
+                                    }
+                                    .quan-review-card:hover {
+                                        transform: translateY(-6px);
+                                        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.35), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
+                                    }
+                                    @media (max-width: 640px) {
+                                        .quan-review-grid {
+                                            display: grid;
+                                            grid-template-columns: repeat(2, minmax(0, 1fr));
+                                            gap: 0.75rem;
+                                        }
+                                        .quan-review-card {
+                                            width: 100%;
+                                            height: 300px;
+                                        }
+                                    }
+                                </style>
+
+                                <div class="quan-review-grid mt-4">
+                                    @foreach($quan->videos as $idx => $v)
+                                        <div onclick="openQuanVideoModal({{ $idx }})"
+                                             class="quan-review-card group border border-white/10"
+                                             style="height: 440px; width: 260px; position: relative;">
+                                            {{-- Thumbnail --}}
+                                            <img src="{{ $v->effective_thumbnail }}"
+                                                 alt="{{ $v->tieu_de }}"
+                                                 loading="lazy"
+                                                 onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=400&q=80';"
+                                                 class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out">
+
+                                            {{-- Gradients overlay --}}
+                                            <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-black/40 pointer-events-none"></div>
+
+                                            {{-- Header tags --}}
+                                            <div class="relative z-10 p-3 flex items-center justify-between gap-1 pointer-events-none">
+                                                <span class="inline-flex items-center gap-1.5 bg-black/60 backdrop-blur-md text-white text-[11px] font-bold px-2.5 py-1 rounded-full border border-white/20 shadow-sm">
+                                                    <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+                                                    TikTok
+                                                </span>
+                                                @if($v->luot_xem > 0)
+                                                    <span class="inline-flex items-center gap-1 bg-black/60 backdrop-blur-md text-white text-[11px] font-medium px-2.5 py-1 rounded-full border border-white/20 shadow-sm">
+                                                        <span class="material-symbols-outlined text-[13px]">visibility</span>
+                                                        {{ number_format($v->luot_xem) }}
+                                                    </span>
+                                                @endif
+                                            </div>
+
+                                            {{-- Center Play Icon --}}
+                                            <div class="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+                                                <div class="w-14 h-14 rounded-full bg-orange-500/90 text-white flex items-center justify-center shadow-2xl transform group-hover:scale-115 transition-transform duration-300">
+                                                    <span class="material-symbols-outlined text-3xl">play_arrow</span>
+                                                </div>
+                                            </div>
+
+                                            {{-- Bottom Content --}}
+                                            <div class="relative z-10 p-3.5 pointer-events-none">
+                                                <p class="text-white text-xs font-bold leading-snug line-clamp-2 drop-shadow-md mb-2">{{ $v->tieu_de }}</p>
+                                                <div class="flex items-center gap-2 text-white/90 text-xs">
+                                                    <div class="w-5 h-5 rounded-full overflow-hidden bg-white/30 flex-shrink-0 ring-1 ring-white/40">
+                                                        <img src="{{ $v->avatar_nguoi_dang ?: 'https://ui-avatars.com/api/?name='.urlencode($v->nguoi_dang ?: 'Reviewer').'&background=random' }}"
+                                                             alt="{{ $v->nguoi_dang }}"
+                                                             class="w-full h-full object-cover">
+                                                    </div>
+                                                    <span class="truncate font-semibold text-[11px]">{{ $v->nguoi_dang ?: '@reviewer' }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @elseif($quan->tiktok_url)
+                            <div class="mt-5 pt-4 border-t border-gray-100">
+                                <a href="{{ $quan->tiktok_url }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 text-primary hover:underline font-bold text-xs bg-orange-50 hover:bg-orange-100 text-orange-700 px-3.5 py-2.5 rounded-xl border border-orange-200 transition-colors">
+                                    <span class="material-symbols-outlined text-lg text-primary">play_circle</span>
+                                    <span>Xem review trên TikTok của quán</span>
+                                    <span class="material-symbols-outlined text-sm">open_in_new</span>
+                                </a>
+                            </div>
                         @endif
                     </section>
                 </div>
@@ -963,6 +1085,48 @@
                 </div>
             </aside>
         </div>
+    {{-- Modal Xem Video Review của Quán (Chỉ phát video sạch hoặc fallback Iframe) --}}
+    @if(isset($quan->videos) && $quan->videos->isNotEmpty())
+        <div id="quan-video-modal" class="fixed inset-0 hidden opacity-0 transition-opacity duration-300" style="display:none; z-index: 9999;">
+            {{-- Backdrop --}}
+            <div class="absolute inset-0 bg-black/85 backdrop-blur-md" onclick="closeQuanVideoModal()"></div>
+
+            {{-- Nút Đóng --}}
+            <button type="button" onclick="event.stopPropagation(); closeQuanVideoModal()"
+                    class="fixed top-4 right-4 md:top-6 md:right-6 text-gray-900 bg-white hover:bg-gray-200 hover:scale-110 rounded-full w-12 h-12 flex items-center justify-center transition-transform shadow-2xl cursor-pointer"
+                    style="z-index: 10000;" title="Đóng (Esc)">
+                <span class="material-symbols-outlined text-2xl font-black">close</span>
+            </button>
+
+            {{-- Nút Chuyển Trái / Phải nếu có nhiều video --}}
+            @if($quan->videos->count() > 1)
+                <button type="button" onclick="event.stopPropagation(); changeQuanVideo(-1)" class="fixed left-2 md:left-8 top-1/2 -translate-y-1/2 text-gray-900 bg-white hover:bg-gray-200 hover:scale-110 rounded-full w-12 h-12 md:w-14 md:h-14 flex items-center justify-center transition-transform shadow-2xl cursor-pointer" style="z-index: 10000;" title="Video trước">
+                    <span class="material-symbols-outlined text-3xl md:text-4xl font-black">chevron_left</span>
+                </button>
+                <button type="button" onclick="event.stopPropagation(); changeQuanVideo(1)" class="fixed right-2 md:right-8 top-1/2 -translate-y-1/2 text-gray-900 bg-white hover:bg-gray-200 hover:scale-110 rounded-full w-12 h-12 md:w-14 md:h-14 flex items-center justify-center transition-transform shadow-2xl cursor-pointer" style="z-index: 10000;" title="Video kế tiếp">
+                    <span class="material-symbols-outlined text-3xl md:text-4xl font-black">chevron_right</span>
+                </button>
+            @endif
+
+            {{-- Khung Video căn giữa --}}
+            <div class="fixed inset-0 flex items-center justify-center pointer-events-none" style="z-index: 10000;">
+                <div class="pointer-events-auto rounded-3xl overflow-hidden shadow-2xl bg-black border border-white/10"
+                     style="width: min(480px, calc(90vh * 9 / 16), 94vw); height: min(860px, 90vh); aspect-ratio: 9/16; position: relative;">
+
+                    {{-- Loading Spinner --}}
+                    <div id="quan-video-loading" class="absolute inset-0 flex items-center justify-center bg-black" style="z-index: 10;">
+                        <div class="flex flex-col items-center gap-3">
+                            <div class="animate-spin rounded-full h-10 w-10 border-4 border-gray-600 border-t-orange-500"></div>
+                            <span class="text-xs text-gray-400 font-medium">Đang tải video review...</span>
+                        </div>
+                    </div>
+
+                    {{-- Container phát video --}}
+                    <div id="modal-quan-video-container" class="w-full h-full relative" style="z-index: 20;"></div>
+                </div>
+            </div>
+        </div>
+    @endif
     </main>
 @endsection
 
@@ -1268,5 +1432,243 @@
                 });
             }
         });
+
+        @if(isset($quan->videos) && $quan->videos->isNotEmpty())
+        @php
+            $quanVideoDataJson = $quan->videos->map(function($v) use ($quan) {
+                return [
+                    'id' => $v->id,
+                    'video_id' => $v->video_id,
+                    'clean_url' => $v->clean_video_url,
+                    'title' => $v->tieu_de,
+                    'author' => $v->nguoi_dang,
+                    'avatar' => $v->avatar_nguoi_dang,
+                    'views' => $v->luot_xem,
+                    'quan_name' => $quan->ten_quan,
+                    'quan_url' => route('quan.detail', $quan->slug),
+                ];
+            })->values()->all();
+        @endphp
+
+        const quanVideoDataList = {!! json_encode($quanVideoDataJson, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) !!};
+        let currentQuanVideoIndex = 0;
+        let activeQuanVideoPlayer = null;
+        let isQuanVideoMuted = false;
+
+        function openQuanVideoModal(index) {
+            if (!quanVideoDataList || quanVideoDataList.length === 0) return;
+            currentQuanVideoIndex = index;
+            const video = quanVideoDataList[index];
+            const modal = document.getElementById('quan-video-modal');
+            const container = document.getElementById('modal-quan-video-container');
+            const loading = document.getElementById('quan-video-loading');
+
+            if (!modal || !container) return;
+
+            modal.style.display = 'block';
+            setTimeout(() => modal.classList.remove('opacity-0'), 10);
+            if (loading) loading.style.display = 'flex';
+            container.innerHTML = '';
+            activeQuanVideoPlayer = null;
+
+            // ƯU TIÊN 1: Phát video MP4 sạch thuần túy
+            if (video.clean_url) {
+                const playerWrapper = document.createElement('div');
+                playerWrapper.className = 'relative w-full h-full bg-black flex items-center justify-center select-none overflow-hidden';
+
+                const videoElem = document.createElement('video');
+                videoElem.src = video.clean_url;
+                videoElem.className = 'w-full h-full object-cover';
+                videoElem.autoplay = true;
+                videoElem.loop = true;
+                videoElem.playsInline = true;
+                videoElem.muted = isQuanVideoMuted;
+                videoElem.preload = 'auto';
+
+                // Top overlay: Tên quán & Nút loa
+                const topBar = document.createElement('div');
+                topBar.className = 'absolute top-3 inset-x-3 flex items-center justify-between z-30 pointer-events-none';
+                topBar.innerHTML = `
+                    <div class="pointer-events-auto inline-flex items-center gap-1.5 bg-black/60 backdrop-blur-md text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg max-w-[240px]">
+                        <span class="material-symbols-outlined text-sm text-orange-400">restaurant</span>
+                        <span class="truncate">${video.quan_name || 'Quán Mới'}</span>
+                    </div>
+                    <div class="flex items-center gap-2 pointer-events-auto">
+                        <button type="button" id="btn-toggle-quan-sound" class="w-9 h-9 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-md text-white flex items-center justify-center transition shadow-lg cursor-pointer">
+                            <span class="material-symbols-outlined text-lg" id="icon-quan-sound">${isQuanVideoMuted ? 'volume_off' : 'volume_up'}</span>
+                        </button>
+                    </div>
+                `;
+
+                // Center indicator khi click play/pause
+                const centerIcon = document.createElement('div');
+                centerIcon.className = 'absolute inset-0 flex items-center justify-center pointer-events-none z-20';
+                centerIcon.innerHTML = `
+                    <div id="quan-play-pause-bubble" class="w-16 h-16 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center text-white opacity-0 transition-opacity">
+                        <span class="material-symbols-outlined text-4xl" id="quan-play-pause-icon">pause</span>
+                    </div>
+                `;
+
+                // Bottom overlay: Tiêu đề, tác giả & Thanh tiến trình
+                const bottomBar = document.createElement('div');
+                bottomBar.className = 'absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-4 pt-10 z-30 pointer-events-none';
+                bottomBar.innerHTML = `
+                    <p class="text-white font-bold text-sm leading-snug line-clamp-2 drop-shadow-md mb-1">${video.title || 'Video Review'}</p>
+                    <div class="flex items-center gap-2 text-white/80 text-xs">
+                        <span class="font-semibold">${video.author || '@reviewer'}</span>
+                        ${video.views > 0 ? `<span>• ${Number(video.views).toLocaleString('vi-VN')} lượt xem</span>` : ''}
+                    </div>
+                    <div id="quan-video-progress-container" class="mt-2.5 w-full bg-white/20 hover:bg-white/40 h-1.5 rounded-full overflow-hidden cursor-pointer pointer-events-auto relative">
+                        <div id="quan-video-progress-bar" class="bg-orange-500 h-full w-0 transition-all duration-75"></div>
+                    </div>
+                `;
+
+                playerWrapper.appendChild(videoElem);
+                playerWrapper.appendChild(centerIcon);
+                playerWrapper.appendChild(topBar);
+                playerWrapper.appendChild(bottomBar);
+                container.appendChild(playerWrapper);
+
+                activeQuanVideoPlayer = videoElem;
+
+                videoElem.onloadeddata = () => { if (loading) loading.style.display = 'none'; };
+                videoElem.onerror = () => {
+                    if (loading) loading.style.display = 'none';
+                    console.warn('Lỗi phát MP4, tự động chuyển về nhúng Iframe TikTok');
+                    container.innerHTML = '';
+                    const iframe = document.createElement('iframe');
+                    iframe.src = `https://www.tiktok.com/embed/v2/${video.video_id}`;
+                    iframe.frameBorder = '0';
+                    iframe.allow = 'autoplay; clipboard-write; encrypted-media; picture-in-picture';
+                    iframe.allowFullscreen = true;
+                    iframe.style.cssText = 'width:100%;height:100%;border:none;display:block;background:#000;';
+                    container.appendChild(iframe);
+                };
+                videoElem.ontimeupdate = () => {
+                    const prog = document.getElementById('quan-video-progress-bar');
+                    if (prog && videoElem.duration) {
+                        prog.style.width = `${(videoElem.currentTime / videoElem.duration) * 100}%`;
+                    }
+                };
+
+                // Tự động phát mượt mà
+                videoElem.play().catch(() => {
+                    videoElem.muted = true;
+                    isQuanVideoMuted = true;
+                    const icon = document.getElementById('icon-quan-sound');
+                    if (icon) icon.textContent = 'volume_off';
+                    videoElem.play().catch(() => {});
+                });
+
+                // Click vào video để dừng/phát
+                playerWrapper.onclick = (e) => {
+                    if (e.target.closest('#btn-toggle-quan-sound') || e.target.closest('#quan-video-progress-container') || e.target.closest('a')) return;
+                    toggleQuanPlayPause(videoElem);
+                };
+
+                // Nút bật/tắt tiếng
+                const btnSound = topBar.querySelector('#btn-toggle-quan-sound');
+                if (btnSound) {
+                    btnSound.onclick = (e) => {
+                        e.stopPropagation();
+                        isQuanVideoMuted = !isQuanVideoMuted;
+                        videoElem.muted = isQuanVideoMuted;
+                        const soundIcon = document.getElementById('icon-quan-sound');
+                        if (soundIcon) soundIcon.textContent = isQuanVideoMuted ? 'volume_off' : 'volume_up';
+                    };
+                }
+
+                // Click vào thanh timeline để tua
+                const progContainer = bottomBar.querySelector('#quan-video-progress-container');
+                if (progContainer) {
+                    progContainer.onclick = (e) => {
+                        e.stopPropagation();
+                        const rect = progContainer.getBoundingClientRect();
+                        const pos = (e.clientX - rect.left) / rect.width;
+                        if (videoElem.duration) {
+                            videoElem.currentTime = pos * videoElem.duration;
+                        }
+                    };
+                }
+            } else {
+                // Fallback iframe nếu chưa có link MP4 sạch
+                const iframe = document.createElement('iframe');
+                iframe.src = `https://www.tiktok.com/embed/v2/${video.video_id}`;
+                iframe.frameBorder = '0';
+                iframe.allow = 'autoplay; clipboard-write; encrypted-media; picture-in-picture';
+                iframe.allowFullscreen = true;
+                iframe.style.cssText = 'width:100%;height:100%;border:none;display:block;background:#000;';
+                iframe.onload = () => { if (loading) loading.style.display = 'none'; };
+                container.appendChild(iframe);
+            }
+
+            document.body.style.overflow = 'hidden';
+        }
+
+        function toggleQuanPlayPause(videoElem) {
+            if (!videoElem) return;
+            const bubble = document.getElementById('quan-play-pause-bubble');
+            const icon = document.getElementById('quan-play-pause-icon');
+
+            if (videoElem.paused) {
+                videoElem.play();
+                if (icon) icon.textContent = 'play_arrow';
+            } else {
+                videoElem.pause();
+                if (icon) icon.textContent = 'pause';
+            }
+
+            if (bubble) {
+                bubble.classList.remove('opacity-0');
+                setTimeout(() => bubble.classList.add('opacity-0'), 500);
+            }
+        }
+
+        function closeQuanVideoModal() {
+            const modal = document.getElementById('quan-video-modal');
+            const container = document.getElementById('modal-quan-video-container');
+            const loading = document.getElementById('quan-video-loading');
+
+            if (activeQuanVideoPlayer) {
+                activeQuanVideoPlayer.pause();
+                activeQuanVideoPlayer.src = '';
+                activeQuanVideoPlayer = null;
+            }
+
+            if (modal) {
+                modal.classList.add('opacity-0');
+                setTimeout(() => {
+                    modal.style.display = 'none';
+                    if (container) container.innerHTML = '';
+                    if (loading) loading.style.display = 'flex';
+                    document.body.style.overflow = '';
+                }, 250);
+            }
+        }
+
+        function changeQuanVideo(direction) {
+            if (!quanVideoDataList || quanVideoDataList.length <= 1) return;
+            let newIndex = currentQuanVideoIndex + direction;
+            if (newIndex < 0) newIndex = quanVideoDataList.length - 1;
+            if (newIndex >= quanVideoDataList.length) newIndex = 0;
+            openQuanVideoModal(newIndex);
+        }
+
+        document.addEventListener('keydown', function(e) {
+            const modal = document.getElementById('quan-video-modal');
+            if (!modal || modal.style.display === 'none') return;
+
+            if (e.key === 'Escape') {
+                closeQuanVideoModal();
+            } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                changeQuanVideo(1);
+            } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                changeQuanVideo(-1);
+            } else if (e.key === ' ' || e.code === 'Space') {
+                e.preventDefault();
+                if (activeQuanVideoPlayer) toggleQuanPlayPause(activeQuanVideoPlayer);
+            }
+        });
+        @endif
     </script>
 @endpush

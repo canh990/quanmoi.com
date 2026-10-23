@@ -15,6 +15,14 @@
 
     @push('styles')
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css" />
+        <style>
+            .tab-active {
+                border-bottom: 2px solid #ea580c;
+                color: #ea580c !important;
+                font-weight: 700;
+                margin-bottom: -1px;
+            }
+        </style>
     @endpush
 
     {{-- Breadcrumb --}}
@@ -111,14 +119,18 @@
 
         {{-- Left: Details & Gallery --}}
         <div class="lg:col-span-2 space-y-8">
-            <nav id="owner-venue-tabs" class="flex border-b border-gray-200 gap-5 overflow-x-auto no-scrollbar" aria-label="Điều hướng chi tiết quán">
+            <nav id="owner-venue-tabs" class="flex border-b border-gray-200 gap-3 sm:gap-4 md:gap-5 overflow-x-auto no-scrollbar" aria-label="Điều hướng chi tiết quán">
                 <a href="#owner-menu-section" aria-current="location" class="tab-active py-3 text-xs sm:text-sm font-semibold whitespace-nowrap px-1">THỰC ĐƠN</a>
-                <a href="#owner-promotions-section" class="text-gray-500 hover:text-primary py-3 text-xs sm:text-sm font-semibold whitespace-nowrap px-1 transition-colors flex items-center gap-1.5">
-                    <span class="material-symbols-outlined text-[16px] text-amber-500 animate-pulse">auto_awesome</span>
-                    KHUYẾN MÃI & AI (✨)
+                <a href="#owner-promotions-section" class="text-gray-500 hover:text-primary py-3 text-xs sm:text-sm font-semibold whitespace-nowrap px-1 transition-colors flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[16px] text-amber-500">auto_awesome</span>
+                    ƯU ĐÃI & AI
+                </a>
+                <a href="#owner-videos-section" class="text-gray-500 hover:text-primary py-3 text-xs sm:text-sm font-semibold whitespace-nowrap px-1 transition-colors flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[16px] text-orange-500">smart_display</span>
+                    VIDEO REVIEW ({{ $videos->count() }})
                 </a>
                 <a href="#owner-reviews-section" class="text-gray-500 hover:text-primary py-3 text-xs sm:text-sm font-semibold whitespace-nowrap px-1 transition-colors">ĐÁNH GIÁ</a>
-                <a href="#owner-info-section" class="text-gray-500 hover:text-primary py-3 text-xs sm:text-sm font-semibold whitespace-nowrap px-1 transition-colors">THÔNG TIN CHI TIẾT</a>
+                <a href="#owner-info-section" class="text-gray-500 hover:text-primary py-3 text-xs sm:text-sm font-semibold whitespace-nowrap px-1 transition-colors">THÔNG TIN</a>
                 <a href="#owner-gallery-section" class="text-gray-500 hover:text-primary py-3 text-xs sm:text-sm font-semibold whitespace-nowrap px-1 transition-colors">HÌNH ẢNH</a>
             </nav>
 
@@ -631,6 +643,133 @@
                             </button>
                         </div>
                     </div>
+            </section>
+
+            {{-- Owner TikTok Videos Review Section --}}
+            <section hidden class="space-y-6" id="owner-videos-section">
+                <div class="bg-white rounded-[24px] p-6 md:p-8 border border-gray-100 shadow-sm space-y-5">
+                    {{-- Section Header --}}
+                    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 pb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-2xl bg-orange-100 text-orange-600 flex items-center justify-center shadow-2xs">
+                                <span class="material-symbols-outlined text-xl">smart_display</span>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-extrabold text-on-surface flex items-center gap-2">
+                                    Video Review TikTok Của Quán
+                                    <span class="text-xs bg-orange-100 text-orange-700 font-bold px-2.5 py-0.5 rounded-full">{{ $videos->count() }} video</span>
+                                </h4>
+                                <p class="text-xs text-gray-400 mt-0.5">Quản lý và đăng tải các video review thực tế cho {{ $quan->ten_quan }}</p>
+                            </div>
+                        </div>
+                        <button type="button" onclick="openCreateVideoModal()"
+                                class="px-4 py-2.5 bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 text-white font-bold text-xs rounded-xl shadow-sm transition flex items-center gap-1.5 cursor-pointer">
+                            <span class="material-symbols-outlined text-[18px]">add_circle</span>
+                            Đăng video review mới
+                        </button>
+                    </div>
+
+                    {{-- Banner Giải Thích Quy Trình Phê Duyệt --}}
+                    <div class="p-4 rounded-2xl bg-amber-50/80 border border-amber-200/80 flex items-start gap-3">
+                        <span class="material-symbols-outlined text-amber-600 text-xl shrink-0 mt-0.5">verified_user</span>
+                        <div class="text-xs text-amber-900 leading-relaxed">
+                            <p class="font-bold mb-0.5">Quy trình kiểm duyệt video review:</p>
+                            <p>Khi bạn đăng video TikTok mới, video sẽ ở trạng thái <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-200 text-amber-900 font-bold text-[11px]"><span class="w-1.5 h-1.5 rounded-full bg-amber-600"></span> Chờ duyệt</span>. <strong>Ban quản trị (Admin) sẽ kiểm tra nội dung và phê duyệt</strong> trước khi video được hiển thị công khai cho khách hàng trên trang chi tiết quán và trang Video Review chung.</p>
+                        </div>
+                    </div>
+
+                    {{-- Danh sách Video --}}
+                    @if($videos->isEmpty())
+                        <div class="py-12 text-center bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
+                            <div class="w-16 h-16 rounded-full bg-orange-50 text-orange-500 flex items-center justify-center mx-auto mb-3">
+                                <span class="material-symbols-outlined text-3xl">smart_display</span>
+                            </div>
+                            <h5 class="text-sm font-bold text-gray-800">Quán chưa có video review nào</h5>
+                            <p class="text-xs text-gray-500 max-w-md mx-auto mt-1 mb-4">Dán đường dẫn video TikTok review về quán để tự động tải video sạch, tăng lượng tương tác và thu hút thực khách đến quán!</p>
+                            <button type="button" onclick="openCreateVideoModal()"
+                                    class="px-4 py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs rounded-xl shadow-xs transition inline-flex items-center gap-1.5 cursor-pointer">
+                                <span class="material-symbols-outlined text-base">add</span>
+                                Đăng video review đầu tiên
+                            </button>
+                        </div>
+                    @else
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            @foreach($videos as $v)
+                                <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-2xs hover:shadow-md transition flex flex-col justify-between" id="owner-video-card-{{ $v->id }}">
+                                    {{-- Video Card Header Thumbnail --}}
+                                    <div class="relative w-full aspect-[9/12] bg-gray-900 overflow-hidden group cursor-pointer" onclick="openPreviewVideoModal('{{ $v->clean_video_url ?: $v->embed_url }}', '{{ $v->video_id }}', '{{ addslashes($v->tieu_de) }}')">
+                                        <img src="{{ $v->effective_thumbnail }}"
+                                             alt="{{ $v->tieu_de }}"
+                                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                             onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=400&q=80';">
+                                        
+                                        <div class="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                                            <div class="w-11 h-11 rounded-full bg-white/90 text-gray-900 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                                                <span class="material-symbols-outlined text-2xl">play_arrow</span>
+                                            </div>
+                                        </div>
+
+                                        {{-- Badge Trạng Thái Phê Duyệt --}}
+                                        <div class="absolute top-2.5 left-2.5">
+                                            @if($v->trang_thai === 'da_duyet')
+                                                <span class="inline-flex items-center gap-1 bg-emerald-600/95 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+                                                    <span class="material-symbols-outlined text-xs">check_circle</span>
+                                                    Đã duyệt
+                                                </span>
+                                            @elseif($v->trang_thai === 'cho_duyet')
+                                                <span class="inline-flex items-center gap-1 bg-amber-500/95 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+                                                    Chờ duyệt
+                                                </span>
+                                            @else
+                                                <span class="inline-flex items-center gap-1 bg-gray-600/95 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+                                                    <span class="material-symbols-outlined text-xs">visibility_off</span>
+                                                    Đang ẩn
+                                                </span>
+                                            @endif
+                                        </div>
+
+                                        {{-- Lượt xem --}}
+                                        @if($v->luot_xem > 0)
+                                            <div class="absolute top-2.5 right-2.5">
+                                                <span class="inline-flex items-center gap-1 bg-black/60 backdrop-blur-xs text-white text-[10px] font-medium px-2 py-0.5 rounded-full">
+                                                    <span class="material-symbols-outlined text-xs">visibility</span>
+                                                    {{ number_format($v->luot_xem) }}
+                                                </span>
+                                            </div>
+                                        @endif
+                                    </div>
+
+                                    {{-- Video Card Content --}}
+                                    <div class="p-3.5 flex flex-col justify-between flex-1">
+                                        <div>
+                                            <h5 class="font-bold text-xs text-gray-900 line-clamp-2 leading-snug mb-2" title="{{ $v->tieu_de }}">{{ $v->tieu_de }}</h5>
+                                            <div class="flex items-center gap-1.5 text-[11px] text-gray-500 mb-2">
+                                                <span class="font-medium truncate">{{ $v->nguoi_dang ?: '@reviewer' }}</span>
+                                                <span>•</span>
+                                                <span>{{ $v->created_at ? $v->created_at->format('d/m/Y') : 'Mới đây' }}</span>
+                                            </div>
+                                        </div>
+
+                                        {{-- Nút Thao tác --}}
+                                        <div class="pt-2 border-t border-gray-100 flex items-center justify-between gap-2 mt-auto">
+                                            <button type="button" onclick="openPreviewVideoModal('{{ $v->clean_video_url ?: $v->embed_url }}', '{{ $v->video_id }}', '{{ addslashes($v->tieu_de) }}')"
+                                                    class="text-xs font-bold text-primary hover:underline flex items-center gap-1 cursor-pointer">
+                                                <span class="material-symbols-outlined text-[15px]">play_circle</span>
+                                                Xem thử
+                                            </button>
+
+                                            <button type="button" onclick="deleteOwnerVideo('{{ $v->id }}', '{{ addslashes($v->tieu_de) }}')"
+                                                    class="text-xs font-bold text-red-500 hover:text-red-700 flex items-center gap-1 p-1 hover:bg-red-50 rounded-lg transition cursor-pointer" title="Xóa video này">
+                                                <span class="material-symbols-outlined text-[16px]">delete</span>
+                                                Xóa
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
                 </div>
             </section>
         </div>
@@ -640,28 +779,91 @@
 
             {{-- Thao tác nhanh --}}
             <div class="bg-white rounded-[24px] p-6 border border-gray-100 shadow-sm space-y-4">
-                <h3 class="text-lg font-bold text-on-surface border-b border-gray-100 pb-3">Thao tác nhanh</h3>
+                <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+                    <h3 class="text-base font-bold text-gray-900 flex items-center gap-2">
+                        <span class="w-8 h-8 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center">
+                            <span class="material-symbols-outlined text-[18px]">bolt</span>
+                        </span>
+                        Thao tác nhanh
+                    </h3>
+                    <span class="text-[11px] text-gray-400 font-medium">Lối tắt quản lý</span>
+                </div>
 
                 <div class="space-y-2">
-                    {{-- Nút AI Tạo Khuyến Mãi --}}
-                    <a href="#owner-promotions-section" onclick="setOwnerVenueTab('#owner-promotions-section')"
-                       class="w-full h-11 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold text-[14px] rounded-xl flex items-center justify-center gap-2 shadow-sm hover:from-purple-700 hover:to-indigo-700 transition-all cursor-pointer">
-                        <span class="material-symbols-outlined text-[18px]">auto_awesome</span> AI Tạo Khuyến Mãi (✨)
+                    {{-- 1. Đăng video TikTok review --}}
+                    <a href="#owner-videos-section" onclick="setOwnerVenueTab('#owner-videos-section')"
+                       class="group p-3 rounded-2xl border border-orange-100 bg-orange-50/40 hover:bg-orange-50 hover:border-orange-200 transition-all flex items-center gap-3 cursor-pointer">
+                        <div class="w-9 h-9 rounded-xl bg-orange-500 text-white flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
+                            <span class="material-symbols-outlined text-lg">smart_display</span>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center gap-1.5">
+                                <h4 class="font-bold text-xs text-gray-900 group-hover:text-orange-600 transition-colors">Đăng video review</h4>
+                                <span class="bg-orange-100 text-orange-700 text-[9px] font-extrabold px-1.5 py-0.5 rounded-full uppercase">Mới</span>
+                            </div>
+                            <p class="text-[11px] text-gray-500 truncate">Dán link TikTok hoặc file MP4</p>
+                        </div>
+                        <span class="material-symbols-outlined text-gray-400 text-base group-hover:text-orange-600 group-hover:translate-x-0.5 transition-all">chevron_right</span>
                     </a>
 
-                    {{-- Nút Chỉnh sửa thông tin --}}
-                    <button onclick="openEditModal()"
-                            class="w-full h-11 text-white font-bold text-[14px] rounded-xl flex items-center justify-center gap-2 shadow-sm hover:opacity-90 transition-all cursor-pointer" style="background-color: #f97316;">
-                        <span class="material-symbols-outlined text-[18px]">edit</span> Chỉnh sửa thông tin
+                    {{-- 2. AI Tạo Khuyến Mãi --}}
+                    <a href="#owner-promotions-section" onclick="setOwnerVenueTab('#owner-promotions-section')"
+                       class="group p-3 rounded-2xl border border-purple-100 bg-purple-50/30 hover:bg-purple-50 hover:border-purple-200 transition-all flex items-center gap-3 cursor-pointer">
+                        <div class="w-9 h-9 rounded-xl bg-purple-600 text-white flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
+                            <span class="material-symbols-outlined text-lg">auto_awesome</span>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <h4 class="font-bold text-xs text-gray-900 group-hover:text-purple-600 transition-colors">Kira AI Tạo ưu đãi</h4>
+                            <p class="text-[11px] text-gray-500 truncate">Sinh voucher & bài viết tự động</p>
+                        </div>
+                        <span class="material-symbols-outlined text-gray-400 text-base group-hover:text-purple-600 group-hover:translate-x-0.5 transition-all">chevron_right</span>
+                    </a>
+
+                    {{-- 3. Quản lý / Thêm thực đơn --}}
+                    <a href="{{ route('chu-quan.quan.menu.edit', $quan->slug) }}"
+                       class="group p-3 rounded-2xl border border-gray-100 bg-white hover:bg-gray-50 hover:border-gray-200 transition-all flex items-center gap-3 cursor-pointer">
+                        <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                            <span class="material-symbols-outlined text-lg">restaurant_menu</span>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <h4 class="font-bold text-xs text-gray-900 group-hover:text-emerald-600 transition-colors">Quản lý thực đơn</h4>
+                            <p class="text-[11px] text-gray-500 truncate">Thêm món ăn, đổi giá và ảnh món</p>
+                        </div>
+                        <span class="material-symbols-outlined text-gray-400 text-base group-hover:text-emerald-600 group-hover:translate-x-0.5 transition-all">chevron_right</span>
+                    </a>
+
+                    {{-- 4. Chỉnh sửa thông tin quán --}}
+                    <button type="button" onclick="openEditModal()"
+                            class="w-full text-left group p-3 rounded-2xl border border-gray-100 bg-white hover:bg-gray-50 hover:border-gray-200 transition-all flex items-center gap-3 cursor-pointer">
+                        <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                            <span class="material-symbols-outlined text-lg">edit</span>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <h4 class="font-bold text-xs text-gray-900 group-hover:text-blue-600 transition-colors">Chỉnh sửa thông tin</h4>
+                            <p class="text-[11px] text-gray-500 truncate">Tên quán, giờ mở cửa, địa chỉ</p>
+                        </div>
+                        <span class="material-symbols-outlined text-gray-400 text-base group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all">chevron_right</span>
                     </button>
-                    <a href="{{ route('chu-quan.quan.menu.edit', $quan->slug) }}" class="w-full h-11 bg-tertiary text-white font-bold text-[14px] rounded-xl flex items-center justify-center gap-2 shadow-sm hover:bg-tertiary/90 transition-all">
-                        <span class="material-symbols-outlined text-[18px]">restaurant_menu</span> Quản lý / Thêm thực đơn
+
+                    {{-- 5. Đăng thêm quán mới --}}
+                    <a href="/chu-quan/dang-quan"
+                       class="group p-3 rounded-2xl border border-gray-100 bg-white hover:bg-gray-50 hover:border-gray-200 transition-all flex items-center gap-3 cursor-pointer">
+                        <div class="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                            <span class="material-symbols-outlined text-lg">add_location_alt</span>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <h4 class="font-bold text-xs text-gray-900 group-hover:text-amber-600 transition-colors">Đăng thêm cơ sở mới</h4>
+                            <p class="text-[11px] text-gray-500 truncate">Mở thêm chi nhánh hoặc quán mới</p>
+                        </div>
+                        <span class="material-symbols-outlined text-gray-400 text-base group-hover:text-amber-600 group-hover:translate-x-0.5 transition-all">chevron_right</span>
                     </a>
-                    <a href="/chu-quan/dang-quan" class="w-full h-11 bg-primary text-white font-bold text-[14px] rounded-xl flex items-center justify-center gap-2 shadow-sm hover:bg-primary/90 transition-all">
-                        <span class="material-symbols-outlined text-[18px]">add_location_alt</span> Đăng thêm quán mới
-                    </a>
-                    <a href="/" class="w-full h-11 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-[14px] rounded-xl flex items-center justify-center gap-2 transition-all">
-                        <span class="material-symbols-outlined text-[18px]">home</span> Trở về trang chủ
+                </div>
+
+                {{-- Nút Trở về trang chủ nhẹ nhàng ở dưới --}}
+                <div class="pt-2 border-t border-gray-100">
+                    <a href="/" class="w-full py-2.5 px-3 rounded-xl border border-gray-200 hover:bg-gray-50 text-gray-600 hover:text-gray-900 font-bold text-xs flex items-center justify-center gap-1.5 transition-all">
+                        <span class="material-symbols-outlined text-base">home</span>
+                        <span>Trở về trang chủ</span>
                     </a>
                 </div>
             </div>
@@ -686,11 +888,11 @@
                         <p class="text-[11px] font-semibold text-rose-400 uppercase tracking-wide mt-0.5">Lượt lưu</p>
                     </div>
                     {{-- Video Review --}}
-                    <div class="bg-orange-50 rounded-2xl p-3 text-center">
+                    <a href="#owner-videos-section" onclick="setOwnerVenueTab('#owner-videos-section')" class="bg-orange-50 hover:bg-orange-100 transition-colors rounded-2xl p-3 text-center cursor-pointer block">
                         <span class="material-symbols-outlined text-orange-500 text-2xl" style="font-variation-settings: 'FILL' 1;">videocam</span>
                         <p class="text-xl font-black text-orange-700 mt-0.5">{{ number_format($luotVideo, 0, ',', '.') }}</p>
                         <p class="text-[11px] font-semibold text-orange-400 uppercase tracking-wide mt-0.5">Video</p>
-                    </div>
+                    </a>
                 </div>
 
                 @if(($quan->luot_xem ?? 0) > 0 || $luotLuu > 0)
@@ -1611,5 +1813,406 @@
             }
         }
     }
+
+    /* =========================================================
+       XỬ LÝ VIDEO TIKTOK CỦA CHỦ QUÁN
+    ========================================================= */
+    function openCreateVideoModal() {
+        const modal = document.getElementById('modal-create-video');
+        if (modal) {
+            modal.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+        }
+    }
+
+    function closeCreateVideoModal() {
+        const modal = document.getElementById('modal-create-video');
+        if (modal) {
+            modal.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+            resetCreateVideoForm();
+        }
+    }
+
+    function resetCreateVideoForm() {
+        const form = document.getElementById('owner-video-form');
+        if (form) form.reset();
+        clearOwnerTikTokPreview();
+        clearOwnerVideoFile();
+        clearOwnerThumbnail();
+        const btn = document.getElementById('btn-submit-owner-video');
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = `<span class="material-symbols-outlined text-base">send</span><span>Gửi video phê duyệt</span>`;
+        }
+    }
+
+    function clearOwnerTikTokPreview() {
+        const input = document.getElementById('owner_video_input');
+        const previewBox = document.getElementById('owner-tiktok-preview-box');
+        if (input) input.value = '';
+        if (previewBox) {
+            previewBox.classList.add('hidden');
+            const thumb = document.getElementById('owner-preview-thumb');
+            if (thumb) thumb.src = '';
+            const title = document.getElementById('owner-preview-title');
+            if (title) title.textContent = '';
+            const author = document.getElementById('owner-preview-author');
+            if (author) author.textContent = '';
+            const views = document.getElementById('owner-preview-views');
+            if (views) views.textContent = '';
+        }
+    }
+
+    function handleOwnerVideoFileChange(input) {
+        const fileBox = document.getElementById('owner-file-selected-box');
+        const fileNameSpan = document.getElementById('owner-file-selected-name');
+        const titleInput = document.getElementById('owner_video_title');
+
+        if (input.files && input.files.length > 0) {
+            const file = input.files[0];
+            if (file.size > 200 * 1024 * 1024) {
+                alert(`File video "${file.name}" quá lớn (${(file.size / (1024 * 1024)).toFixed(1)}MB). Vui lòng chọn file dung lượng nhỏ hơn 200MB.`);
+                input.value = '';
+                if (fileBox) fileBox.classList.add('hidden');
+                return;
+            }
+
+            // Tự động xóa TikTok preview để tránh nhầm lẫn giữa 2 nguồn
+            clearOwnerTikTokPreview();
+
+            if (fileBox && fileNameSpan) {
+                fileNameSpan.textContent = `${file.name} (${(file.size / (1024 * 1024)).toFixed(1)}MB)`;
+                fileBox.classList.remove('hidden');
+            }
+
+            // Tự động điền tiêu đề từ tên file nếu tiêu đề đang trống
+            if (titleInput && !titleInput.value.trim()) {
+                const nameWithoutExt = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
+                titleInput.value = nameWithoutExt;
+            }
+        } else {
+            if (fileBox) fileBox.classList.add('hidden');
+        }
+    }
+
+    function clearOwnerVideoFile() {
+        const fileInput = document.getElementById('owner_video_file');
+        const fileBox = document.getElementById('owner-file-selected-box');
+        if (fileInput) fileInput.value = '';
+        if (fileBox) fileBox.classList.add('hidden');
+    }
+
+    function handleOwnerThumbnailChange(input) {
+        const preview = document.getElementById('owner-thumb-preview');
+        const previewBox = document.getElementById('owner-thumb-preview-box');
+        if (input.files && input.files.length > 0) {
+            const file = input.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                if (preview) preview.src = e.target.result;
+                if (previewBox) previewBox.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        } else {
+            clearOwnerThumbnail();
+        }
+    }
+
+    function clearOwnerThumbnail() {
+        const fileInput = document.getElementById('owner_thumbnail_file');
+        const previewBox = document.getElementById('owner-thumb-preview-box');
+        const preview = document.getElementById('owner-thumb-preview');
+        if (fileInput) fileInput.value = '';
+        if (previewBox) previewBox.classList.add('hidden');
+        if (preview) preview.src = '';
+    }
+
+    // Lắng nghe khi xóa sạch ô nhập TikTok thì tự ẩn box preview
+    document.addEventListener('DOMContentLoaded', function() {
+        const tiktokInput = document.getElementById('owner_video_input');
+        if (tiktokInput) {
+            tiktokInput.addEventListener('input', function() {
+                if (!this.value.trim()) {
+                    const previewBox = document.getElementById('owner-tiktok-preview-box');
+                    if (previewBox) previewBox.classList.add('hidden');
+                }
+            });
+        }
+    });
+
+    async function fetchOwnerTikTokInfo() {
+        const input = document.getElementById('owner_video_input');
+        const btn = document.getElementById('btn-fetch-tiktok-info');
+        const previewBox = document.getElementById('owner-tiktok-preview-box');
+        const titleInput = document.getElementById('owner_video_title');
+
+        if (!input || !input.value.trim()) {
+            alert('Vui lòng nhập đường dẫn video TikTok trước.');
+            return;
+        }
+
+        // Tự động clear file video nếu trước đó đã chọn file
+        clearOwnerVideoFile();
+
+        btn.disabled = true;
+        const oldBtnText = btn.innerHTML;
+        btn.innerHTML = `<span class="animate-spin material-symbols-outlined text-base">sync</span> Đang tải...`;
+
+        try {
+            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            const res = await fetch("{{ route('chu-quan.quan.videos.fetch-info', $quan->slug) }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': token,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ url: input.value.trim() })
+            });
+
+            const data = await res.json();
+            if (data.success && data.data) {
+                const info = data.data;
+                if (info.title && titleInput && !titleInput.value) {
+                    titleInput.value = info.title;
+                }
+                if (previewBox) {
+                    previewBox.classList.remove('hidden');
+                    document.getElementById('owner-preview-thumb').src = info.cover_url || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400';
+                    document.getElementById('owner-preview-title').textContent = info.title || 'Video Review TikTok';
+                    document.getElementById('owner-preview-author').textContent = info.author_name || '@tiktok_creator';
+                    document.getElementById('owner-preview-views').textContent = `${Number(info.views || 0).toLocaleString('vi-VN')} lượt xem • ${Number(info.likes || 0).toLocaleString('vi-VN')} thích`;
+                }
+            } else {
+                alert(data.message || 'Không thể lấy thông tin video. Bạn vẫn có thể gửi link này để Admin kiểm duyệt.');
+            }
+        } catch (err) {
+            alert('Lỗi kết nối khi lấy thông tin video TikTok.');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = oldBtnText;
+        }
+    }
+
+    document.getElementById('owner-video-form')?.addEventListener('submit', function(e) {
+        const fileInput = document.getElementById('owner_video_file');
+        if (fileInput && fileInput.files && fileInput.files.length > 0) {
+            const file = fileInput.files[0];
+            if (file.size > 200 * 1024 * 1024) {
+                e.preventDefault();
+                alert(`File video "${file.name}" quá lớn (${(file.size / (1024 * 1024)).toFixed(1)}MB). Vui lòng chọn file dung lượng nhỏ hơn 200MB hoặc dán link TikTok.`);
+                return;
+            }
+        }
+        const btn = document.getElementById('btn-submit-owner-video');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = `<span class="animate-spin material-symbols-outlined text-base">sync</span> Đang xử lý tải video...`;
+        }
+    });
+
+    async function deleteOwnerVideo(id, title) {
+        if (!confirm(`Bạn có chắc chắn muốn xóa video "${title || 'này'}" khỏi quán không?`)) return;
+
+        try {
+            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            const res = await fetch(`/chu-quan/quan/{{ $quan->slug }}/videos/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': token,
+                    'Accept': 'application/json'
+                }
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                document.getElementById(`owner-video-card-${id}`)?.remove();
+                alert('Đã xóa video thành công.');
+            } else {
+                alert(data.message || 'Không thể xóa video.');
+            }
+        } catch (e) {
+            alert('Lỗi kết nối khi xóa video.');
+        }
+    }
+
+    function openPreviewVideoModal(videoUrl, videoId, title) {
+        const modal = document.getElementById('modal-owner-preview-player');
+        const container = document.getElementById('owner-player-container');
+        if (!modal || !container) return;
+
+        modal.classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
+        container.innerHTML = '';
+
+        if (videoUrl && (videoUrl.endsWith('.mp4') || videoUrl.includes('/storage/videos/'))) {
+            const video = document.createElement('video');
+            video.src = videoUrl;
+            video.controls = true;
+            video.autoplay = true;
+            video.playsInline = true;
+            video.className = 'w-full h-full object-cover';
+            container.appendChild(video);
+        } else {
+            const iframe = document.createElement('iframe');
+            iframe.src = `https://www.tiktok.com/embed/v2/${videoId}`;
+            iframe.style.cssText = 'width:100%;height:100%;border:none;background:#000;';
+            container.appendChild(iframe);
+        }
+    }
+
+    function closePreviewVideoModal() {
+        const modal = document.getElementById('modal-owner-preview-player');
+        const container = document.getElementById('owner-player-container');
+        if (container) container.innerHTML = '';
+        if (modal) {
+            modal.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+        }
+    }
 </script>
+
+{{-- Modal Đăng Video Review Mới Cho Chủ Quán --}}
+<div id="modal-create-video" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs hidden transition-opacity" onclick="if(event.target === this) closeCreateVideoModal()">
+    <div class="bg-white rounded-3xl max-w-lg w-full max-h-[92vh] flex flex-col shadow-2xl border border-gray-100 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        {{-- Modal Header --}}
+        <div class="p-5 border-b border-gray-100 bg-gradient-to-r from-orange-50 to-rose-50/50 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-orange-500 text-white flex items-center justify-center shadow-xs">
+                    <span class="material-symbols-outlined text-lg">smart_display</span>
+                </div>
+                <div>
+                    <h3 class="font-bold text-gray-900 text-sm sm:text-base leading-tight">Đăng Video Review TikTok Mới</h3>
+                    <p class="text-[11px] text-gray-500 mt-0.5">Quán: {{ $quan->ten_quan }}</p>
+                </div>
+            </div>
+            <button type="button" onclick="closeCreateVideoModal()" class="w-8 h-8 rounded-full bg-white text-gray-400 hover:text-gray-700 hover:bg-gray-100 flex items-center justify-center transition-colors cursor-pointer shadow-2xs">
+                <span class="material-symbols-outlined text-lg">close</span>
+            </button>
+        </div>
+
+        {{-- Form --}}
+        <form method="POST" action="{{ route('chu-quan.quan.videos.store', $quan->slug) }}" enctype="multipart/form-data" id="owner-video-form" class="p-5 overflow-y-auto space-y-4 text-xs">
+            @csrf
+
+            {{-- Thông báo kiểm duyệt --}}
+            <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-amber-800 text-[11px] leading-relaxed flex items-start gap-2">
+                <span class="material-symbols-outlined text-amber-600 text-base shrink-0 mt-0.5">info</span>
+                <span>Video sau khi gửi sẽ ở trạng thái <strong>🟡 Chờ duyệt</strong>. Admin sẽ phê duyệt trước khi hiển thị cho khách xem.</span>
+            </div>
+
+            {{-- Nhập link TikTok --}}
+            <div>
+                <label for="owner_video_input" class="block font-bold text-gray-700 mb-1.5">
+                    Đường dẫn video TikTok (Khuyên dùng)
+                </label>
+                <div class="flex gap-2">
+                    <input type="text" id="owner_video_input" name="video_input"
+                           placeholder="https://www.tiktok.com/@username/video/123456789..."
+                           class="flex-1 px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-900 outline-none focus:border-orange-500 focus:bg-white transition">
+                    <button type="button" id="btn-fetch-tiktok-info" onclick="fetchOwnerTikTokInfo()"
+                            class="px-3.5 py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl transition flex items-center gap-1 shrink-0 cursor-pointer shadow-xs">
+                        <span class="material-symbols-outlined text-base">sync</span>
+                        <span>Kiểm tra</span>
+                    </button>
+                </div>
+                <p class="text-[10px] text-gray-400 mt-1">Dán link video TikTok review về quán bạn (hỗ trợ cả link app và trình duyệt).</p>
+            </div>
+
+            {{-- Khung preview khi bóc tách được info (Có nút Xóa/Hủy) --}}
+            <div id="owner-tiktok-preview-box" class="hidden p-3 bg-gray-50 rounded-2xl border border-gray-200 flex items-center justify-between gap-3">
+                <div class="flex items-center gap-3 min-w-0 flex-1">
+                    <img id="owner-preview-thumb" src="" class="w-14 h-18 object-cover rounded-xl bg-gray-200 shrink-0 shadow-xs">
+                    <div class="min-w-0 flex-1">
+                        <p id="owner-preview-title" class="font-bold text-xs text-gray-900 line-clamp-2"></p>
+                        <p id="owner-preview-author" class="text-[11px] text-orange-600 font-semibold mt-0.5"></p>
+                        <p id="owner-preview-views" class="text-[10px] text-gray-400 mt-0.5"></p>
+                    </div>
+                </div>
+                <button type="button" onclick="clearOwnerTikTokPreview()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold text-red-600 hover:text-red-700 hover:bg-red-50 border border-red-200 flex items-center gap-1 shrink-0 transition cursor-pointer" title="Hủy bỏ video TikTok này để chọn nguồn khác">
+                    <span class="material-symbols-outlined text-base">delete</span>
+                    <span>Xóa</span>
+                </button>
+            </div>
+
+            {{-- Tiêu đề video --}}
+            <div>
+                <label for="owner_video_title" class="block font-bold text-gray-700 mb-1.5">
+                    Tiêu đề hiển thị (Tùy chọn)
+                </label>
+                <input type="text" id="owner_video_title" name="tieu_de" maxlength="250"
+                       placeholder="Để trống hệ thống sẽ tự lấy tiêu đề từ video TikTok"
+                       class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-900 outline-none focus:border-orange-500 focus:bg-white transition">
+            </div>
+
+            {{-- Hoặc tải file MP4 --}}
+            <div class="pt-3 border-t border-gray-100">
+                <div class="flex items-center justify-between mb-1.5">
+                    <label for="owner_video_file" class="block font-bold text-gray-700">
+                        Hoặc tải file video từ máy tính
+                    </label>
+                    <span class="text-[10px] text-gray-400">MP4, MOV, WebM (tối đa 200MB)</span>
+                </div>
+                <input type="file" id="owner_video_file" name="video_file" accept="video/mp4,video/quicktime,video/webm"
+                       onchange="handleOwnerVideoFileChange(this)"
+                       class="w-full text-xs text-gray-500 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100 cursor-pointer">
+
+                {{-- Thông báo file đã chọn --}}
+                <div id="owner-file-selected-box" class="hidden mt-2 p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between gap-2 text-emerald-800">
+                    <div class="flex items-center gap-2 min-w-0 truncate">
+                        <span class="material-symbols-outlined text-base text-emerald-600 shrink-0">check_circle</span>
+                        <span id="owner-file-selected-name" class="font-bold text-xs truncate"></span>
+                    </div>
+                    <button type="button" onclick="clearOwnerVideoFile()" class="text-xs text-red-600 hover:text-red-800 font-bold px-2 py-1 rounded-lg hover:bg-red-50 transition cursor-pointer shrink-0">
+                        Hủy file
+                    </button>
+                </div>
+            </div>
+
+            {{-- Ảnh bìa tùy chọn (Thumbnail) --}}
+            <div class="pt-2 border-t border-gray-100">
+                <label for="owner_thumbnail_file" class="block font-bold text-gray-700 mb-1">
+                    Ảnh bìa / Thumbnail đại diện (Tùy chọn)
+                </label>
+                <input type="file" id="owner_thumbnail_file" name="thumbnail_file" accept="image/jpeg,image/png,image/webp"
+                       onchange="handleOwnerThumbnailChange(this)"
+                       class="w-full text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200 cursor-pointer">
+                <p class="text-[10px] text-gray-400 mt-0.5">Tải ảnh bìa tùy chỉnh dạng JPG, PNG nếu bạn đăng video từ máy tính.</p>
+
+                <div id="owner-thumb-preview-box" class="hidden mt-2 flex items-center gap-2.5 p-2 bg-gray-50 border border-gray-200 rounded-xl">
+                    <img id="owner-thumb-preview" src="" class="w-12 h-16 object-cover rounded-lg bg-gray-200">
+                    <div class="flex-1 min-w-0">
+                        <p class="text-xs font-semibold text-gray-700">Xem trước ảnh bìa tùy chọn</p>
+                    </div>
+                    <button type="button" onclick="clearOwnerThumbnail()" class="text-xs text-red-600 hover:text-red-800 font-bold px-2 py-1 hover:bg-red-50 rounded-lg transition cursor-pointer">
+                        Hủy ảnh
+                    </button>
+                </div>
+            </div>
+
+            {{-- Nút hành động --}}
+            <div class="pt-4 border-t border-gray-100 flex items-center justify-end gap-2.5">
+                <button type="button" onclick="closeCreateVideoModal()" class="px-4 py-2.5 rounded-xl border border-gray-200 text-gray-600 font-bold hover:bg-gray-50 transition cursor-pointer">
+                    Hủy bỏ
+                </button>
+                <button type="submit" id="btn-submit-owner-video" class="px-5 py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl shadow-sm transition flex items-center gap-1.5 cursor-pointer">
+                    <span class="material-symbols-outlined text-base">send</span>
+                    <span>Gửi video phê duyệt</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- Modal Xem Thử Video Review Cho Chủ Quán --}}
+<div id="modal-owner-preview-player" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md hidden transition-opacity" onclick="if(event.target === this) closePreviewVideoModal()">
+    <button type="button" onclick="closePreviewVideoModal()" class="fixed top-4 right-4 text-white hover:text-gray-300 w-11 h-11 rounded-full bg-white/20 flex items-center justify-center transition cursor-pointer z-50">
+        <span class="material-symbols-outlined text-2xl font-black">close</span>
+    </button>
+    <div class="rounded-3xl overflow-hidden shadow-2xl bg-black border border-white/10" style="width: min(440px, 92vw); height: min(780px, 86vh); position: relative;">
+        <div id="owner-player-container" class="w-full h-full flex items-center justify-center bg-black"></div>
+    </div>
+</div>
 @endpush
