@@ -147,183 +147,21 @@ class QuanLyVideoController extends Controller
     }
 
     /**
-     * Thêm mới video TikTok review
+     * Thêm mới video TikTok review (Chặn admin tự thêm - chỉ duyệt video do quán gửi)
      */
     public function store(Request $request)
     {
         $this->authorizeAccess();
-        set_time_limit(180);
 
-        $validated = $request->validate([
-            'tieu_de' => 'nullable|string|max:1000',
-            'video_input' => 'nullable|string|max:1000',
-            'video_file' => 'nullable|file|mimes:mp4,mov,webm|max:102400', // max 100MB
-            'quan_id' => 'nullable|uuid|exists:quan,id',
-            'nguoi_dang' => 'nullable|string|max:100',
-            'thumbnail_url' => 'nullable|string|max:1000',
-            'thumbnail_file' => 'nullable|image|max:10240',
-            'avatar_nguoi_dang' => 'nullable|string|max:1000',
-            'luot_xem' => 'nullable|integer|min:0',
-            'luot_thich' => 'nullable|integer|min:0',
-            'trang_thai' => 'nullable|in:da_duyet,cho_duyet,an',
-            'tai_video_sach' => 'nullable|boolean',
-        ], [
-            'video_file.mimes' => 'File video phải có định dạng .mp4, .mov hoặc .webm.',
-            'video_file.max' => 'Dung lượng video tối đa là 100MB.',
-            'quan_id.exists' => 'Quán ăn được chọn không hợp lệ.',
-        ]);
-
-        $videoId = null;
-        $videoUrl = null;
-        $thumbnailUrl = $validated['thumbnail_url'] ?? null;
-        $tieuDe = trim($validated['tieu_de'] ?? '');
-        $nguoiDang = trim($validated['nguoi_dang'] ?? '');
-        $luotXem = $validated['luot_xem'] ?? 0;
-        $luotThich = $validated['luot_thich'] ?? 0;
-        $avatarNguoiDang = $validated['avatar_nguoi_dang'] ?? null;
-        $isCleanDownloaded = false;
-
-        // 1. Trường hợp tải file video trực tiếp từ máy tính
-        if ($request->hasFile('video_file')) {
-            $file = $request->file('video_file');
-            $uniqueId = 'local_' . time() . '_' . substr(bin2hex(random_bytes(4)), 0, 8);
-            $filename = "{$uniqueId}." . $file->getClientOriginalExtension();
-            $file->storeAs('videos/shorts', $filename, 'public');
-
-            $videoId = $uniqueId;
-            $videoUrl = "/storage/videos/shorts/{$filename}";
-            $isCleanDownloaded = true;
-
-            if (empty($tieuDe)) {
-                $tieuDe = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-            }
-            if (empty($nguoiDang)) {
-                $nguoiDang = '@' . (Auth::user()->ten ?? 'admin');
-            }
-        }
-        // 2. Trường hợp dán link TikTok hoặc ID
-        elseif (! empty($validated['video_input'])) {
-            $input = trim($validated['video_input']);
-            $videoId = VideoShort::extractTikTokVideoId($input);
-
-            if (! $videoId) {
-                return back()->withInput()->with('error', 'Không thể bóc tách TikTok Video ID từ link bạn nhập. Vui lòng dán đường dẫn video TikTok hợp lệ (VD: https://www.tiktok.com/@user/video/1234567890123456789).');
-            }
-
-            $shouldDownloadClean = $request->boolean('tai_video_sach', true);
-            $tiktokData = VideoShort::fetchTikTokData($input);
-
-            if ($tiktokData) {
-                if (empty($tieuDe)) {
-                    $tieuDe = $tiktokData['title'] ?? ('Review Quán Mới #' . $videoId);
-                }
-                if (empty($nguoiDang)) {
-                    $nguoiDang = $tiktokData['author_name'] ?? '@tiktok_creator';
-                }
-                if (empty($avatarNguoiDang) && ! empty($tiktokData['author_avatar'])) {
-                    $localAvatar = VideoShort::downloadAvatarImage($tiktokData['author_avatar'], $videoId);
-                    $avatarNguoiDang = $localAvatar ?: strtok($tiktokData['author_avatar'], '?');
-                }
-                if (! empty($tiktokData['views'])) {
-                    $luotXem = (int) $tiktokData['views'];
-                }
-                if (! empty($tiktokData['likes'])) {
-                    $luotThich = (int) $tiktokData['likes'];
-                }
-
-                // Tải thumbnail về local nếu có
-                if (empty($thumbnailUrl) && ! empty($tiktokData['cover_url'])) {
-                    $localThumb = VideoShort::downloadCoverImage($tiktokData['cover_url'], $videoId);
-                    $thumbnailUrl = $localThumb ?: strtok($tiktokData['cover_url'], '?');
-                }
-
-                // Tải video sạch MP4 nếu được bật
-                if ($shouldDownloadClean && ! empty($tiktokData['play_url'])) {
-                    $downloadedPath = VideoShort::downloadPlayVideo($tiktokData['play_url'], $videoId);
-                    if ($downloadedPath) {
-                        $videoUrl = $downloadedPath;
-                        $isCleanDownloaded = true;
-                    }
-                }
-            }
-
-            // Nếu không tải được MP4 sạch, lưu link gốc
-            if (empty($videoUrl)) {
-                $videoUrl = str_starts_with($input, 'http')
-                    ? $input
-                    : "https://www.tiktok.com/@" . ltrim($nguoiDang ?: 'tiktok', '@') . "/video/{$videoId}";
-            }
-        } else {
-            return back()->withInput()->with('error', 'Vui lòng dán link TikTok hoặc chọn file video từ máy tính.');
-        }
-
-        // Xử lý upload thumbnail thủ công nếu có
-        if ($request->hasFile('thumbnail_file')) {
-            $tFile = $request->file('thumbnail_file');
-            $tName = "thumb_{$videoId}." . $tFile->getClientOriginalExtension();
-            $tFile->storeAs('videos/thumbnails', $tName, 'public');
-            $thumbnailUrl = "/storage/videos/thumbnails/{$tName}";
-        }
-
-        // Nếu chưa có thumbnail_url mà trong storage đã có thumbnail của video_id này, tận dụng luôn
-        if (empty($thumbnailUrl) && ! empty($videoId)) {
-            $candidates = [
-                storage_path("app/public/videos/thumbnails/{$videoId}.jpg"),
-                storage_path("app/public/videos/thumbnails/{$videoId}.webp"),
-                storage_path("app/public/videos/thumbnails/{$videoId}.png"),
-                storage_path("app/public/videos/thumbnails/thumb_{$videoId}.jpg"),
-                storage_path("app/public/videos/thumbnails/thumb_{$videoId}.png"),
-            ];
-            foreach ($candidates as $cand) {
-                if (file_exists($cand) && filesize($cand) > 1000) {
-                    $thumbnailUrl = "/storage/videos/thumbnails/" . basename($cand);
-                    break;
-                }
-            }
-        }
-
-        if (empty($tieuDe)) {
-            $tieuDe = 'Review Video #' . $videoId;
-        }
-
-        if ($nguoiDang && ! str_starts_with($nguoiDang, '@')) {
-            $nguoiDang = '@' . $nguoiDang;
-        }
-
-        // Cắt chuỗi an toàn nếu vượt quá giới hạn
-        $tieuDe = mb_substr($tieuDe, 0, 1000);
-        $videoUrl = $videoUrl ? substr($videoUrl, 0, 2000) : null;
-        $thumbnailUrl = $thumbnailUrl ? substr($thumbnailUrl, 0, 2000) : null;
-        $avatarNguoiDang = $avatarNguoiDang ? substr($avatarNguoiDang, 0, 2000) : null;
-        $nguoiDang = mb_substr($nguoiDang ?: '@reviewer', 0, 100);
-
-        $video = VideoShort::create([
-            'quan_id' => $validated['quan_id'] ?? null,
-            'tieu_de' => $tieuDe,
-            'video_id' => $videoId,
-            'video_url' => $videoUrl,
-            'thumbnail_url' => $thumbnailUrl,
-            'nguoi_dang' => $nguoiDang,
-            'avatar_nguoi_dang' => $avatarNguoiDang,
-            'luot_xem' => $luotXem,
-            'luot_thich' => $luotThich,
-            'trang_thai' => $validated['trang_thai'] ?? 'da_duyet',
-        ]);
-
-        $successMsg = $isCleanDownloaded
-            ? 'Đã thêm và tải video MP4 sạch (không logo/nút TikTok) thành công!'
-            : 'Đã thêm video thành công!';
-
-        if ($request->wantsJson()) {
+        if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
-                'success' => true,
-                'message' => $successMsg,
-                'is_clean' => $isCleanDownloaded,
-                'data' => $video,
-            ]);
+                'success' => false,
+                'message' => 'Admin chỉ có quyền phê duyệt video do quán gửi lên, không được tự ý thêm video.',
+            ], 403);
         }
 
-        return redirect()->route('admin.video-shorts.index')->with('success', $successMsg);
+        return redirect()->route('admin.video-shorts.index')
+            ->with('error', 'Admin chỉ có quyền phê duyệt video do quán gửi lên.');
     }
 
     /**
@@ -579,6 +417,58 @@ class QuanLyVideoController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Đã xóa video thành công.',
+        ]);
+    }
+
+    /**
+     * Phê duyệt video review do quán gửi lên
+     */
+    public function approve(Request $request, string $id)
+    {
+        $this->authorizeAccess();
+
+        $video = VideoShort::with('quan')->findOrFail($id);
+        $video->trang_thai = 'da_duyet';
+        $video->save();
+
+        // Ghi nhận Audit Log
+        try {
+            \App\Models\AdminAuditLog::create([
+                'actor_id' => auth()->id(),
+                'action' => 'video.approved',
+                'target_type' => 'App\Models\VideoShort',
+                'target_id' => (string) $video->id,
+                'metadata' => [
+                    'tieu_de' => $video->tieu_de,
+                    'ten_quan' => $video->quan?->ten_quan ?? '',
+                    'video_id' => $video->video_id,
+                ],
+                'ip_address' => $request->ip(),
+            ]);
+        } catch (\Throwable $e) {}
+
+        return response()->json([
+            'success' => true,
+            'trang_thai' => 'da_duyet',
+            'message' => 'Đã phê duyệt video review thành công! Video đã hiển thị công khai.',
+        ]);
+    }
+
+    /**
+     * Từ chối / Tạm ẩn video review
+     */
+    public function reject(Request $request, string $id)
+    {
+        $this->authorizeAccess();
+
+        $video = VideoShort::with('quan')->findOrFail($id);
+        $video->trang_thai = 'an';
+        $video->save();
+
+        return response()->json([
+            'success' => true,
+            'trang_thai' => 'an',
+            'message' => 'Đã từ chối / tạm ẩn video review.',
         ]);
     }
 }

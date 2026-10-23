@@ -7,6 +7,7 @@ use App\Models\AdminAuditLog;
 use App\Models\Blog;
 use App\Models\Quan;
 use App\Models\User;
+use App\Models\VideoShort;
 use App\Notifications\SystemBroadcastNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Notification;
@@ -306,6 +307,8 @@ class ThongBaoAdminController extends Controller
         $pendingQuanCount = Quan::where('trang_thai', 'chua_duyet')->count();
         $pendingBlogCount = Blog::where('status', 'pending')->count();
         $unverifiedUserCount = User::where('da_xac_thuc', false)->count();
+        $pendingVideoCount = VideoShort::where('trang_thai', 'cho_duyet')->count();
+        $totalVideoCount = VideoShort::count();
         $broadcastCount = AdminAuditLog::where('action', 'system.broadcast')->count();
 
         // 1. Quán chờ duyệt
@@ -402,13 +405,34 @@ class ThongBaoAdminController extends Controller
                 ];
             });
 
-        // 4. Lấy tất cả Audit Logs gần đây (tất cả các thao tác thêm, sửa, xóa, duyệt, từ chối, phân quyền, v.v.)
+        // 4. Video review TikTok chờ duyệt
+        $pendingVideos = VideoShort::where('trang_thai', 'cho_duyet')
+            ->with('quan:id,ten_quan,slug')
+            ->select('id', 'quan_id', 'tieu_de', 'video_id', 'video_url', 'thumbnail_url', 'nguoi_dang', 'created_at', 'trang_thai')
+            ->latest()
+            ->take(15)
+            ->get()
+            ->map(function ($v) {
+                return [
+                    'id' => $v->id,
+                    'title' => $v->tieu_de,
+                    'quan_name' => $v->quan?->ten_quan ?? 'Chưa liên kết quán',
+                    'nguoi_dang' => $v->nguoi_dang,
+                    'thumbnail_url' => $v->effective_thumbnail ?? $v->thumbnail_url,
+                    'created_at' => $v->created_at?->toIso8601String(),
+                    'created_at_formatted' => $v->created_at?->format('d/m/Y H:i'),
+                    'time_ago' => $v->created_at?->diffForHumans(),
+                    'url' => route('admin.video-shorts.index'),
+                ];
+            });
+
+        // 5. Lấy tất cả Audit Logs gần đây (tất cả các thao tác thêm, sửa, xóa, duyệt, từ chối, phân quyền, v.v.)
         $recentAuditLogs = AdminAuditLog::with('actor:id,ho_ten')
             ->latest()
             ->take(40)
             ->get();
 
-        // 5. Tổng hợp toàn bộ danh sách thông báo đa chiều
+        // 6. Tổng hợp toàn bộ danh sách thông báo đa chiều
         $allNotifications = [];
 
         // Thêm Quán chờ duyệt
@@ -464,6 +488,25 @@ class ThongBaoAdminController extends Controller
                 'url' => $u['url'],
                 'icon' => 'person_add',
                 'badge_class' => 'bg-indigo-100 text-indigo-700',
+            ];
+        }
+
+        // Thêm Video review chờ duyệt
+        foreach ($pendingVideos as $v) {
+            $allNotifications[] = [
+                'id' => 'video_' . $v['id'],
+                'item_id' => $v['id'],
+                'type' => 'video',
+                'category_label' => 'Video review chờ duyệt',
+                'title' => $v['title'] ?: 'Video review TikTok mới',
+                'description' => 'Quán: ' . $v['quan_name'] . ' • Người đăng: ' . ($v['nguoi_dang'] ?: 'Chủ quán'),
+                'time_ago' => $v['time_ago'],
+                'created_at' => $v['created_at'],
+                'created_at_formatted' => $v['created_at_formatted'],
+                'url' => route('admin.video-shorts.index'),
+                'icon' => 'smart_display',
+                'image_url' => $v['thumbnail_url'],
+                'badge_class' => 'bg-amber-100 text-amber-800',
             ];
         }
 
@@ -527,6 +570,40 @@ class ThongBaoAdminController extends Controller
                         'url' => route('admin.duyet-xac-thuc.index'),
                         'icon' => 'storefront',
                         'badge_class' => 'bg-amber-100 text-amber-800',
+                    ];
+                    break;
+
+                case 'video.submitted':
+                    $item = [
+                        'id' => 'audit_' . $log->id,
+                        'item_id' => $log->id,
+                        'type' => 'video',
+                        'category_label' => 'Yêu cầu duyệt video',
+                        'title' => 'Quán ' . ($meta['ten_quan'] ?? '') . ' gửi video review',
+                        'description' => ($meta['tieu_de'] ?? 'Video review TikTok mới') . ' • Gửi bởi: ' . $actorName,
+                        'time_ago' => $timeAgo,
+                        'created_at' => $createdAtStr,
+                        'created_at_formatted' => $createdAtFmt,
+                        'url' => route('admin.video-shorts.index'),
+                        'icon' => 'smart_display',
+                        'badge_class' => 'bg-amber-100 text-amber-800',
+                    ];
+                    break;
+
+                case 'video.approved':
+                    $item = [
+                        'id' => 'audit_' . $log->id,
+                        'item_id' => $log->id,
+                        'type' => 'video',
+                        'category_label' => 'Duyệt video review',
+                        'title' => 'Đã phê duyệt video review',
+                        'description' => ($meta['tieu_de'] ?? '') . ' • Thực hiện bởi: ' . $actorName,
+                        'time_ago' => $timeAgo,
+                        'created_at' => $createdAtStr,
+                        'created_at_formatted' => $createdAtFmt,
+                        'url' => route('admin.video-shorts.index'),
+                        'icon' => 'check_circle',
+                        'badge_class' => 'bg-emerald-100 text-emerald-700',
                     ];
                     break;
 
@@ -1009,7 +1086,7 @@ class ThongBaoAdminController extends Controller
 
         $activeNotifications = array_values(array_filter($allNotifications, fn($n) => empty($n['read'])));
         $unreadAdminCount = count($activeNotifications);
-        $totalPending = $pendingQuanCount + $pendingBlogCount + $unverifiedUserCount;
+        $totalPending = $pendingQuanCount + $pendingBlogCount + $unverifiedUserCount + $pendingVideoCount;
 
         return [
             'success' => true,
@@ -1018,18 +1095,22 @@ class ThongBaoAdminController extends Controller
             'total_users' => $totalUserCount,
             'active_users' => $activeUserCount,
             'total_blogs' => $totalBlogCount,
+            'total_videos' => $totalVideoCount,
             'total_pending' => $totalPending,
             'pending_quan' => $pendingQuanCount,
             'pending_blog' => $pendingBlogCount,
+            'pending_video' => $pendingVideoCount,
             'unverified_user' => $unverifiedUserCount,
             'broadcast_count' => $broadcastCount,
             'pending_quans' => $pendingQuans,
             'pending_blogs' => $pendingBlogs,
+            'pending_videos' => $pendingVideos,
             'unverified_users' => $unverifiedUsers,
             'notifications' => $activeNotifications,
             'all_notifications' => $allNotifications,
             'latest_quan' => $pendingQuans->first() ?? null,
             'latest_blog' => $pendingBlogs->first() ?? null,
+            'latest_video' => $pendingVideos->first() ?? null,
             'latest_user' => $unverifiedUsers->first() ?? null,
             'latest_broadcast' => $recentAuditLogs->firstWhere('action', 'system.broadcast'),
         ];

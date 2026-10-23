@@ -216,6 +216,22 @@ class VideoController extends Controller
             'trang_thai' => 'cho_duyet', // Chờ admin phê duyệt trước khi khách thấy
         ]);
 
+        // Ghi nhận yêu cầu gửi duyệt video tới Admin
+        try {
+            \App\Models\AdminAuditLog::create([
+                'actor_id' => auth()->id(),
+                'action' => 'video.submitted',
+                'target_type' => 'App\Models\VideoShort',
+                'target_id' => (string) $video->id,
+                'metadata' => [
+                    'tieu_de' => $video->tieu_de,
+                    'ten_quan' => $quan->ten_quan,
+                    'video_id' => $video->video_id,
+                ],
+                'ip_address' => $request->ip(),
+            ]);
+        } catch (\Throwable $e) {}
+
         $successMsg = 'Đã gửi video review thành công! Video đang ở trạng thái 🟡 "Chờ duyệt" và sẽ hiển thị công khai cho khách hàng ngay sau khi Ban quản trị (Admin) phê duyệt.';
 
         if ($request->expectsJson() || $request->ajax()) {

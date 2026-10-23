@@ -2722,6 +2722,19 @@
                     });
                 }
 
+                // Cập nhật huy hiệu "Cần duyệt" cho mục Video TikTok / Shorts
+                if (data.pending_video !== undefined) {
+                    document.querySelectorAll('.sidebar-video-pending-badge').forEach(b => {
+                        const badgeText = b.querySelector('.badge-text') || b;
+                        if (data.pending_video > 0) {
+                            badgeText.textContent = data.pending_video;
+                            b.classList.remove('hidden');
+                        } else {
+                            b.classList.add('hidden');
+                        }
+                    });
+                }
+
                 // Cập nhật thống kê bài viết trên màn hình quản lý bài viết nếu đang hiển thị
                 const statBlogPending = document.getElementById('stat-blog-pending');
                 if (statBlogPending && data.pending_blog !== undefined) statBlogPending.textContent = data.pending_blog;
@@ -2768,6 +2781,20 @@
                         );
                     }
                     window.__lastSeenQuanKey = data.latest_quan.id;
+                }
+
+                // Toast & chime notification nếu có video review mới chờ duyệt
+                if (data.latest_video) {
+                    if (isNotifInit && window.__lastSeenVideoId && window.__lastSeenVideoId !== data.latest_video.id) {
+                        showRealtimeToast(
+                            'Video Review Chờ Phê Duyệt',
+                            `Quán "${data.latest_video.quan_name}" vừa gửi video review mới`,
+                            data.latest_video.url,
+                            'smart_display',
+                            'bg-amber-500'
+                        );
+                    }
+                    window.__lastSeenVideoId = data.latest_video.id;
                 }
 
                 // Toast & chime notification tổng quát

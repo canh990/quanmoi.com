@@ -124,6 +124,8 @@ Route::middleware(['auth', 'KiemTraQuyenHan:admin'])->group(function () {
         Route::put('/{id}', [QuanLyVideoController::class, 'update'])->name('update');
         Route::delete('/{id}', [QuanLyVideoController::class, 'destroy'])->name('destroy');
         Route::put('/{id}/toggle', [QuanLyVideoController::class, 'toggleStatus'])->name('toggle');
+        Route::put('/{id}/approve', [QuanLyVideoController::class, 'approve'])->name('approve');
+        Route::put('/{id}/reject', [QuanLyVideoController::class, 'reject'])->name('reject');
     });
 
     // Quản lý SEO
