@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AiFoodSuggestionController;
 use App\Http\Controllers\Api\BanDoController;
 use App\Http\Controllers\Api\DiaChiController;
 use App\Http\Controllers\Auth\DangKyController;
@@ -107,6 +108,11 @@ Route::prefix('api')->group(function () {
         ->name('api.ai-chatbot.chat');
     Route::get('/ai-chatbot/suggestions', [\App\Http\Controllers\Api\AiChatbotController::class, 'suggestions'])
         ->name('api.ai-chatbot.suggestions');
+
+    // AI Gợi ý món ăn thông minh theo ngữ cảnh thời gian (không cần đăng nhập)
+    Route::get('/ai-food-suggestions', [\App\Http\Controllers\Api\AiFoodSuggestionController::class, 'suggest'])
+        ->middleware('throttle:60,1')
+        ->name('api.ai-food-suggestions');
 });
 
 Route::middleware('auth')->group(function () {

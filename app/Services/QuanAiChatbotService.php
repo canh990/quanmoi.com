@@ -35,7 +35,7 @@ class QuanAiChatbotService
         if ($state['is_greeting']) {
             return [
                 'success' => true,
-                'reply' => "Xin chào! 👋 Mình là **Kira AI** - Trợ lý ẩm thực thông minh của Quán Mới.\n\nMình có thể giúp bạn:\n- 📍 Tìm quán ngon theo quận/huyện (Quận 1, Quận 3, Bình Thạnh, Cầu Giấy, Ba Đình, Hải Châu...)\n- 💰 Lọc quán theo ngân sách (dưới 50k, 100k, 200k, buffet cao cấp...)\n- 🍜 Gợi ý theo loại món & dịp (lẩu nướng tụ tập, cafe làm việc, hẹn hò lãng mạn, ăn đêm 24/7...)\n- 🎁 Săn mã giảm giá & ưu đãi voucher đang chạy tại quán\n\nBạn muốn tìm quán ở khu vực nào hay đang thèm món gì hôm nay?",
+                'reply' => "Hế lô bồ iu! 👋 Mình là **Kira AI** - Trợ lý ẩm thực chuẩn gu Quán Mới đây.\n\nĐang phân vân hôm nay ăn gì, ở đâu? Cứ bảo mình một câu nha:\n- 📍 Tìm quán ngon chuẩn từng quận/huyện\n- 💰 Săn quán êm ví, sinh viên đến buffet sang chảnh\n- 🍜 Gợi ý lẩu nướng tụ tập, cafe chill làm việc, ăn đêm 24/7\n- 🎁 Bắt trọn voucher & ưu đãi hấp dẫn đang chạy\n\nBồ đang ở khu vực nào hay muốn thẩm món gì hôm nay, kể Kira nghe liền nè! ✨",
                 'venues' => [],
                 'criteria' => $state,
                 'parsed_intent' => $state,
@@ -47,7 +47,7 @@ class QuanAiChatbotService
         if ($state['is_thanks']) {
             return [
                 'success' => true,
-                'reply' => "Rất vui được đồng hành cùng bạn! Chúc bạn có một bữa ăn thật ngon miệng và trải nghiệm ẩm thực trọn vẹn tại Quán Mới. Nếu cần tìm thêm quán ngon hay đổi vị lúc nào, cứ nhắn cho mình nhé! ❤️",
+                'reply' => "Dạ luôn nè bồ ơi! ❤️ Chúc bồ có một bữa ăn ngon bá cháy và no căng bụng nha. Khi nào muốn đổi vị hay tìm thêm quán mới lạ, cứ quay lại hú Kira một tiếng là có mặt liền nhé! ✨",
                 'venues' => [],
                 'criteria' => $state,
                 'parsed_intent' => $state,
@@ -1731,28 +1731,29 @@ class QuanAiChatbotService
         $compressedVenues = $this->compressVenuesForPrompt($venues);
         $venuesJson = !empty($compressedVenues) ? json_encode($compressedVenues, JSON_UNESCAPED_UNICODE) : '[]';
 
-        return "Bạn là Kira AI - Trợ lý AI chuyên gia ẩm thực & tư vấn địa điểm ăn uống của nền tảng Quán Mới (quanmoi.com).
-Phong cách: Tự nhiên, ngắn gọn, đúng trọng tâm, lịch sự và am hiểu sâu sắc.
+        return "Bạn là Kira AI - Trợ lý ẩm thực vui vẻ, chuẩn gu và sành ăn của Quán Mới (quanmoi.com).
+Phong cách: Tự nhiên, vui vẻ chuẩn Gen Z (dễ thương, năng động, dùng từ gần gũi như 'bồ ơi', 'chill', 'gu', 'mlem mlem', 'đỉnh nóc', 'chuẩn bài', 'hạt dẻ'...), nhưng vẫn lịch sự, tinh tế và tôn trọng người dùng.
 
 QUY TẮC BẮT BUỘC:
-1. TRẢ LỜI NGẮN GỌN & ĐÚNG TRỌNG TÂM:
-- Trả lời thẳng vào câu hỏi của người dùng, không lan man, không chào hỏi dài dòng, không tự ý chuyển chủ đề.
-- Nếu người dùng hỏi so sánh (quán nào rẻ nhất, mở muộn nhất, ngon nhất...): Trả lời ngay tên quán thắng cuộc và số liệu cụ thể ở câu đầu tiên.
-- Nếu hỏi tiện ích (chỗ để xe, phòng riêng, giờ mở cửa, món ăn...): Trả lời súc tích trong 2-3 câu.
-- Tuyệt đối không lặp lại câu chào hoặc câu trả lời ở các lượt trò chuyện trước.
+1. TRÌNH BÀY TỰ NHIÊN, LIỀN MẠCH, KHÔNG TỰ Ý XUỐNG DÒNG HAY NGẮT CÂU VỤN VẶT:
+- Trả lời thẳng vào trọng tâm câu hỏi. Tuyệt đối KHÔNG tự ý xuống dòng vô lý ở giữa câu, KHÔNG chia một câu thành nhiều đoạn rời rạc.
+- Mỗi đoạn văn là một khối nội dung liền mạch. Chỉ xuống dòng giữa các đoạn chính hoặc giữa các mục danh sách (1., 2., 3.).
+- Khi giới thiệu quán ăn: Mỗi quán trình bày trọn vẹn trong 1 dòng duy nhất theo định dạng: [Tên Quán](url) (Loại hình): Nêu điểm nổi bật/món ngon và lý do đáng thử. Tuyệt đối KHÔNG ngắt dòng hay thụt đầu dòng thêm đoạn con.
+- Không lặp lại câu chào hay câu mở đầu rập khuôn qua các lượt trò chuyện. Giữ hội thoại liên tục, tự nhiên như bạn bè đang trò chuyện.
 
-2. CHUYÊN SÂU ẨM THỰC DỰ ÁN QUÁN MỚI (GROUNDED DỮ LIỆU THẬT):
-- DỮ LIỆU QUÁN THỰC TẾ TRONG HỆ THỐNG:
+2. GHI NHỚ NGỮ CẢNH & SỞ THÍCH NGƯỜI DÙNG:
+- Luôn ghi nhớ sở thích ẩm thực, khu vực, khẩu vị và ngân sách người dùng đã chia sẻ qua các lượt trò chuyện trước.
+- Khi người dùng hỏi tiếp ('quán khác', 'rẻ hơn', 'đổi sang quận khác'), duy trì đầy đủ ngữ cảnh đã có và chỉ cập nhật tiêu chí mới.
+
+3. DỮ LIỆU QUÁN THỰC TẾ TRONG HỆ THỐNG QUÁN MỚI (GROUNDED):
 {$venuesJson}
-- Tuyệt đối KHÔNG BỊA ĐẶT thông tin quán ăn, địa chỉ, giá cả, giờ mở cửa hoặc số điện thoại không có trong dữ liệu trên.
-- Luôn kèm link dạng Markdown: [Tên Quán](url) khi nhắc đến quán.
-- Khi người dùng hỏi tìm quán mà thiếu thông tin (quận/huyện, món ăn, ngân sách), hãy chủ động hỏi lại lịch sự và ngắn gọn để tư vấn chính xác.
-- Khi người dùng yêu cầu 'làm mới', 'quán mới', 'quán khác', 'đổi quán': Hãy hào hứng giới thiệu danh sách quán MỚI TINH vừa được làm mới từ hệ thống Quán Mới, tập trung vào những nét độc đáo và khác biệt so với các quán trước đó, tuyệt đối không lặp lại quán cũ đã xuất hiện.
-- TRÌNH BÀY GỌN GÀNG, KHÔNG LẶP LẠI NỘI DUNG: Không liệt kê dài dòng các dòng metadata (địa chỉ, giá cả, giờ mở cửa) dưới dạng gạch đầu dòng trong đoạn văn bản vì giao diện đã hiển thị các thông tin này dưới dạng thẻ card trực quan bên dưới tin nhắn. Hãy viết 1-2 câu nhận xét tinh tế nêu bật gu ẩm thực, món đặc trưng và lý do tại sao quán phù hợp.
+- Tuyệt đối KHÔNG BỊA ĐẶT quán ăn, địa chỉ, số điện thoại hay giá cả không có trong danh sách trên.
+- Luôn kèm link dạng Markdown: [Tên Quán](url) khi nhắc đến quán (URL dạng /quan/{slug}).
+- Không liệt kê dài dòng các dòng metadata (địa chỉ, giá cả, giờ mở cửa) dưới dạng gạch đầu dòng vì giao diện đã hiển thị thẻ card trực quan bên dưới tin nhắn.
+- Quản lý lịch sử gợi ý linh hoạt: Khi người dùng bấm 'làm mới' hay 'quán khác', giới thiệu các quán mới lạ, không bị giới hạn máy móc, không lặp lại quán cũ đã xuất hiện.
 
-3. TRẢ LỜI VẤN ĐỀ ĐỜI SỐNG HẰNG NGÀY Ở MỨC CƠ BẢN:
-- Với các câu hỏi đời sống (tâm sự, stress, sức khỏe, nấu ăn tại nhà, dinh dưỡng...): Trả lời ấm áp, súc tích, cơ bản trong 3-4 gạch đầu dòng thiết thực, không viết bài luận dài dòng.
-- Có thể gợi ý nhẹ nhàng việc đổi gió ăn uống hoặc tìm quán trên Quán Mới nếu phù hợp ngữ cảnh, nhưng không gượng ép chèn quán nếu không liên quan.";
+4. TRẢ LỜI CÂU HỎI ĐỜI SỐNG HẰNG NGÀY:
+- Với câu hỏi nấu ăn, tâm sự, dinh dưỡng, mẹo sống: Trả lời ấm áp, súc tích, thực tế trong 3-4 ý chính, không viết lan man dài dòng.";
     }
 
     /**
@@ -1768,20 +1769,20 @@ QUY TẮC BẮT BUỘC:
 
             // Nếu câu hỏi không nhắc đến quán ăn, món ăn hay khu vực cụ thể (câu hỏi đời sống / trò chuyện thông thường)
             if (empty($areaText) && empty($dishOrCat)) {
-                return "Chào bạn! Mình là **Kira AI** - Trợ lý thông minh của Quán Mới. Mình luôn sẵn sàng chia sẻ, giải đáp mọi thắc mắc của bạn từ câu chuyện đời sống, nấu ăn tại nhà, dinh dưỡng cho tới việc tìm kiếm những địa điểm ẩm thực tuyệt vời nhất.\n\n" .
-                    "Bạn muốn cùng mình thảo luận hoặc tìm hiểu thêm về chủ đề gì hôm nay? Đừng ngần ngại nhắn cho mình nhé! ✨";
+                return "Hế lô bồ iu! 👋 Mình là **Kira AI** - Trợ lý thông minh của Quán Mới đây. Mình luôn sẵn sàng chia sẻ, giải đáp mọi thắc mắc từ câu chuyện đời sống, nấu ăn tại nhà, dinh dưỡng cho tới việc săn lùng những toạ độ ẩm thực đỉnh nóc nhất.\n\n" .
+                    "Bồ muốn cùng Kira tâm sự hoặc tìm hiểu về chủ đề gì hôm nay? Cứ tự nhiên nhắn cho mình nha! ✨";
             }
 
             $dishText = $dishOrCat ?: 'ẩm thực';
-            $msg = "Rất tiếc, hiện tại hệ thống Quán Mới chưa tìm thấy quán **{$dishText}** nào" . ($areaText ? " tại khu vực **{$areaText}**" : "") . " khớp hoàn toàn với toàn bộ tiêu chí này.\n\n";
-            $msg .= "💡 **Lời khuyên từ Kira:**\n";
-            $msg .= "- Bạn có thể thử **nới lỏng khoảng giá** hoặc tìm kiếm ở các quận lân cận (ví dụ: ";
+            $msg = "Tiếc ghê, hiện tại hệ thống Quán Mới chưa tìm thấy quán **{$dishText}** nào" . ($areaText ? " tại khu vực **{$areaText}**" : "") . " khớp trọn vẹn với toàn bộ tiêu chí này.\n\n";
+            $msg .= "💡 **Mẹo nhỏ từ Kira:**\n";
+            $msg .= "- Bồ có thể thử **nới lỏng khoảng giá** hoặc tìm kiếm ở các quận lân cận (ví dụ: ";
             if (str_contains((string)$state['city'], 'Hà Nội')) {
                 $msg .= "**Cầu Giấy**, **Đống Đa**, **Hoàn Kiếm**).\n";
             } else {
                 $msg .= "**Quận 1**, **Quận 3**, **Bình Thạnh**).\n";
             }
-            $msg .= "- Bạn cũng có thể nhắn cho mình món tương tự (ví dụ: thay vì món hiếm, thử lẩu nướng, cơm tấm, bún bò hay cafe chill) để mình quét ngay các địa điểm chất lượng nhất nhé!";
+            $msg .= "- Bồ cũng có thể bảo Kira món tương tự (thay vì món hiếm, thử lẩu nướng, bún bò, cơm tấm hay cafe chill) để mình quét ngay các toạ độ chất lượng nhất nhé!";
             return $msg;
         }
 
@@ -1797,56 +1798,52 @@ QUY TẮC BẮT BUỘC:
         // ── Câu mở đầu đa dạng, tự nhiên, không lặp lại khuôn mẫu máy móc ─────────
         $intro = "";
         if (!empty($state['is_refreshing']) || !empty($state['wants_newest'])) {
-            $intro = "🔄 **Làm mới dữ liệu gợi ý thành công!** Dưới đây là {$count} quán mới tinh, chưa từng xuất hiện trong phiên trò chuyện tại **{$area}** dành cho bạn:\n\n";
+            $intro = "🔄 **Làm mới dữ liệu gợi ý thành công!** Bồ check ngay {$count} toạ độ mới toanh tại **{$area}** chưa từng xuất hiện này nha:\n\n";
         } elseif (!empty($state['is_asking_more'])) {
-            $intro = "Hiểu ý bạn ngay! Dưới đây là {$count} địa điểm **mới lạ và hấp dẫn khác** tại **{$area}** dành cho bạn:\n\n";
+            $intro = "Bắt sóng ngay! Kira tìm thêm {$count} địa chỉ **mới lạ và cực chất** tại **{$area}** cho bồ đổi gió nè:\n\n";
         } elseif (!empty($state['is_asking_cheaper'])) {
-            $intro = "Đã rõ gu tiết kiệm của bạn! Mình đã lọc ra các quán có mức giá **bình dân, 'hạt dẻ' hơn** tại **{$area}**:\n\n";
+            $intro = "Đã rõ gu 'hạt dẻ' êm ví của bồ! Đây là {$count} quán ngon giá **siêu bình dân, chuẩn gu tiết kiệm** tại **{$area}**:\n\n";
         } elseif ($userTurns === 0) {
-            // Lượt 1: Giới thiệu thân thiện, chuẩn gu
+            // Lượt 1: Giới thiệu thân thiện, chuẩn gu Gen Z
             if (!empty($state['dish'])) {
-                $intro = "Nếu bạn đang thèm **{$state['dish']}** chuẩn vị tại **{$area}**, dưới đây là {$count} quán lý tưởng nhất dành cho bạn:\n\n";
+                $intro = "Đang thèm **{$state['dish']}** chuẩn vị tại **{$area}** thì lưu ngay {$count} toạ độ đỉnh nóc này nha bồ ơi:\n\n";
             } elseif (!empty($state['occasion'])) {
-                $intro = "Cho một buổi **{$state['occasion']}** đáng nhớ tại **{$area}**, mình xin gợi ý {$count} địa điểm rất phù hợp:\n\n";
+                $intro = "Để có một buổi **{$state['occasion']}** bao vui bao chill tại **{$area}**, bồ ghé ngay {$count} điểm hẹn lý tưởng này nhé:\n\n";
             } elseif (!empty($state['category'])) {
-                $intro = "Khám phá ngay {$count} quán **{$state['category']}** nổi bật tại **{$area}** được nhiều thực khách yêu thích:\n\n";
+                $intro = "Gu **{$state['category']}** tại **{$area}** thì {$count} quán này chuẩn bài luôn, ăn là dính nha bồ:\n\n";
             } else {
-                $intro = "Dưới đây là {$count} gợi ý ẩm thực nổi bật tại **{$area}** dành cho bạn:\n\n";
+                $intro = "Kira gợi ý nhanh {$count} toạ độ ẩm thực cực hot tại **{$area}** cho bồ thẩm liền nè:\n\n";
             }
         } else {
             // Từ lượt thứ 2 trở đi: Ngắn gọn, trực tiếp, KHÔNG lặp lại mở đầu rườm rà
             $followUpIntros = [
-                "Gợi ý tiếp theo dành cho bạn tại **{$area}**:\n\n",
-                "Dưới đây là các quán chất lượng phù hợp với yêu cầu mới của bạn tại **{$area}**:\n\n",
-                "Mình đã tìm thêm {$count} địa chỉ ăn uống hợp gu bạn tại **{$area}**:\n\n",
+                "Lên tiếp {$count} toạ độ xịn sò tại **{$area}** theo yêu cầu mới của bồ nè:\n\n",
+                "Đổi vị liền với danh sách quán chuẩn gu tại **{$area}** này nha bồ:\n\n",
+                "Kira chọn thêm {$count} quán cực ổn áp tại **{$area}** cho bồ đây:\n\n",
             ];
             $intro = $followUpIntros[$userTurns % count($followUpIntros)];
         }
 
-        // ── Trình bày súc tích từng quán kèm lý do đề xuất, không lặp lại metadata của thẻ bên dưới ─────────────
+        // ── Trình bày súc tích từng quán: 1 dòng trọn vẹn, tự nhiên, không ngắt dòng vô lý ─────────────
         $body = "";
         foreach ($venues as $i => $v) {
             $idx = $i + 1;
-            $dishText = !empty($v['highlight_dishes']) ? "nổi bật với món **" . implode(', ', array_slice($v['highlight_dishes'], 0, 2)) . "**" : "thực đơn phong phú";
-            $reasons = [];
-            if (!empty($v['is_verified'])) $reasons[] = "Đã xác thực";
-            if (!empty($v['rating']) && (float)$v['rating'] >= 4.5) $reasons[] = "Đánh giá cao";
-            if (!empty($v['promotion'])) $reasons[] = "Có ưu đãi";
-            if (!empty($v['is_open_now'])) $reasons[] = "Đang mở cửa";
-            $tag = !empty($reasons) ? " *(" . implode(' • ', $reasons) . ")*" : "";
+            $dishText = !empty($v['highlight_dishes'])
+                ? "nổi bật với món **" . implode(', ', array_slice($v['highlight_dishes'], 0, 2)) . "**"
+                : "menu phong phú, nhiều món ngon";
 
-            $body .= "{$idx}. [**{$v['name']}**]({$v['url']}) - {$v['category']}{$tag}\n";
-            $body .= "   Điểm đến {$dishText}, không gian thích hợp cho bạn trải nghiệm.\n\n";
+            $body .= "{$idx}. [**{$v['name']}**]({$v['url']}) ({$v['category']}): {$dishText}, không gian chill rất đáng trải nghiệm.\n";
         }
+        $body .= "\n";
 
-        // ── Lời khuyên chủ động & Định hướng tiếp theo không lặp lại ───────────────
+        // ── Lời khuyên chủ động & Định hướng tiếp theo vui vẻ, không lặp lại ───────────────
         $footer = "";
         if ($userTurns === 0) {
-            $footer = "👉 Bạn muốn mình so sánh giá xem quán nào rẻ nhất, hay tìm quán mở muộn hơn?";
+            $footer = "👉 Bồ muốn mình so giá xem quán nào rẻ nhất, hay tìm quán mở muộn hơn thì cứ ới nha!";
         } elseif ($userTurns === 1) {
-            $footer = "👉 Bạn muốn mình kiểm tra bãi đỗ xe hoặc món ăn cụ thể tại quán không?";
+            $footer = "👉 Muốn check chỗ đậu xe hay hỏi chi tiết món nào cứ bảo Kira nhé!";
         } else {
-            $footer = "👉 Bạn muốn tìm hiểu thêm thông tin gì về các quán này, hoặc đổi sang khu vực khác không?";
+            $footer = "👉 Bồ muốn đổi sang khu vực khác hay tìm thêm toạ độ nào nữa không?";
         }
 
         return $intro . $body . $footer;
@@ -1859,9 +1856,14 @@ QUY TẮC BẮT BUỘC:
     {
         $suggestions = [];
 
-        // Luôn có tùy chọn làm mới liên tục và gợi ý quán mới
-        $suggestions[] = '🔄 Làm mới quán khác';
-        $suggestions[] = '✨ Gợi ý quán mới nhất';
+        // Gợi ý hành động thực tế theo danh sách quán vừa gợi ý
+        if (!empty($venues)) {
+            $firstVenue = $venues[0]['ten_quan'] ?? '';
+            if ($firstVenue !== '') {
+                $suggestions[] = "Menu & giá món tại {$firstVenue}";
+                $suggestions[] = "Chỉ đường tới {$firstVenue}";
+            }
+        }
 
         // Gợi ý đổi quận lân cận
         if (!empty($state['district'])) {
@@ -1917,17 +1919,64 @@ QUY TẮC BẮT BUỘC:
     }
 
     /**
-     * Gợi ý mặc định khi mở khung chat
+     * Gợi ý tự động bám sát theo thời gian, bối cảnh và nhu cầu ăn uống của người dùng
      */
-    public function getDefaultSuggestions(): array
+    public function getDefaultSuggestions(array $context = []): array
     {
-        return [
-            '✨ Gợi ý quán mới',
-            '🔄 Làm mới quán khác',
-            'Lẩu nướng ngon tụ tập cuối tuần',
-            'Cafe yên tĩnh làm việc Quận 1',
-            'Món ngon sinh viên dưới 50k',
-            'Quán ăn đêm mở khuya 24/7',
-        ];
+        $hour      = $context['hour'] ?? now()->hour;
+        $dayOfWeek = $context['day_of_week'] ?? now()->dayOfWeek;
+        $isWeekend = in_array($dayOfWeek, [0, 6]);
+        $location  = trim($context['location'] ?? '');
+
+        $suggestions = [];
+
+        // 1. Nhu cầu ăn uống tự động theo thời gian thực trong ngày
+        if ($hour >= 5 && $hour < 10) {
+            $suggestions[] = 'Ăn sáng ngon & nóng hổi gần đây';
+            $suggestions[] = 'Cà phê sáng tỉnh táo làm việc';
+            $suggestions[] = 'Phở bò, bánh mì giòn ngon';
+            $suggestions[] = 'Điểm tâm sáng bình dân dưới 35k';
+        } elseif ($hour >= 10 && $hour < 14) {
+            $suggestions[] = 'Cơm trưa văn phòng ngon, có máy lạnh';
+            $suggestions[] = 'Món trưa nhanh gọn no bụng dưới 50k';
+            $suggestions[] = 'Cơm tấm, bún bò trưa nay';
+            $suggestions[] = 'Quán ăn trưa có giao tận nơi';
+        } elseif ($hour >= 14 && $hour < 17) {
+            $suggestions[] = 'Trà sữa, kem mát lạnh xế chiều';
+            $suggestions[] = 'Quán cafe yên tĩnh làm việc chill';
+            $suggestions[] = 'Đồ ăn vặt xế chiều chuẩn vị';
+            $suggestions[] = 'Bánh ngọt & trà thảo mộc';
+        } elseif ($hour >= 17 && $hour < 21) {
+            if ($isWeekend) {
+                $suggestions[] = 'Lẩu nướng tụ tập bạn bè cuối tuần';
+                $suggestions[] = 'Buffet BBQ nướng thả ga';
+                $suggestions[] = 'Quán ăn gia đình ấm cúng cuối tuần';
+                $suggestions[] = 'Hải sản tươi sống chế biến ngon';
+            } else {
+                $suggestions[] = 'Bữa tối ấm cúng no bụng sau giờ làm';
+                $suggestions[] = 'Lẩu nướng ấm áp tụ tập bạn bè';
+                $suggestions[] = 'Món ngon bình dân dưới 60k';
+                $suggestions[] = 'Cơm niêu, món ăn gia đình đậm đà';
+            }
+        } else {
+            $suggestions[] = 'Quán ăn đêm mở khuya 24/7';
+            $suggestions[] = 'Cháo nóng, ốc đêm êm bụng';
+            $suggestions[] = 'Mì cay, lẩu đêm ấm bụng';
+            $suggestions[] = 'Quán ăn khuya giao nhanh';
+        }
+
+        // 2. Nhu cầu tiết kiệm & khuyến mãi
+        if ($isWeekend) {
+            $suggestions[] = 'Quán nào đang có voucher giảm giá?';
+        } else {
+            $suggestions[] = 'Món ngon sinh viên tiết kiệm dưới 50k';
+        }
+
+        // 3. Nếu người dùng đang chọn địa điểm cụ thể
+        if ($location !== '') {
+            $suggestions[] = "Quán ngon chuẩn vị tại {$location}";
+        }
+
+        return array_values(array_unique($suggestions));
     }
 }

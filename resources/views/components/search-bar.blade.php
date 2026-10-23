@@ -84,115 +84,82 @@
             id="{{ $prefix }}-suggestions-dropdown" 
             class="absolute top-[calc(100%+8px)] left-0 right-0 w-full bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.18)] border border-gray-100 p-4 md:p-5 hidden z-50 text-left transition-all duration-200 overflow-hidden"
         >
-            {{-- Default Suggestions (Hiển thị khi ô tìm kiếm rỗng) --}}
+            {{-- AI Suggestions (Hiển thị khi ô tìm kiếm rỗng - tự động gợi ý theo nhu cầu & ngữ cảnh) --}}
             <div id="{{ $prefix }}-default-panel">
-                <div class="flex items-center justify-between mb-3 px-1">
+                {{-- Header với AI context label --}}
+                <div class="flex items-center justify-between mb-2.5 px-1">
                     <h4 class="font-extrabold text-[15px] text-gray-800 flex items-center gap-2">
-                        <span class="w-1.5 h-4 bg-primary rounded-full inline-block" style="background-color: #a04100;"></span>
-                        Gợi ý cho bạn
+                        <span class="w-1.5 h-4 rounded-full inline-block" style="background-color: #a04100;"></span>
+                        <span id="{{ $prefix }}-ai-label">Gợi ý món ngon cho bạn</span>
                     </h4>
-                    <span class="text-[12px] text-gray-400 font-medium">Món ngon nổi bật</span>
+                    <div class="flex items-center gap-2">
+                        <span id="{{ $prefix }}-ai-context" class="text-[11.5px] font-semibold px-2.5 py-0.5 rounded-full flex items-center gap-1.5 transition-all duration-300" style="color: #a04100; background-color: rgba(160,65,0,0.08);">
+                            <span class="w-1.5 h-1.5 rounded-full bg-[#a04100] animate-pulse"></span>
+                            <span>AI đang phân tích...</span>
+                        </span>
+                    </div>
                 </div>
 
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                    {{-- 1. Phở bò --}}
-                    <div data-dish="Phở bò" class="suggestion-item flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-[#a04100]/5 border border-gray-100 hover:border-[#a04100]/30 transition-all cursor-pointer group bg-white shadow-2xs">
-                        <div class="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 group-hover:scale-105 transition-transform bg-gray-100">
-                            <img src="https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=120&q=80" alt="Phở bò" class="w-full h-full object-cover">
-                        </div>
-                        <div class="overflow-hidden min-w-0">
-                            <div class="font-bold text-[13px] md:text-[13.5px] text-gray-800 group-hover:text-primary truncate" style="--tw-text-opacity: 1;">Phở bò</div>
-                            <div class="text-[11px] text-gray-400 truncate">Nước dùng truyền thống</div>
-                        </div>
+                {{-- Nhu cầu của bạn (AI tự động chọn, có thể đổi theo ý muốn) --}}
+                <div class="mb-3 px-0.5">
+                    <div class="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar text-[11.5px] select-none" id="{{ $prefix }}-need-pills">
+                        <button type="button" data-need="auto" class="ai-need-pill active-need px-2.5 py-1 rounded-full font-bold transition-all border shrink-0 flex items-center gap-1 cursor-pointer">
+                            <span>✨</span>
+                            <span>AI Tự động</span>
+                        </button>
+                        <button type="button" data-need="bua_chinh" class="ai-need-pill px-2.5 py-1 rounded-full font-medium transition-all border shrink-0 flex items-center gap-1 cursor-pointer">
+                            <span>🍱</span>
+                            <span>Bữa no chính</span>
+                        </button>
+                        <button type="button" data-need="nhanh_gon" class="ai-need-pill px-2.5 py-1 rounded-full font-medium transition-all border shrink-0 flex items-center gap-1 cursor-pointer">
+                            <span>⚡</span>
+                            <span>Nhanh gọn</span>
+                        </button>
+                        <button type="button" data-need="thanh_dam" class="ai-need-pill px-2.5 py-1 rounded-full font-medium transition-all border shrink-0 flex items-center gap-1 cursor-pointer">
+                            <span>🥗</span>
+                            <span>Thanh đạm</span>
+                        </button>
+                        <button type="button" data-need="an_vat" class="ai-need-pill px-2.5 py-1 rounded-full font-medium transition-all border shrink-0 flex items-center gap-1 cursor-pointer">
+                            <span>🧋</span>
+                            <span>Ăn vặt & Nước</span>
+                        </button>
+                        <button type="button" data-need="lau_nuong" class="ai-need-pill px-2.5 py-1 rounded-full font-medium transition-all border shrink-0 flex items-center gap-1 cursor-pointer">
+                            <span>🍲</span>
+                            <span>Lẩu & Nướng</span>
+                        </button>
+                        <button type="button" data-need="tiet_kiem" class="ai-need-pill px-2.5 py-1 rounded-full font-medium transition-all border shrink-0 flex items-center gap-1 cursor-pointer">
+                            <span>💰</span>
+                            <span>Tiết kiệm</span>
+                        </button>
                     </div>
+                </div>
 
-                    {{-- 2. Cơm tấm --}}
-                    <div data-dish="Cơm tấm" class="suggestion-item flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-[#a04100]/5 border border-gray-100 hover:border-[#a04100]/30 transition-all cursor-pointer group bg-white shadow-2xs">
-                        <div class="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 group-hover:scale-105 transition-transform bg-gray-100">
-                            <img src="https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?auto=format&fit=crop&w=120&q=80" alt="Cơm tấm" class="w-full h-full object-cover">
-                        </div>
-                        <div class="overflow-hidden min-w-0">
-                            <div class="font-bold text-[13px] md:text-[13.5px] text-gray-800 group-hover:text-primary truncate">Cơm tấm</div>
-                            <div class="text-[11px] text-gray-400 truncate">Bữa chính đậm đà</div>
+                {{-- Loading skeleton --}}
+                <div id="{{ $prefix }}-ai-loading" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                    @for ($i = 0; $i < 6; $i++)
+                    <div class="flex items-center gap-2.5 p-2.5 rounded-xl border border-gray-100 bg-white shadow-2xs animate-pulse">
+                        <div class="w-10 h-10 rounded-xl bg-gray-200 flex-shrink-0"></div>
+                        <div class="flex-1 space-y-1.5">
+                            <div class="h-3 bg-gray-200 rounded-full w-3/4"></div>
+                            <div class="h-2 bg-gray-100 rounded-full w-1/2"></div>
                         </div>
                     </div>
+                    @endfor
+                </div>
 
-                    {{-- 3. Trà sữa --}}
-                    <div data-dish="Trà sữa" class="suggestion-item flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-[#a04100]/5 border border-gray-100 hover:border-[#a04100]/30 transition-all cursor-pointer group bg-white shadow-2xs">
-                        <div class="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 group-hover:scale-105 transition-transform bg-gray-100">
-                            <img src="https://images.unsplash.com/photo-1556679343-c7306c1976bc?auto=format&fit=crop&w=120&q=80" alt="Trà sữa" class="w-full h-full object-cover">
-                        </div>
-                        <div class="overflow-hidden min-w-0">
-                            <div class="font-bold text-[13px] md:text-[13.5px] text-gray-800 group-hover:text-primary truncate">Trà sữa</div>
-                            <div class="text-[11px] text-gray-400 truncate">Giải nhiệt cực đã</div>
-                        </div>
-                    </div>
+                {{-- AI Suggestions Grid (JS rendered) --}}
+                <div id="{{ $prefix }}-ai-grid" class="hidden grid grid-cols-2 sm:grid-cols-3 gap-2.5"></div>
 
-                    {{-- 4. Bún đậu mắm tôm --}}
-                    <div data-dish="Bún đậu mắm tôm" class="suggestion-item flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-[#a04100]/5 border border-gray-100 hover:border-[#a04100]/30 transition-all cursor-pointer group bg-white shadow-2xs">
-                        <div class="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 group-hover:scale-105 transition-transform bg-gray-100">
-                            <img src="https://images.unsplash.com/photo-1564834724105-918b73d1b9e0?auto=format&fit=crop&w=80&q=80" alt="Bún đậu mắm tôm" class="w-full h-full object-cover">
-                        </div>
-                        <div class="overflow-hidden min-w-0">
-                            <div class="font-bold text-[13px] md:text-[13.5px] text-gray-800 group-hover:text-primary truncate">Bún đậu mắm tôm</div>
-                            <div class="text-[11px] text-gray-400 truncate">Đậm đà giòn rụm</div>
-                        </div>
-                    </div>
-
-                    {{-- 5. Cà phê --}}
-                    <div data-dish="Cà phê" class="suggestion-item flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-[#a04100]/5 border border-gray-100 hover:border-[#a04100]/30 transition-all cursor-pointer group bg-white shadow-2xs">
-                        <div class="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 group-hover:scale-105 transition-transform bg-gray-100">
-                            <img src="https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=80&q=80" alt="Cà phê" class="w-full h-full object-cover">
-                        </div>
-                        <div class="overflow-hidden min-w-0">
-                            <div class="font-bold text-[13px] md:text-[13.5px] text-gray-800 group-hover:text-primary truncate">Cà phê</div>
-                            <div class="text-[11px] text-gray-400 truncate">Hẹn hò, trò chuyện</div>
-                        </div>
-                    </div>
-
-                    {{-- 6. Lẩu & Nướng --}}
-                    <div data-dish="Lẩu nướng" class="suggestion-item flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-[#a04100]/5 border border-gray-100 hover:border-[#a04100]/30 transition-all cursor-pointer group bg-white shadow-2xs">
-                        <div class="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 group-hover:scale-105 transition-transform bg-gray-100">
-                            <img src="https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=120&q=80" alt="Lẩu & Nướng" class="w-full h-full object-cover">
-                        </div>
-                        <div class="overflow-hidden min-w-0">
-                            <div class="font-bold text-[13px] md:text-[13.5px] text-gray-800 group-hover:text-primary truncate">Lẩu & Nướng</div>
-                            <div class="text-[11px] text-gray-400 truncate">Tiệc tùng tụ tập</div>
-                        </div>
-                    </div>
-
-                    {{-- 7. Bánh mì --}}
-                    <div data-dish="Bánh mì" class="suggestion-item flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-[#a04100]/5 border border-gray-100 hover:border-[#a04100]/30 transition-all cursor-pointer group bg-white shadow-2xs">
-                        <div class="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 group-hover:scale-105 transition-transform bg-gray-100">
-                            <img src="https://images.unsplash.com/photo-1509722747041-616f39b57569?auto=format&fit=crop&w=80&q=80" alt="Bánh mì" class="w-full h-full object-cover">
-                        </div>
-                        <div class="overflow-hidden min-w-0">
-                            <div class="font-bold text-[13px] md:text-[13.5px] text-gray-800 group-hover:text-primary truncate">Bánh mì</div>
-                            <div class="text-[11px] text-gray-400 truncate">Nhanh gọn nóng hổi</div>
-                        </div>
-                    </div>
-
-                    {{-- 8. Đồ ăn vặt --}}
-                    <div data-dish="Đồ ăn vặt" class="suggestion-item flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-[#a04100]/5 border border-gray-100 hover:border-[#a04100]/30 transition-all cursor-pointer group bg-white shadow-2xs">
-                        <div class="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 group-hover:scale-105 transition-transform bg-gray-100">
-                            <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=120&q=80" alt="Đồ ăn vặt" class="w-full h-full object-cover">
-                        </div>
-                        <div class="overflow-hidden min-w-0">
-                            <div class="font-bold text-[13px] md:text-[13.5px] text-gray-800 group-hover:text-primary truncate">Đồ ăn vặt</div>
-                            <div class="text-[11px] text-gray-400 truncate">Ngon rẻ mê ly</div>
-                        </div>
-                    </div>
-
-                    {{-- 9. Hải sản --}}
-                    <div data-dish="Hải sản" class="suggestion-item flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-[#a04100]/5 border border-gray-100 hover:border-[#a04100]/30 transition-all cursor-pointer group bg-white shadow-2xs">
-                        <div class="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 group-hover:scale-105 transition-transform bg-gray-100">
-                            <img src="https://images.unsplash.com/photo-1615141982883-c7ad0e69fd62?auto=format&fit=crop&w=80&q=80" alt="Hải sản" class="w-full h-full object-cover">
-                        </div>
-                        <div class="overflow-hidden min-w-0">
-                            <div class="font-bold text-[13px] md:text-[13.5px] text-gray-800 group-hover:text-primary truncate">Hải sản</div>
-                            <div class="text-[11px] text-gray-400 truncate">Tươi sống thả ga</div>
-                        </div>
-                    </div>
+                {{-- Footer trợ lý AI --}}
+                <div class="mt-3 pt-2.5 border-t border-gray-100 flex items-center justify-between text-[11px] text-gray-400 px-1">
+                    <span class="flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[14px] text-[#a04100]">auto_awesome</span>
+                        <span>Kira AI tự động gợi ý theo nhu cầu & thời gian</span>
+                    </span>
+                    <button type="button" onclick="if (typeof toggleAiChatbot === 'function') { toggleAiChatbot(true); }" class="font-semibold text-[#a04100] hover:underline flex items-center gap-0.5 cursor-pointer">
+                        <span>Hỏi Kira AI</span>
+                        <span class="material-symbols-outlined text-[13px]">arrow_forward</span>
+                    </button>
                 </div>
             </div>
 
@@ -412,11 +379,23 @@
 
         function closeSuggestions() {
             suggestionsDropdown.classList.add('hidden');
+            if (typeof stopAiAutoRotate === 'function') {
+                stopAiAutoRotate();
+            }
         }
 
         function openSuggestions() {
             closeLocation();
             suggestionsDropdown.classList.remove('hidden');
+            // Lazy-load AI suggestions lần đầu tiên hoặc tự động xoay đổi món
+            if (typeof loadAiSuggestions === 'function') {
+                if (!window['_aiLoaded_' + prefix]) {
+                    window['_aiLoaded_' + prefix] = true;
+                    loadAiSuggestions();
+                } else if (typeof onAiDropdownOpened === 'function') {
+                    onAiDropdownOpened();
+                }
+            }
         }
 
         function closeLocation() {
@@ -438,6 +417,7 @@
 
         // Suggestions events
         searchInput.addEventListener('focus', openSuggestions);
+        searchInput.addEventListener('click', openSuggestions);
 
         searchInput.addEventListener('input', function(e) {
             const val = e.target.value.trim();
@@ -487,21 +467,301 @@
         });
 
         function submitSearchForm() {
+            // Lưu từ khóa vào lịch sử tìm kiếm
+            const currentVal = searchInput ? searchInput.value.trim() : '';
+            if (currentVal && typeof saveSearchToHistory === 'function') {
+                saveSearchToHistory(currentVal);
+            }
             cleanEmptyInputs();
             form.submit();
         }
 
-        // Click on 9 dishes in Gợi ý cho bạn
-        wrapper.querySelectorAll('.suggestion-item').forEach(item => {
-            item.addEventListener('click', function() {
-                const dish = this.getAttribute('data-dish');
-                if (dish) {
-                    searchInput.value = dish;
+        // ════════════════════════════════════════════════════════════
+        // AI FOOD SUGGESTIONS - Tự động gợi ý thông minh theo nhu cầu & thời gian
+        // ════════════════════════════════════════════════════════════
+        const aiLabel       = document.getElementById(prefix + '-ai-label');
+        const aiContext     = document.getElementById(prefix + '-ai-context');
+        const aiLoading     = document.getElementById(prefix + '-ai-loading');
+        const aiGrid        = document.getElementById(prefix + '-ai-grid');
+        const aiNeedPills   = document.getElementById(prefix + '-need-pills');
+
+        let currentAiNeed = 'auto';
+        const AI_SUGGESTIONS_KEY = 'qm_ai_suggestions_v3_' + prefix;
+        const AI_SUGGESTIONS_TTL = 3 * 60 * 1000; // 3 phút cache pool
+        const HISTORY_KEY        = 'qm_search_history';
+
+        // Quản lý pool và tự động đổi gợi ý
+        let aiSuggestionsPool   = [];
+        let aiCurrentSliceIndex = 0;
+        let aiAutoRotateTimer   = null;
+        let lastAiContextData   = null;
+        const AI_DISPLAY_COUNT  = 9;
+        const AI_AUTO_ROTATE_INTERVAL = 20000; // Tự động xoay đổi món mỗi 20 giây khi search bar mở
+
+        // Lấy lịch sử tìm kiếm từ localStorage
+        function getSearchHistory() {
+            try {
+                const raw = localStorage.getItem(HISTORY_KEY);
+                return raw ? JSON.parse(raw) : [];
+            } catch { return []; }
+        }
+
+        // Lưu lịch sử tìm kiếm
+        function saveSearchToHistory(term) {
+            if (!term || term.trim().length < 2) return;
+            try {
+                let history = getSearchHistory();
+                history = [term.trim(), ...history.filter(h => h !== term.trim())].slice(0, 15);
+                localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+            } catch { /* ignore */ }
+        }
+
+        // Xử lý sự kiện bấm chọn nhu cầu ẩm thực
+        if (aiNeedPills) {
+            aiNeedPills.querySelectorAll('.ai-need-pill').forEach(pill => {
+                pill.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    const need = this.getAttribute('data-need') || 'auto';
+                    if (need === currentAiNeed) return;
+
+                    currentAiNeed = need;
+
+                    // Cập nhật giao diện pill active
+                    aiNeedPills.querySelectorAll('.ai-need-pill').forEach(p => {
+                        p.classList.remove('active-need', 'bg-[#a04100]', 'text-white', 'border-[#a04100]', 'shadow-xs', 'font-bold');
+                        p.classList.add('bg-gray-50', 'text-gray-700', 'border-gray-200', 'font-medium');
+                    });
+
+                    this.classList.remove('bg-gray-50', 'text-gray-700', 'border-gray-200', 'font-medium');
+                    this.classList.add('active-need', 'bg-[#a04100]', 'text-white', 'border-[#a04100]', 'shadow-xs', 'font-bold');
+
+                    aiCurrentSliceIndex = 0;
+                    loadAiSuggestions(true);
+                });
+            });
+        }
+
+        // Render một item gợi ý món ăn
+        function renderAiSuggestionItem(item) {
+            const el = document.createElement('div');
+            el.className = 'ai-suggestion-item flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-[#a04100]/5 border border-gray-100 hover:border-[#a04100]/30 transition-all cursor-pointer group bg-white shadow-2xs relative';
+            el.setAttribute('data-search', item.search_term || item.dish);
+            el.setAttribute('data-slug', item.quan_slug || '');
+
+            const defaultImg = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=160&q=80';
+            const img = item.image || defaultImg;
+            const dishName = escapeHtml(item.dish || '');
+            const subtitle = escapeHtml(item.subtitle || 'Quán ngon chuẩn vị');
+            const priceText = item.price_formatted ? escapeHtml(item.price_formatted) : '';
+            const reason = escapeHtml(item.reason || 'Món ngon nổi bật');
+            const badge = escapeHtml(item.badge || 'AI');
+
+            el.innerHTML = `
+                <div class="w-11 h-11 rounded-xl overflow-hidden flex-shrink-0 group-hover:scale-105 transition-transform bg-gray-100 relative">
+                    <img src="${escapeHtml(img)}" alt="${dishName}"
+                         class="w-full h-full object-cover"
+                         loading="lazy"
+                         onerror="this.src='${defaultImg}'">
+                </div>
+                <div class="overflow-hidden min-w-0 flex-1 pr-1">
+                    <div class="flex items-center justify-between gap-1">
+                        <div class="font-bold text-[13px] md:text-[13.5px] text-gray-800 group-hover:text-primary truncate" style="--tw-text-opacity:1;">${dishName}</div>
+                        <span class="text-[9.5px] font-bold px-1.5 py-0.5 rounded-md bg-orange-50 text-[#a04100] shrink-0 border border-orange-100/60 leading-none">${badge}</span>
+                    </div>
+                    <div class="flex items-center gap-1.5 text-[11px] text-gray-500 truncate mt-0.5">
+                        ${priceText ? `<span class="font-bold text-[#a04100]">${priceText}</span><span class="text-gray-300">·</span>` : ''}
+                        <span class="truncate">${subtitle}</span>
+                    </div>
+                    <div class="text-[10px] text-gray-400 truncate mt-0.5 flex items-center gap-1">
+                        <span class="truncate">${reason}</span>
+                    </div>
+                </div>
+            `;
+
+            el.addEventListener('click', function () {
+                const searchTerm = this.getAttribute('data-search');
+                if (searchTerm) {
+                    searchInput.value = searchTerm;
+                    saveSearchToHistory(searchTerm);
                     closeSuggestions();
                     submitSearchForm();
                 }
             });
-        });
+
+            return el;
+        }
+
+        // Render các items vào grid
+        function renderAiGridItems(items) {
+            if (!aiGrid) return;
+            aiGrid.innerHTML = '';
+            (items || []).forEach(item => {
+                aiGrid.appendChild(renderAiSuggestionItem(item));
+            });
+        }
+
+        // AI tự động đổi món từ pool
+        function autoRotateAiDishes(withEffect = true) {
+            if (!aiSuggestionsPool || aiSuggestionsPool.length <= 6) return;
+
+            // Xoay vòng index lát cắt
+            aiCurrentSliceIndex = (aiCurrentSliceIndex + 6) % aiSuggestionsPool.length;
+
+            const count = Math.min(AI_DISPLAY_COUNT, aiSuggestionsPool.length);
+            const rotated = [];
+            for (let i = 0; i < count; i++) {
+                const idx = (aiCurrentSliceIndex + i) % aiSuggestionsPool.length;
+                rotated.push(aiSuggestionsPool[idx]);
+            }
+
+            if (withEffect && aiGrid) {
+                aiGrid.style.transition = 'opacity 0.25s ease';
+                aiGrid.style.opacity = '0.35';
+                setTimeout(() => {
+                    renderAiGridItems(rotated);
+                    aiGrid.style.opacity = '1';
+                }, 200);
+
+                // Hiệu ứng thông báo AI tự đổi món
+                if (aiContext && lastAiContextData) {
+                    aiContext.innerHTML = '<span class="shrink-0 animate-pulse text-[12px]">✨</span><span>AI tự đổi món mới</span>';
+                    setTimeout(() => {
+                        if (lastAiContextData && aiContext) {
+                            aiContext.innerHTML = `<span class="shrink-0">${lastAiContextData.icon || '✨'}</span><span>${escapeHtml(lastAiContextData.label || 'Gợi ý cho bạn')}</span>`;
+                        }
+                    }, 1800);
+                }
+            } else {
+                renderAiGridItems(rotated);
+            }
+        }
+
+        // Bắt đầu chu kỳ AI tự động đổi món
+        function startAiAutoRotate() {
+            stopAiAutoRotate();
+            aiAutoRotateTimer = setInterval(() => {
+                autoRotateAiDishes(true);
+            }, AI_AUTO_ROTATE_INTERVAL);
+        }
+
+        // Dừng chu kỳ AI tự đổi món khi đóng dropdown
+        function stopAiAutoRotate() {
+            if (aiAutoRotateTimer) {
+                clearInterval(aiAutoRotateTimer);
+                aiAutoRotateTimer = null;
+            }
+        }
+
+        // Kích hoạt khi người dùng mở lại dropdown tìm kiếm
+        function onAiDropdownOpened() {
+            if (aiSuggestionsPool && aiSuggestionsPool.length > 6) {
+                autoRotateAiDishes(false);
+            }
+            startAiAutoRotate();
+        }
+
+        // Load AI suggestions từ server
+        function loadAiSuggestions(force = false) {
+            const cacheKey = AI_SUGGESTIONS_KEY + '_' + currentAiNeed;
+
+            // Kiểm tra cache localStorage nếu không phải force
+            if (!force) {
+                try {
+                    const cached = localStorage.getItem(cacheKey);
+                    if (cached) {
+                        const parsed = JSON.parse(cached);
+                        const age = Date.now() - (parsed.timestamp || 0);
+                        if (age < AI_SUGGESTIONS_TTL && Array.isArray(parsed.suggestions) && parsed.suggestions.length > 0) {
+                            aiSuggestionsPool   = parsed.suggestions;
+                            lastAiContextData   = parsed.context;
+                            aiCurrentSliceIndex = 0;
+                            renderAiSuggestions(parsed);
+                            startAiAutoRotate();
+                            return;
+                        }
+                    }
+                } catch { /* ignore cache error */ }
+            }
+
+            // Hiện loading skeleton, ẩn grid
+            if (aiLoading) aiLoading.classList.remove('hidden');
+            if (aiGrid) aiGrid.classList.add('hidden');
+            if (aiContext) {
+                aiContext.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-[#a04100] animate-pulse"></span> AI đang phân tích...';
+            }
+
+            // Gọi API lấy pool 18 món
+            const now = new Date();
+            const params = new URLSearchParams({
+                need: currentAiNeed,
+                hour: now.getHours(),
+                day_of_week: now.getDay(),
+                limit: 18,
+            });
+
+            // Thêm lịch sử tìm kiếm
+            const history = getSearchHistory();
+            if (history.length > 0) {
+                params.set('history', JSON.stringify(history.slice(0, 10)));
+            }
+
+            // Thêm location nếu người dùng đã chọn
+            if (hiddenTinhThanh && hiddenTinhThanh.value) {
+                params.set('location', hiddenTinhThanh.value);
+            }
+
+            fetch(`/api/ai-food-suggestions?${params.toString()}`)
+                .then(res => res.json())
+                .then(res => {
+                    if (!res.success) return;
+
+                    aiSuggestionsPool   = Array.isArray(res.suggestions) ? res.suggestions : [];
+                    lastAiContextData   = res.context;
+                    aiCurrentSliceIndex = 0;
+
+                    // Lưu cache pool
+                    try {
+                        localStorage.setItem(cacheKey, JSON.stringify({
+                            timestamp: Date.now(),
+                            suggestions: aiSuggestionsPool,
+                            context: res.context,
+                        }));
+                    } catch { /* ignore */ }
+
+                    renderAiSuggestions({ suggestions: aiSuggestionsPool, context: res.context });
+                    startAiAutoRotate();
+                })
+                .catch(() => {
+                    if (aiLoading) aiLoading.classList.add('hidden');
+                    if (aiGrid) aiGrid.classList.remove('hidden');
+                    if (aiContext) aiContext.textContent = 'Gợi ý nổi bật';
+                });
+        }
+
+        // Render kết quả AI suggestions vào grid
+        function renderAiSuggestions(data) {
+            if (!aiGrid) return;
+
+            // Cập nhật label context
+            if (aiContext && data.context) {
+                lastAiContextData = data.context;
+                aiContext.innerHTML = `<span class="shrink-0">${data.context.icon || '✨'}</span><span>${escapeHtml(data.context.label || 'Gợi ý cho bạn')}</span>`;
+            }
+            if (aiLabel && data.context && data.context.message) {
+                aiLabel.textContent = data.context.message;
+            }
+
+            // Render batch món đầu tiên
+            const suggestions = Array.isArray(data.suggestions) ? data.suggestions : [];
+            renderAiGridItems(suggestions.slice(0, AI_DISPLAY_COUNT));
+
+            // Ẩn loading skeleton, hiện grid
+            if (aiLoading) aiLoading.classList.add('hidden');
+            aiGrid.classList.remove('hidden');
+        }
+
 
         function fetchSuggestions(keyword) {
             livePanel.innerHTML = '<div class="py-4 text-center text-gray-400 text-[13px] flex items-center justify-center gap-2"><span class="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" style="border-color: #a04100; border-top-color: transparent;"></span>Đang tìm gợi ý...</div>';
