@@ -18,7 +18,10 @@
     <style>
         body { font-family: 'Inter', 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, sans-serif; }
         .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
-        .material-symbols-outlined.fill-1 { font-variation-settings: 'FILL' 1; }
+        .material-symbols-outlined.fill-1,
+        .material-symbols-outlined.fill-icon,
+        .material-symbols-outlined.material-symbols-filled,
+        .material-symbols-filled { font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
         
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
@@ -2084,7 +2087,7 @@
                                 tbody.innerHTML = `
                                     <tr>
                                         <td colspan="6" class="px-6 py-12 text-center text-gray-400 font-medium">
-                                            <span class="material-symbols-outlined text-3xl text-gray-300 block mb-2">article_off</span>
+                                            <span class="material-symbols-outlined text-3xl text-gray-300 block mb-2">article</span>
                                             Không còn bài viết nào trong danh sách.
                                         </td>
                                     </tr>

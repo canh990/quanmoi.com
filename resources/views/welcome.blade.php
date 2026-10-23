@@ -158,47 +158,9 @@
                 </div>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 xl:gap-8">
                     @forelse($quanNoiBat as $quan)
-                    <a href="{{ route('quan.detail', $quan->slug) }}" class="block bg-white rounded-2xl shadow-sm overflow-hidden group cursor-pointer hover:shadow-xl transition-all border border-gray-100 flex flex-col h-full">
-                        <div class="relative h-52 w-full overflow-hidden flex-shrink-0">
-                            <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="{{ $quan->anh_bia_url ?: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=600&q=80' }}" alt="{{ $quan->ten_quan }}"/>
-                            <div class="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-xl text-primary font-bold text-xs flex items-center gap-1 shadow-sm">
-                                <span class="material-symbols-outlined text-[15px]" style="font-variation-settings: 'FILL' 1;">star</span> 4.9 (520+)
-                            </div>
-                            <div class="absolute top-3 right-3 bg-primary text-white text-[11px] font-bold px-2.5 py-1 rounded-lg">Top 1 Đề Xuất</div>
-                            <button type="button" data-quan-id="{{ $quan->id }}" onclick="event.preventDefault(); toggleSave(this, '{{ $quan->id }}')" class="absolute bottom-3 right-3 w-9 h-9 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center text-red-500 shadow-sm hover:scale-110 active:scale-90 transition-transform z-10" title="Lưu quán">
-                                <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' {{ in_array($quan->id, $savedQuanIds) ? '1' : '0' }};">favorite</span>
-                            </button>
-                        </div>
-                        <div class="p-4 sm:p-5 flex flex-col flex-1 justify-between gap-2.5">
-                            <div class="space-y-1.5">
-                                <div class="flex items-center justify-between gap-1.5">
-                                    <h3 class="min-w-0 flex-1 font-bold text-[16px] sm:text-[17px] text-on-surface break-words [overflow-wrap:anywhere] group-hover:text-primary transition-colors">{{ $quan->ten_quan }}</h3>
-                                    @if($quan->is_xac_thuc)
-                                        <span class="material-symbols-outlined text-tick-xanh text-[19px] flex-shrink-0" style="font-variation-settings: 'FILL' 1;" title="Đã xác thực">verified</span>
-                                    @endif
-                                </div>
-                                <p class="text-text-muted text-[13px] flex items-center gap-1">
-                                    <span class="material-symbols-outlined text-[16px] text-gray-400 flex-shrink-0">location_on</span>
-                                    <span class="truncate">{{ $quan->dia_chi_chi_tiet }}, {{ $quan->ten_phuong_xa }}, {{ $quan->ten_quan_huyen }}</span>
-                                </p>
-                            </div>
-                            <div class="flex items-center justify-between pt-2.5 border-t border-gray-100 gap-2 min-w-0">
-                                <div class="flex items-center gap-1.5 min-w-0 flex-shrink">
-                                    <span class="bg-gray-100 px-2 py-0.5 rounded-md text-gray-600 text-[11px] font-medium whitespace-nowrap truncate max-w-[95px] xl:max-w-[120px]" title="{{ str_replace('_', ' ', \Illuminate\Support\Str::title($quan->loai_hinh_kinh_doanh ?? 'Quán ăn')) }}">
-                                        {{ str_replace('_', ' ', \Illuminate\Support\Str::title($quan->loai_hinh_kinh_doanh ?? 'Quán ăn')) }}
-                                    </span>
-                                    <span class="flex items-center gap-0.5 text-gray-500 text-[11px] whitespace-nowrap flex-shrink-0">
-                                        <span class="material-symbols-outlined text-[13px]">visibility</span>{{ number_format($quan->luot_xem) }}
-                                    </span>
-                                </div>
-                                <span class="text-primary font-bold text-[12.5px] xl:text-[13.5px] whitespace-nowrap flex-shrink-0 ml-auto">
-                                    {{ number_format($quan->gia_nho_nhat, 0, ',', '.') }}đ - {{ number_format($quan->gia_lon_nhat, 0, ',', '.') }}đ
-                                </span>
-                            </div>
-                        </div>
-                    </a>
+                        <x-venue-card :quan="$quan" :saved-quan-ids="$savedQuanIds ?? []" />
                     @empty
-                    <p class="col-span-3 text-center text-gray-500 py-10">Chưa có quán nào nổi bật.</p>
+                        <p class="col-span-3 text-center text-gray-500 py-10">Chưa có quán nào nổi bật.</p>
                     @endforelse
                 </div>
 
@@ -228,40 +190,9 @@
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         @forelse($quanMoi as $quan)
-                        <a href="{{ route('quan.detail', $quan->slug) }}" class="group rounded-2xl border border-gray-100 bg-white hover:shadow-lg hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col h-full">
-                            <div class="relative w-full h-44 flex-shrink-0 overflow-hidden">
-                                <img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" src="{{ $quan->anh_bia_url ?: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=600&q=80' }}" alt="{{ $quan->ten_quan }}" />
-                                <div class="absolute top-2 left-2 bg-secondary text-white px-2 py-1 rounded-lg text-[10px] font-bold shadow-sm">Mới Mở</div>
-                                <button type="button" data-quan-id="{{ $quan->id }}" onclick="event.preventDefault(); toggleSave(this, '{{ $quan->id }}')" class="absolute top-2 right-2 w-8 h-8 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center text-red-500 shadow-sm hover:scale-110 active:scale-90 transition-transform z-10" title="Lưu quán">
-                                    <span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' {{ in_array($quan->id, $savedQuanIds) ? '1' : '0' }};">favorite</span>
-                                </button>
-                            </div>
-                            <div class="p-4 flex flex-col flex-1">
-                                <div class="flex items-center gap-1.5 mb-1.5">
-                                    <span class="material-symbols-outlined text-[14px] text-primary">schedule</span>
-                                    <span class="text-[11px] text-primary font-bold">{{ $quan->created_at->diffForHumans() }}</span>
-                                </div>
-                                <div class="flex items-center justify-between gap-2">
-                                    <h4 class="font-bold text-[15px] text-on-surface group-hover:text-primary transition-colors truncate">{{ $quan->ten_quan }}</h4>
-                                    @if($quan->is_xac_thuc)
-                                        <span class="material-symbols-outlined text-tick-xanh text-[16px] flex-shrink-0" style="font-variation-settings: 'FILL' 1;" title="Đã xác thực">verified</span>
-                                    @endif
-                                </div>
-                                <p class="text-[12px] text-text-muted mt-1 truncate flex items-center gap-1">
-                                    <span class="material-symbols-outlined text-[14px]">location_on</span>
-                                    {{ $quan->ten_quan_huyen }}, {{ $quan->ten_tinh_thanh }}
-                                </p>
-                                <div class="mt-3 pt-3 flex items-center justify-between border-t border-gray-100 gap-2 min-w-0">
-                                    <div class="flex gap-1.5 items-center min-w-0 flex-shrink">
-                                        <span class="bg-gray-50 text-gray-600 px-2 py-0.5 rounded-md text-[11px] font-medium whitespace-nowrap truncate max-w-[95px]" title="{{ str_replace('_', ' ', \Illuminate\Support\Str::title($quan->loai_hinh_kinh_doanh ?? 'Quán ăn')) }}">{{ str_replace('_', ' ', \Illuminate\Support\Str::title($quan->loai_hinh_kinh_doanh ?? 'Quán ăn')) }}</span>
-                                        <span class="flex items-center gap-0.5 text-gray-500 text-[11px] whitespace-nowrap flex-shrink-0"><span class="material-symbols-outlined text-[13px]">visibility</span>{{ number_format($quan->luot_xem) }}</span>
-                                    </div>
-                                    <span class="font-bold text-primary text-[13px] whitespace-nowrap flex-shrink-0 ml-auto">{{ number_format($quan->gia_nho_nhat, 0, ',', '.') }}đ</span>
-                                </div>
-                            </div>
-                        </a>
+                            <x-venue-card :quan="$quan" :saved-quan-ids="$savedQuanIds ?? []" />
                         @empty
-                        <p class="sm:col-span-2 lg:col-span-4 text-center text-gray-500 py-10">Chưa có quán mới nào.</p>
+                            <p class="sm:col-span-2 lg:col-span-4 text-center text-gray-500 py-10">Chưa có quán mới nào.</p>
                         @endforelse
                     </div>
 
@@ -631,15 +562,26 @@
         // Find all save buttons for this quan on the page to sync state
         const matchingButtons = document.querySelectorAll(`button[data-quan-id="${quanId}"]`);
         const primaryIcon = btn.querySelector('.material-symbols-outlined');
-        const currentlySaved = primaryIcon ? primaryIcon.style.fontVariationSettings.includes("'FILL' 1") : false;
+        const isIconFilled = (el) => el && /['"]?FILL['"]?\s*1/i.test(el.style.fontVariationSettings || el.getAttribute('style') || '');
+        const currentlySaved = btn.dataset.saved !== undefined
+            ? btn.dataset.saved === '1'
+            : isIconFilled(primaryIcon);
         const targetSaved = !currentlySaved;
 
+        const applySaveState = (state) => {
+            matchingButtons.forEach(b => {
+                b.dataset.saved = state ? '1' : '0';
+                b.title = state ? 'Bỏ lưu quán' : 'Lưu quán';
+                const icon = b.querySelector('.material-symbols-outlined');
+                if (icon) {
+                    icon.style.fontVariationSettings = state ? "'FILL' 1" : "'FILL' 0";
+                }
+            });
+        };
+
         // 1. OPTIMISTIC UI: Update visual state INSTANTLY (0ms delay)
+        applySaveState(targetSaved);
         matchingButtons.forEach(b => {
-            const icon = b.querySelector('.material-symbols-outlined');
-            if (icon) {
-                icon.style.fontVariationSettings = targetSaved ? "'FILL' 1" : "'FILL' 0";
-            }
             b.style.transform = 'scale(1.25)';
             setTimeout(() => { b.style.transform = 'scale(1)'; }, 180);
         });
@@ -667,7 +609,7 @@
             }
         }
 
-        btn.dataset.loading = 'true';
+        matchingButtons.forEach(b => b.dataset.loading = 'true');
 
         try {
             const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
@@ -682,10 +624,7 @@
 
             if (res.status === 401) {
                 // Revert icon and redirect to login
-                matchingButtons.forEach(b => {
-                    const icon = b.querySelector('.material-symbols-outlined');
-                    if (icon) icon.style.fontVariationSettings = currentlySaved ? "'FILL' 1" : "'FILL' 0";
-                });
+                applySaveState(currentlySaved);
                 window.location.href = "{{ route('login') }}";
                 return;
             }
@@ -693,16 +632,10 @@
             const data = await res.json();
             if (data.success) {
                 const finalSaved = data.status === 'saved';
-                matchingButtons.forEach(b => {
-                    const icon = b.querySelector('.material-symbols-outlined');
-                    if (icon) icon.style.fontVariationSettings = finalSaved ? "'FILL' 1" : "'FILL' 0";
-                });
+                applySaveState(finalSaved);
             } else {
                 // Revert on failure
-                matchingButtons.forEach(b => {
-                    const icon = b.querySelector('.material-symbols-outlined');
-                    if (icon) icon.style.fontVariationSettings = currentlySaved ? "'FILL' 1" : "'FILL' 0";
-                });
+                applySaveState(currentlySaved);
                 if (window.showToast) {
                     window.showToast({
                         title: 'Không thể thực hiện',
@@ -714,10 +647,7 @@
         } catch (err) {
             console.error(err);
             // Revert on network error
-            matchingButtons.forEach(b => {
-                const icon = b.querySelector('.material-symbols-outlined');
-                if (icon) icon.style.fontVariationSettings = currentlySaved ? "'FILL' 1" : "'FILL' 0";
-            });
+            applySaveState(currentlySaved);
             if (window.showToast) {
                 window.showToast({
                     title: 'Lỗi kết nối',
@@ -726,7 +656,7 @@
                 });
             }
         } finally {
-            btn.dataset.loading = 'false';
+            matchingButtons.forEach(b => b.dataset.loading = 'false');
         }
     }
 </script>

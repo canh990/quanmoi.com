@@ -252,31 +252,17 @@
                         </div>
                     </div>
 
-                    {{-- Map Preview Container --}}
-                    <div class="relative h-[220px] rounded-lg overflow-hidden border border-gray-200 bg-gray-100 group">
-                        <iframe 
-                            id="map-iframe"
-                            src="https://maps.google.com/maps?q={{ urlencode('Việt Nam') }}&t=&z=14&ie=UTF8&iwloc=&output=embed" 
-                            width="100%" 
-                            height="100%" 
-                            style="border:0;" 
-                            allowfullscreen="" 
-                            loading="lazy" 
-                            referrerpolicy="no-referrer-when-downgrade">
-                        </iframe>
-                        <div class="absolute bottom-3 left-3 right-3 bg-white/95 backdrop-blur-sm p-2.5 rounded-lg shadow-md border border-gray-200 pointer-events-none transition-opacity duration-300">
-                            <div class="flex items-start gap-2.5">
-                                <span class="material-symbols-outlined text-secondary mt-0.5 text-[20px]">map</span>
-                                <div>
-                                    <p class="text-[12px] font-bold text-on-surface">Đang chọn vị trí:</p>
-                                    <p class="text-[12px] text-gray-600 leading-tight" id="address-preview-text">Chưa chọn vị trí</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <input type="hidden" id="kinh_do" name="kinh_do" value="106.7009" />
-                    <input type="hidden" id="vi_do" name="vi_do" value="10.7769" />
+                    {{-- Interactive Draggable Map Picker --}}
+                    <x-map-picker
+                        mapId="dang-quan-map"
+                        :lat="10.7769"
+                        :lng="106.7009"
+                        latId="vi_do"
+                        lngId="kinh_do"
+                        height="h-[250px]"
+                        :showCoordInputs="false"
+                        :addressSelectors="['#dia_chi_chi_tiet', '#ten_phuong_xa', '#ten_quan_huyen', '#ten_tinh_thanh']"
+                    />
                 </div>
             </section>
         </div>

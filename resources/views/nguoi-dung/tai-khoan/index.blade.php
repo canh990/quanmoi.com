@@ -170,8 +170,8 @@
                                             <span>{{ $firstLoc }}</span>
                                         </p>
                                     </div>
-                                    <button type="button" onclick="event.stopPropagation(); toggleSavePlace(this, '{{ $firstQuan->id }}')" class="pointer-events-auto bg-white/20 hover:bg-white/40 backdrop-blur-md p-2.5 rounded-full text-white border border-white/30 transition-all cursor-pointer shadow-md active:scale-90 shrink-0" title="Bỏ lưu địa điểm" aria-label="Bỏ lưu địa điểm">
-                                        <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">bookmark</span>
+                                    <button type="button" onclick="event.stopPropagation(); toggleSavePlace(this, '{{ $firstQuan->id }}')" class="pointer-events-auto bg-white/20 hover:bg-white/40 backdrop-blur-md p-2.5 rounded-full text-red-500 border border-white/30 transition-all cursor-pointer shadow-md active:scale-90 shrink-0" title="Bỏ lưu địa điểm" aria-label="Bỏ lưu địa điểm">
+                                        <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
                                     </button>
                                 </div>
                             </div>
@@ -188,8 +188,8 @@
                                 <div class="h-44 w-full relative overflow-hidden bg-surface-container-low">
                                     <img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="{{ $quanImg }}" alt="{{ $quan->ten_quan }}"/>
                                     <a href="{{ route('quan.detail', $quan->slug) }}" class="absolute inset-0 z-10" aria-label="{{ $quan->ten_quan }}"></a>
-                                    <button type="button" onclick="event.stopPropagation(); toggleSavePlace(this, '{{ $quan->id }}')" class="absolute top-3 right-3 z-20 bg-white/90 hover:bg-white backdrop-blur-sm p-1.5 rounded-full text-primary shadow-sm hover:scale-110 active:scale-95 transition-all cursor-pointer" title="Bỏ lưu địa điểm" aria-label="Bỏ lưu địa điểm">
-                                        <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">bookmark</span>
+                                    <button type="button" onclick="event.stopPropagation(); toggleSavePlace(this, '{{ $quan->id }}')" class="absolute top-3 right-3 z-20 bg-white/90 hover:bg-white backdrop-blur-sm p-1.5 rounded-full text-red-500 shadow-sm hover:scale-110 active:scale-95 transition-all cursor-pointer" title="Bỏ lưu địa điểm" aria-label="Bỏ lưu địa điểm">
+                                        <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
                                     </button>
                                 </div>
                                 <div class="p-4 space-y-1.5 relative">
@@ -223,8 +223,8 @@
                 @else
                     {{-- Trạng thái trống khi chưa lưu địa điểm nào --}}
                     <div class="bg-surface-card rounded-2xl border border-surface-container p-8 md:p-12 text-center space-y-3">
-                        <div class="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto">
-                            <span class="material-symbols-outlined text-3xl">bookmark_border</span>
+                        <div class="w-14 h-14 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center mx-auto">
+                            <span class="material-symbols-outlined text-3xl">favorite</span>
                         </div>
                         <h4 class="text-base md:text-lg font-bold text-on-surface">Bạn chưa lưu địa điểm nào</h4>
                         <p class="text-xs md:text-sm text-text-muted max-w-md mx-auto">Khám phá các nhà hàng, quán ăn ngon và bấm vào biểu tượng lưu để xem lại nhanh chóng tại đây bất cứ lúc nào.</p>
@@ -262,10 +262,7 @@
                     submitBtn.style.pointerEvents = 'none';
 
                     submitBtn.innerHTML = `
-                        <svg class="animate-spin h-4 w-4 text-current inline-block mr-1.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
+                        <span class="material-symbols-outlined text-[18px] animate-spin inline-block mr-1.5">progress_activity</span>
                         <span>Đang lưu...</span>
                     `;
 
@@ -278,8 +275,10 @@
     });
 
     function toggleSavePlace(btn, quanId) {
+        if (btn.dataset.loading === 'true') return;
         const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
         if (!token) return;
+        btn.dataset.loading = 'true';
 
         const card = document.getElementById(`saved-card-${quanId}`);
         const quanName = card?.querySelector('h4')?.textContent?.trim() || '';
@@ -344,6 +343,9 @@
                     type: 'error'
                 });
             }
+        })
+        .finally(() => {
+            btn.dataset.loading = 'false';
         });
     }
 </script>

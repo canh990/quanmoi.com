@@ -245,7 +245,7 @@
                                 'pho_bun' => ['label' => 'Phở & Bún bò', 'icon' => 'ramen_dining'],
                                 'com_tam' => ['label' => 'Cơm tấm & Cơm trưa', 'icon' => 'rice_bowl'],
                                 'tra_sua_cafe' => ['label' => 'Trà sữa & Cà phê', 'icon' => 'local_cafe'],
-                                'do_nuong_lau' => ['label' => 'Lẩu & Đồ nướng BBQ', 'icon' => 'skillet'],
+                                'do_nuong_lau' => ['label' => 'Lẩu & Đồ nướng BBQ', 'icon' => 'outdoor_grill'],
                                 'an_vat' => ['label' => 'Ăn vặt & Đường phố', 'icon' => 'bakery_dining'],
                                 'hai_san' => ['label' => 'Hải sản tươi sống', 'icon' => 'set_meal'],
                                 'do_chay' => ['label' => 'Món chay thanh tịnh', 'icon' => 'eco'],

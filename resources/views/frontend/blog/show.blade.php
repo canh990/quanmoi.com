@@ -335,7 +335,7 @@
                                     @auth
                                         @php $isLiked = $comment->isLikedBy(auth()->user()); @endphp
                                         <button type="button" onclick="handleLikeComment({{ $comment->id }})" id="like-btn-{{ $comment->id }}" class="flex items-center gap-1 transition-colors {{ $isLiked ? 'text-rose-600 font-bold' : 'text-slate-500 hover:text-rose-600' }}">
-                                            <span class="material-symbols-outlined text-[16px] {{ $isLiked ? 'fill-current' : '' }}" id="like-icon-{{ $comment->id }}">{{ $isLiked ? 'favorite' : 'favorite_border' }}</span>
+                                            <span class="material-symbols-outlined text-[16px] {{ $isLiked ? 'fill-1' : '' }}" style="font-variation-settings: 'FILL' {{ $isLiked ? '1' : '0' }};" id="like-icon-{{ $comment->id }}">favorite</span>
                                             <span id="like-count-{{ $comment->id }}">{{ $comment->likes_count > 0 ? $comment->likes_count : 'Thích' }}</span>
                                         </button>
 
@@ -354,7 +354,7 @@
                                         @endif
                                     @else
                                         <a href="{{ route('login') }}" class="flex items-center gap-1 text-slate-500 hover:text-rose-600 transition-colors">
-                                            <span class="material-symbols-outlined text-[16px]">favorite_border</span>
+                                            <span class="material-symbols-outlined text-[16px]">favorite</span>
                                             <span>{{ $comment->likes_count > 0 ? $comment->likes_count : 'Thích' }}</span>
                                         </a>
                                         <a href="{{ route('login') }}" class="flex items-center gap-1 text-slate-500 hover:text-primary transition-colors">
@@ -426,7 +426,7 @@
                                             @auth
                                                 @php $isReplyLiked = $reply->isLikedBy(auth()->user()); @endphp
                                                 <button type="button" onclick="handleLikeComment({{ $reply->id }})" id="like-btn-{{ $reply->id }}" class="flex items-center gap-0.5 transition-colors {{ $isReplyLiked ? 'text-rose-600 font-bold' : 'text-slate-500 hover:text-rose-600' }}">
-                                                    <span class="material-symbols-outlined text-[14px] {{ $isReplyLiked ? 'fill-current' : '' }}" id="like-icon-{{ $reply->id }}">{{ $isReplyLiked ? 'favorite' : 'favorite_border' }}</span>
+                                                    <span class="material-symbols-outlined text-[14px] {{ $isReplyLiked ? 'fill-1' : '' }}" style="font-variation-settings: 'FILL' {{ $isReplyLiked ? '1' : '0' }};" id="like-icon-{{ $reply->id }}">favorite</span>
                                                     <span id="like-count-{{ $reply->id }}">{{ $reply->likes_count > 0 ? $reply->likes_count : 'Thích' }}</span>
                                                 </button>
 
@@ -445,7 +445,7 @@
                                                 @endif
                                             @else
                                                 <a href="{{ route('login') }}" class="flex items-center gap-0.5 text-slate-500 hover:text-rose-600 transition-colors">
-                                                    <span class="material-symbols-outlined text-[14px]">favorite_border</span>
+                                                    <span class="material-symbols-outlined text-[14px]">favorite</span>
                                                     <span>{{ $reply->likes_count > 0 ? $reply->likes_count : 'Thích' }}</span>
                                                 </a>
                                             @endauth
@@ -782,11 +782,13 @@
                 if (data.liked) {
                     btn.className = 'flex items-center gap-1 transition-colors text-rose-600 font-bold';
                     icon.textContent = 'favorite';
-                    icon.classList.add('fill-current');
+                    icon.classList.add('fill-1');
+                    icon.style.fontVariationSettings = "'FILL' 1";
                 } else {
                     btn.className = 'flex items-center gap-1 transition-colors text-slate-500 hover:text-rose-600';
-                    icon.textContent = 'favorite_border';
-                    icon.classList.remove('fill-current');
+                    icon.textContent = 'favorite';
+                    icon.classList.remove('fill-1');
+                    icon.style.fontVariationSettings = "'FILL' 0";
                 }
                 countSpan.textContent = data.likes_count > 0 ? data.likes_count : 'Thích';
             }
@@ -924,7 +926,7 @@
                                 <p class="text-on-surface font-body-sm whitespace-pre-line text-xs leading-relaxed">${c.content}</p>
                                 <div class="flex items-center gap-3 mt-2 text-[11px] text-on-surface-variant font-medium">
                                     <button type="button" onclick="handleLikeComment(${c.id})" id="like-btn-${c.id}" class="flex items-center gap-0.5 transition-colors text-slate-500 hover:text-rose-600">
-                                        <span class="material-symbols-outlined text-[14px]" id="like-icon-${c.id}">favorite_border</span>
+                                        <span class="material-symbols-outlined text-[14px]" id="like-icon-${c.id}">favorite</span>
                                         <span id="like-count-${c.id}">Thích</span>
                                     </button>
                                     <button type="button" onclick="toggleReplyBox(${parentId}, '${c.user_name}')" class="flex items-center gap-0.5 text-slate-500 hover:text-primary transition-colors">
@@ -960,7 +962,7 @@
                                     <p class="text-on-surface font-body-sm whitespace-pre-line text-sm leading-relaxed">${c.content}</p>
                                     <div class="flex items-center gap-4 mt-2.5 pt-2 text-xs text-on-surface-variant font-medium">
                                         <button type="button" onclick="handleLikeComment(${c.id})" id="like-btn-${c.id}" class="flex items-center gap-1 transition-colors text-slate-500 hover:text-rose-600">
-                                            <span class="material-symbols-outlined text-[16px]" id="like-icon-${c.id}">favorite_border</span>
+                                            <span class="material-symbols-outlined text-[16px]" id="like-icon-${c.id}">favorite</span>
                                             <span id="like-count-${c.id}">Thích</span>
                                         </button>
                                         <button type="button" onclick="toggleReplyBox(${c.id}, '${c.user_name}')" class="flex items-center gap-1 text-slate-500 hover:text-primary transition-colors">

@@ -155,6 +155,7 @@ class SecurityHardeningTest extends TestCase
 
     public function test_geocode_endpoint_validates_empty_address(): void
     {
+        $this->withoutMiddleware(\Illuminate\Routing\Middleware\ThrottleRequests::class);
         $response = $this->getJson('/api/ban-do/geocode');
         $response->assertStatus(422);
     }

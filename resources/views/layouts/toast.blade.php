@@ -81,6 +81,11 @@
         const template = document.getElementById('global-toast-template');
         if (!container || !template) return;
 
+        // If showing a save/unsave toast, immediately replace any previous save/unsave toast
+        if (type === 'saved' || type === 'unsaved') {
+            container.querySelectorAll('.toast-item[data-toast-type="saved"], .toast-item[data-toast-type="unsaved"]').forEach(el => el.remove());
+        }
+
         // Keep at most 2 active toasts so rapid clicks stay clean
         const activeToasts = container.querySelectorAll('.toast-item');
         if (activeToasts.length >= 2) {
@@ -88,6 +93,7 @@
         }
 
         const toast = template.content.firstElementChild.cloneNode(true);
+        toast.dataset.toastType = type;
         const eyebrowEl = toast.querySelector('.toast-eyebrow');
         const eyebrowTextEl = toast.querySelector('.toast-eyebrow-text');
         const titleEl = toast.querySelector('.toast-title');

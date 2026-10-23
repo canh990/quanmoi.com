@@ -150,6 +150,31 @@ class KhamPhaController extends Controller
         if (!$useSqliteTesting && config('scout.driver') === 'elastic') {
             try {
                 $quans = $query->paginate(12);
+
+                // Phong ve: Neu Scout bao co ket qua (total > 0) nhung so luong ban ghi thuc te bi thieu
+                // do index Elasticsearch bi lech voi co so du lieu (stale ID sau khi re-seed/xoa du lieu DB)
+                $expectedCount = min(12, max(0, $quans->total() - ($quans->currentPage() - 1) * 12));
+                if ($quans->total() > 0 && ($quans->isEmpty() || $quans->count() < $expectedCount)) {
+                    $usedEloquentFallback = true;
+                    [$quans, $fallbackQuanIds] = $this->paginateWithEloquentFallback(
+                        $request,
+                        $tuKhoa,
+                        $danhMuc,
+                        $tinhCodes,
+                        $huyenCodes,
+                        $isXacThuc,
+                        $isNoiBat,
+                        $coShopee,
+                        $coVideo,
+                        $dangMoCua,
+                        $mucGia,
+                        $hasGps,
+                        $lat,
+                        $lon,
+                        $banKinh,
+                        $sapXep
+                    );
+                }
             } catch (\Throwable $e) {
                 report($e);
                 $usedEloquentFallback = true;
@@ -277,8 +302,15 @@ class KhamPhaController extends Controller
             $monAns = $allMatchingMonAns->forPage($currentPage, $perPageMonAn)->values();
         }
 
+        $savedQuanIds = [];
+        $user = auth()->user();
+        if ($user) {
+            $savedQuanIds = $user->savedQuan()->pluck('quan_id')->toArray();
+        }
+
         return view('nguoi-dung.kham-pha.index', [
             'quans'           => $quans,
+            'savedQuanIds'    => $savedQuanIds,
             'quansGoiY'       => $quansGoiY,
             'monAns'          => $monAns,
             'totalMonAns'     => $totalMonAns,
