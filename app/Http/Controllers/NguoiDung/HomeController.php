@@ -62,6 +62,7 @@ class HomeController extends Controller
             'hinhAnh',
             'danhGia.nguoiDung',
             'khuyenMaiDangChay',
+            'videos' => fn ($q) => $q->where('trang_thai', 'da_duyet')->orderBy('created_at', 'desc'),
         ])
             ->where('slug', $slug)
             ->firstOrFail();

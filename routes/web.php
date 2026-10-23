@@ -93,6 +93,14 @@ Route::prefix('chu-quan')->group(function () {
             ->name('chu-quan.quan.khuyen-mai.destroy');
         Route::post('/quan/{slug}/khuyen-mai/kiem-tra', [\App\Http\Controllers\ChuQuan\KhuyenMaiController::class, 'kiemTraVoucher'])
             ->name('chu-quan.quan.khuyen-mai.kiem-tra');
+
+        // Quản lý Video TikTok Review của quán (chờ duyệt)
+        Route::post('/quan/{slug}/videos', [\App\Http\Controllers\ChuQuan\VideoController::class, 'store'])
+            ->name('chu-quan.quan.videos.store');
+        Route::post('/quan/{slug}/videos/fetch-info', [\App\Http\Controllers\ChuQuan\VideoController::class, 'ajaxFetchTikTokInfo'])
+            ->name('chu-quan.quan.videos.fetch-info');
+        Route::delete('/quan/{slug}/videos/{id}', [\App\Http\Controllers\ChuQuan\VideoController::class, 'destroy'])
+            ->name('chu-quan.quan.videos.destroy');
     });
 });
 

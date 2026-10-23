@@ -13,7 +13,10 @@ class VideoShortController extends Controller
     {
         $query = VideoShort::with('quan')
             ->where('trang_thai', 'da_duyet')
-            ->whereHas('quan', fn ($query) => $query->where('trang_thai', 'da_duyet'));
+            ->where(function ($q) {
+                $q->whereNull('quan_id')
+                    ->orWhereHas('quan', fn ($sub) => $sub->where('trang_thai', 'da_duyet'));
+            });
 
         // 1. Tìm kiếm theo tên quán hoặc từ khóa tiêu đề
         if ($request->filled('q')) {
@@ -70,7 +73,10 @@ class VideoShortController extends Controller
         $page = $request->input('page', 1);
         $videos = VideoShort::with('quan')
             ->where('trang_thai', 'da_duyet')
-            ->whereHas('quan', fn ($query) => $query->where('trang_thai', 'da_duyet'))
+            ->where(function ($q) {
+                $q->whereNull('quan_id')
+                    ->orWhereHas('quan', fn ($sub) => $sub->where('trang_thai', 'da_duyet'));
+            })
             ->orderBy('created_at', 'desc')
             ->paginate(5, ['*'], 'page', $page);
 

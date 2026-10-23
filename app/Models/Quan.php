@@ -255,6 +255,11 @@ class Quan extends Model
         return $this->belongsTo(User::class, 'chu_quan_id');
     }
 
+    public function nguoiDang()
+    {
+        return $this->chuQuan();
+    }
+
     public function hinhAnh()
     {
         return $this->hasMany(HinhAnhQuan::class, 'quan_id');

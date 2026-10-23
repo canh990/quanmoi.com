@@ -54,4 +54,14 @@ return Application::configure(basePath: dirname(__DIR__))
                 return response()->json(['message' => 'Dữ liệu hoặc trang yêu cầu không tồn tại trong hệ thống.'], 404);
             }
         });
+        $exceptions->render(function (\Illuminate\Http\Exceptions\PostTooLargeException $e, Request $request) {
+            if ($request->expectsJson() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Dung lượng file tải lên quá lớn (vượt quá giới hạn cho phép). Vui lòng chọn file dung lượng nhỏ hơn 200MB.',
+                ], 413);
+            }
+
+            return back()->withInput()->with('error', 'Dung lượng file tải lên quá lớn (vượt quá giới hạn 200MB). Vui lòng chọn file nhỏ hơn hoặc dán link TikTok để hệ thống tự động bóc tách.');
+        });
     })->create();
