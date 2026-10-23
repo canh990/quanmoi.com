@@ -586,7 +586,7 @@
         } else {
             localStorage.setItem(key, 'true');
             btn.className = 'w-full px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs hover:shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-98';
-            btnText.textContent = 'Đang theo dõi ✓';
+            btnText.textContent = 'Đang theo dõi';
             btnIcon.textContent = 'done_all';
             showToast('Đã theo dõi tác giả! Bạn sẽ nhận thông báo khi có bài viết mới.', 'favorite');
         }
@@ -602,7 +602,7 @@
             const btnIcon = document.getElementById('follow-icon');
             if (btn) {
                 btn.className = 'w-full px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs hover:shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-98';
-                if (btnText) btnText.textContent = 'Đang theo dõi ✓';
+                if (btnText) btnText.textContent = 'Đang theo dõi';
                 if (btnIcon) btnIcon.textContent = 'done_all';
             }
         }

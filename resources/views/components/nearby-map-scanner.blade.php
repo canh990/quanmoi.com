@@ -592,7 +592,7 @@
                 const cat = escapeHtml(quan.loai_hinh_kinh_doanh || 'Quán ăn');
                 const dirUrl = escapeHtml(buildDirectionsUrl(inst, lat, lng));
                 const verifiedHtml = quan.is_xac_thuc
-                    ? `<span class="material-symbols-outlined text-[14px] text-blue-600 shrink-0" style="font-variation-settings:'FILL' 1;" title="Quán đã xác thực">verified</span>`
+                    ? `<span class="material-symbols-outlined text-[14px] text-tick-xanh shrink-0" style="font-variation-settings:'FILL' 1;" title="Quán đã xác thực">verified</span>`
                     : '';
                 const statusDot = quan.dang_mo_cua
                     ? `<span class="inline-flex items-center gap-1 text-[10.5px] font-bold text-emerald-700"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Đang mở</span>`

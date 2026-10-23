@@ -81,25 +81,37 @@
                         $badgeClass = 'bg-primary/10 text-primary';
 
                         if (in_array($action, ['approved', 'published', 'verified', 'verified_granted', 'permission_granted', 'restored'])) {
-                            $icon = in_array($action, ['verified', 'verified_granted']) ? 'verified' : (in_array($action, ['restored']) ? 'unarchive' : 'check_circle');
+                            $icon = in_array($action, ['verified', 'verified_granted']) ? 'verified' : (in_array($action, ['permission_granted']) ? 'lock_open' : (in_array($action, ['restored']) ? 'unarchive' : 'check_circle'));
                             $iconClass = 'bg-emerald-100 text-emerald-700';
                             $badgeClass = 'bg-emerald-100 text-emerald-800';
-                        } elseif (in_array($action, ['rejected', 'verification_rejected', 'permission_denied', 'deleted', 'force_deleted'])) {
-                            $icon = in_array($action, ['deleted', 'force_deleted']) ? 'delete_forever' : (in_array($action, ['permission_denied']) ? 'lock' : 'cancel');
+                        } elseif (in_array($action, ['rejected', 'verification_rejected', 'verified_revoked', 'permission_denied', 'deleted', 'force_deleted'])) {
+                            $icon = in_array($action, ['deleted', 'force_deleted']) ? 'delete_forever' : (in_array($action, ['permission_denied']) ? 'lock' : (in_array($action, ['verification_rejected', 'verified_revoked']) ? 'gpp_bad' : 'cancel'));
                             $iconClass = 'bg-rose-100 text-rose-700';
                             $badgeClass = 'bg-rose-100 text-rose-800';
                         } elseif (in_array($action, ['requested_revision', 'need_revision', 'updated'])) {
                             $icon = $action === 'updated' ? 'store' : 'edit_note';
                             $iconClass = 'bg-amber-100 text-amber-700';
                             $badgeClass = 'bg-amber-100 text-amber-800';
-                        } elseif ($action === 'submitted') {
+                        } elseif (in_array($action, ['submitted', 'pending'])) {
                             $icon = 'schedule';
                             $iconClass = 'bg-blue-100 text-blue-700';
                             $badgeClass = 'bg-blue-100 text-blue-800';
+                        } elseif ($action === 'hero') {
+                            $icon = 'auto_awesome';
+                            $iconClass = 'bg-amber-100 text-amber-700';
+                            $badgeClass = 'bg-amber-100 text-amber-800';
                         } elseif ($action === 'featured_granted') {
                             $icon = 'hotel_class';
                             $iconClass = 'bg-amber-100 text-amber-700';
                             $badgeClass = 'bg-amber-100 text-amber-800';
+                        } elseif ($action === 'featured_revoked') {
+                            $icon = 'star';
+                            $iconClass = 'bg-slate-200 text-slate-700';
+                            $badgeClass = 'bg-slate-200 text-slate-800';
+                        } elseif ($action === 'created') {
+                            $icon = 'add_business';
+                            $iconClass = 'bg-indigo-100 text-indigo-700';
+                            $badgeClass = 'bg-indigo-100 text-indigo-800';
                         } elseif ($action === 'new_review') {
                             $icon = 'rate_review';
                             $iconClass = 'bg-amber-100 text-amber-700';
@@ -351,25 +363,37 @@
         let badgeClass = 'bg-primary/10 text-primary';
 
         if (['approved', 'published', 'verified', 'verified_granted', 'permission_granted', 'restored'].includes(action)) {
-            icon = ['verified', 'verified_granted'].includes(action) ? 'verified' : (action === 'restored' ? 'unarchive' : 'check_circle');
+            icon = ['verified', 'verified_granted'].includes(action) ? 'verified' : (action === 'permission_granted' ? 'lock_open' : (action === 'restored' ? 'unarchive' : 'check_circle'));
             iconClass = 'bg-emerald-100 text-emerald-700';
             badgeClass = 'bg-emerald-100 text-emerald-800';
-        } else if (['rejected', 'verification_rejected', 'permission_denied', 'deleted', 'force_deleted'].includes(action)) {
-            icon = ['deleted', 'force_deleted'].includes(action) ? 'delete_forever' : (action === 'permission_denied' ? 'lock' : 'cancel');
+        } else if (['rejected', 'verification_rejected', 'verified_revoked', 'permission_denied', 'deleted', 'force_deleted'].includes(action)) {
+            icon = ['deleted', 'force_deleted'].includes(action) ? 'delete_forever' : (action === 'permission_denied' ? 'lock' : (['verification_rejected', 'verified_revoked'].includes(action) ? 'gpp_bad' : 'cancel'));
             iconClass = 'bg-rose-100 text-rose-700';
             badgeClass = 'bg-rose-100 text-rose-800';
         } else if (['requested_revision', 'need_revision', 'updated'].includes(action)) {
             icon = action === 'updated' ? 'store' : 'edit_note';
             iconClass = 'bg-amber-100 text-amber-700';
             badgeClass = 'bg-amber-100 text-amber-800';
-        } else if (action === 'submitted') {
+        } else if (action === 'submitted' || action === 'pending') {
             icon = 'schedule';
             iconClass = 'bg-blue-100 text-blue-700';
             badgeClass = 'bg-blue-100 text-blue-800';
+        } else if (action === 'hero') {
+            icon = 'auto_awesome';
+            iconClass = 'bg-amber-100 text-amber-700';
+            badgeClass = 'bg-amber-100 text-amber-800';
         } else if (action === 'featured_granted') {
             icon = 'hotel_class';
             iconClass = 'bg-amber-100 text-amber-700';
             badgeClass = 'bg-amber-100 text-amber-800';
+        } else if (action === 'featured_revoked') {
+            icon = 'star';
+            iconClass = 'bg-slate-200 text-slate-700';
+            badgeClass = 'bg-slate-200 text-slate-800';
+        } else if (action === 'created') {
+            icon = 'add_business';
+            iconClass = 'bg-indigo-100 text-indigo-700';
+            badgeClass = 'bg-indigo-100 text-indigo-800';
         } else if (action === 'new_review') {
             icon = 'rate_review';
             iconClass = 'bg-amber-100 text-amber-700';

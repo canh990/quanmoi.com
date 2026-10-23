@@ -1813,7 +1813,7 @@
                         <div>
                             <div class="bd-card-name-row">
                                 <h3 class="bd-card-title">${escapeHtml(q.ten_quan)}</h3>
-                                ${q.is_xac_thuc ? '<span class="material-symbols-outlined" style="font-size: 15px; color: #2563eb; font-variation-settings: \'FILL\' 1; flex-shrink: 0;" title="Đã xác thực">verified</span>' : ''}
+                                ${q.is_xac_thuc ? '<span class="material-symbols-outlined text-tick-xanh" style="font-size: 15px; font-variation-settings: \'FILL\' 1; flex-shrink: 0;" title="Đã xác thực">verified</span>' : ''}
                             </div>
                             
                             <div class="bd-card-meta-row">

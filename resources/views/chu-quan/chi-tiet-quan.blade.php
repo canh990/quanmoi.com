@@ -681,7 +681,7 @@
                     </div>
                     {{-- Lượt lưu --}}
                     <div class="bg-rose-50 rounded-2xl p-3 text-center">
-                        <span class="material-symbols-outlined text-rose-500 text-2xl" style="font-variation-settings: 'FILL' 1;">bookmark</span>
+                        <span class="material-symbols-outlined text-rose-500 text-2xl" style="font-variation-settings: 'FILL' 1;">favorite</span>
                         <p class="text-xl font-black text-rose-700 mt-0.5">{{ number_format($luotLuu, 0, ',', '.') }}</p>
                         <p class="text-[11px] font-semibold text-rose-400 uppercase tracking-wide mt-0.5">Lượt lưu</p>
                     </div>

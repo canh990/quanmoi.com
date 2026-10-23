@@ -562,15 +562,26 @@
         // Find all save buttons for this quan on the page to sync state
         const matchingButtons = document.querySelectorAll(`button[data-quan-id="${quanId}"]`);
         const primaryIcon = btn.querySelector('.material-symbols-outlined');
-        const currentlySaved = primaryIcon ? primaryIcon.style.fontVariationSettings.includes("'FILL' 1") : false;
+        const isIconFilled = (el) => el && /['"]?FILL['"]?\s*1/i.test(el.style.fontVariationSettings || el.getAttribute('style') || '');
+        const currentlySaved = btn.dataset.saved !== undefined
+            ? btn.dataset.saved === '1'
+            : isIconFilled(primaryIcon);
         const targetSaved = !currentlySaved;
 
+        const applySaveState = (state) => {
+            matchingButtons.forEach(b => {
+                b.dataset.saved = state ? '1' : '0';
+                b.title = state ? 'Bỏ lưu quán' : 'Lưu quán';
+                const icon = b.querySelector('.material-symbols-outlined');
+                if (icon) {
+                    icon.style.fontVariationSettings = state ? "'FILL' 1" : "'FILL' 0";
+                }
+            });
+        };
+
         // 1. OPTIMISTIC UI: Update visual state INSTANTLY (0ms delay)
+        applySaveState(targetSaved);
         matchingButtons.forEach(b => {
-            const icon = b.querySelector('.material-symbols-outlined');
-            if (icon) {
-                icon.style.fontVariationSettings = targetSaved ? "'FILL' 1" : "'FILL' 0";
-            }
             b.style.transform = 'scale(1.25)';
             setTimeout(() => { b.style.transform = 'scale(1)'; }, 180);
         });
@@ -598,7 +609,7 @@
             }
         }
 
-        btn.dataset.loading = 'true';
+        matchingButtons.forEach(b => b.dataset.loading = 'true');
 
         try {
             const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
@@ -613,10 +624,7 @@
 
             if (res.status === 401) {
                 // Revert icon and redirect to login
-                matchingButtons.forEach(b => {
-                    const icon = b.querySelector('.material-symbols-outlined');
-                    if (icon) icon.style.fontVariationSettings = currentlySaved ? "'FILL' 1" : "'FILL' 0";
-                });
+                applySaveState(currentlySaved);
                 window.location.href = "{{ route('login') }}";
                 return;
             }
@@ -624,16 +632,10 @@
             const data = await res.json();
             if (data.success) {
                 const finalSaved = data.status === 'saved';
-                matchingButtons.forEach(b => {
-                    const icon = b.querySelector('.material-symbols-outlined');
-                    if (icon) icon.style.fontVariationSettings = finalSaved ? "'FILL' 1" : "'FILL' 0";
-                });
+                applySaveState(finalSaved);
             } else {
                 // Revert on failure
-                matchingButtons.forEach(b => {
-                    const icon = b.querySelector('.material-symbols-outlined');
-                    if (icon) icon.style.fontVariationSettings = currentlySaved ? "'FILL' 1" : "'FILL' 0";
-                });
+                applySaveState(currentlySaved);
                 if (window.showToast) {
                     window.showToast({
                         title: 'Không thể thực hiện',
@@ -645,10 +647,7 @@
         } catch (err) {
             console.error(err);
             // Revert on network error
-            matchingButtons.forEach(b => {
-                const icon = b.querySelector('.material-symbols-outlined');
-                if (icon) icon.style.fontVariationSettings = currentlySaved ? "'FILL' 1" : "'FILL' 0";
-            });
+            applySaveState(currentlySaved);
             if (window.showToast) {
                 window.showToast({
                     title: 'Lỗi kết nối',
@@ -657,7 +656,7 @@
                 });
             }
         } finally {
-            btn.dataset.loading = 'false';
+            matchingButtons.forEach(b => b.dataset.loading = 'false');
         }
     }
 </script>

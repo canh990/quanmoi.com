@@ -59,10 +59,10 @@
     $isCategoryActive = !empty($danhMuc) && !$isSpecialPage;
     $activeCategoryLabel = $isCategoryActive ? $danhMuc : 'Danh mục quán';
     $danhMucList = [
-        ['ten' => 'Lẩu & Nướng', 'icon' => 'skillet', 'desc' => 'Buffet nướng, lẩu thái, nướng than'],
+        ['ten' => 'Lẩu & Nướng', 'icon' => 'outdoor_grill', 'desc' => 'Buffet nướng, lẩu thái, nướng than'],
         ['ten' => 'Cà phê & Trà', 'icon' => 'local_cafe', 'desc' => 'Cafe chill, trà sữa, acoustic'],
         ['ten' => 'Đồ ăn vặt', 'icon' => 'fastfood', 'desc' => 'Bánh tráng, xiên que, trà chanh'],
-        ['ten' => 'Nhà hàng', 'icon' => 'dinner_dining', 'desc' => 'Gia đình, sang trọng, tiệc tùng'],
+        ['ten' => 'Nhà hàng', 'icon' => 'restaurant', 'desc' => 'Gia đình, sang trọng, tiệc tùng'],
         ['ten' => 'Quán Đêm 24/7', 'icon' => 'nightlife', 'desc' => 'Mở xuyên đêm, ăn khuya'],
         ['ten' => 'Billiards & Giải trí', 'icon' => 'sports_esports', 'desc' => 'Bida, board game, giải trí'],
     ];
@@ -260,9 +260,9 @@
 
                     {{-- [Tích xanh ✅] --}}
                     <a href="{{ $isXacThucActive ? request()->fullUrlWithQuery(['is_xac_thuc' => null]) : request()->fullUrlWithQuery(['is_xac_thuc' => 1]) }}" 
-                       class="filter-pill-btn {{ $isXacThucActive ? 'bg-sky-600 text-white border-sky-600 shadow-sm font-bold' : 'bg-white/95 text-gray-700 hover:text-sky-600 hover:bg-white border-gray-200/90 hover:border-sky-300 font-semibold' }}"
+                       class="filter-pill-btn {{ $isXacThucActive ? 'bg-tick-xanh text-white border-tick-xanh shadow-sm font-bold' : 'bg-white/95 text-gray-700 hover:text-tick-xanh hover:bg-white border-gray-200/90 hover:border-emerald-300 font-semibold' }}"
                        style="height: 38px; min-height: 38px; box-sizing: border-box;">
-                        <span class="material-symbols-outlined text-[18px] flex-shrink-0 {{ $isXacThucActive ? 'text-white' : 'text-sky-500' }}" style="font-variation-settings: 'FILL' 1;">verified</span>
+                        <span class="material-symbols-outlined text-[18px] flex-shrink-0 {{ $isXacThucActive ? 'text-white' : 'text-tick-xanh' }}" style="font-variation-settings: 'FILL' 1;">verified</span>
                         <span>Tích xanh</span>
                     </a>
 
@@ -482,7 +482,7 @@
                        class="inline-flex items-center gap-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-full px-3 py-1 text-[13px] font-bold transition-all group"
                        title="Bỏ lọc video review">
                         <span class="material-symbols-outlined text-[15px]">play_circle</span>
-                        <span>Có Video Review 🎬</span>
+                        <span>Có Video Review</span>
                         <span class="material-symbols-outlined text-[15px] group-hover:rotate-90 transition-transform">close</span>
                     </a>
                 @endif
@@ -490,9 +490,10 @@
                 {{-- Tích xanh --}}
                 @if(!empty($isXacThuc))
                     <a href="{{ request()->fullUrlWithQuery(['is_xac_thuc' => null]) }}" 
-                       class="inline-flex items-center gap-1.5 bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 rounded-full px-3 py-1 text-[13px] font-bold transition-all group"
+                       class="inline-flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-full px-3 py-1 text-[13px] font-bold transition-all group"
                        title="Bỏ lọc tích xanh">
-                        <span>Đã xác thực ✅</span>
+                        <span class="material-symbols-outlined text-[15px] text-tick-xanh" style="font-variation-settings: 'FILL' 1;">verified</span>
+                        <span>Đã xác thực</span>
                         <span class="material-symbols-outlined text-[15px] group-hover:rotate-90 transition-transform">close</span>
                     </a>
                 @endif
@@ -502,7 +503,8 @@
                     <a href="{{ request()->fullUrlWithQuery(['co_shopeefood' => null]) }}" 
                        class="inline-flex items-center gap-1.5 bg-orange-50 hover:bg-orange-100 text-[#EE4D2D] border border-orange-200 rounded-full px-3 py-1 text-[13px] font-bold transition-all group"
                        title="Bỏ lọc ShopeeFood">
-                        <span>ShopeeFood 🛵</span>
+                        <span class="material-symbols-outlined text-[15px]">moped</span>
+                        <span>ShopeeFood</span>
                         <span class="material-symbols-outlined text-[15px] group-hover:rotate-90 transition-transform">close</span>
                     </a>
                 @endif
@@ -512,7 +514,8 @@
                     <a href="{{ request()->fullUrlWithQuery(['is_noi_bat' => null]) }}" 
                        class="inline-flex items-center gap-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-full px-3 py-1 text-[13px] font-bold transition-all group"
                        title="Bỏ lọc nổi bật">
-                        <span>Nổi bật ⭐</span>
+                        <span class="material-symbols-outlined text-[15px] text-amber-500" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+                        <span>Nổi bật</span>
                         <span class="material-symbols-outlined text-[15px] group-hover:rotate-90 transition-transform">close</span>
                     </a>
                 @endif

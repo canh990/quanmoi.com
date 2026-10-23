@@ -463,6 +463,10 @@
                     iconName = 'hotel_class';
                     iconClass = 'bg-amber-100 text-amber-700';
                     statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700">Quán nổi bật</span>';
+                } else if (action === 'featured_revoked') {
+                    iconName = 'star';
+                    iconClass = 'bg-slate-200 text-slate-700';
+                    statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-700">Hết nổi bật</span>';
                 } else if (action === 'verified_granted' || action === 'verified') {
                     iconName = 'verified';
                     iconClass = 'bg-emerald-100 text-emerald-700';

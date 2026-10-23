@@ -111,8 +111,8 @@
                         @php
                             $statusConfig = [
                                 'draft' => ['bg' => 'bg-gray-100', 'text' => 'text-gray-700', 'label' => 'Bản nháp', 'icon' => 'edit_note'],
-                                'pending' => ['bg' => 'bg-amber-100', 'text' => 'text-amber-700', 'label' => 'Chờ duyệt', 'icon' => 'hourglass_empty'],
-                                'need_revision' => ['bg' => 'bg-orange-100', 'text' => 'text-orange-700', 'label' => 'Cần sửa', 'icon' => 'warning'],
+                                'pending' => ['bg' => 'bg-amber-100', 'text' => 'text-amber-700', 'label' => 'Chờ duyệt', 'icon' => 'pending_actions'],
+                                'need_revision' => ['bg' => 'bg-orange-100', 'text' => 'text-orange-700', 'label' => 'Cần sửa', 'icon' => 'rule'],
                                 'published' => ['bg' => 'bg-green-100', 'text' => 'text-green-700', 'label' => 'Đã xuất bản', 'icon' => 'check_circle'],
                                 'rejected' => ['bg' => 'bg-red-100', 'text' => 'text-red-700', 'label' => 'Từ chối', 'icon' => 'cancel'],
                                 'hidden' => ['bg' => 'bg-gray-200', 'text' => 'text-gray-500', 'label' => 'Đã ẩn', 'icon' => 'visibility_off'],
@@ -392,9 +392,9 @@
                 const statusMap = {
                     'published': { bg: 'bg-green-100', text: 'text-green-700', label: 'Đã xuất bản', icon: 'check_circle' },
                     'rejected': { bg: 'bg-red-100', text: 'text-red-700', label: 'Từ chối', icon: 'cancel' },
-                    'need_revision': { bg: 'bg-orange-100', text: 'text-orange-700', label: 'Cần sửa', icon: 'warning' },
+                    'need_revision': { bg: 'bg-orange-100', text: 'text-orange-700', label: 'Cần sửa', icon: 'rule' },
                     'hidden': { bg: 'bg-gray-200', text: 'text-gray-500', label: 'Đã ẩn', icon: 'visibility_off' },
-                    'pending': { bg: 'bg-amber-100', text: 'text-amber-700', label: 'Chờ duyệt', icon: 'hourglass_empty' },
+                    'pending': { bg: 'bg-amber-100', text: 'text-amber-700', label: 'Chờ duyệt', icon: 'pending_actions' },
                 };
                 const cfg = statusMap[notif.status];
                 if (cfg) {

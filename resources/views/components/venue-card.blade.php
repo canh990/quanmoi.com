@@ -4,6 +4,7 @@
     $hasVideo = $quan->co_video_review ?? ($quan->relationLoaded('videos') ? $quan->videos->isNotEmpty() : (method_exists($quan, 'videos') && $quan->videos()->exists()));
     $isSaved = in_array($quan->id, $savedQuanIds ?? []);
     $isDangMo = method_exists($quan, 'isDangMoCua') && $quan->isDangMoCua();
+    $tenLoaiHinh = str_replace('_', ' ', \Illuminate\Support\Str::title($quan->loai_hinh_kinh_doanh ?? 'Quán ăn'));
 @endphp
 
 <a href="{{ route('quan.detail', $quan->slug) }}" class="block bg-white rounded-2xl shadow-sm overflow-hidden group cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-gray-100 flex flex-col h-full">
@@ -22,13 +23,18 @@
             </div>
         </div>
 
-        {{-- Góc dưới bên trái: Khoảng cách GPS (nếu có toạ độ người dùng) --}}
-        @if(isset($quan->khoang_cach_km) && $quan->khoang_cach_km !== null)
-            <div class="absolute bottom-3 left-3 z-10 bg-primary/95 text-white backdrop-blur-md px-2.5 py-1 rounded-xl font-bold text-xs flex items-center gap-1 shadow-sm" title="Cách vị trí của bạn {{ $quan->khoang_cach_km }} km">
-                <span class="material-symbols-outlined text-[14px]">near_me</span>
-                <span>{{ $quan->khoang_cach_km }} km</span>
-            </div>
-        @endif
+        {{-- Góc dưới bên trái: Tên danh mục quán & Khoảng cách GPS (nếu có) --}}
+        <div class="absolute bottom-3 left-3 z-10 flex items-center gap-1.5 max-w-[calc(100%-54px)] pointer-events-none">
+            <span class="bg-white/95 backdrop-blur-md text-gray-800 px-2.5 py-1 rounded-xl text-[11px] sm:text-[11.5px] font-bold shadow-sm border border-gray-100/60 truncate" title="{{ $tenLoaiHinh }}">
+                {{ $tenLoaiHinh }}
+            </span>
+            @if(isset($quan->khoang_cach_km) && $quan->khoang_cach_km !== null)
+                <span class="bg-primary/95 text-white backdrop-blur-md px-2 py-1 rounded-xl font-bold text-[11px] flex items-center gap-0.5 shadow-sm whitespace-nowrap" title="Cách vị trí của bạn {{ $quan->khoang_cach_km }} km">
+                    <span class="material-symbols-outlined text-[13px]">near_me</span>
+                    <span>{{ $quan->khoang_cach_km }} km</span>
+                </span>
+            @endif
+        </div>
 
         {{-- Góc trên bên phải: Các huy hiệu trạng thái (Video, Mở cửa, Quán Nổi bật) --}}
         <div class="absolute top-3 right-3 flex items-center gap-1 z-10">
@@ -54,6 +60,7 @@
         {{-- Góc dưới bên phải: Nút Trái tim lưu quán --}}
         <button type="button" 
                 data-quan-id="{{ $quan->id }}" 
+                data-saved="{{ $isSaved ? '1' : '0' }}"
                 onclick="event.preventDefault(); toggleSave(this, '{{ $quan->id }}')" 
                 class="absolute bottom-3 right-3 w-9 h-9 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center text-red-500 shadow-sm hover:scale-110 active:scale-90 transition-transform z-10" 
                 title="{{ $isSaved ? 'Bỏ lưu quán' : 'Lưu quán' }}">
@@ -79,18 +86,13 @@
             </p>
         </div>
 
-        {{-- Chân thẻ: Loại hình ẩm thực + Lượt xem + ShopeeFood + Khoảng giá --}}
+        {{-- Chân thẻ: Lượt xem + ShopeeFood + Khoảng giá --}}
         <div class="flex items-center justify-between pt-2.5 border-t border-gray-100 gap-2 min-w-0 mt-auto">
-            <div class="flex items-center gap-1.5 min-w-0 flex-shrink">
-                {{-- Badge loại hình kinh doanh --}}
-                <span class="bg-gray-100 px-2 py-0.5 rounded-md text-gray-600 text-[11px] font-medium whitespace-nowrap truncate max-w-[95px] xl:max-w-[120px]" title="{{ str_replace('_', ' ', \Illuminate\Support\Str::title($quan->loai_hinh_kinh_doanh ?? 'Quán ăn')) }}">
-                    {{ str_replace('_', ' ', \Illuminate\Support\Str::title($quan->loai_hinh_kinh_doanh ?? 'Quán ăn')) }}
-                </span>
-
+            <div class="flex items-center gap-2 min-w-0 flex-shrink">
                 {{-- Lượt xem --}}
-                <span class="flex items-center gap-0.5 text-gray-500 text-[11px] whitespace-nowrap flex-shrink-0" title="{{ number_format($quan->luot_xem ?? 0) }} lượt xem">
-                    <span class="material-symbols-outlined text-[13px]">visibility</span>
-                    {{ number_format($quan->luot_xem ?? 0) }}
+                <span class="flex items-center gap-1 text-gray-500 text-[11.5px] whitespace-nowrap flex-shrink-0" title="{{ number_format($quan->luot_xem ?? 0) }} lượt xem">
+                    <span class="material-symbols-outlined text-[14px]">visibility</span>
+                    <span>{{ number_format($quan->luot_xem ?? 0) }}</span>
                 </span>
 
                 {{-- ShopeeFood (nếu có) --}}

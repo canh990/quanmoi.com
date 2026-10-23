@@ -276,8 +276,9 @@
                     <div>
                         <div class="flex items-center gap-2">
                             <span class="font-bold text-sm text-amber-950">Chế độ xem trước thẩm định hồ sơ</span>
-                            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold {{ $quan->trang_thai === 'chua_duyet' ? 'bg-amber-200 text-amber-900' : 'bg-rose-100 text-rose-800' }}">
-                                {{ $quan->trang_thai === 'chua_duyet' ? '⏳ Chờ phê duyệt' : '🔒 Bị khóa / Từ chối' }}
+                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold {{ $quan->trang_thai === 'chua_duyet' ? 'bg-amber-200 text-amber-900' : 'bg-rose-100 text-rose-800' }}">
+                                <span class="material-symbols-outlined text-[13px]">{{ $quan->trang_thai === 'chua_duyet' ? 'schedule' : 'lock' }}</span>
+                                {{ $quan->trang_thai === 'chua_duyet' ? 'Chờ phê duyệt' : 'Bị khóa / Từ chối' }}
                             </span>
                         </div>
                         <p class="text-xs text-amber-800 mt-0.5">Trang quán này chưa được công khai cho khách. Chỉ Quản trị viên và Chủ sở hữu quán mới có thể xem trước nội dung này.</p>
@@ -456,6 +457,7 @@
                         <button type="button" 
                             id="detail-save-btn" 
                             data-quan-id="{{ $quan->id }}" 
+                            data-saved="{{ $isSaved ? '1' : '0' }}"
                             onclick="toggleSaveDetail(this, '{{ $quan->id }}')" 
                             class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 font-bold text-xs sm:text-sm shadow-xs transition-all active:scale-95 group shrink-0"
                             title="{{ $isSaved ? 'Bỏ lưu quán' : 'Lưu quán' }}">
@@ -1134,17 +1136,25 @@
 
             const icon = btn.querySelector('.material-symbols-outlined');
             const textEl = document.getElementById('detail-save-text');
-            const currentlySaved = icon ? icon.style.fontVariationSettings.includes("'FILL' 1") : false;
+            const isIconFilled = (el) => el && /['"]?FILL['"]?\s*1/i.test(el.style.fontVariationSettings || el.getAttribute('style') || '');
+            const currentlySaved = btn.dataset.saved !== undefined
+                ? btn.dataset.saved === '1'
+                : isIconFilled(icon);
             const targetSaved = !currentlySaved;
 
+            const applyDetailSaveState = (state) => {
+                btn.dataset.saved = state ? '1' : '0';
+                btn.title = state ? 'Bỏ lưu quán' : 'Lưu quán';
+                if (icon) {
+                    icon.style.fontVariationSettings = state ? "'FILL' 1" : "'FILL' 0";
+                }
+                if (textEl) {
+                    textEl.textContent = state ? 'Đã lưu' : 'Lưu quán';
+                }
+            };
+
             // 1. Optimistic visual update (0ms delay)
-            if (icon) {
-                icon.style.fontVariationSettings = targetSaved ? "'FILL' 1" : "'FILL' 0";
-            }
-            if (textEl) {
-                textEl.textContent = targetSaved ? 'Đã lưu' : 'Lưu quán';
-            }
-            btn.title = targetSaved ? 'Bỏ lưu quán' : 'Lưu quán';
+            applyDetailSaveState(targetSaved);
             btn.style.transform = 'scale(1.15)';
             setTimeout(() => { btn.style.transform = 'scale(1)'; }, 180);
 
@@ -1185,8 +1195,7 @@
                 });
 
                 if (res.status === 401) {
-                    if (icon) icon.style.fontVariationSettings = currentlySaved ? "'FILL' 1" : "'FILL' 0";
-                    if (textEl) textEl.textContent = currentlySaved ? 'Đã lưu' : 'Lưu quán';
+                    applyDetailSaveState(currentlySaved);
                     window.location.href = "{{ route('login') }}";
                     return;
                 }
@@ -1194,11 +1203,9 @@
                 const data = await res.json();
                 if (data.success) {
                     const finalSaved = data.status === 'saved';
-                    if (icon) icon.style.fontVariationSettings = finalSaved ? "'FILL' 1" : "'FILL' 0";
-                    if (textEl) textEl.textContent = finalSaved ? 'Đã lưu' : 'Lưu quán';
+                    applyDetailSaveState(finalSaved);
                 } else {
-                    if (icon) icon.style.fontVariationSettings = currentlySaved ? "'FILL' 1" : "'FILL' 0";
-                    if (textEl) textEl.textContent = currentlySaved ? 'Đã lưu' : 'Lưu quán';
+                    applyDetailSaveState(currentlySaved);
                     if (window.showToast) {
                         window.showToast({
                             title: 'Không thể thực hiện',
@@ -1209,8 +1216,7 @@
                 }
             } catch (err) {
                 console.error(err);
-                if (icon) icon.style.fontVariationSettings = currentlySaved ? "'FILL' 1" : "'FILL' 0";
-                if (textEl) textEl.textContent = currentlySaved ? 'Đã lưu' : 'Lưu quán';
+                applyDetailSaveState(currentlySaved);
                 if (window.showToast) {
                     window.showToast({
                         title: 'Lỗi kết nối',
