@@ -60,6 +60,9 @@
         <span class="material-symbols-outlined text-[24px] group-hover:-translate-y-0.5 transition-transform">arrow_upward</span>
     </button>
 
+    <!-- Floating AI Chatbot Widget (Bottom Right) -->
+    @include('layouts.ai-chatbot')
+
     <script>
         window.toggleSave = async function(btn, quanId) {
             const card = btn.closest('a, article, .group');
