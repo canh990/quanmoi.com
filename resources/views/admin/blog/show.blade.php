@@ -68,10 +68,10 @@
             <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
                 <h3 class="text-lg font-bold text-gray-900 mb-4">Thông tin tác giả</h3>
                 <div class="flex items-center gap-4 mb-4">
-                    <img src="{{ $blog->user->anh_dai_dien_url ?? 'https://ui-avatars.com/api/?name='.urlencode($blog->user->ho_ten) }}" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name={{ urlencode($blog->user->ho_ten ?? \'U\') }}';" class="w-12 h-12 rounded-full">
+                    <img src="{{ $blog->user?->anh_dai_dien_url ?? 'https://ui-avatars.com/api/?name=' . urlencode($blog->user?->ho_ten ?? 'User') }}" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=User';" class="w-12 h-12 rounded-full">
                     <div>
-                        <p class="font-bold text-gray-900">{{ $blog->user->ho_ten }}</p>
-                        <p class="text-sm text-gray-500">{{ $blog->user->email }}</p>
+                        <p class="font-bold text-gray-900">{{ $blog->user?->ho_ten ?? 'Không rõ' }}</p>
+                        <p class="text-sm text-gray-500">{{ $blog->user?->email ?? 'Không có email' }}</p>
                     </div>
                 </div>
                 <div class="text-sm text-gray-600 space-y-2">

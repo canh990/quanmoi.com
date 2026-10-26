@@ -188,9 +188,9 @@
                         </p>
                     </div>
 
-                    <!-- 4 High-Impact KPI Counter Cards -->
+                    <!-- 4 High-Impact KPI Counter Cards with Glowing Amber Hover -->
                     <div class="author-kpi-row">
-                        <div class="p-3 bg-white rounded-2xl border border-slate-200/80 text-center hover:border-primary/40 hover:shadow-2xs transition-all">
+                        <div class="p-3 bg-white rounded-2xl border border-slate-200/80 text-center hover:border-amber-400 hover:ring-2 hover:ring-amber-400/30 hover:shadow-md hover:shadow-amber-500/10 hover:-translate-y-0.5 transition-all cursor-pointer">
                             <div class="w-7 h-7 mx-auto mb-1 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
                                 <span class="material-symbols-outlined text-[16px]">edit_note</span>
                             </div>
@@ -198,15 +198,15 @@
                             <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Bài viết</div>
                         </div>
 
-                        <div class="p-3 bg-white rounded-2xl border border-slate-200/80 text-center hover:border-amber-300 hover:shadow-2xs transition-all">
+                        <div class="p-3 bg-white rounded-2xl border border-slate-200/80 text-center hover:border-amber-400 hover:ring-2 hover:ring-amber-400/30 hover:shadow-md hover:shadow-amber-500/10 hover:-translate-y-0.5 transition-all cursor-pointer" id="author-total-views-card">
                             <div class="w-7 h-7 mx-auto mb-1 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-600">
                                 <span class="material-symbols-outlined text-[16px]">visibility</span>
                             </div>
-                            <div class="text-xl sm:text-2xl font-black text-slate-800">{{ number_format($totalViews) }}</div>
+                            <div id="author-total-views" class="text-xl sm:text-2xl font-black text-slate-800">{{ number_format($totalViews) }}</div>
                             <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Lượt xem</div>
                         </div>
 
-                        <div class="p-3 bg-white rounded-2xl border border-slate-200/80 text-center hover:border-blue-300 hover:shadow-2xs transition-all">
+                        <div class="p-3 bg-white rounded-2xl border border-slate-200/80 text-center hover:border-amber-400 hover:ring-2 hover:ring-amber-400/30 hover:shadow-md hover:shadow-amber-500/10 hover:-translate-y-0.5 transition-all cursor-pointer">
                             <div class="w-7 h-7 mx-auto mb-1 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-600">
                                 <span class="material-symbols-outlined text-[16px]">forum</span>
                             </div>
@@ -214,7 +214,7 @@
                             <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Bình luận</div>
                         </div>
 
-                        <div class="p-3 bg-white rounded-2xl border border-slate-200/80 text-center hover:border-purple-300 hover:shadow-2xs transition-all" title="{{ $topCategory->name ?? 'Đa dạng' }}">
+                        <div class="p-3 bg-white rounded-2xl border border-slate-200/80 text-center hover:border-amber-400 hover:ring-2 hover:ring-amber-400/30 hover:shadow-md hover:shadow-amber-500/10 hover:-translate-y-0.5 transition-all cursor-pointer" title="{{ $topCategory->name ?? 'Đa dạng' }}">
                             <div class="w-7 h-7 mx-auto mb-1 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-600">
                                 <span class="material-symbols-outlined text-[16px]">workspace_premium</span>
                             </div>
@@ -226,12 +226,12 @@
                     </div>
                 </div>
 
-                <!-- Actions Column -->
+                <!-- Actions Column with Glowing Amber Hover -->
                 <div class="author-action-col">
                     <button type="button" 
                             id="follow-author-btn" 
                             onclick="toggleFollowAuthor('{{ $author->id }}')" 
-                            class="w-full px-4 py-2.5 rounded-xl bg-primary hover:bg-primary/95 text-white font-bold text-xs shadow-xs hover:shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-98">
+                            class="w-full px-4 py-2.5 rounded-xl bg-primary hover:bg-primary/95 text-white font-bold text-xs shadow-xs border-2 border-transparent hover:border-amber-400 hover:ring-2 hover:ring-amber-400/40 hover:shadow-md hover:shadow-amber-500/15 transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-98">
                         <span class="material-symbols-outlined text-[17px]" id="follow-icon">bookmark_add</span>
                         <span id="follow-text">Theo dõi tác giả</span>
                     </button>
@@ -239,7 +239,7 @@
                     <button type="button" 
                             onclick="copyAuthorLink()" 
                             id="share-author-btn"
-                            class="w-full px-4 py-2.5 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl border border-slate-200 transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-98">
+                            class="w-full px-4 py-2.5 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl border border-slate-200 hover:border-amber-400 hover:ring-2 hover:ring-amber-400/35 hover:shadow-md hover:shadow-amber-500/15 transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-98">
                         <span class="material-symbols-outlined text-[17px] text-primary">share</span>
                         <span id="share-btn-text">Chia sẻ hồ sơ</span>
                     </button>
@@ -348,14 +348,14 @@
                                 <!-- Cover Image with Glass Tag Overlay -->
                                 <a href="{{ route('blog.show', $blog->slug) }}" class="article-cover-frame">
                                     @if($blog->category)
-                                        <div class="absolute top-3 left-3 z-10 px-2.5 py-1 rounded-lg bg-white/90 backdrop-blur-md text-slate-900 font-extrabold text-[10px] uppercase tracking-wider border border-white/50 shadow-sm">
+                                        <div class="absolute top-3 left-3 z-10 px-2.5 py-1 rounded-lg bg-white/90 backdrop-blur-md text-slate-900 font-extrabold text-[10px] uppercase tracking-wider border border-white/50 shadow-sm max-w-[calc(100%-1.5rem)] truncate">
                                             {{ $blog->category->name }}
                                         </div>
                                     @endif
                                     
-                                    <div class="absolute top-3 right-3 z-10 px-2 py-0.5 rounded-md bg-black/50 backdrop-blur-md text-white font-semibold text-[10px] flex items-center gap-1">
-                                        <span class="material-symbols-outlined text-[12px]">schedule</span>
-                                        <span>{{ $blog->reading_time ?? '3' }} phút</span>
+                                    <div class="absolute bottom-3 right-3 z-10 px-2.5 py-1 rounded-md bg-black/60 backdrop-blur-md text-white font-semibold text-[10.5px] flex items-center gap-1 shadow-sm" title="Thời gian đăng bài: {{ ($blog->published_at ?? $blog->created_at)?->format('d/m/Y H:i') }}">
+                                        <span class="material-symbols-outlined text-[13px] text-amber-300">schedule</span>
+                                        <span>{{ ($blog->published_at ?? $blog->created_at)?->diffForHumans() ?? 'Vừa xong' }}</span>
                                     </div>
 
                                     <img src="{{ $blog->cover_image_url ?? 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=600&q=80' }}" 
@@ -363,7 +363,7 @@
                                 </a>
 
                                 <!-- Card Content -->
-                                <div class="p-5 flex flex-col flex-grow">
+                                <div class="p-4 sm:p-5 flex flex-col flex-grow">
                                     <a href="{{ route('blog.show', $blog->slug) }}" class="flex-grow block group/link">
                                         <h3 class="text-base font-bold text-slate-900 mb-2 line-clamp-2 group-hover/link:text-primary transition-colors leading-snug">
                                             {{ $blog->title }}
@@ -374,24 +374,21 @@
                                     </a>
 
                                     <!-- Card Footer with Stats -->
-                                    <div class="mt-auto pt-3.5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
-                                        <span class="flex items-center gap-1 text-[11px] font-medium text-slate-500">
+                                    <div class="mt-auto pt-3.5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400 gap-2">
+                                        <span class="flex items-center gap-1 text-[11px] font-medium text-slate-500 shrink-0">
                                             <span class="material-symbols-outlined text-[14px] text-slate-400">calendar_today</span>
-                                            <span>{{ $blog->published_at ? $blog->published_at->format('d/m/Y') : 'Mới' }}</span>
+                                            <span>{{ ($blog->published_at ?? $blog->created_at) ? ($blog->published_at ?? $blog->created_at)->format('d/m/Y') : 'Mới' }}</span>
                                         </span>
 
-                                        <div class="flex items-center gap-3">
-                                            <span class="flex items-center gap-1 text-[11px]" title="Lượt xem">
-                                                <span class="material-symbols-outlined text-[14px]">visibility</span>
-                                                <span>{{ number_format($blog->view_count ?? 0) }}</span>
+                                        <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                                            <span class="flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-lg border border-transparent hover:border-amber-400 hover:ring-2 hover:ring-amber-400/30 hover:bg-amber-50/50 hover:text-amber-700 transition-all cursor-pointer blog-view-count-wrap" data-blog-slug="{{ $blog->slug }}" data-blog-id="{{ $blog->id }}" title="{{ number_format($blog->view_count ?? 0) }} lượt xem">
+                                                <span class="material-symbols-outlined text-[14px] text-amber-600">visibility</span>
+                                                <span class="author-card-view-count font-semibold text-slate-700">{{ number_format($blog->view_count ?? 0) }}</span>
                                             </span>
-                                            <span class="flex items-center gap-1 text-[11px]" title="Bình luận">
-                                                <span class="material-symbols-outlined text-[14px]">forum</span>
-                                                <span>{{ number_format($blog->comment_count ?? 0) }}</span>
+                                            <span class="flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-lg border border-transparent hover:border-amber-400 hover:ring-2 hover:ring-amber-400/30 hover:bg-amber-50/50 hover:text-amber-700 transition-all cursor-pointer" title="{{ number_format($blog->comment_count ?? 0) }} bình luận">
+                                                <span class="material-symbols-outlined text-[14px] text-primary">forum</span>
+                                                <span class="font-semibold text-slate-700">{{ number_format($blog->comment_count ?? 0) }}</span>
                                             </span>
-                                            <a href="{{ route('blog.show', $blog->slug) }}" class="w-6 h-6 rounded-full bg-slate-100 group-hover:bg-primary group-hover:text-white flex items-center justify-center transition-colors text-slate-400 ml-1">
-                                                <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
-                                            </a>
                                         </div>
                                     </div>
                                 </div>
@@ -673,5 +670,55 @@
             }
         });
     }
+
+    // Đồng bộ số lượt xem thời gian thực mà KHÔNG CẦN RELOAD TRANG
+    function syncAuthorViewsInDom(data) {
+        if (!data) return;
+        const wrappers = document.querySelectorAll(`[data-blog-slug="${data.slug}"], [data-blog-id="${data.blogId}"]`);
+        let hasUpdated = false;
+        wrappers.forEach(el => {
+            const countEl = el.querySelector('.author-card-view-count') || el;
+            if (countEl) {
+                countEl.textContent = data.formatted;
+                hasUpdated = true;
+            }
+        });
+
+        // Nếu bài viết thuộc tác giả này, cập nhật cả ô tổng lượt xem của tác giả
+        const totalViewsEl = document.getElementById('author-total-views');
+        if (totalViewsEl && hasUpdated) {
+            const currentTotal = parseInt(totalViewsEl.textContent.replace(/[^0-9]/g, '')) || 0;
+            totalViewsEl.textContent = (currentTotal + 1).toLocaleString();
+            const card = document.getElementById('author-total-views-card');
+            if (card) {
+                card.classList.add('ring-2', 'ring-amber-400', 'border-amber-400');
+                setTimeout(() => card.classList.remove('ring-2', 'ring-amber-400', 'border-amber-400'), 1500);
+            }
+        }
+    }
+
+    try {
+        if (window.BroadcastChannel) {
+            const bc = new BroadcastChannel('qm_blog_views_sync');
+            bc.onmessage = function(e) {
+                if (e.data) syncAuthorViewsInDom(e.data);
+            };
+        }
+    } catch(e) {}
+
+    window.addEventListener('storage', function(e) {
+        if (e.key === 'qm_latest_blog_view' && e.newValue) {
+            try {
+                syncAuthorViewsInDom(JSON.parse(e.newValue));
+            } catch(err) {}
+        }
+    });
+
+    window.addEventListener('pageshow', function() {
+        try {
+            const raw = localStorage.getItem('qm_latest_blog_view');
+            if (raw) syncAuthorViewsInDom(JSON.parse(raw));
+        } catch(e) {}
+    });
 </script>
 @endpush
