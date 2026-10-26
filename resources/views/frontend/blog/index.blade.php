@@ -427,29 +427,29 @@
 
 <!-- ==================== CREATE BLOG MODAL ==================== -->
 @auth
-<div id="createBlogModal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-slate-900/65 backdrop-blur-md p-4 sm:p-8 lg:p-12">
+<div id="createBlogModal" class="fixed inset-0 hidden overflow-y-auto bg-slate-900/70 backdrop-blur-md p-3 sm:p-6 lg:p-8 pt-6 sm:pt-8" style="z-index: 100000;">
     <div class="flex min-h-full items-center justify-center p-0 text-center">
-        <form action="{{ route('nguoi-dung.blog.store') }}" method="POST" enctype="multipart/form-data" id="modal-blog-form" onsubmit="event.preventDefault(); submitModalBlogForm('pending');" class="relative w-full max-w-3xl my-auto max-h-[82vh] bg-white rounded-3xl shadow-2xl border border-slate-200/80 overflow-hidden animate-modal-in flex flex-col text-left">
+        <form action="{{ route('nguoi-dung.blog.store') }}" method="POST" enctype="multipart/form-data" id="modal-blog-form" onsubmit="event.preventDefault(); submitModalBlogForm('pending');" class="relative w-full max-w-3xl my-auto max-h-[86vh] bg-white rounded-3xl shadow-2xl border border-slate-200/80 overflow-hidden animate-modal-in flex flex-col text-left">
             @csrf
             <input type="hidden" name="redirect_to" value="{{ route('blog.index') }}">
             <input type="hidden" name="action" id="modal-action-input" value="pending">
             <input type="hidden" name="content" id="modal-content-input">
             
             <!-- Modal Header (Pinned at Top) -->
-            <div style="background: linear-gradient(135deg, #b45309 0%, #d97706 50%, #ea580c 100%); color: #ffffff;" class="px-6 py-4 flex items-center justify-between shrink-0 shadow-sm relative z-20">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30 text-white shrink-0">
+            <div style="background: linear-gradient(135deg, #b45309 0%, #d97706 50%, #ea580c 100%); color: #ffffff;" class="px-5 sm:px-6 py-4 flex items-center justify-between shrink-0 shadow-sm relative z-20">
+                <div class="flex items-center gap-3 min-w-0">
+                    <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30 text-white shrink-0 shadow-xs">
                         <span class="material-symbols-outlined text-2xl">edit_note</span>
                     </div>
-                    <div class="leading-tight">
-                        <h3 class="text-lg font-extrabold text-white tracking-wide">Tạo Bài Viết Blog Mới</h3>
-                        <p class="text-xs text-amber-100/90 font-medium mt-0.5">Chia sẻ trải nghiệm & giới thiệu quán cho cộng đồng</p>
+                    <div class="leading-tight min-w-0">
+                        <h3 class="text-base sm:text-lg font-extrabold text-white tracking-wide truncate">Tạo Bài Viết Blog Mới</h3>
+                        <p class="text-xs text-amber-100/90 font-medium mt-0.5 truncate">Chia sẻ trải nghiệm & giới thiệu quán cho cộng đồng</p>
                     </div>
                 </div>
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2 sm:gap-3 shrink-0 ml-2">
                     <span id="modal-draft-indicator" class="text-xs font-semibold text-white/90 bg-black/20 px-2.5 py-1 rounded-full opacity-0 transition-opacity hidden sm:flex items-center"></span>
-                    <button onclick="closeCreateBlogModal()" type="button" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all hover:rotate-90">
-                        <span class="material-symbols-outlined text-lg">close</span>
+                    <button onclick="closeCreateBlogModal()" type="button" class="w-9 h-9 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-xs" title="Đóng cửa sổ (Esc)">
+                        <span class="material-symbols-outlined text-xl">close</span>
                     </button>
                 </div>
             </div>
@@ -757,7 +757,7 @@
 @endauth
 
 <!-- ==================== GUEST LOGIN MODAL ==================== -->
-<div id="guestBlogModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+<div id="guestBlogModal" class="fixed inset-0 hidden items-center justify-center p-4 bg-black/60 backdrop-blur-sm" style="z-index: 100000;">
     <div class="relative w-full max-w-md bg-white rounded-3xl shadow-2xl border border-outline-variant p-6 text-center animate-modal-in">
         <div class="w-16 h-16 rounded-2xl bg-amber-100 text-primary flex items-center justify-center mx-auto mb-4 border border-amber-200">
             <span class="material-symbols-outlined text-3xl">rate_review</span>
@@ -929,6 +929,13 @@
             document.body.classList.remove('overflow-hidden');
         }
     }
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeCreateBlogModal();
+            closeGuestModal();
+        }
+    });
 
 
     function previewModalCoverImage(input) {

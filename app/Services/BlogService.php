@@ -4,10 +4,15 @@ namespace App\Services;
 
 use App\Models\Blog;
 use App\Models\BlogView;
+use App\Models\BlogSubscriber;
+use App\Notifications\NewBlogPublishedNotification;
+use App\Notifications\NewsletterWelcomeNotification;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 
 class BlogService
 {
@@ -95,5 +100,56 @@ class BlogService
     public function syncTags(Blog $blog, array $tagIds): void
     {
         $blog->tags()->sync($tagIds);
+    }
+
+    /**
+     * Gửi email chào mừng khi độc giả đăng ký nhận tin ẩm thực thành công.
+     */
+    public function sendNewsletterWelcome(BlogSubscriber $subscriber): bool
+    {
+        try {
+            Notification::route('mail', $subscriber->email)
+                ->notify(new NewsletterWelcomeNotification($subscriber));
+            return true;
+        } catch (\Throwable $e) {
+            Log::warning('Không thể gửi email chào mừng nhận tin ẩm thực: ' . $e->getMessage(), [
+                'email' => $subscriber->email,
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Tự động gửi thông báo qua Gmail tới toàn bộ độc giả đã đăng ký khi có bài viết blog mới được xuất bản.
+     */
+    public function notifySubscribersAboutNewPost(Blog $blog): int
+    {
+        if ($blog->status !== 'published') {
+            return 0;
+        }
+
+        // Đảm bảo load đủ thông tin cần thiết cho email
+        $blog->loadMissing(['category', 'user']);
+
+        $subscribers = BlogSubscriber::where('status', 'active')->get();
+        if ($subscribers->isEmpty()) {
+            return 0;
+        }
+
+        $sentCount = 0;
+        foreach ($subscribers as $subscriber) {
+            try {
+                if (filter_var($subscriber->email, FILTER_VALIDATE_EMAIL)) {
+                    Notification::route('mail', $subscriber->email)
+                        ->notify(new NewBlogPublishedNotification($blog, $subscriber));
+                    $sentCount++;
+                }
+            } catch (\Throwable $e) {
+                Log::warning("Lỗi gửi thông báo bài viết mới tới email {$subscriber->email}: " . $e->getMessage());
+            }
+        }
+
+        Log::info("Đã gửi thông báo bài viết blog mới [{$blog->title}] tới {$sentCount}/{$subscribers->count()} độc giả nhận tin ẩm thực.");
+        return $sentCount;
     }
 }
