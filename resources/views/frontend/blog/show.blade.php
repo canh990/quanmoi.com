@@ -488,33 +488,88 @@
         </div>
         
         <!-- Related Articles -->
-        @if($relatedBlogs->count() > 0)
-        <section class="mt-10">
-            <h3 class="font-display-lg text-2xl text-on-background mb-6 font-bold">Bài viết liên quan</h3>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                @foreach($relatedBlogs->take(4) as $related)
-                    <a href="{{ route('blog.show', $related->slug) }}" class="bg-surface-card rounded-xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] border border-outline-variant/30 group flex flex-col hover:border-primary/50 transition-all hover:-translate-y-1">
-                        <div class="relative aspect-[4/3] overflow-hidden">
-                            <img src="{{ $related->cover_image ? (Str::startsWith($related->cover_image, 'http') ? $related->cover_image : asset('storage/'.$related->cover_image)) : 'https://placehold.co/600x400/png' }}" 
-                                 class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" alt="{{ $related->title }}">
-                            @if($related->category)
-                                <div class="absolute bottom-3 left-3 bg-black/60 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-md uppercase">
-                                    {{ $related->category->name }}
-                                </div>
-                            @endif
-                        </div>
-                        <div class="p-4 flex flex-col flex-1">
-                            <h4 class="font-title-md text-[15px] leading-[22px] text-on-background mb-2 line-clamp-2 group-hover:text-primary transition-colors flex-1 font-bold">{{ $related->title }}</h4>
-                            <div class="text-[12px] text-on-surface-variant flex items-center justify-between mt-auto pt-2 border-t border-surface-dim">
-                                <span>{{ $related->user->ho_ten ?? 'Tác giả' }}</span>
-                                <span>{{ ($related->published_at ?? $related->created_at)?->format('d/m/Y') ?? 'Mới' }}</span>
-                            </div>
-                        </div>
-                    </a>
-                @endforeach
+        <section class="mt-12 pt-8 border-t border-surface-dim">
+            <div class="flex items-center justify-between mb-6 flex-wrap gap-2">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                        <span class="material-symbols-outlined text-[22px]">auto_stories</span>
+                    </div>
+                    <div>
+                        <h3 class="font-display-lg text-xl sm:text-2xl text-on-background font-bold">Bài viết liên quan</h3>
+                        <p class="text-xs text-on-surface-variant mt-0.5">Khám phá các bài viết cùng chủ đề ẩm thực hấp dẫn</p>
+                    </div>
+                </div>
+                @if($relatedBlogs->count() > 0)
+                    <span class="text-xs font-bold px-3 py-1 rounded-full bg-surface-container text-slate-600 border border-outline-variant/30">
+                        {{ $relatedBlogs->count() }} bài gợi ý
+                    </span>
+                @endif
             </div>
+
+            @if($relatedBlogs->count() > 0)
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
+                    @foreach($relatedBlogs as $related)
+                        <a href="{{ route('blog.show', $related->slug) }}" class="bg-surface-card rounded-2xl overflow-hidden shadow-xs hover:shadow-xl border border-outline-variant/30 hover:border-amber-400 hover:ring-2 hover:ring-amber-400/30 transition-all duration-300 hover:-translate-y-1.5 flex flex-col group">
+                            {{-- Cover Image --}}
+                            <div class="relative aspect-[16/10] overflow-hidden bg-slate-100">
+                                <img src="{{ $related->cover_image ? (Str::startsWith($related->cover_image, 'http') ? $related->cover_image : asset('storage/'.$related->cover_image)) : 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=600&q=80' }}" 
+                                     class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+                                     alt="{{ $related->title }}"
+                                     loading="lazy"
+                                     onerror="this.src='https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=600&q=80'">
+                                
+                                {{-- Category Badge --}}
+                                @if($related->category)
+                                    <div class="absolute top-3 left-3 bg-white/95 backdrop-blur-md text-amber-700 text-[10px] font-bold px-2.5 py-1 rounded-full shadow-xs border border-amber-200/60 uppercase tracking-wider">
+                                        {{ $related->category->name }}
+                                    </div>
+                                @endif
+                            </div>
+
+                            {{-- Content --}}
+                            <div class="p-4 sm:p-5 flex flex-col flex-1 justify-between gap-3">
+                                <div>
+                                    <h4 class="font-title-md text-[15px] sm:text-[16px] leading-snug text-on-background font-bold line-clamp-2 group-hover:text-primary transition-colors">
+                                        {{ $related->title }}
+                                    </h4>
+                                    @if($related->excerpt)
+                                        <p class="text-xs text-on-surface-variant line-clamp-2 leading-relaxed mt-2 text-slate-500 font-normal">
+                                            {{ $related->excerpt }}
+                                        </p>
+                                    @endif
+                                </div>
+
+                                {{-- Meta footer: Author, Date, Views --}}
+                                <div class="pt-3 border-t border-surface-dim/70 flex items-center justify-between text-xs text-on-surface-variant gap-2 flex-wrap">
+                                    <div class="flex items-center gap-2 min-w-0">
+                                        <img class="w-6 h-6 rounded-full object-cover border border-gray-100 shrink-0" 
+                                             src="{{ $related->user->anh_dai_dien_url ?? 'https://ui-avatars.com/api/?name='.urlencode($related->user->ho_ten ?? 'User').'&background=random' }}" 
+                                             alt="{{ $related->user->ho_ten ?? 'Tác giả' }}">
+                                        <span class="font-semibold text-slate-700 truncate max-w-[110px] text-xs">
+                                            {{ $related->user->ho_ten ?? 'Tác giả' }}
+                                        </span>
+                                    </div>
+                                    <div class="flex items-center gap-3 shrink-0 text-[11px] text-slate-400 font-medium">
+                                        <span title="{{ ($related->published_at ?? $related->created_at)?->format('d/m/Y H:i') }}">
+                                            {{ ($related->published_at ?? $related->created_at)?->diffForHumans() ?? 'Mới' }}
+                                        </span>
+                                        <span class="flex items-center gap-0.5 text-slate-500" title="{{ number_format($related->view_count ?? 0) }} lượt xem">
+                                            <span class="material-symbols-outlined text-[13px] text-amber-500">visibility</span>
+                                            <span>{{ number_format($related->view_count ?? 0) }}</span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    @endforeach
+                </div>
+            @else
+                <div class="p-8 text-center rounded-2xl bg-surface-container/20 border border-dashed border-outline-variant/40">
+                    <span class="material-symbols-outlined text-3xl text-text-muted mb-1">auto_stories</span>
+                    <p class="text-xs text-on-surface-variant">Hiện chưa có thêm bài viết liên quan nào khác.</p>
+                </div>
+            @endif
         </section>
-        @endif
         
     </div>
     
