@@ -13,6 +13,56 @@
 @section('content')
 <main class="max-w-[1200px] mx-auto px-container-margin py-stack-lg min-h-[819px] pt-6">
 
+    {{-- Alert thành công --}}
+    @if(session('success'))
+    <div id="toast-success" class="mb-6 flex items-start sm:items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-2xl px-5 py-4 shadow-lg shadow-emerald-100/50" role="alert">
+        <div class="w-9 h-9 rounded-xl bg-emerald-100 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0 text-emerald-600">
+            <span class="material-symbols-outlined text-[22px]">check_circle</span>
+        </div>
+        <div class="flex-1 min-w-0">
+            <p class="font-bold text-emerald-900 text-sm">Thành công!</p>
+            <p class="text-emerald-800 text-xs mt-0.5">{{ session('success') }}</p>
+        </div>
+        <button type="button" onclick="document.getElementById('toast-success').remove()" class="text-emerald-500 hover:text-emerald-700 cursor-pointer">
+            <span class="material-symbols-outlined text-[18px]">close</span>
+        </button>
+    </div>
+    @endif
+
+    {{-- Alert lỗi validation từ Server (Hiển thị ngay trên web) --}}
+    @if(isset($errors) && $errors->any())
+    <div id="toast-errors" class="mb-6 flex items-start sm:items-center gap-3 bg-rose-50 border border-rose-200 rounded-2xl px-5 py-4 shadow-lg shadow-rose-100/50" role="alert">
+        <div class="w-9 h-9 rounded-xl bg-rose-100 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0 text-rose-600">
+            <span class="material-symbols-outlined text-[22px]">error</span>
+        </div>
+        <div class="flex-1 min-w-0">
+            <p class="font-bold text-rose-900 text-sm">Vui lòng kiểm tra lại thông tin:</p>
+            <ul class="list-disc list-inside text-rose-800 text-xs mt-1 space-y-0.5">
+                @foreach($errors->all() as $err)
+                    <li>{{ $err }}</li>
+                @endforeach
+            </ul>
+        </div>
+        <button type="button" onclick="document.getElementById('toast-errors').remove()" class="text-rose-500 hover:text-rose-700 cursor-pointer">
+            <span class="material-symbols-outlined text-[18px]">close</span>
+        </button>
+    </div>
+    @endif
+
+    {{-- Banner báo lỗi giao diện Web ở phía Client (Không dùng popup HTML trình duyệt) --}}
+    <div id="client-error-banner" class="hidden mb-6 flex items-start sm:items-center gap-3 bg-rose-50 border border-rose-200 rounded-2xl px-5 py-4 shadow-lg shadow-rose-100/50" role="alert">
+        <div class="w-9 h-9 rounded-xl bg-rose-100 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0 text-rose-600">
+            <span class="material-symbols-outlined text-[22px]">error</span>
+        </div>
+        <div class="flex-1 min-w-0">
+            <p class="font-bold text-rose-900 text-sm">Vui lòng kiểm tra lại thông tin:</p>
+            <ul id="client-error-list" class="list-disc list-inside text-rose-800 text-xs mt-1 space-y-0.5"></ul>
+        </div>
+        <button type="button" onclick="document.getElementById('client-error-banner').classList.add('hidden')" class="text-rose-500 hover:text-rose-700 cursor-pointer">
+            <span class="material-symbols-outlined text-[18px]">close</span>
+        </button>
+    </div>
+
     @if(session('error_conflict') || session('error'))
     <div id="toast-conflict" class="mb-6 flex items-start sm:items-center gap-3 bg-amber-50 border border-amber-200 rounded-2xl px-5 py-4 shadow-lg shadow-amber-100/50">
         <div class="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0 text-amber-600">
@@ -37,7 +87,7 @@
         <div class="md:col-span-9 space-y-stack-lg">
             <!-- Profile Information Section -->
             <section class="bg-surface-card p-stack-lg rounded-xl shadow-[0px_4px_20px_rgba(0,0,0,0.05)] border border-surface-container">
-                <form id="form-update-profile" action="{{ route('tai-khoan.update') }}" method="POST">
+                <form id="form-update-profile" action="{{ route('tai-khoan.update') }}" method="POST" novalidate>
                     @csrf
                     @method('PUT')
                     <input type="hidden" name="last_updated_at" value="{{ $user->updated_at?->toISOString() }}">
@@ -47,11 +97,36 @@
                             <span class="btn-text">LƯU THAY ĐỔI</span>
                         </button>
                     </div>
+
+                    {{-- Banner báo lỗi cho thông tin cá nhân --}}
+                    <div id="profile-client-error-banner" class="hidden mb-4 flex items-start sm:items-center gap-3 bg-rose-50 border border-rose-200 rounded-2xl px-4 py-3 shadow-xs" role="alert">
+                        <div class="w-7 h-7 rounded-lg bg-rose-100 flex items-center justify-center shrink-0 text-rose-600">
+                            <span class="material-symbols-outlined text-[18px]">error</span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="font-bold text-rose-900 text-xs">Vui lòng kiểm tra lại thông tin:</p>
+                            <ul id="profile-client-error-list" class="list-disc list-inside text-rose-800 text-[11px] mt-0.5 space-y-0.5"></ul>
+                        </div>
+                        <button type="button" onclick="document.getElementById('profile-client-error-banner').classList.add('hidden')" class="text-rose-500 hover:text-rose-700 cursor-pointer">
+                            <span class="material-symbols-outlined text-[16px]">close</span>
+                        </button>
+                    </div>
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-stack-md">
                         <div class="space-y-1">
-                            <label class="font-label-md text-label-md text-on-surface-variant block">Họ và tên</label>
-                            <input name="ho_ten" class="w-full px-4 py-3 bg-surface-container-low border {{ $errors->has('ho_ten') ? 'border-error' : 'border-outline-variant' }} rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all" type="text" value="{{ old('ho_ten', $user->ho_ten) }}"/>
-                            @error('ho_ten')<p class="text-error text-xs mt-1">{{ $message }}</p>@enderror
+                            <label class="font-label-md text-label-md text-on-surface-variant block">Họ và tên <span class="text-rose-500">*</span></label>
+                            <input name="ho_ten"
+                                   id="ho_ten"
+                                   class="w-full px-4 py-3 bg-surface-container-low border {{ $errors->has('ho_ten') ? 'border-rose-500 ring-1 ring-rose-500' : 'border-outline-variant' }} rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
+                                   type="text"
+                                   value="{{ old('ho_ten', $user->ho_ten) }}"/>
+                            <p id="client-error-ho_ten" class="text-rose-600 text-xs mt-1.5 font-medium items-center gap-1 hidden"></p>
+                            @error('ho_ten')
+                                <p class="text-rose-600 text-xs mt-1.5 font-medium flex items-center gap-1 server-error-ho_ten">
+                                    <span class="material-symbols-outlined text-[15px] shrink-0">error</span>
+                                    <span>{{ $message }}</span>
+                                </p>
+                            @enderror
                         </div>
                         <div class="space-y-1">
                             <label class="font-label-md text-label-md text-on-surface-variant block">Địa chỉ Email</label>
@@ -67,15 +142,39 @@
                         </div>
                         <div class="space-y-1">
                             <label class="font-label-md text-label-md text-on-surface-variant block">Ngày sinh</label>
-                            <input name="ngay_sinh" class="w-full px-4 py-3 bg-surface-container-low border {{ $errors->has('ngay_sinh') ? 'border-error' : 'border-outline-variant' }} rounded-xl focus:ring-2 focus:ring-primary outline-none" type="date" value="{{ old('ngay_sinh', $user->ngay_sinh ? \Carbon\Carbon::parse($user->ngay_sinh)->format('Y-m-d') : '') }}"/>
+                            <input name="ngay_sinh"
+                                   id="ngay_sinh"
+                                   class="w-full px-4 py-3 bg-surface-container-low border {{ $errors->has('ngay_sinh') ? 'border-rose-500 ring-1 ring-rose-500' : 'border-outline-variant' }} rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all"
+                                   type="date"
+                                   value="{{ old('ngay_sinh', $user->ngay_sinh ? \Carbon\Carbon::parse($user->ngay_sinh)->format('Y-m-d') : '') }}"/>
+                            <p id="client-error-ngay_sinh" class="text-rose-600 text-xs mt-1.5 font-medium items-center gap-1 hidden"></p>
+                            @error('ngay_sinh')
+                                <p class="text-rose-600 text-xs mt-1.5 font-medium flex items-center gap-1 server-error-ngay_sinh">
+                                    <span class="material-symbols-outlined text-[15px] shrink-0">error</span>
+                                    <span>{{ $message }}</span>
+                                </p>
+                            @enderror
                         </div>
                         <div class="space-y-1">
                             <label class="font-label-md text-label-md text-on-surface-variant block">Số điện thoại</label>
                             <div class="relative">
                                 <span class="material-symbols-outlined absolute left-3 top-3.5 text-on-surface-variant">call</span>
-                                <input name="so_dien_thoai" class="w-full pl-10 pr-4 py-3 bg-surface-container-low border {{ $errors->has('so_dien_thoai') ? 'border-error' : 'border-outline-variant' }} rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all" type="tel" value="{{ old('so_dien_thoai', $user->so_dien_thoai) }}"/>
+                                <input name="so_dien_thoai"
+                                       id="so_dien_thoai"
+                                       maxlength="11"
+                                       inputmode="numeric"
+                                       class="w-full pl-10 pr-4 py-3 bg-surface-container-low border {{ $errors->has('so_dien_thoai') ? 'border-rose-500 ring-1 ring-rose-500' : 'border-outline-variant' }} rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all"
+                                       type="tel"
+                                       placeholder="Ví dụ: 0912345678"
+                                       value="{{ old('so_dien_thoai', $user->so_dien_thoai) }}"/>
                             </div>
-                            @error('so_dien_thoai')<p class="text-error text-xs mt-1">{{ $message }}</p>@enderror
+                            <p id="client-error-so_dien_thoai" class="text-rose-600 text-xs mt-1.5 font-medium items-center gap-1 hidden"></p>
+                            @error('so_dien_thoai')
+                                <p class="text-rose-600 text-xs mt-1.5 font-medium flex items-center gap-1 server-error-so_dien_thoai">
+                                    <span class="material-symbols-outlined text-[15px] shrink-0">error</span>
+                                    <span>{{ $message }}</span>
+                                </p>
+                            @enderror
                         </div>
                         <div class="space-y-1">
                             <label class="font-label-md text-label-md text-on-surface-variant block">Địa chỉ hiện tại</label>
@@ -90,7 +189,7 @@
 
             <!-- Password Update Section -->
             <section class="bg-surface-card p-stack-lg rounded-xl shadow-[0px_4px_20px_rgba(0,0,0,0.05)] border border-surface-container">
-                <form id="form-update-password" action="{{ route('tai-khoan.update-password') }}" method="POST">
+                <form id="form-update-password" action="{{ route('tai-khoan.update-password') }}" method="POST" novalidate>
                     @csrf
                     @method('PUT')
                     <div class="flex justify-between items-center mb-stack-lg">
@@ -99,20 +198,57 @@
                             <span class="btn-text">CẬP NHẬT MẬT KHẨU</span>
                         </button>
                     </div>
+
+                    {{-- Banner báo lỗi cho đổi mật khẩu --}}
+                    <div id="pwd-client-error-banner" class="hidden mb-4 flex items-start sm:items-center gap-3 bg-rose-50 border border-rose-200 rounded-2xl px-4 py-3 shadow-xs" role="alert">
+                        <div class="w-7 h-7 rounded-lg bg-rose-100 flex items-center justify-center shrink-0 text-rose-600">
+                            <span class="material-symbols-outlined text-[18px]">error</span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="font-bold text-rose-900 text-xs">Vui lòng kiểm tra lại thông tin mật khẩu:</p>
+                            <ul id="pwd-client-error-list" class="list-disc list-inside text-rose-800 text-[11px] mt-0.5 space-y-0.5"></ul>
+                        </div>
+                        <button type="button" onclick="document.getElementById('pwd-client-error-banner').classList.add('hidden')" class="text-rose-500 hover:text-rose-700 cursor-pointer">
+                            <span class="material-symbols-outlined text-[16px]">close</span>
+                        </button>
+                    </div>
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-stack-md">
                         <div class="md:col-span-2 space-y-1">
-                            <label class="font-label-md text-label-md text-on-surface-variant block">Mật khẩu hiện tại</label>
-                            <input name="current_password" class="w-full px-4 py-3 bg-surface-container-low border {{ $errors->has('current_password') ? 'border-error' : 'border-outline-variant' }} rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all" type="password" required/>
-                            @error('current_password')<p class="text-error text-xs mt-1">{{ $message }}</p>@enderror
+                            <label class="font-label-md text-label-md text-on-surface-variant block">Mật khẩu hiện tại <span class="text-rose-500">*</span></label>
+                            <input name="current_password"
+                                   id="current_password"
+                                   class="w-full px-4 py-3 bg-surface-container-low border {{ $errors->has('current_password') ? 'border-rose-500 ring-1 ring-rose-500' : 'border-outline-variant' }} rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all"
+                                   type="password"/>
+                            <p id="client-error-current_password" class="text-rose-600 text-xs mt-1.5 font-medium items-center gap-1 hidden"></p>
+                            @error('current_password')
+                                <p class="text-rose-600 text-xs mt-1.5 font-medium flex items-center gap-1 server-error-current_password">
+                                    <span class="material-symbols-outlined text-[15px] shrink-0">error</span>
+                                    <span>{{ $message }}</span>
+                                </p>
+                            @enderror
                         </div>
                         <div class="space-y-1">
-                            <label class="font-label-md text-label-md text-on-surface-variant block">Mật khẩu mới</label>
-                            <input name="password" class="w-full px-4 py-3 bg-surface-container-low border {{ $errors->has('password') ? 'border-error' : 'border-outline-variant' }} rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all" type="password" required/>
-                            @error('password')<p class="text-error text-xs mt-1">{{ $message }}</p>@enderror
+                            <label class="font-label-md text-label-md text-on-surface-variant block">Mật khẩu mới <span class="text-rose-500">*</span></label>
+                            <input name="password"
+                                   id="password"
+                                   class="w-full px-4 py-3 bg-surface-container-low border {{ $errors->has('password') ? 'border-rose-500 ring-1 ring-rose-500' : 'border-outline-variant' }} rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all"
+                                   type="password"/>
+                            <p id="client-error-password" class="text-rose-600 text-xs mt-1.5 font-medium items-center gap-1 hidden"></p>
+                            @error('password')
+                                <p class="text-rose-600 text-xs mt-1.5 font-medium flex items-center gap-1 server-error-password">
+                                    <span class="material-symbols-outlined text-[15px] shrink-0">error</span>
+                                    <span>{{ $message }}</span>
+                                </p>
+                            @enderror
                         </div>
                         <div class="space-y-1">
-                            <label class="font-label-md text-label-md text-on-surface-variant block">Xác nhận mật khẩu mới</label>
-                            <input name="password_confirmation" class="w-full px-4 py-3 bg-surface-container-low border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all" type="password" required/>
+                            <label class="font-label-md text-label-md text-on-surface-variant block">Xác nhận mật khẩu mới <span class="text-rose-500">*</span></label>
+                            <input name="password_confirmation"
+                                   id="password_confirmation"
+                                   class="w-full px-4 py-3 bg-surface-container-low border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all"
+                                   type="password"/>
+                            <p id="client-error-password_confirmation" class="text-rose-600 text-xs mt-1.5 font-medium items-center gap-1 hidden"></p>
                         </div>
                     </div>
                 </form>
@@ -242,14 +378,255 @@
 </main>
 
 <script>
+    function showFieldError(fieldName, message) {
+        const input = document.getElementById(fieldName) || document.querySelector(`[name="${fieldName}"]`);
+        if (!input) return;
+        input.classList.remove('border-outline-variant', 'border-error');
+        input.classList.add('border-rose-500', 'ring-1', 'ring-rose-500');
+
+        // Ẩn thông báo lỗi server cũ nếu có
+        const serverError = document.querySelector(`.server-error-${fieldName}`);
+        if (serverError) serverError.classList.add('hidden');
+
+        let errorEl = document.getElementById(`client-error-${fieldName}`);
+        if (!errorEl) {
+            errorEl = document.createElement('p');
+            errorEl.id = `client-error-${fieldName}`;
+            errorEl.className = 'text-rose-600 text-xs mt-1.5 font-medium flex items-center gap-1';
+            const parent = input.closest('.space-y-1') || input.parentElement;
+            parent.appendChild(errorEl);
+        }
+        errorEl.innerHTML = `<span class="material-symbols-outlined text-[15px] shrink-0">error</span><span>${message}</span>`;
+        errorEl.classList.remove('hidden');
+        errorEl.classList.add('flex');
+    }
+
+    function clearFieldError(fieldName) {
+        const input = document.getElementById(fieldName) || document.querySelector(`[name="${fieldName}"]`);
+        if (input) {
+            input.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500', 'border-error');
+            input.classList.add('border-outline-variant');
+        }
+        const errorEl = document.getElementById(`client-error-${fieldName}`);
+        if (errorEl) {
+            errorEl.classList.add('hidden');
+            errorEl.classList.remove('flex');
+            errorEl.innerHTML = '';
+        }
+        const serverError = document.querySelector(`.server-error-${fieldName}`);
+        if (serverError) {
+            serverError.classList.add('hidden');
+        }
+    }
+
+    function showFormErrorBanner(bannerId, listId, messages) {
+        const banner = document.getElementById(bannerId);
+        const list = document.getElementById(listId);
+        if (!banner || !list) return;
+
+        list.innerHTML = '';
+        messages.forEach(function(msg) {
+            const li = document.createElement('li');
+            li.textContent = msg;
+            list.appendChild(li);
+        });
+        banner.classList.remove('hidden');
+    }
+
+    function hideFormErrorBanner(bannerId) {
+        const banner = document.getElementById(bannerId);
+        if (banner) {
+            banner.classList.add('hidden');
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
+        const ngaySinhInput = document.getElementById('ngay_sinh');
+        const sdtInput = document.getElementById('so_dien_thoai');
+        const hoTenInput = document.getElementById('ho_ten');
+
+        const curPwdInput = document.getElementById('current_password');
+        const newPwdInput = document.getElementById('password');
+        const cfmPwdInput = document.getElementById('password_confirmation');
+
+        if (hoTenInput) {
+            hoTenInput.addEventListener('input', function() {
+                if (this.value.trim()) {
+                    clearFieldError('ho_ten');
+                    hideFormErrorBanner('profile-client-error-banner');
+                }
+            });
+        }
+
+        if (ngaySinhInput) {
+            const checkNgaySinh = function() {
+                const val = ngaySinhInput.value;
+                if (!val) {
+                    clearFieldError('ngay_sinh');
+                    return true;
+                }
+                const todayStr = new Date().toISOString().split('T')[0];
+                if (val > todayStr) {
+                    showFieldError('ngay_sinh', 'Ngày sinh không thể là ngày trong tương lai.');
+                    return false;
+                }
+                clearFieldError('ngay_sinh');
+                return true;
+            };
+
+            ngaySinhInput.addEventListener('change', checkNgaySinh);
+            ngaySinhInput.addEventListener('input', checkNgaySinh);
+            ngaySinhInput.addEventListener('blur', checkNgaySinh);
+        }
+
+        if (sdtInput) {
+            sdtInput.addEventListener('input', function() {
+                // Tự động giữ tối đa 11 số và chỉ chứa chữ số
+                this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11);
+                const val = this.value;
+                if (!val) {
+                    clearFieldError('so_dien_thoai');
+                    return;
+                }
+                if (!val.startsWith('0')) {
+                    showFieldError('so_dien_thoai', 'Số điện thoại phải bắt đầu bằng số 0.');
+                    return;
+                }
+                if (val.length < 10) {
+                    showFieldError('so_dien_thoai', 'Số điện thoại phải từ 10 đến 11 số (hiện có ' + val.length + ' số).');
+                    return;
+                }
+                clearFieldError('so_dien_thoai');
+            });
+
+            sdtInput.addEventListener('blur', function() {
+                const val = this.value.trim();
+                if (val && !/^0[0-9]{9,10}$/.test(val)) {
+                    showFieldError('so_dien_thoai', 'Số điện thoại không hợp lệ (phải bắt đầu bằng số 0 và có từ 10 đến 11 số).');
+                }
+            });
+        }
+
+        if (curPwdInput) {
+            curPwdInput.addEventListener('input', function() {
+                if (this.value) {
+                    clearFieldError('current_password');
+                    hideFormErrorBanner('pwd-client-error-banner');
+                }
+            });
+        }
+
+        if (newPwdInput) {
+            newPwdInput.addEventListener('input', function() {
+                if (this.value && this.value.length >= 8) {
+                    clearFieldError('password');
+                }
+            });
+        }
+
+        if (cfmPwdInput) {
+            cfmPwdInput.addEventListener('input', function() {
+                if (this.value && this.value === (newPwdInput ? newPwdInput.value : '')) {
+                    clearFieldError('password_confirmation');
+                }
+            });
+        }
+
         ['form-update-profile', 'form-update-password'].forEach(function(formId) {
             const form = document.getElementById(formId);
             if (!form) return;
 
             form.addEventListener('submit', function(e) {
-                if (!form.checkValidity()) {
-                    return;
+                if (formId === 'form-update-profile') {
+                    let errorMessages = [];
+                    hideFormErrorBanner('profile-client-error-banner');
+
+                    let firstInvalid = null;
+
+                    // 1. Kiểm tra Họ và tên
+                    const hoTenVal = hoTenInput ? hoTenInput.value.trim() : '';
+                    if (!hoTenVal) {
+                        showFieldError('ho_ten', 'Vui lòng nhập họ và tên.');
+                        errorMessages.push('Vui lòng nhập họ và tên.');
+                        if (!firstInvalid) firstInvalid = hoTenInput;
+                    }
+
+                    // 2. Kiểm tra Ngày sinh
+                    if (ngaySinhInput && ngaySinhInput.value) {
+                        const todayStr = new Date().toISOString().split('T')[0];
+                        if (ngaySinhInput.value > todayStr) {
+                            showFieldError('ngay_sinh', 'Ngày sinh không thể là ngày trong tương lai.');
+                            errorMessages.push('Ngày sinh không thể là ngày trong tương lai.');
+                            if (!firstInvalid) firstInvalid = ngaySinhInput;
+                        }
+                    }
+
+                    // 3. Kiểm tra Số điện thoại
+                    if (sdtInput && sdtInput.value.trim()) {
+                        const sdtVal = sdtInput.value.trim();
+                        if (!/^0[0-9]{9,10}$/.test(sdtVal)) {
+                            showFieldError('so_dien_thoai', 'Số điện thoại không hợp lệ (phải bắt đầu bằng số 0 và có từ 10 đến 11 số).');
+                            errorMessages.push('Số điện thoại không hợp lệ (phải bắt đầu bằng số 0 và có từ 10 đến 11 số).');
+                            if (!firstInvalid) firstInvalid = sdtInput;
+                        }
+                    }
+
+                    if (errorMessages.length > 0) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        showFormErrorBanner('profile-client-error-banner', 'profile-client-error-list', errorMessages);
+                        if (firstInvalid) {
+                            firstInvalid.focus();
+                        }
+                        return false;
+                    }
+                }
+
+                if (formId === 'form-update-password') {
+                    let pwdErrors = [];
+                    hideFormErrorBanner('pwd-client-error-banner');
+
+                    let firstInvalid = null;
+
+                    const curPwdVal = curPwdInput ? curPwdInput.value.trim() : '';
+                    const newPwdVal = newPwdInput ? newPwdInput.value : '';
+                    const cfmPwdVal = cfmPwdInput ? cfmPwdInput.value : '';
+
+                    if (!curPwdVal) {
+                        showFieldError('current_password', 'Vui lòng nhập mật khẩu hiện tại.');
+                        pwdErrors.push('Vui lòng nhập mật khẩu hiện tại.');
+                        if (!firstInvalid) firstInvalid = curPwdInput;
+                    }
+
+                    if (!newPwdVal) {
+                        showFieldError('password', 'Vui lòng nhập mật khẩu mới.');
+                        pwdErrors.push('Vui lòng nhập mật khẩu mới.');
+                        if (!firstInvalid) firstInvalid = newPwdInput;
+                    } else if (newPwdVal.length < 8) {
+                        showFieldError('password', 'Mật khẩu mới phải có ít nhất 8 ký tự.');
+                        pwdErrors.push('Mật khẩu mới phải có ít nhất 8 ký tự.');
+                        if (!firstInvalid) firstInvalid = newPwdInput;
+                    }
+
+                    if (!cfmPwdVal) {
+                        showFieldError('password_confirmation', 'Vui lòng xác nhận mật khẩu mới.');
+                        pwdErrors.push('Vui lòng xác nhận mật khẩu mới.');
+                        if (!firstInvalid) firstInvalid = cfmPwdInput;
+                    } else if (cfmPwdVal !== newPwdVal) {
+                        showFieldError('password_confirmation', 'Xác nhận mật khẩu mới không khớp.');
+                        pwdErrors.push('Xác nhận mật khẩu mới không khớp.');
+                        if (!firstInvalid) firstInvalid = cfmPwdInput;
+                    }
+
+                    if (pwdErrors.length > 0) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        showFormErrorBanner('pwd-client-error-banner', 'pwd-client-error-list', pwdErrors);
+                        if (firstInvalid) {
+                            firstInvalid.focus();
+                        }
+                        return false;
+                    }
                 }
 
                 const submitBtn = form.querySelector('button[type="submit"]');

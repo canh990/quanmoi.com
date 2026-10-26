@@ -19,7 +19,7 @@
         <div class="absolute top-3 left-3 z-10">
             <div class="bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-xl text-primary font-bold text-xs flex items-center gap-1 shadow-sm">
                 <span class="material-symbols-outlined text-[15px] text-amber-500" style="font-variation-settings: 'FILL' 1;">star</span>
-                <span>4.9</span>
+                <span>{{ isset($quan->danh_gia_avg_so_sao) && (float)$quan->danh_gia_avg_so_sao > 0 ? number_format((float)$quan->danh_gia_avg_so_sao, 1) : '4.9' }}</span>
             </div>
         </div>
 
