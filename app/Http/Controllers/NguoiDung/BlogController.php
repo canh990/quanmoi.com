@@ -238,7 +238,7 @@ class BlogController extends Controller
         }
 
         $blog->excerpt = $data['excerpt'] ?? null;
-        $blog->content = clean($data['content']);
+        $blog->content = function_exists('clean') ? clean($data['content']) : $data['content'];
         $blog->allow_comments = $request->boolean('allow_comments', true);
         if ($oldStatus === 'published') {
             $blog->status = ($data['action'] === 'draft') ? 'draft' : 'published';
