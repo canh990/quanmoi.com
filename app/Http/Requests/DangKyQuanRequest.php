@@ -35,6 +35,7 @@ class DangKyQuanRequest extends FormRequest
         return [
             'ten_quan'              => 'required|string|max:255',
             'loai_hinh_kinh_doanh'  => 'required|string|max:255',
+            'danh_muc_id'           => 'nullable|exists:danh_muc_quan,id',
             'so_dien_thoai'         => 'required|string|max:20',
             'email'             => 'nullable|email|max:255',
             'dia_chi_chi_tiet'  => 'required|string|max:500',

@@ -301,15 +301,91 @@ class BanDoController extends Controller
             ->values()
             ->toArray();
 
-        // 2. Tra cứu tọa độ địa lý (có Cache 24h để phản hồi tức thì & chống chặn IP Nominatim)
-        $cacheKey = 'bando_geocode_v2_' . md5(mb_strtolower($address));
-        $geoData = Cache::remember($cacheKey, 86400, function () use ($address) {
+        // 2. Tra cứu tọa độ địa lý (hỗ trợ thử tuần tự: Địa chỉ chi tiết ➔ Phường/Xã ➔ Quận/Huyện ➔ Tỉnh/Thành)
+        $candidates = [$address];
+        if (str_contains($address, ',')) {
+            $parts = array_values(array_filter(array_map('trim', explode(',', $address))));
+            $partCount = count($parts);
+            for ($i = 1; $i < $partCount; $i++) {
+                $subQuery = implode(', ', array_slice($parts, $i));
+                if (! in_array($subQuery, $candidates, true) && mb_strlen($subQuery) >= 3) {
+                    $candidates[] = $subQuery;
+                }
+            }
+        }
+
+        $geoData = null;
+        $matchedCandidate = null;
+        $isFallback = false;
+
+        foreach ($candidates as $idx => $cand) {
+            $data = $this->queryGeocodingProvider($cand);
+            if ($data !== null && ! empty($data['results'])) {
+                $geoData = $data;
+                $matchedCandidate = $cand;
+                $isFallback = ($idx > 0);
+                break;
+            }
+        }
+
+        if ($geoData !== null && ! empty($geoData['results'])) {
+            $primary = $geoData['results'][0];
+
+            return response()->json([
+                'success' => true,
+                'lat' => $primary['lat'],
+                'lng' => $primary['lng'],
+                'display_name' => $primary['display_name'],
+                'suggestions' => $geoData['results'],
+                'venues' => $matchedVenues,
+                'provider' => $geoData['provider'],
+                'is_fallback' => $isFallback,
+                'matched_query' => $matchedCandidate,
+                'original_address' => $address,
+            ]);
+        }
+
+        // Nếu Nominatim/Google không ra địa chỉ nhưng trong Database có quán ăn khớp tên/món ăn
+        if (! empty($matchedVenues)) {
+            $primaryVenue = $matchedVenues[0];
+
+            return response()->json([
+                'success' => true,
+                'lat' => $primaryVenue['lat'],
+                'lng' => $primaryVenue['lng'],
+                'display_name' => $primaryVenue['display_name'],
+                'suggestions' => [],
+                'venues' => $matchedVenues,
+                'provider' => 'database',
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Không tìm thấy địa điểm hoặc quán ăn phù hợp.',
+            'suggestions' => [],
+            'venues' => [],
+        ], 404);
+    }
+
+    /**
+     * Tra cứu tọa độ địa lý qua Google Maps API (nếu có key) hoặc OpenStreetMap Nominatim có cache 24h.
+     */
+    private function queryGeocodingProvider(string $query): ?array
+    {
+        $query = trim($query);
+        if ($query === '') {
+            return null;
+        }
+
+        $cacheKey = 'bando_geocode_v2_' . md5(mb_strtolower($query));
+        $geoData = \Illuminate\Support\Facades\Cache::remember($cacheKey, 86400, function () use ($query) {
             $apiKey = config('services.google.maps_api_key') ?? env('GOOGLE_MAPS_API_KEY');
 
             if ($apiKey) {
                 try {
-                    $response = Http::timeout(5)->get('https://maps.googleapis.com/maps/api/geocode/json', [
-                        'address' => $address,
+                    $response = \Illuminate\Support\Facades\Http::timeout(5)->get('https://maps.googleapis.com/maps/api/geocode/json', [
+                        'address' => $query,
                         'key' => $apiKey,
                         'language' => 'vi',
                         'region' => 'vn',
@@ -337,10 +413,10 @@ class BanDoController extends Controller
             }
 
             try {
-                $response = Http::timeout(5)->withHeaders([
+                $response = \Illuminate\Support\Facades\Http::timeout(5)->withHeaders([
                     'User-Agent' => 'QuanMoiApp/1.0 (contact: support@quanmoi.com)',
                 ])->get('https://nominatim.openstreetmap.org/search', [
-                    'q' => $address,
+                    'q' => $query,
                     'format' => 'json',
                     'limit' => 5,
                     'countrycodes' => 'vn',
@@ -365,51 +441,16 @@ class BanDoController extends Controller
                     }
                 }
             } catch (\Throwable $e) {
-                // Không cache lỗi mạng tạm thời nếu cần, trả về null
+                // Không cache lỗi mạng tạm thời nếu cần
             }
 
             return null;
         });
 
-        // Nếu không tìm thấy địa chỉ ngoài, xóa cache rỗng để lần sau có thể thử lại nếu do lỗi mạng
         if ($geoData === null) {
-            Cache::forget($cacheKey);
+            \Illuminate\Support\Facades\Cache::forget($cacheKey);
         }
 
-        if ($geoData !== null && ! empty($geoData['results'])) {
-            $primary = $geoData['results'][0];
-
-            return response()->json([
-                'success' => true,
-                'lat' => $primary['lat'],
-                'lng' => $primary['lng'],
-                'display_name' => $primary['display_name'],
-                'suggestions' => $geoData['results'],
-                'venues' => $matchedVenues,
-                'provider' => $geoData['provider'],
-            ]);
-        }
-
-        // Nếu Nominatim/Google không ra địa chỉ nhưng trong Database có quán ăn khớp tên/món ăn
-        if (! empty($matchedVenues)) {
-            $primaryVenue = $matchedVenues[0];
-
-            return response()->json([
-                'success' => true,
-                'lat' => $primaryVenue['lat'],
-                'lng' => $primaryVenue['lng'],
-                'display_name' => $primaryVenue['display_name'],
-                'suggestions' => [],
-                'venues' => $matchedVenues,
-                'provider' => 'database',
-            ]);
-        }
-
-        return response()->json([
-            'success' => false,
-            'message' => 'Không tìm thấy địa điểm hoặc quán ăn phù hợp.',
-            'suggestions' => [],
-            'venues' => [],
-        ], 404);
+        return $geoData;
     }
 }

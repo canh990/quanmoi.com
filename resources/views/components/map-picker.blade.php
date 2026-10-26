@@ -280,6 +280,7 @@
 
         function collectAddressString(inst) {
             const parts = [];
+            const seen = new Set();
             inst.addressSelectors.forEach(selector => {
                 const el = document.querySelector(selector);
                 if (!el) return;
@@ -290,11 +291,50 @@
                 } else {
                     val = (el.value || '').trim();
                 }
-                if (val && !val.startsWith('--')) {
+                const lower = val.toLowerCase();
+                if (val && !val.startsWith('--') && !seen.has(lower)) {
+                    seen.add(lower);
                     parts.push(val);
                 }
             });
             return parts.join(', ');
+        }
+
+        async function directGeocodeFallback(address) {
+            if (!address || address.length < 3) return null;
+            const rawParts = address.split(',').map(s => s.trim()).filter(Boolean);
+            const candidates = [address];
+            for (let i = 1; i < rawParts.length; i++) {
+                const sub = rawParts.slice(i).join(', ');
+                if (sub.length >= 3 && !candidates.includes(sub)) {
+                    candidates.push(sub);
+                }
+            }
+
+            for (let i = 0; i < candidates.length; i++) {
+                const query = candidates[i];
+                try {
+                    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1&countrycodes=vn`;
+                    const res = await fetch(url, {
+                        headers: { 'Accept': 'application/json' }
+                    });
+                    if (res.ok) {
+                        const items = await res.json();
+                        if (Array.isArray(items) && items.length > 0 && items[0].lat && items[0].lon) {
+                            return {
+                                lat: parseFloat(items[0].lat),
+                                lng: parseFloat(items[0].lon),
+                                isFallback: i > 0,
+                                matchedQuery: query,
+                                message: i > 0
+                                    ? `Đã định vị theo khu vực: ${query} (Kéo ghim để chỉnh chính xác hơn)`
+                                    : `Đã định vị: ${address} (Kéo ghim để chỉnh chính xác hơn)`,
+                            };
+                        }
+                    }
+                } catch (e) {}
+            }
+            return null;
         }
 
         async function locateFromAddress(mapId, silent = false) {
@@ -322,24 +362,67 @@
             }
 
             try {
+                let successHandled = false;
                 const res = await fetch(`/api/ban-do/geocode?address=${encodeURIComponent(address)}`, {
                     headers: { 'Accept': 'application/json' }
                 });
-                const data = await res.json();
 
-                if (data && data.success && Number.isFinite(parseFloat(data.lat)) && Number.isFinite(parseFloat(data.lng))) {
-                    setPosition(
-                        mapId,
-                        parseFloat(data.lat),
-                        parseFloat(data.lng),
-                        17,
-                        `Đã định vị: ${address} (Kéo ghim để chỉnh chính xác hơn)`
-                    );
-                } else if (!silent) {
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && data.success && Number.isFinite(parseFloat(data.lat)) && Number.isFinite(parseFloat(data.lng))) {
+                        const isFallback = !!data.is_fallback;
+                        const zoomLevel = isFallback ? 16 : 17;
+                        const msg = isFallback
+                            ? `Đã định vị theo khu vực: ${data.matched_query || address} (Kéo ghim để chỉnh chính xác hơn)`
+                            : `Đã định vị: ${address} (Kéo ghim để chỉnh chính xác hơn)`;
+
+                        setPosition(
+                            mapId,
+                            parseFloat(data.lat),
+                            parseFloat(data.lng),
+                            zoomLevel,
+                            msg
+                        );
+                        successHandled = true;
+                    }
+                }
+
+                if (!successHandled) {
+                    const directResult = await directGeocodeFallback(address);
+                    if (directResult) {
+                        setPosition(
+                            mapId,
+                            directResult.lat,
+                            directResult.lng,
+                            directResult.isFallback ? 16 : 17,
+                            directResult.message
+                        );
+                        successHandled = true;
+                    }
+                }
+
+                if (!successHandled && !silent) {
                     if (statusEl) statusEl.textContent = 'Không tìm thấy chính xác, hãy kéo ghim trực tiếp trên bản đồ.';
                 }
             } catch (err) {
-                console.warn('Geocode error:', err);
+                console.warn('Geocode API error, trying direct browser fallback...', err);
+                try {
+                    const directResult = await directGeocodeFallback(address);
+                    if (directResult) {
+                        setPosition(
+                            mapId,
+                            directResult.lat,
+                            directResult.lng,
+                            directResult.isFallback ? 16 : 17,
+                            directResult.message
+                        );
+                        return;
+                    }
+                } catch (e2) {}
+
+                if (statusEl && !silent) {
+                    statusEl.textContent = 'Không thể kết nối dịch vụ định vị. Hãy kéo ghim trực tiếp trên bản đồ.';
+                }
             } finally {
                 if (btn && !silent) {
                     btn.disabled = false;
