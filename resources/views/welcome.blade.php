@@ -140,8 +140,8 @@
             </div>
         </section>
 
-        {{-- SECTION 1: Trending Venues / Quán Nổi Bật --}}
-        <section class="bg-surface-container-low py-16">
+        {{-- SECTION 1: Trending Venues / Quán Ăn Nổi Bật --}}
+        <section class="bg-surface-container-low py-16" id="home-featured-section">
             <div class="max-w-[1240px] mx-auto px-container-margin">
                 <div class="flex justify-between items-end mb-8">
                     <div>
@@ -156,7 +156,9 @@
                         Xem tất cả <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
                     </a>
                 </div>
-                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 xl:gap-8">
+
+                {{-- Grid Quán Nổi Bật --}}
+                <div id="venues-grid-featured" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 xl:gap-8">
                     @forelse($quanNoiBat as $quan)
                         <x-venue-card :quan="$quan" :saved-quan-ids="$savedQuanIds ?? []" />
                     @empty
@@ -172,6 +174,67 @@
                     </a>
                 </div>
                 @endif
+            </div>
+        </section>
+
+        {{-- SECTION 1.5: Quán Ăn Gần Bạn (Tách riêng nằm ở dưới Quán Nổi Bật) --}}
+        <section class="bg-white py-16 border-t border-gray-100" id="home-nearby-section">
+            <div class="max-w-[1240px] mx-auto px-container-margin">
+                <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+                    <div>
+                        <div class="inline-flex items-center gap-1.5 text-emerald-600 text-xs font-bold uppercase tracking-wider mb-1">
+                            <span class="material-symbols-outlined text-[16px]">near_me</span>
+                            <span>Gần bạn nhất (bán kính 10km)</span>
+                        </div>
+                        <h2 class="text-2xl font-black text-on-surface flex items-center gap-2">
+                            <span>Quán ăn gần vị trí của bạn</span>
+                        </h2>
+                        <p class="text-text-muted text-[15px] mt-1" id="nearby-subtitle">
+                            {{ ($hasGps && $quanGanBan->isNotEmpty()) ? 'Tự động sắp xếp theo khoảng cách gần nhất từ vị trí của bạn' : 'Khám phá các quán ăn ngon lân cận vị trí hiện tại của bạn' }}
+                        </p>
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                        <button type="button" onclick="requestUserLocation(true)" class="text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3.5 py-2 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs">
+                            <span class="material-symbols-outlined text-[16px]">my_location</span>
+                            <span>Định vị lại</span>
+                        </button>
+                        <a href="{{ route('ban-do') }}" class="text-xs font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 px-3.5 py-2 rounded-xl flex items-center gap-1.5 transition-colors">
+                            <span class="material-symbols-outlined text-[16px]">map</span>
+                            <span>Xem trên bản đồ</span>
+                        </a>
+                    </div>
+                </div>
+
+                {{-- Banner kêu gọi cấp quyền vị trí (chỉ hiển thị khi chưa có GPS) --}}
+                <div id="nearby-permission-banner" class="{{ ($hasGps && $quanGanBan->isNotEmpty()) ? 'hidden' : 'block' }} bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 rounded-2xl p-6 sm:p-8 text-center sm:text-left mb-6 shadow-xs">
+                    <div class="flex flex-col sm:flex-row items-center justify-between gap-6">
+                        <div class="flex items-center gap-4">
+                            <div class="w-14 h-14 rounded-2xl bg-emerald-500 text-white flex items-center justify-center flex-shrink-0 shadow-sm">
+                                <span class="material-symbols-outlined text-[32px]">near_me</span>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-900 text-base sm:text-lg">Bật định vị để xem các quán ăn ngon quanh bạn</h3>
+                                <p class="text-xs sm:text-sm text-gray-600 mt-1 max-w-xl">Hệ thống sẽ tự động đo đạc khoảng cách và đề xuất những quán ăn được yêu thích nhất gần vị trí của bạn.</p>
+                            </div>
+                        </div>
+                        <button type="button" onclick="requestUserLocation(true)" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm px-5 py-3 rounded-xl shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer whitespace-nowrap">
+                            <span class="material-symbols-outlined text-[18px]">near_me</span>
+                            <span>Cho phép truy cập vị trí</span>
+                        </button>
+                    </div>
+                </div>
+
+                {{-- Grid Quán Gần Bạn --}}
+                <div id="venues-grid-nearby" class="{{ ($hasGps && $quanGanBan->isNotEmpty()) ? 'grid' : 'hidden' }} grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 xl:gap-8">
+                    @if($hasGps && $quanGanBan->isNotEmpty())
+                        @foreach($quanGanBan as $quan)
+                            <x-venue-card :quan="$quan" :saved-quan-ids="$savedQuanIds ?? []" />
+                        @endforeach
+                    @endif
+                </div>
+            </div>
+        </section>
 
                 <div class="mt-10 rounded-[28px] bg-white border border-gray-100 shadow-sm p-6 md:p-7">
                     <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-6">
@@ -381,38 +444,91 @@
             </div>
         </section>
 
-        {{-- Recommended List Mobile --}}
+        {{-- 1. Recommended List Mobile: Quán Nổi Bật --}}
         <section class="px-4">
             <div class="flex justify-between items-center mb-3">
                 <div>
                     <h2 class="font-bold text-[16px] text-on-surface">Quán gợi ý nổi bật</h2>
-                    <p class="text-[12px] text-gray-500">Địa điểm đánh giá cao gần bạn</p>
+                    <p class="text-[12px] text-gray-500">Địa điểm đánh giá cao được yêu thích nhất</p>
                 </div>
                 <a class="text-xs text-primary font-bold flex items-center gap-0.5" href="{{ route('quan-noi-bat') }}">Xem tất cả <span class="material-symbols-outlined text-[14px]">chevron_right</span></a>
             </div>
-                        <div class="flex flex-col gap-3">
+
+            <div class="flex flex-col gap-3" id="mobile-venues-featured">
                 @forelse($quanNoiBat as $quan)
                 <a href="{{ route('quan.detail', $quan->slug) }}" class="bg-white rounded-2xl p-3 flex gap-3 shadow-sm border border-gray-100 active:bg-gray-50 transition-colors">
                     <div class="w-24 h-24 rounded-xl overflow-hidden flex-shrink-0 relative">
-                        <img class="w-full h-full object-cover" src="{{ $quan->anh_bia_url ?: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=300&q=80' }}"/>
+                        <img class="w-full h-full object-cover" src="{{ $quan->anh_bia_url ?: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=300&q=80' }}" loading="lazy"/>
                         <div class="absolute bottom-1 right-1 bg-black/70 text-white px-1.5 py-0.5 rounded-md text-[10px] font-bold flex items-center gap-0.5">
                             <span class="material-symbols-outlined text-[10px] text-amber-400" style="font-variation-settings: 'FILL' 1;">star</span> 4.9
                         </div>
                     </div>
                     <div class="flex flex-col justify-between flex-1 py-0.5">
                         <div>
-                            <h3 class="font-bold text-[15px] text-on-surface leading-tight flex items-center gap-1">{{ $quan->ten_quan }} <span class="material-symbols-outlined text-tick-xanh text-[15px]" style="font-variation-settings: 'FILL' 1;">verified</span></h3>
+                            <h3 class="font-bold text-[15px] text-on-surface leading-tight flex items-center gap-1">{{ $quan->ten_quan }} @if($quan->is_xac_thuc)<span class="material-symbols-outlined text-tick-xanh text-[15px]" style="font-variation-settings: 'FILL' 1;">verified</span>@endif</h3>
                             <p class="text-[12px] text-text-muted mt-1 truncate">{{ $quan->dia_chi_chi_tiet }}, {{ $quan->ten_quan_huyen }}</p>
                         </div>
                         <div class="flex items-center justify-between">
                             <span class="text-xs font-bold text-primary">{{ number_format($quan->gia_nho_nhat, 0, ',', '.') }}đ - {{ number_format($quan->gia_lon_nhat, 0, ',', '.') }}đ</span>
-                            <span class="text-[11px] text-gray-400 flex items-center gap-0.5"><span class="material-symbols-outlined text-[12px]">directions_walk</span> 500m</span>
+                            <span class="text-[11px] text-gray-400 flex items-center gap-0.5"><span class="material-symbols-outlined text-[12px]">visibility</span> {{ $quan->luot_xem ?? 0 }}</span>
                         </div>
                     </div>
                 </a>
                 @empty
                 <p class="text-center text-gray-500 py-4">Chưa có quán nào.</p>
                 @endforelse
+            </div>
+        </section>
+
+        {{-- 2. Nearby List Mobile: Quán Ăn Gần Bạn (Tách riêng nằm dưới) --}}
+        <section class="px-4 pt-4" id="mobile-nearby-section">
+            <div class="flex justify-between items-center mb-3">
+                <div>
+                    <h2 class="font-bold text-[16px] text-on-surface flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-emerald-600 text-[18px]">near_me</span>
+                        <span>Quán ăn gần bạn</span>
+                    </h2>
+                    <p class="text-[12px] text-gray-500" id="mobile-nearby-subtitle">
+                        {{ ($hasGps && $quanGanBan->isNotEmpty()) ? 'Sắp xếp theo khoảng cách gần nhất' : 'Khám phá quán ngon quanh vị trí của bạn' }}
+                    </p>
+                </div>
+                <button type="button" onclick="requestUserLocation(true)" class="text-xs text-emerald-700 font-bold flex items-center gap-0.5 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-200">
+                    <span class="material-symbols-outlined text-[14px]">my_location</span> Định vị
+                </button>
+            </div>
+
+            <div class="flex flex-col gap-3" id="mobile-venues-nearby">
+                @if($hasGps && $quanGanBan->isNotEmpty())
+                    @foreach($quanGanBan as $quan)
+                    <a href="{{ route('quan.detail', $quan->slug) }}" class="bg-white rounded-2xl p-3 flex gap-3 shadow-sm border border-gray-100 active:bg-gray-50 transition-colors">
+                        <div class="w-24 h-24 rounded-xl overflow-hidden flex-shrink-0 relative">
+                            <img class="w-full h-full object-cover" src="{{ $quan->anh_bia_url ?: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=300&q=80' }}" loading="lazy"/>
+                            <div class="absolute bottom-1 right-1 bg-black/70 text-white px-1.5 py-0.5 rounded-md text-[10px] font-bold flex items-center gap-0.5">
+                                <span class="material-symbols-outlined text-[10px] text-amber-400" style="font-variation-settings: 'FILL' 1;">star</span> 4.9
+                            </div>
+                        </div>
+                        <div class="flex flex-col justify-between flex-1 py-0.5">
+                            <div>
+                                <h3 class="font-bold text-[15px] text-on-surface leading-tight flex items-center gap-1">{{ $quan->ten_quan }} @if($quan->is_xac_thuc)<span class="material-symbols-outlined text-tick-xanh text-[15px]" style="font-variation-settings: 'FILL' 1;">verified</span>@endif</h3>
+                                <p class="text-[12px] text-text-muted mt-1 truncate">{{ $quan->dia_chi_chi_tiet }}, {{ $quan->ten_quan_huyen }}</p>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold text-primary">{{ number_format($quan->gia_nho_nhat, 0, ',', '.') }}đ - {{ number_format($quan->gia_lon_nhat, 0, ',', '.') }}đ</span>
+                                <span class="text-[11px] text-emerald-600 font-bold flex items-center gap-0.5"><span class="material-symbols-outlined text-[12px]">near_me</span> {{ $quan->khoang_cach_km }} km</span>
+                            </div>
+                        </div>
+                    </a>
+                    @endforeach
+                @else
+                    <div id="mobile-nearby-prompt" class="bg-emerald-50/70 border border-emerald-100 rounded-2xl p-4 text-center">
+                        <span class="material-symbols-outlined text-3xl text-emerald-600 mb-1">near_me</span>
+                        <p class="text-xs text-gray-700 font-medium mb-3">Bật vị trí để Quán Mới tìm các quán ăn gần bạn nhất</p>
+                        <button type="button" onclick="requestUserLocation(true)" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold shadow-xs">
+                            <span class="material-symbols-outlined text-[15px]">location_on</span>
+                            <span>Cho phép truy cập vị trí</span>
+                        </button>
+                    </div>
+                @endif
             </div>
         </section>
 
@@ -659,5 +775,301 @@
             matchingButtons.forEach(b => b.dataset.loading = 'false');
         }
     }
-</script>
+
+    // ==========================================
+    // TỰ ĐỘNG YÊU CẦU TRUY CẬP VỊ TRÍ & QUÁN GẦN BẠN
+    // ==========================================
+    window.QUANMOI_SAVED_IDS = @json($savedQuanIds ?? []);
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function showNearbyLoadingSkeleton() {
+        const gridNearby = document.getElementById('venues-grid-nearby');
+        const promptBanner = document.getElementById('nearby-permission-banner');
+        if (promptBanner) promptBanner.classList.add('hidden');
+
+        if (gridNearby) {
+            gridNearby.dataset.loading = 'true';
+            gridNearby.classList.remove('hidden');
+            gridNearby.classList.add('grid');
+            gridNearby.innerHTML = [1, 2, 3].map(() => `
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden animate-pulse">
+                    <div class="h-48 sm:h-52 bg-gray-200 w-full"></div>
+                    <div class="p-4 sm:p-5 space-y-3">
+                        <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+                        <div class="h-3 bg-gray-200 rounded w-1/2"></div>
+                        <div class="h-8 bg-gray-100 rounded mt-4"></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+    }
+
+    function generateVenueCardHtml(quan) {
+        const isSaved = (window.QUANMOI_SAVED_IDS || []).includes(quan.id);
+        const anhBia = quan.anh_dai_dien || 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=600&q=80';
+        const rating = (quan.so_sao_trung_binh && quan.so_sao_trung_binh > 0) ? quan.so_sao_trung_binh : '4.9';
+        const loaiHinh = (quan.loai_hinh_kinh_doanh || 'Quán ăn').replace(/_/g, ' ');
+        const giaNhoNhat = Number(quan.gia_nho_nhat || 0).toLocaleString('vi-VN');
+        const giaLonNhat = Number(quan.gia_lon_nhat || 0).toLocaleString('vi-VN');
+        const distanceKm = quan.khoang_cach_km !== undefined ? quan.khoang_cach_km : null;
+
+        return `
+        <a href="${quan.url}" class="block bg-white rounded-2xl shadow-sm overflow-hidden group cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-gray-100 flex flex-col h-full animate-fadeIn">
+            <div class="relative h-48 sm:h-52 w-full overflow-hidden flex-shrink-0">
+                <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                     src="${anhBia}" 
+                     alt="${escapeHtml(quan.ten_quan)}" 
+                     loading="lazy" />
+                
+                <div class="absolute top-3 left-3 z-10">
+                    <div class="bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-xl text-primary font-bold text-xs flex items-center gap-1 shadow-sm">
+                        <span class="material-symbols-outlined text-[15px] text-amber-500" style="font-variation-settings: 'FILL' 1;">star</span>
+                        <span>${rating}</span>
+                    </div>
+                </div>
+
+                <div class="absolute bottom-3 left-3 z-10 flex items-center gap-1.5 max-w-[calc(100%-54px)] pointer-events-none">
+                    <span class="bg-white/95 backdrop-blur-md text-gray-800 px-2.5 py-1 rounded-xl text-[11px] sm:text-[11.5px] font-bold shadow-sm border border-gray-100/60 truncate" title="${loaiHinh}">
+                        ${loaiHinh}
+                    </span>
+                    ${distanceKm !== null ? `
+                        <span class="bg-primary/95 text-white backdrop-blur-md px-2 py-1 rounded-xl font-bold text-[11px] flex items-center gap-0.5 shadow-sm whitespace-nowrap" title="Cách vị trí của bạn ${distanceKm} km">
+                            <span class="material-symbols-outlined text-[13px]">near_me</span>
+                            <span>${distanceKm} km</span>
+                        </span>
+                    ` : ''}
+                </div>
+
+                <div class="absolute top-3 right-3 flex items-center gap-1 z-10">
+                    ${quan.dang_mo_cua ? `
+                        <span class="bg-emerald-600/90 backdrop-blur-md text-white px-2 py-0.5 rounded-lg text-[10.5px] font-bold flex items-center gap-1 shadow-sm">
+                            <span class="w-1.5 h-1.5 rounded-full bg-white"></span>
+                            Mở cửa
+                        </span>
+                    ` : ''}
+                    ${quan.is_noi_bat ? `
+                        <span class="bg-amber-500 text-white font-bold text-[10.5px] px-2 py-0.5 rounded-lg shadow-sm flex items-center gap-0.5" title="Quán nổi bật">
+                            <span class="material-symbols-outlined text-[12px]" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+                        </span>
+                    ` : ''}
+                </div>
+
+                <button type="button" 
+                        data-quan-id="${quan.id}" 
+                        data-saved="${isSaved ? '1' : '0'}"
+                        onclick="event.preventDefault(); toggleSave(this, '${quan.id}')" 
+                        class="absolute bottom-3 right-3 w-9 h-9 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center text-red-500 shadow-sm hover:scale-110 active:scale-90 transition-transform z-10" 
+                        title="${isSaved ? 'Bỏ lưu quán' : 'Lưu quán'}">
+                    <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' ${isSaved ? '1' : '0'};">favorite</span>
+                </button>
+            </div>
+
+            <div class="p-4 sm:p-5 flex flex-col flex-1 justify-between gap-2.5">
+                <div class="space-y-1.5">
+                    <div class="flex items-center justify-between gap-1.5">
+                        <h3 class="min-w-0 flex-1 font-bold text-[16px] sm:text-[17px] text-on-surface break-words [overflow-wrap:anywhere] group-hover:text-primary transition-colors pr-1">${escapeHtml(quan.ten_quan)}</h3>
+                        ${quan.is_xac_thuc ? `
+                            <span class="material-symbols-outlined text-tick-xanh text-[18px] sm:text-[19px] flex-shrink-0" style="font-variation-settings: 'FILL' 1;" title="Đã xác thực">verified</span>
+                        ` : ''}
+                    </div>
+
+                    <p class="text-text-muted text-[13px] flex items-start gap-1">
+                        <span class="material-symbols-outlined text-[16px] text-gray-400 flex-shrink-0 mt-0.5">location_on</span>
+                        <span class="line-clamp-2 leading-relaxed">${escapeHtml(quan.dia_chi || '')}</span>
+                    </p>
+                </div>
+
+                <div class="flex items-center justify-between pt-2.5 border-t border-gray-100 gap-2 min-w-0 mt-auto">
+                    <div class="flex items-center gap-2 min-w-0 flex-shrink">
+                        <span class="flex items-center gap-1 text-gray-500 text-[11.5px] whitespace-nowrap flex-shrink-0">
+                            <span class="material-symbols-outlined text-[14px]">visibility</span>
+                            <span>${quan.luot_xem || 0}</span>
+                        </span>
+                    </div>
+
+                    <span class="text-primary font-bold text-[12.5px] xl:text-[13.5px] whitespace-nowrap flex-shrink-0 ml-auto">
+                        ${giaNhoNhat}đ - ${giaLonNhat}đ
+                    </span>
+                </div>
+            </div>
+        </a>
+        `;
+    }
+
+    function generateMobileVenueItemHtml(quan) {
+        const anhBia = quan.anh_dai_dien || 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=300&q=80';
+        const giaNhoNhat = Number(quan.gia_nho_nhat || 0).toLocaleString('vi-VN');
+        const giaLonNhat = Number(quan.gia_lon_nhat || 0).toLocaleString('vi-VN');
+
+        return `
+        <a href="${quan.url}" class="bg-white rounded-2xl p-3 flex gap-3 shadow-sm border border-gray-100 active:bg-gray-50 transition-colors animate-fadeIn">
+            <div class="w-24 h-24 rounded-xl overflow-hidden flex-shrink-0 relative">
+                <img class="w-full h-full object-cover" src="${anhBia}" loading="lazy"/>
+                <div class="absolute bottom-1 right-1 bg-black/70 text-white px-1.5 py-0.5 rounded-md text-[10px] font-bold flex items-center gap-0.5">
+                    <span class="material-symbols-outlined text-[10px] text-amber-400" style="font-variation-settings: 'FILL' 1;">star</span> 4.9
+                </div>
+            </div>
+            <div class="flex flex-col justify-between flex-1 py-0.5">
+                <div>
+                    <h3 class="font-bold text-[15px] text-on-surface leading-tight flex items-center gap-1">
+                        ${escapeHtml(quan.ten_quan)}
+                        ${quan.is_xac_thuc ? `<span class="material-symbols-outlined text-tick-xanh text-[15px]" style="font-variation-settings: 'FILL' 1;">verified</span>` : ''}
+                    </h3>
+                    <p class="text-[12px] text-text-muted mt-1 truncate">${escapeHtml(quan.dia_chi || '')}</p>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-primary">${giaNhoNhat}đ - ${giaLonNhat}đ</span>
+                    <span class="text-[11px] text-emerald-600 font-bold flex items-center gap-0.5"><span class="material-symbols-outlined text-[12px]">near_me</span> ${quan.khoang_cach_km} km</span>
+                </div>
+            </div>
+        </a>
+        `;
+    }
+
+    function requestUserLocation(isUserInitiated = false) {
+        if (!("geolocation" in navigator)) {
+            if (isUserInitiated && window.showToast) {
+                window.showToast({
+                    title: 'Không hỗ trợ',
+                    message: 'Trình duyệt của bạn không hỗ trợ định vị GPS.',
+                    type: 'error'
+                });
+            }
+            return;
+        }
+
+        // Tự động gọi trình duyệt yêu cầu truy cập vị trí
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+
+                // 1. Lưu tọa độ vào cookie (7 ngày) & sessionStorage để các trang khác và SSR sử dụng
+                document.cookie = `user_lat=${lat}; path=/; max-age=604800; SameSite=Lax`;
+                document.cookie = `user_lng=${lng}; path=/; max-age=604800; SameSite=Lax`;
+                sessionStorage.setItem('quanmoi_geo_status', 'granted');
+
+                // 2. Hiển thị trạng thái đang tải (skeleton)
+                showNearbyLoadingSkeleton();
+
+                // 3. Tải danh sách quán lân cận
+                fetchNearbyVenues(lat, lng, isUserInitiated);
+            },
+            function(error) {
+                // Người dùng từ chối cấp quyền hoặc đóng popup:
+                // Giữ nguyên hiển thị mặc định như bình thường!
+                console.log('Location permission was denied or dismissed:', error.code, error.message);
+                sessionStorage.setItem('quanmoi_geo_status', 'denied');
+
+                if (isUserInitiated && window.showToast) {
+                    window.showToast({
+                        title: 'Chưa cấp quyền',
+                        message: 'Bạn đã từ chối chia sẻ vị trí. Bạn có thể bật lại bất cứ lúc nào.',
+                        type: 'info'
+                    });
+                }
+            },
+            {
+                enableHighAccuracy: false,
+                timeout: 8000,
+                maximumAge: 300000
+            }
+        );
+    }
+
+    async function fetchNearbyVenues(lat, lng, scrollOnSuccess = false) {
+        const gridNearby = document.getElementById('venues-grid-nearby');
+        const mobileNearby = document.getElementById('mobile-venues-nearby');
+        const promptBanner = document.getElementById('nearby-permission-banner');
+
+        // Thử bán kính 20km (bao quát đô thị TP.HCM / Hà Nội)
+        try {
+            let res = await fetch(`/api/ban-do/quan-lan-can?lat=${lat}&lng=${lng}&radius=20&per_page=9`);
+            let data = await res.json();
+
+            // Nếu 20km chưa có, tự động mở rộng quét 50km
+            if (!data.success || !Array.isArray(data.data) || data.data.length === 0) {
+                res = await fetch(`/api/ban-do/quan-lan-can?lat=${lat}&lng=${lng}&radius=50&per_page=9`);
+                data = await res.json();
+            }
+
+            if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+                if (promptBanner) promptBanner.classList.add('hidden');
+
+                if (gridNearby) {
+                    delete gridNearby.dataset.loading;
+                    gridNearby.classList.remove('hidden');
+                    gridNearby.classList.add('grid');
+                    gridNearby.innerHTML = data.data.map(q => generateVenueCardHtml(q)).join('');
+                }
+
+                if (mobileNearby) {
+                    mobileNearby.innerHTML = data.data.map(q => generateMobileVenueItemHtml(q)).join('');
+                }
+
+                const subtitle = document.getElementById('nearby-subtitle');
+                if (subtitle) {
+                    subtitle.textContent = `Tìm thấy ${data.data.length} quán ăn gần bạn nhất (sắp xếp theo khoảng cách)`;
+                }
+
+                const mobileSubtitle = document.getElementById('mobile-nearby-subtitle');
+                if (mobileSubtitle) {
+                    mobileSubtitle.textContent = `Tìm thấy ${data.data.length} quán ăn gần bạn nhất`;
+                }
+
+                if (scrollOnSuccess) {
+                    document.getElementById('home-nearby-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            } else {
+                // Không có quán trong bán kính
+                if (promptBanner) promptBanner.classList.add('hidden');
+
+                if (gridNearby) {
+                    delete gridNearby.dataset.loading;
+                    gridNearby.classList.remove('hidden');
+                    gridNearby.classList.add('grid');
+                    gridNearby.innerHTML = `
+                        <div class="col-span-1 sm:col-span-2 lg:col-span-3 bg-white rounded-2xl p-8 text-center border border-gray-100 shadow-sm">
+                            <span class="material-symbols-outlined text-4xl text-amber-500 mb-2">location_off</span>
+                            <h3 class="font-bold text-gray-900 text-base mb-1">Chưa có quán ăn trong bán kính lân cận</h3>
+                            <p class="text-xs text-gray-500 max-w-md mx-auto">Hiện tại chưa có quán ăn nào thuộc hệ thống Quán Mới gần tọa độ của bạn. Bạn hãy khám phá các quán ăn nổi bật phía trên nhé!</p>
+                        </div>
+                    `;
+                }
+            }
+        } catch (err) {
+            console.error('Error fetching nearby venues:', err);
+            if (gridNearby) {
+                delete gridNearby.dataset.loading;
+            }
+        }
+    }
+
+    // Tự động kiểm tra và yêu cầu truy cập vị trí khi vào website
+    document.addEventListener('DOMContentLoaded', function() {
+        const geoStatus = sessionStorage.getItem('quanmoi_geo_status');
+        const hasServerGps = {{ ($hasGps && $quanGanBan->isNotEmpty()) ? 'true' : 'false' }};
+
+        if (hasServerGps) {
+            // Server-Side Rendering đã tải sẵn quán gần bạn qua Cookie
+            const promptBanner = document.getElementById('nearby-permission-banner');
+            if (promptBanner) promptBanner.classList.add('hidden');
+        } else if (geoStatus === 'granted') {
+            // Đã cấp quyền trước đó nhưng chưa có dữ liệu SSR -> tự động tải
+            requestUserLocation(false);
+        } else if (geoStatus !== 'denied') {
+            // Lần đầu vào trang: tự động xin quyền vị trí
+            requestUserLocation(false);
+        }
+    });
+    </script>
 @endpush
