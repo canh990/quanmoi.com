@@ -25,10 +25,16 @@ class BlogAiController extends Controller
             'topic' => 'nullable|string|max:500',
             'current_title' => 'nullable|string|max:500',
             'keywords' => 'nullable|string|max:500',
+            'style' => 'nullable|string|max:100',
         ]);
 
         $topic = $request->input('topic') ?: ($request->input('current_title') ?: $request->input('keywords', ''));
-        $titles = $this->aiService->suggestTitles($topic, $request->input('current_title'), $request->input('keywords'));
+        $titles = $this->aiService->suggestTitles(
+            $topic, 
+            $request->input('current_title'), 
+            $request->input('keywords'),
+            $request->input('style')
+        );
 
         return response()->json([
             'success' => true,
@@ -45,12 +51,14 @@ class BlogAiController extends Controller
             'keywords' => 'required|string|max:1000',
             'restaurant_name' => 'nullable|string|max:255',
             'dish_type' => 'nullable|string|max:255',
+            'style' => 'nullable|string|max:100',
         ]);
 
         $outline = $this->aiService->generateReviewOutline(
             $request->input('keywords'),
             $request->input('restaurant_name'),
-            $request->input('dish_type')
+            $request->input('dish_type'),
+            $request->input('style')
         );
 
         return response()->json([

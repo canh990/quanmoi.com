@@ -8,6 +8,23 @@
         @include('nguoi-dung.partials.sidebar')
 
         <div class="md:col-span-9 space-y-stack-lg">
+            @if(session('success'))
+                <div id="user-blog-success-banner" class="mb-6 p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl shadow-sm flex items-center justify-between gap-3 animate-modal-in">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                            <span class="material-symbols-outlined text-2xl">check_circle</span>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-sm text-emerald-900">Thành công!</h4>
+                            <p class="text-xs text-emerald-700 mt-0.5">{{ session('success') }}</p>
+                        </div>
+                    </div>
+                    <button type="button" onclick="document.getElementById('user-blog-success-banner')?.remove()" class="p-1.5 text-emerald-500 hover:text-emerald-700 hover:bg-emerald-100 rounded-lg transition-colors cursor-pointer" title="Đóng">
+                        <span class="material-symbols-outlined text-lg">close</span>
+                    </button>
+                </div>
+            @endif
+
             <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
                 <div>
                     <h1 class="text-3xl font-extrabold text-on-surface">Bài viết của tôi</h1>

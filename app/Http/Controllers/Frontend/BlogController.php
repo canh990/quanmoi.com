@@ -168,6 +168,7 @@ class BlogController extends Controller
                 $request->session()->getId(), 
                 $request->ip()
             );
+            $blog->refresh();
         }
 
         $relatedBlogs = Blog::where('status', 'published')

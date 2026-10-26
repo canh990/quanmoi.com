@@ -259,11 +259,23 @@
     // Auto-display Laravel session flash messages on page load
     document.addEventListener('DOMContentLoaded', () => {
         @if(session('success'))
-            window.showToast({
-                title: 'Thành công',
-                message: @json(session('success')),
-                type: 'success'
-            });
+            try {
+                localStorage.removeItem('qm_blog_active_draft');
+                sessionStorage.removeItem('qm_blog_active_draft');
+                sessionStorage.removeItem('qm_blog_modal_open');
+            } catch(e) {}
+
+            // Nếu trên trang đã có thông báo ở trên đầu thì không hiện thêm popup toast để tránh trùng lặp
+            const hasTopBanner = document.getElementById('blog-success-banner') || 
+                                 document.getElementById('user-blog-success-banner') ||
+                                 document.querySelector('.page-success-banner');
+            if (!hasTopBanner) {
+                window.showToast({
+                    title: 'Thành công',
+                    message: @json(session('success')),
+                    type: 'success'
+                });
+            }
         @endif
 
         @if(session('error'))
