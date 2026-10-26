@@ -161,7 +161,11 @@ class HomeController extends Controller
             }
         }
 
-                $danhMucList = \App\Models\DanhMucQuan::hienThi()->noiBat()->orderBy('thu_tu')->orderBy('id')->get();
+        try {
+            $danhMucList = \App\Models\DanhMucQuan::hienThi()->noiBat()->orderBy('thu_tu')->orderBy('id')->get();
+        } catch (\Throwable $e) {
+            $danhMucList = collect();
+        }
 
         return view('welcome', compact(
             'danhMucList',
