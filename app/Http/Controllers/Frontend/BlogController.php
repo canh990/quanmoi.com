@@ -608,7 +608,10 @@ class BlogController extends Controller
                 $subscriber->ip_address = $ip;
                 $subscriber->save();
 
-                $msg = 'Chào mừng bạn đã kích hoạt lại đăng ký nhận tin ẩm thực từ Quán Mới!';
+                // Gửi email chào mừng khi kích hoạt lại
+                $this->blogService->sendNewsletterWelcome($subscriber);
+
+                $msg = 'Chào mừng bạn đã kích hoạt lại đăng ký nhận tin ẩm thực từ Quán Mới! Chúng tôi đã gửi email xác nhận đến hộp thư của bạn.';
                 if ($request->ajax() || $request->wantsJson()) {
                     return response()->json([
                         'success' => true,
@@ -619,7 +622,7 @@ class BlogController extends Controller
             }
         }
 
-        BlogSubscriber::create([
+        $subscriber = BlogSubscriber::create([
             'email' => $email,
             'user_id' => $userId,
             'ip_address' => $ip,
@@ -628,7 +631,10 @@ class BlogController extends Controller
             'token' => Str::random(32),
         ]);
 
-        $msg = 'Đăng ký nhận tin ẩm thực thành công! Quán Mới sẽ gửi đến bạn những review và ưu đãi mới nhất.';
+        // Gửi email chào mừng ngay khi đăng ký thành công
+        $this->blogService->sendNewsletterWelcome($subscriber);
+
+        $msg = 'Đăng ký nhận tin ẩm thực thành công! Quán Mới đã gửi email chào mừng đến hộp thư của bạn và sẽ thông báo mỗi khi có bài viết mới.';
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'success' => true,
@@ -637,6 +643,22 @@ class BlogController extends Controller
         }
 
         return back()->with('newsletter_success', $msg);
+    }
+
+    /**
+     * Hủy đăng ký nhận tin ẩm thực (Unsubscribe)
+     */
+    public function unsubscribeNewsletter(Request $request, string $token)
+    {
+        $subscriber = BlogSubscriber::where('token', $token)->first();
+
+        if (! $subscriber) {
+            return redirect()->route('blog.index')->with('error', 'Liên kết hủy nhận tin không hợp lệ hoặc đã hết hạn.');
+        }
+
+        $subscriber->update(['status' => 'unsubscribed']);
+
+        return view('frontend.blog.unsubscribed', compact('subscriber'));
     }
 
     /**

@@ -228,6 +228,15 @@ class BlogController extends Controller
                     \Illuminate\Support\Facades\Log::warning('BlogStatusUpdatedNotification error: ' . $notiEx->getMessage());
                 }
             }
+
+            // Tự động thông báo qua email tới các độc giả đã đăng ký nhận tin ẩm thực khi bài được xuất bản
+            if ($status === 'published' && $oldStatus !== 'published') {
+                try {
+                    app(\App\Services\BlogService::class)->notifySubscribersAboutNewPost($blog);
+                } catch (\Throwable $subEx) {
+                    \Illuminate\Support\Facades\Log::warning('Lỗi gửi thông báo bài viết mới tới subscribers: ' . $subEx->getMessage());
+                }
+            }
         });
         
         $msg = match ($status) {
