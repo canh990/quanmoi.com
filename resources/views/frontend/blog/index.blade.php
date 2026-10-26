@@ -5,6 +5,7 @@
 
 @push('styles')
 <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.css">
 <style>
     .level-1-card { background: white; border-radius: 12px; box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.05); transition: transform 0.2s ease, box-shadow 0.2s ease; }
     .level-1-card:hover { transform: translateY(-4px); box-shadow: 0px 8px 30px rgba(0, 0, 0, 0.08); }
@@ -72,17 +73,18 @@
 <!-- Main Content -->
 <main class="mt-6 md:mt-10 max-w-[1200px] mx-auto px-container-margin pb-16">
 
-    <!-- Flash Success / Error Messages in Vietnamese -->
     @if(session('success'))
-        <div class="mb-6 p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl flex items-center justify-between shadow-sm animate-modal-in">
+        <div id="blog-success-banner" class="mb-6 p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl shadow-sm animate-modal-in flex items-center justify-between gap-3">
             <div class="flex items-center gap-3">
-                <span class="material-symbols-outlined text-emerald-600 text-2xl">check_circle</span>
+                <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                    <span class="material-symbols-outlined text-2xl">check_circle</span>
+                </div>
                 <div>
-                    <h4 class="font-bold text-sm">Thành công!</h4>
+                    <h4 class="font-bold text-sm text-emerald-900">Thành công!</h4>
                     <p class="text-xs text-emerald-700 mt-0.5">{{ session('success') }}</p>
                 </div>
             </div>
-            <button onclick="this.parentElement.remove()" class="text-emerald-500 hover:text-emerald-700 text-sm font-bold p-1">
+            <button type="button" onclick="document.getElementById('blog-success-banner')?.remove()" class="p-1.5 text-emerald-500 hover:text-emerald-700 hover:bg-emerald-100 rounded-lg transition-colors cursor-pointer" title="Đóng">
                 <span class="material-symbols-outlined text-lg">close</span>
             </button>
         </div>
@@ -126,7 +128,19 @@
                         <span>Bởi {{ $heroBlog->user->ho_ten ?? 'Tác giả' }}</span>
                         <span class="material-symbols-outlined text-sm">arrow_forward</span>
                     </p>
-                    <p class="text-xs opacity-75">{{ $heroBlog->published_at ? $heroBlog->published_at->format('d/m/Y') : '' }} • {{ number_format($heroBlog->view_count ?? 0) }} lượt xem • {{ number_format($heroBlog->comment_count ?? 0) }} bình luận</p>
+                    <p class="text-xs opacity-75 flex items-center gap-2 flex-wrap">
+                        <span>{{ $heroBlog->published_at ? $heroBlog->published_at->format('d/m/Y') : '' }}</span>
+                        <span>•</span>
+                        <span class="blog-view-count-wrap inline-flex items-center gap-1 font-medium px-2 py-0.5 rounded-full border border-transparent hover:border-amber-400 hover:ring-2 hover:ring-amber-400/30 transition-all cursor-pointer" data-blog-slug="{{ $heroBlog->slug }}" data-blog-id="{{ $heroBlog->id }}" title="Lượt xem bài viết">
+                            <span class="material-symbols-outlined text-[15px] text-amber-300">visibility</span>
+                            <span class="blog-view-count-text">{{ number_format($heroBlog->view_count ?? 0) }} lượt xem</span>
+                        </span>
+                        <span>•</span>
+                        <span class="inline-flex items-center gap-1 font-medium" title="Bình luận bài viết">
+                            <span class="material-symbols-outlined text-[15px]">forum</span>
+                            <span>{{ number_format($heroBlog->comment_count ?? 0) }} bình luận</span>
+                        </span>
+                    </p>
                 </div>
             </a>
         </div>
@@ -211,11 +225,15 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
                     @foreach($blogs as $blog)
                         <!-- Blog Card -->
-                        <article class="level-1-card flex flex-col h-full group">
+                        <article class="level-1-card flex flex-col h-full group border border-outline-variant hover:border-amber-400/80 hover:ring-2 hover:ring-amber-400/30 hover:shadow-lg transition-all duration-300">
                             <a href="{{ route('blog.show', $blog->slug) }}" class="blog-card-cover-frame">
                                 @if($blog->category)
-                                    <div class="absolute top-3 left-3 z-10 bg-primary-container text-on-primary px-2 py-0.5 rounded-md font-label-md text-label-md uppercase font-bold">{{ $blog->category->name }}</div>
+                                    <div class="absolute top-3 left-3 z-10 bg-primary-container text-on-primary px-2 py-0.5 rounded-md font-label-md text-label-md uppercase font-bold max-w-[calc(100%-1.5rem)] truncate">{{ $blog->category->name }}</div>
                                 @endif
+                                <div class="absolute bottom-3 right-3 z-10 px-2.5 py-0.5 rounded-md bg-black/60 backdrop-blur-md text-white font-semibold text-[10px] flex items-center gap-1 shadow-sm" title="Thời gian đăng: {{ ($blog->published_at ?? $blog->created_at)?->format('d/m/Y H:i') }}">
+                                    <span class="material-symbols-outlined text-[12px] text-amber-300">schedule</span>
+                                    <span>{{ ($blog->published_at ?? $blog->created_at)?->diffForHumans() ?? 'Vừa xong' }}</span>
+                                </div>
                                 <img src="{{ $blog->cover_image_url ?? 'https://placehold.co/600x400/png' }}" alt="{{ $blog->title }}"/>
                             </a>
                             <div class="p-4 flex flex-col flex-grow">
@@ -233,11 +251,17 @@
                                             <span>Tác giả</span>
                                         @endif
                                         <span>•</span>
-                                        <span>{{ $blog->published_at ? $blog->published_at->format('d/m/Y') : '' }}</span>
+                                        <span>{{ ($blog->published_at ?? $blog->created_at)?->format('d/m/Y') ?? 'Mới' }}</span>
                                     </span>
-                                    <div class="font-label-sm text-label-sm text-text-muted flex items-center gap-2.5">
-                                        <span class="flex items-center gap-0.5" title="Lượt xem"><span class="material-symbols-outlined text-[14px]">visibility</span> {{ number_format($blog->view_count ?? 0) }}</span>
-                                        <span class="flex items-center gap-0.5" title="Bình luận"><span class="material-symbols-outlined text-[14px]">forum</span> {{ number_format($blog->comment_count ?? 0) }}</span>
+                                    <div class="font-label-sm text-label-sm text-text-muted flex items-center gap-2">
+                                        <span class="blog-view-count-wrap flex items-center gap-1 font-semibold text-slate-600 hover:text-amber-700 transition-all px-2 py-0.5 rounded-lg border border-transparent hover:border-amber-400 hover:ring-2 hover:ring-amber-400/30 hover:shadow-xs cursor-pointer" data-blog-slug="{{ $blog->slug }}" data-blog-id="{{ $blog->id }}" title="{{ number_format($blog->view_count ?? 0) }} lượt xem">
+                                            <span class="material-symbols-outlined text-[15px] text-amber-600">visibility</span>
+                                            <span class="blog-view-count-text">{{ number_format($blog->view_count ?? 0) }} lượt xem</span>
+                                        </span>
+                                        <span class="flex items-center gap-1 font-semibold text-slate-600 hover:text-primary transition-all px-2 py-0.5 rounded-lg border border-transparent hover:border-amber-400 hover:ring-2 hover:ring-amber-400/30 hover:shadow-xs cursor-pointer" title="{{ number_format($blog->comment_count ?? 0) }} bình luận">
+                                            <span class="material-symbols-outlined text-[15px] text-primary">forum</span>
+                                            <span>{{ number_format($blog->comment_count ?? 0) }}</span>
+                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -291,11 +315,11 @@
                 <h4 class="font-bold text-on-surface text-base mb-2">Tạo bài viết cho quán</h4>
                 <p class="text-on-surface-variant text-xs mb-4">Chia sẻ menu mới, không gian quán đẹp hoặc thông tin khuyến mãi để thu hút thực khách.</p>
                 @auth
-                    <button onclick="openCreateBlogModal()" type="button" class="w-full py-2.5 bg-primary text-white font-bold text-xs rounded-xl shadow-sm hover:opacity-90 transition-all flex items-center justify-center gap-2">
+                    <button onclick="openCreateBlogModal()" type="button" class="w-full py-2.5 bg-primary text-white font-bold text-xs rounded-xl shadow-sm hover:opacity-90 border border-transparent hover:border-amber-400 hover:ring-2 hover:ring-amber-400/30 transition-all flex items-center justify-center gap-2 cursor-pointer">
                         <span class="material-symbols-outlined text-[18px]">edit</span> Viết bài mới ngay
                     </button>
                 @else
-                    <button onclick="openGuestModal()" type="button" class="w-full py-2.5 bg-primary text-white font-bold text-xs rounded-xl shadow-sm hover:opacity-90 transition-all flex items-center justify-center gap-2">
+                    <button onclick="openGuestModal()" type="button" class="w-full py-2.5 bg-primary text-white font-bold text-xs rounded-xl shadow-sm hover:opacity-90 border border-transparent hover:border-amber-400 hover:ring-2 hover:ring-amber-400/30 transition-all flex items-center justify-center gap-2 cursor-pointer">
                         <span class="material-symbols-outlined text-[18px]">lock</span> Đăng nhập để viết bài
                     </button>
                 @endauth
@@ -332,7 +356,7 @@
                                type="email" 
                                required/>
                     </div>
-                    <button type="submit" class="w-full py-3 bg-primary-container text-on-primary font-title-md text-title-md rounded-xl shadow-sm hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2 font-bold cursor-pointer">
+                    <button type="submit" class="w-full py-3 bg-primary-container text-on-primary font-title-md text-title-md rounded-xl shadow-sm hover:opacity-90 border border-transparent hover:border-amber-400 hover:ring-2 hover:ring-amber-400/30 active:scale-[0.98] transition-all flex items-center justify-center gap-2 font-bold cursor-pointer">
                         <span class="btn-text">Đăng ký ngay</span>
                         <span class="material-symbols-outlined text-base">arrow_forward</span>
                     </button>
@@ -352,7 +376,10 @@
                             <span class="text-2xl font-bold text-primary-container/30 group-hover:text-primary transition-colors">{{ str_pad($index + 1, 2, '0', STR_PAD_LEFT) }}</span>
                             <div>
                                 <h5 class="font-label-md text-label-md text-on-surface group-hover:text-primary transition-colors line-clamp-2 font-semibold">{{ $popularBlog->title }}</h5>
-                                <p class="text-[10px] text-text-muted mt-1 uppercase tracking-tighter">{{ number_format($popularBlog->view_count ?? 0) }} lượt xem</p>
+                                <p class="blog-view-count-wrap text-[11px] text-slate-500 font-semibold mt-1 flex items-center gap-1 px-1.5 py-0.5 rounded-md border border-transparent hover:border-amber-400 hover:ring-2 hover:ring-amber-400/30 transition-all inline-flex cursor-pointer" data-blog-slug="{{ $popularBlog->slug }}" data-blog-id="{{ $popularBlog->id }}" title="{{ number_format($popularBlog->view_count ?? 0) }} lượt xem">
+                                    <span class="material-symbols-outlined text-[13px] text-amber-600">visibility</span>
+                                    <span class="blog-view-count-text">{{ number_format($popularBlog->view_count ?? 0) }} lượt xem</span>
+                                </p>
                             </div>
                         </a>
                     @endforeach
@@ -419,13 +446,33 @@
                         <p class="text-xs text-amber-100/90 font-medium mt-0.5">Chia sẻ trải nghiệm & giới thiệu quán cho cộng đồng</p>
                     </div>
                 </div>
-                <button onclick="closeCreateBlogModal()" type="button" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all hover:rotate-90">
-                    <span class="material-symbols-outlined text-lg">close</span>
-                </button>
+                <div class="flex items-center gap-3">
+                    <span id="modal-draft-indicator" class="text-xs font-semibold text-white/90 bg-black/20 px-2.5 py-1 rounded-full opacity-0 transition-opacity hidden sm:flex items-center"></span>
+                    <button onclick="closeCreateBlogModal()" type="button" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all hover:rotate-90">
+                        <span class="material-symbols-outlined text-lg">close</span>
+                    </button>
+                </div>
             </div>
 
             <!-- Scrollable Body (Only this part scrolls!) -->
             <div id="modal-scrollable-body" class="p-5 sm:p-6 overflow-y-auto space-y-4 flex-1 min-h-0">
+                <!-- Draft Restored Banner in Modal -->
+                <div id="modal-draft-alert-banner" class="hidden p-3 rounded-2xl border border-amber-300 bg-amber-50/95 text-xs text-amber-950 flex items-center justify-between gap-2 shadow-2xs animate-modal-in">
+                    <div class="flex items-center gap-2 overflow-hidden">
+                        <span class="material-symbols-outlined text-amber-600 text-lg shrink-0">history_edu</span>
+                        <span class="truncate font-bold">Đã tự động khôi phục bài viết đang soạn dở của bạn!</span>
+                        <span class="text-slate-500 font-medium text-[11px] hidden sm:inline" id="qm-draft-time-label"></span>
+                    </div>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        <button type="button" onclick="dismissDraftBanner()" class="px-2.5 py-1 text-[11px] font-bold text-amber-800 hover:bg-amber-100 rounded-lg transition-colors cursor-pointer">
+                            Tiếp tục
+                        </button>
+                        <button type="button" onclick="discardSavedDraft()" class="px-2.5 py-1 text-[11px] font-bold text-rose-700 hover:bg-rose-100 rounded-lg transition-colors cursor-pointer flex items-center gap-0.5">
+                            <span class="material-symbols-outlined text-xs">delete</span> Xóa nháp
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Client Validation Alert Box -->
                 <div id="modal-error-alert" class="hidden p-4 bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl text-xs font-bold flex items-center gap-2 shadow-2xs">
                     <span class="material-symbols-outlined text-rose-600 text-lg">warning</span>
@@ -435,26 +482,62 @@
                 {{-- AI Content Writer Assistant Toolbar --}}
                 @include('nguoi-dung.blog.partials.ai-toolbar', ['context' => 'modal'])
 
-                <!-- Cover Image Upload -->
+                <!-- Cover Image Upload & Editor -->
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Ảnh bìa bài viết</label>
-                    <div class="relative w-full h-44 sm:h-48 min-h-[160px] bg-amber-50/40 rounded-2xl overflow-hidden border-2 border-dashed border-amber-300/80 hover:border-amber-500 hover:bg-amber-50/80 transition-all duration-200 flex flex-col items-center justify-center text-center p-3 cursor-pointer group shadow-2xs" id="modal-cover-container">
-                        <input type="file" name="cover_image" id="modal_cover_image" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onchange="previewModalCoverImage(this)">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600">Ảnh bìa bài viết</label>
+                        <span id="modal-cover-badge" class="hidden text-[11px] font-bold text-amber-700 bg-amber-100/90 px-2.5 py-0.5 rounded-full border border-amber-300 flex items-center gap-1 shadow-2xs">
+                            <span class="material-symbols-outlined text-xs">aspect_ratio</span> Tỷ lệ 21:9 chuẩn
+                        </span>
+                    </div>
+
+                    <div class="relative w-full h-44 sm:h-48 min-h-[160px] bg-amber-50/40 rounded-2xl overflow-hidden border-2 border-dashed border-amber-300/80 hover:border-amber-500 hover:bg-amber-50/80 transition-all duration-200 flex flex-col items-center justify-center text-center p-2 group shadow-2xs" id="modal-cover-container">
+                        <input type="file" name="cover_image" id="modal_cover_image" accept="image/jpeg,image/png,image/webp" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onchange="previewModalCoverImage(this)">
                         
-                        <div class="text-center p-2" id="modal-cover-placeholder">
+                        <!-- Placeholder khi chưa có ảnh -->
+                        <div class="text-center p-2 select-none pointer-events-none" id="modal-cover-placeholder">
                             <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center mx-auto mb-1.5 group-hover:scale-110 transition-transform">
                                 <span class="material-symbols-outlined text-xl">add_photo_alternate</span>
                             </div>
                             <p class="text-xs font-bold text-slate-800">Nhấn hoặc kéo thả để tải ảnh bìa bài viết</p>
                             <p class="text-[11px] font-medium text-slate-500 mt-0.5">Định dạng JPG, PNG, WEBP (Tỷ lệ 21:9, tối đa 5MB)</p>
+                            <span class="inline-flex items-center gap-1 mt-1.5 text-[10px] font-bold text-amber-700 bg-amber-100/90 px-2.5 py-0.5 rounded-full border border-amber-200/80">
+                                <span class="material-symbols-outlined text-xs">crop</span> Có hỗ trợ cắt & chỉnh sửa ảnh
+                            </span>
                         </div>
                         
-                        <img id="modal-cover-preview" src="" class="absolute inset-0 w-full h-full object-cover hidden">
+                        <!-- Preview ảnh -->
+                        <img id="modal-cover-preview" src="" alt="Ảnh bìa bài viết" class="absolute inset-0 w-full h-full object-cover hidden">
                         
-                        <div class="absolute inset-0 bg-slate-900/50 hidden group-hover:flex items-center justify-center z-20 pointer-events-none transition-opacity" id="modal-cover-overlay">
-                            <span class="text-white font-bold text-xs bg-slate-900/70 px-4 py-2 rounded-xl backdrop-blur-md flex items-center gap-1.5 shadow-md">
-                                <span class="material-symbols-outlined text-base">edit</span> Thay đổi ảnh
-                            </span>
+                        <!-- Overlay & Actions Bar khi đã có ảnh -->
+                        <div id="modal-cover-actions-bar" class="absolute inset-0 bg-slate-950/45 backdrop-blur-[1px] opacity-0 group-hover:opacity-100 transition-opacity duration-200 hidden flex flex-col items-center justify-center gap-2 p-3 z-20">
+                            <div class="flex items-center gap-2 flex-wrap justify-center">
+                                <!-- Nút Chỉnh sửa ảnh -->
+                                <button type="button" onclick="editModalCoverImage(event)" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-extrabold text-xs shadow-lg flex items-center gap-1.5 transition-all transform hover:scale-105 active:scale-95 cursor-pointer">
+                                    <span class="material-symbols-outlined text-base">crop</span>
+                                    <span>Chỉnh sửa & Cắt ảnh</span>
+                                </button>
+                                <!-- Nút Đổi ảnh -->
+                                <button type="button" onclick="changeModalCoverImage(event)" class="px-3 py-2 rounded-xl bg-slate-900/85 hover:bg-slate-900 text-white font-bold text-xs backdrop-blur-md shadow-md flex items-center gap-1.5 transition-all hover:scale-105 active:scale-95 cursor-pointer border border-white/10">
+                                    <span class="material-symbols-outlined text-base">sync</span>
+                                    <span>Đổi ảnh</span>
+                                </button>
+                                <!-- Nút Xóa ảnh -->
+                                <button type="button" onclick="removeModalCoverImage(event)" class="p-2 rounded-xl bg-rose-600/90 hover:bg-rose-600 text-white font-bold text-xs backdrop-blur-md shadow-md flex items-center justify-center transition-all hover:scale-105 active:scale-95 cursor-pointer border border-white/10" title="Xóa ảnh bìa">
+                                    <span class="material-symbols-outlined text-base">delete</span>
+                                </button>
+                            </div>
+                            <p class="text-[11px] text-white/95 font-medium bg-black/50 px-3 py-0.5 rounded-full backdrop-blur-sm pointer-events-none">
+                                Nhấn <b>Chỉnh sửa & Cắt ảnh</b> để căn chỉnh góc đẹp nhất
+                            </p>
+                        </div>
+
+                        <!-- Nút Chỉnh sửa cố định góc dưới khi có ảnh (để mobile không cần hover cũng thấy) -->
+                        <div id="modal-cover-fixed-edit-btn" class="absolute bottom-2 right-2 hidden z-20 group-hover:hidden">
+                            <button type="button" onclick="editModalCoverImage(event)" class="px-3 py-1.5 rounded-xl bg-slate-900/85 hover:bg-slate-900 text-amber-300 font-bold text-xs backdrop-blur-md shadow-md border border-slate-700 flex items-center gap-1 transition-all cursor-pointer">
+                                <span class="material-symbols-outlined text-sm text-amber-400">crop</span>
+                                <span>Chỉnh sửa ảnh</span>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -483,17 +566,19 @@
                         $modalCategories = \App\Models\BlogCategory::all();
                     }
 
-                    $modalTags = \App\Models\BlogTag::all();
-                    if ($modalTags->isEmpty()) {
-                        $defaultTagNames = ['ReviewQuan', 'MonNgon', 'KhamPha', 'GocChuQuan', 'AmThuc', 'KhuyenMai', 'MonMoi', 'TraiNghiem'];
+                    $allModalTags = \App\Models\BlogTag::all();
+                    if ($allModalTags->isEmpty()) {
+                        $defaultTagNames = ['ReviewQuan', 'MonNgon', 'AmThuc', 'KhongGianChill', 'DiaDiemAnUong', 'KhamPha', 'GocChuQuan', 'KhuyenMai'];
                         foreach ($defaultTagNames as $name) {
                             \App\Models\BlogTag::firstOrCreate(
                                 ['slug' => \Illuminate\Support\Str::slug($name)],
                                 ['name' => $name]
                             );
                         }
-                        $modalTags = \App\Models\BlogTag::all();
+                        $allModalTags = \App\Models\BlogTag::all();
                     }
+                    // Chỉ hiển thị vài thẻ phổ biến nhất ban đầu
+                    $popularTags = $allModalTags->take(8);
                 @endphp
 
                 <!-- Category & Tags Grid -->
@@ -578,7 +663,7 @@
                             
                             <!-- Tag Suggestions Dropdown List -->
                             <div id="modal_tag_dropdown" class="tag-dropdown-menu absolute left-0 right-0 top-full mt-1 bg-white border border-amber-200 rounded-2xl shadow-xl z-50 max-h-48 overflow-y-auto hidden divide-y divide-slate-100">
-                                @foreach($modalTags as $tag)
+                                @foreach($allModalTags as $tag)
                                     <div class="tag-suggestion-item px-4 py-2 hover:bg-amber-50/80 cursor-pointer text-xs font-bold text-slate-800 flex items-center justify-between transition-colors"
                                          data-name="{{ strtolower($tag->name) }}"
                                          onclick="selectTagItem('modal_custom_tags', '{{ addslashes($tag->name) }}', 'modal_tag_dropdown')">
@@ -600,19 +685,21 @@
                             </div>
 
                             <datalist id="modal_tag_datalist">
-                                @foreach($modalTags as $tag)
+                                @foreach($allModalTags as $tag)
                                     <option value="{{ $tag->name }}"></option>
                                 @endforeach
                             </datalist>
                         </div>
                         
                         <!-- Quick Tag Badges with interactive toggle state -->
-                        <div class="quick-tags-container flex flex-wrap gap-1.5 mt-2 max-h-20 overflow-y-auto p-2 bg-slate-50/60 rounded-xl border border-slate-200/60" data-target="modal_custom_tags">
-                            @foreach($modalTags as $tag)
+                        <div class="quick-tags-container flex flex-wrap gap-1.5 mt-2 max-h-24 overflow-y-auto p-2 bg-slate-50/60 rounded-xl border border-slate-200/60" 
+                             data-target="modal_custom_tags"
+                             data-popular='@json($popularTags->pluck("name"))'>
+                            @foreach($popularTags as $tag)
                                 <button type="button" 
                                         data-tag="{{ strtolower($tag->name) }}"
                                         onclick="addQuickTag('modal_custom_tags', '{{ addslashes($tag->name) }}')"
-                                        class="quick-tag-btn px-2.5 py-1 text-[11px] rounded-full border border-amber-200/80 bg-amber-50/60 text-amber-800 font-medium hover:bg-amber-100 hover:border-amber-300 transition-all flex items-center gap-1 cursor-pointer select-none">
+                                        class="quick-tag-btn px-2.5 py-1 text-[11px] rounded-full border border-amber-200/80 bg-amber-50/60 text-amber-800 font-medium hover:bg-amber-100 hover:border-amber-300 transition-all flex items-center gap-1 cursor-pointer select-none active:scale-95">
                                     <span class="material-symbols-outlined text-xs tag-icon">add</span>
                                     <span>#{{ $tag->name }}</span>
                                 </button>
@@ -649,7 +736,7 @@
 
             <!-- Form Footer Buttons (Pinned at Bottom) -->
             <div class="shrink-0 bg-slate-50 border-t border-slate-200/80 px-6 py-3.5 flex items-center justify-between gap-3 relative z-30">
-                <a href="{{ route('nguoi-dung.blog.create') }}" class="text-xs font-bold text-amber-700 hover:text-amber-800 flex items-center gap-1 shrink-0 transition-colors">
+                <a href="{{ route('nguoi-dung.blog.create') }}" onclick="transferDraftToFullEditor(event)" class="text-xs font-bold text-amber-700 hover:text-amber-800 flex items-center gap-1 shrink-0 transition-colors cursor-pointer">
                     <span class="material-symbols-outlined text-base">open_in_new</span>
                     <span class="hidden sm:inline">Mở giao diện soạn thảo đầy đủ</span>
                     <span class="sm:hidden">Soạn thảo</span>
@@ -694,9 +781,16 @@
 {{-- AI Assistant Modals & Script --}}
 @include('nguoi-dung.blog.partials.ai-assistant')
 
+{{-- Cover Image Cropper & Editor Modal --}}
+@include('nguoi-dung.blog.partials.image-cropper-modal')
+
+{{-- Blog Draft Auto-save & Restoration Manager --}}
+@include('nguoi-dung.blog.partials.draft-manager', ['context' => 'modal'])
+
 @endsection
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.js"></script>
 <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 <script>
     let modalQuill = null;
@@ -716,6 +810,44 @@
                     if (wrapper) wrapper.classList.add('hidden');
                 }
             });
+        }
+
+        // Hỗ trợ Kéo & Thả ảnh bìa
+        const coverContainer = document.getElementById('modal-cover-container');
+        if (coverContainer) {
+            ['dragenter', 'dragover'].forEach(eventName => {
+                coverContainer.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    coverContainer.classList.add('border-amber-500', 'bg-amber-100/50');
+                }, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                coverContainer.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    coverContainer.classList.remove('border-amber-500', 'bg-amber-100/50');
+                }, false);
+            });
+
+            coverContainer.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                const files = dt ? dt.files : null;
+                if (files && files.length > 0) {
+                    const input = document.getElementById('modal_cover_image');
+                    if (input) {
+                        try {
+                            const transfer = new DataTransfer();
+                            transfer.items.add(files[0]);
+                            input.files = transfer.files;
+                            previewModalCoverImage(input);
+                        } catch(err) {
+                            console.error(err);
+                        }
+                    }
+                }
+            }, false);
         }
     });
 
@@ -739,6 +871,14 @@
     }
 
     function openCreateBlogModal() {
+        try {
+            sessionStorage.setItem('qm_blog_modal_open', '1');
+            sessionStorage.removeItem('qm_blog_modal_closed');
+            if (window.location.hash !== '#tao-bai-viet') {
+                history.replaceState(null, null, '#tao-bai-viet');
+            }
+        } catch(e) {}
+
         const modal = document.getElementById('createBlogModal');
         if (modal) {
             modal.classList.remove('hidden');
@@ -749,10 +889,21 @@
             if (scrollBody) scrollBody.scrollTop = 0;
             initModalQuill();
             syncQuickTagStates('modal_custom_tags');
+            if (window.restoreBlogDraft) {
+                setTimeout(window.restoreBlogDraft, 60);
+            }
         }
     }
 
     function closeCreateBlogModal() {
+        try {
+            sessionStorage.removeItem('qm_blog_modal_open');
+            sessionStorage.setItem('qm_blog_modal_closed', '1');
+            if (window.location.hash === '#tao-bai-viet') {
+                history.replaceState(null, null, window.location.pathname + window.location.search);
+            }
+        } catch(e) {}
+
         const modal = document.getElementById('createBlogModal');
         if (modal) {
             modal.classList.add('hidden');
@@ -779,24 +930,114 @@
         }
     }
 
+
     function previewModalCoverImage(input) {
         if (input.files && input.files[0]) {
+            const file = input.files[0];
+            if (!file.type.match(/^image\//)) {
+                if (typeof showAiToast === 'function') {
+                    showAiToast('Vui lòng chọn tệp hình ảnh hợp lệ (JPG, PNG, WEBP).', 'error');
+                } else if (typeof showToast === 'function') {
+                    showToast({ title: 'Định dạng không hỗ trợ', message: 'Vui lòng chọn ảnh JPG, PNG hoặc WEBP.', type: 'error' });
+                }
+                input.value = '';
+                return;
+            }
+            if (file.size > 5 * 1024 * 1024) {
+                if (typeof showAiToast === 'function') {
+                    showAiToast('Dung lượng ảnh không được vượt quá 5MB.', 'error');
+                } else if (typeof showToast === 'function') {
+                    showToast({ title: 'Ảnh quá lớn', message: 'Dung lượng ảnh không được vượt quá 5MB.', type: 'error' });
+                }
+                input.value = '';
+                return;
+            }
+
             const reader = new FileReader();
             reader.onload = function(e) {
+                const imageSrc = e.target.result;
                 const preview = document.getElementById('modal-cover-preview');
                 const placeholder = document.getElementById('modal-cover-placeholder');
-                const overlay = document.getElementById('modal-cover-overlay');
-                
+                const actionsBar = document.getElementById('modal-cover-actions-bar');
+                const fixedBtn = document.getElementById('modal-cover-fixed-edit-btn');
+                const badge = document.getElementById('modal-cover-badge');
+                const container = document.getElementById('modal-cover-container');
+
                 if (preview) {
-                    preview.src = e.target.result;
+                    preview.src = imageSrc;
                     preview.classList.remove('hidden');
                 }
                 if (placeholder) placeholder.classList.add('hidden');
-                if (overlay) overlay.classList.remove('hidden');
-            }
-            reader.readAsDataURL(input.files[0]);
+                if (actionsBar) actionsBar.classList.remove('hidden');
+                if (fixedBtn) fixedBtn.classList.remove('hidden');
+                if (badge) badge.classList.remove('hidden');
+                if (container) {
+                    container.classList.remove('border-dashed');
+                    container.classList.add('border-solid', 'border-amber-400');
+                }
+
+                input.classList.add('pointer-events-none');
+
+                // Tự động mở trình chỉnh sửa ảnh để người dùng cắt cúp theo chuẩn 21:9
+                setTimeout(() => {
+                    openCoverImageCropper(imageSrc, 'modal');
+                }, 120);
+            };
+            reader.readAsDataURL(file);
         }
     }
+
+    function editModalCoverImage(event) {
+        if (event) event.stopPropagation();
+        const preview = document.getElementById('modal-cover-preview');
+        if (preview && preview.src && !preview.classList.contains('hidden')) {
+            openCoverImageCropper(preview.src, 'modal');
+        } else {
+            const input = document.getElementById('modal_cover_image');
+            if (input) {
+                input.classList.remove('pointer-events-none');
+                input.click();
+            }
+        }
+    }
+
+    function changeModalCoverImage(event) {
+        if (event) event.stopPropagation();
+        const input = document.getElementById('modal_cover_image');
+        if (input) {
+            input.classList.remove('pointer-events-none');
+            input.click();
+        }
+    }
+
+    function removeModalCoverImage(event) {
+        if (event) event.stopPropagation();
+        const input = document.getElementById('modal_cover_image');
+        const preview = document.getElementById('modal-cover-preview');
+        const placeholder = document.getElementById('modal-cover-placeholder');
+        const actionsBar = document.getElementById('modal-cover-actions-bar');
+        const fixedBtn = document.getElementById('modal-cover-fixed-edit-btn');
+        const badge = document.getElementById('modal-cover-badge');
+        const container = document.getElementById('modal-cover-container');
+
+        if (input) {
+            input.value = '';
+            input.classList.remove('pointer-events-none');
+        }
+        if (preview) {
+            preview.src = '';
+            preview.classList.add('hidden');
+        }
+        if (placeholder) placeholder.classList.remove('hidden');
+        if (actionsBar) actionsBar.classList.add('hidden');
+        if (fixedBtn) fixedBtn.classList.add('hidden');
+        if (badge) badge.classList.add('hidden');
+        if (container) {
+            container.classList.add('border-dashed');
+            container.classList.remove('border-solid', 'border-amber-400');
+        }
+    }
+
 
     function toggleCategoryDropdown(dropdownId) {
         const dropdown = document.getElementById(dropdownId);
@@ -960,9 +1201,10 @@
     function addQuickTag(inputId, tagName) {
         const input = document.getElementById(inputId);
         if (!input) return;
-        tagName = tagName.replace(/^#/, '');
+        tagName = tagName.replace(/^#/, '').trim();
         let terms = input.value.split(',').map(t => t.trim().replace(/^#/, '')).filter(t => t.length > 0);
-        const index = terms.indexOf(tagName);
+        const lowerList = terms.map(t => t.toLowerCase());
+        const index = lowerList.indexOf(tagName.toLowerCase());
         if (index >= 0) {
             // Already present -> Toggle off (remove)
             terms.splice(index, 1);
@@ -971,28 +1213,73 @@
             terms.push(tagName);
         }
         input.value = terms.length > 0 ? terms.join(', ') + ', ' : '';
+        input.dispatchEvent(new Event('input', { bubbles: true }));
         syncQuickTagStates(inputId);
     }
 
     function syncQuickTagStates(inputId) {
         const input = document.getElementById(inputId);
         if (!input) return;
-        let terms = input.value.split(',').map(t => t.trim().toLowerCase().replace(/^#/, '')).filter(t => t.length > 0);
         
         const container = document.querySelector(`.quick-tags-container[data-target="${inputId}"]`);
         if (!container) return;
 
-        container.querySelectorAll('.quick-tag-btn').forEach(btn => {
-            const tag = (btn.getAttribute('data-tag') || '').toLowerCase().replace(/^#/, '');
-            const icon = btn.querySelector('.tag-icon');
-            if (terms.includes(tag)) {
-                btn.className = "quick-tag-btn px-2.5 py-1 text-[11px] rounded-full border border-amber-600 bg-amber-600 text-white font-bold transition-all flex items-center gap-1 cursor-pointer select-none shadow-2xs";
-                if (icon) icon.textContent = "check";
-            } else {
-                btn.className = "quick-tag-btn px-2.5 py-1 text-[11px] rounded-full border border-amber-200/80 bg-amber-50/60 text-amber-800 font-medium hover:bg-amber-100 hover:border-amber-300 transition-all flex items-center gap-1 cursor-pointer select-none";
-                if (icon) icon.textContent = "add";
+        // Lấy danh sách thẻ người dùng đang nhập / vừa sử dụng
+        const rawTerms = input.value.split(',').map(t => t.trim().replace(/^#/, '')).filter(t => t.length > 0);
+        const currentTerms = [];
+        rawTerms.forEach(t => {
+            if (!currentTerms.some(c => c.toLowerCase() === t.toLowerCase())) {
+                currentTerms.push(t);
             }
         });
+
+        // Lấy danh sách thẻ phổ biến mặc định từ data-popular
+        let popularList = [];
+        try {
+            popularList = JSON.parse(container.getAttribute('data-popular') || '[]');
+        } catch(e) {}
+        if (!popularList || popularList.length === 0) {
+            popularList = ['ReviewQuan', 'MonNgon', 'AmThuc', 'KhongGianChill', 'DiaDiemAnUong', 'KhamPha', 'GocChuQuan', 'KhuyenMai'];
+        }
+
+        let html = '';
+
+        // 1. Thẻ vừa dùng / đang dùng (luôn hiện lên đầu với màu cam nổi bật & dấu tích ✓)
+        currentTerms.forEach(term => {
+            const safeTerm = term.replace(/'/g, "\\'");
+            html += `
+                <button type="button" 
+                        data-tag="${term.toLowerCase()}"
+                        onclick="addQuickTag('${inputId}', '${safeTerm}')"
+                        class="quick-tag-btn px-2.5 py-1 text-[11px] rounded-full border border-amber-600 bg-amber-600 text-white font-bold transition-all flex items-center gap-1 cursor-pointer select-none shadow-2xs active:scale-95"
+                        title="Bấm để bỏ thẻ #${term}">
+                    <span class="material-symbols-outlined text-xs tag-icon">check</span>
+                    <span>#${term}</span>
+                </button>
+            `;
+        });
+
+        // 2. Vài thẻ phổ biến chưa dùng (chỉ hiện tối đa 6 gợi ý để thanh thẻ luôn gọn gàng)
+        let unselectedCount = 0;
+        popularList.forEach(popTag => {
+            const isAlreadySelected = currentTerms.some(c => c.toLowerCase() === popTag.toLowerCase());
+            if (!isAlreadySelected && unselectedCount < 6) {
+                unselectedCount++;
+                const safeTag = popTag.replace(/'/g, "\\'");
+                html += `
+                    <button type="button" 
+                            data-tag="${popTag.toLowerCase()}"
+                            onclick="addQuickTag('${inputId}', '${safeTag}')"
+                            class="quick-tag-btn px-2.5 py-1 text-[11px] rounded-full border border-amber-200/80 bg-amber-50/60 text-amber-800 font-medium hover:bg-amber-100 hover:border-amber-300 transition-all flex items-center gap-1 cursor-pointer select-none active:scale-95"
+                            title="Bấm để thêm nhanh #${popTag}">
+                        <span class="material-symbols-outlined text-xs tag-icon">add</span>
+                        <span>#${popTag}</span>
+                    </button>
+                `;
+            }
+        });
+
+        container.innerHTML = html;
     }
 
     document.addEventListener('click', function(e) {
@@ -1028,13 +1315,21 @@
             if (alertBox) {
                 alertBox.classList.remove('hidden');
                 alertBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            } else {
-                alert('Vui lòng nhập đầy đủ Tiêu đề, Danh mục và Nội dung bài viết!');
+            }
+            if (typeof showAiToast === 'function') {
+                showAiToast('Vui lòng nhập đầy đủ Tiêu đề, Danh mục và Nội dung bài viết!', 'warning');
+            } else if (typeof showToast === 'function') {
+                showToast({ title: 'Thiếu thông tin', message: 'Vui lòng nhập đầy đủ Tiêu đề, Danh mục và Nội dung bài viết!', type: 'warning' });
             }
             return;
         }
 
         if (alertBox) alertBox.classList.add('hidden');
+
+        // Clear local draft when submitting
+        if (window.clearDraftOnSubmit) {
+            window.clearDraftOnSubmit();
+        }
 
         document.getElementById('modal-action-input').value = action;
         
@@ -1110,16 +1405,26 @@
         }
     });
 
-    // Auto open modal if there are validation errors
+    // Chỉ tự động mở lại modal tạo bài viết khi có lỗi validation từ server
     @if($errors->any() && auth()->check())
-        document.addEventListener('DOMContentLoaded', function() {
-            openCreateBlogModal();
-        });
+    document.addEventListener('DOMContentLoaded', function() {
+        openCreateBlogModal();
+    });
+    @else
+    document.addEventListener('DOMContentLoaded', function() {
+        try {
+            sessionStorage.removeItem('qm_blog_modal_open');
+        } catch(e) {}
+    });
     @endif
 
-    // Luôn làm mới dữ liệu lượt xem khi quay lại trang bằng nút Back
+    // Luôn làm mới dữ liệu lượt xem khi quay lại trang bằng nút Back để đồng bộ với trang chi tiết
     window.addEventListener('pageshow', function(event) {
-        if (event.persisted) {
+        const isBack = event.persisted || (window.performance && (
+            (window.performance.navigation && window.performance.navigation.type === 2) ||
+            (window.performance.getEntriesByType && window.performance.getEntriesByType('navigation')[0] && window.performance.getEntriesByType('navigation')[0].type === 'back_forward')
+        ));
+        if (isBack) {
             window.location.reload();
         }
     });
@@ -1191,5 +1496,67 @@
             }
         });
     }
+
+    // Tự động đồng bộ số lượt xem theo thời gian thực mà KHÔNG CẦN TẢI LẠI TRANG
+    (function() {
+        function updateBlogViewInDom(data) {
+            if (!data || (!data.slug && !data.blogId)) return;
+            
+            const selectors = [];
+            if (data.slug) selectors.push(`[data-blog-slug="${data.slug}"]`);
+            if (data.blogId) selectors.push(`[data-blog-id="${data.blogId}"]`);
+            
+            const containers = document.querySelectorAll(selectors.join(', '));
+            if (!containers || containers.length === 0) return;
+
+            containers.forEach(wrap => {
+                const textEl = wrap.querySelector('.blog-view-count-text') || wrap;
+                if (textEl) {
+                    textEl.textContent = `${data.formatted} lượt xem`;
+                }
+                if (wrap.hasAttribute('title')) {
+                    wrap.setAttribute('title', `${data.formatted} lượt xem`);
+                }
+                // Hiệu ứng viền sáng amber nhấp nháy báo hiệu cập nhật trực tiếp thành công
+                wrap.classList.add('border-amber-400', 'ring-2', 'ring-amber-400/50', 'bg-amber-50/60', 'transition-all', 'duration-500');
+                setTimeout(() => {
+                    wrap.classList.remove('border-amber-400', 'ring-2', 'ring-amber-400/50', 'bg-amber-50/60');
+                }, 1800);
+            });
+        }
+
+        // 1. Nhận qua BroadcastChannel giữa các tab
+        if ('BroadcastChannel' in window) {
+            try {
+                const bc = new BroadcastChannel('qm_blog_views_sync');
+                bc.onmessage = function(ev) {
+                    if (ev.data) updateBlogViewInDom(ev.data);
+                };
+            } catch(e) {}
+        }
+
+        // 2. Nhận qua storage event
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'qm_latest_blog_view' && e.newValue) {
+                try {
+                    const data = JSON.parse(e.newValue);
+                    updateBlogViewInDom(data);
+                } catch(err) {}
+            }
+        });
+
+        // 3. Khi bấm Back từ trang chi tiết về trang blog (BFCache / pageshow)
+        window.addEventListener('pageshow', function() {
+            try {
+                const raw = localStorage.getItem('qm_latest_blog_view');
+                if (raw) {
+                    const data = JSON.parse(raw);
+                    if (data && (Date.now() - (data.timestamp || 0)) < 3600000) {
+                        updateBlogViewInDom(data);
+                    }
+                }
+            } catch(err) {}
+        });
+    })();
 </script>
 @endpush

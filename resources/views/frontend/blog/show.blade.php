@@ -85,17 +85,18 @@
                     </div>
                 </a>
                 <div class="w-px h-6 bg-surface-dim"></div>
-                <div class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1">
+                <div class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1" title="Đăng lúc {{ ($blog->published_at ?? $blog->created_at)?->format('d/m/Y H:i') }}">
                     <span class="material-symbols-outlined text-[16px]">calendar_today</span>
-                    {{ $blog->published_at ? $blog->published_at->format('d/m/Y') : 'Bản nháp' }}
+                    <span>{{ ($blog->published_at ?? $blog->created_at)?->format('d/m/Y') ?? 'Mới' }}</span>
+                    <span class="text-xs text-slate-400">({{ ($blog->published_at ?? $blog->created_at)?->diffForHumans() ?? 'Vừa xong' }})</span>
                 </div>
                 <div class="w-px h-6 bg-surface-dim"></div>
-                <div class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1.5 bg-surface-container/60 px-2.5 py-1 rounded-full">
-                    <span class="material-symbols-outlined text-[16px] text-primary">visibility</span>
+                <div class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1.5 bg-surface-container/60 px-2.5 py-1 rounded-full border border-transparent hover:border-amber-400 hover:ring-2 hover:ring-amber-400/30 hover:shadow-xs transition-all cursor-pointer">
+                    <span class="material-symbols-outlined text-[16px] text-amber-600">visibility</span>
                     <span><strong id="blog-view-count" class="font-semibold text-on-surface">{{ number_format($blog->view_count ?? 0) }}</strong> lượt xem</span>
                 </div>
                 <div class="w-px h-6 bg-surface-dim"></div>
-                <a href="#comments-section" class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors flex items-center gap-1.5 bg-surface-container/60 px-2.5 py-1 rounded-full">
+                <a href="#comments-section" class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors flex items-center gap-1.5 bg-surface-container/60 px-2.5 py-1 rounded-full border border-transparent hover:border-amber-400 hover:ring-2 hover:ring-amber-400/30 hover:shadow-xs">
                     <span class="material-symbols-outlined text-[16px] text-primary">forum</span>
                     <span><strong id="blog-header-comment-count" class="font-semibold text-on-surface">{{ number_format($blog->comment_count) }}</strong> bình luận</span>
                 </a>
@@ -506,7 +507,7 @@
                             <h4 class="font-title-md text-[15px] leading-[22px] text-on-background mb-2 line-clamp-2 group-hover:text-primary transition-colors flex-1 font-bold">{{ $related->title }}</h4>
                             <div class="text-[12px] text-on-surface-variant flex items-center justify-between mt-auto pt-2 border-t border-surface-dim">
                                 <span>{{ $related->user->ho_ten ?? 'Tác giả' }}</span>
-                                <span>{{ $related->published_at ? $related->published_at->format('d/m/Y') : '' }}</span>
+                                <span>{{ ($related->published_at ?? $related->created_at)?->format('d/m/Y') ?? 'Mới' }}</span>
                             </div>
                         </div>
                     </a>
@@ -533,7 +534,7 @@
                         <h4 class="font-title-md text-[14px] leading-[20px] text-on-background group-hover:text-primary transition-colors line-clamp-2 mb-1">
                             {{ $popularBlog->title }}
                         </h4>
-                        <div class="font-label-sm text-label-sm text-on-surface-variant">{{ $popularBlog->published_at ? $popularBlog->published_at->format('d/m/Y') : 'Bản nháp' }}</div>
+                        <div class="font-label-sm text-label-sm text-on-surface-variant">{{ ($popularBlog->published_at ?? $popularBlog->created_at)?->format('d/m/Y') ?? 'Mới' }}</div>
                     </div>
                 </a>
             @endforeach
@@ -1233,5 +1234,29 @@
             }
         });
     }
+
+    // Tự động đồng bộ lượt xem sang trang Blog Index và Author Profile mà không cần tải lại trang
+    (function() {
+        const blogViewPayload = {
+            slug: @json($blog->slug),
+            blogId: @json($blog->id),
+            viewCount: {{ (int) ($blog->view_count ?? 0) }},
+            formatted: @json(number_format($blog->view_count ?? 0)),
+            authorId: @json($blog->user_id ?? null),
+            timestamp: Date.now()
+        };
+
+        try {
+            localStorage.setItem('qm_latest_blog_view', JSON.stringify(blogViewPayload));
+        } catch(e) {}
+
+        try {
+            if ('BroadcastChannel' in window) {
+                const bc = new BroadcastChannel('qm_blog_views_sync');
+                bc.postMessage(blogViewPayload);
+                setTimeout(() => bc.close(), 1000);
+            }
+        } catch(e) {}
+    })();
 </script>
 @endpush
