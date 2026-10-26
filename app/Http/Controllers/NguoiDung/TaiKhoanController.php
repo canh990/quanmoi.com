@@ -185,6 +185,16 @@ class TaiKhoanController extends Controller
         $validated = $request->validated();
         unset($validated['last_updated_at']);
 
+        // Chuẩn hóa định dạng ngày sinh từ dd/mm/yyyy sang YYYY-MM-DD để lưu vào CSDL
+        if (isset($validated['ngay_sinh']) && is_string($validated['ngay_sinh'])) {
+            $trimmedDob = trim($validated['ngay_sinh']);
+            if (preg_match('/^([0-9]{1,2})\/([0-9]{1,2})\/([0-9]{4})$/', $trimmedDob, $m)) {
+                $validated['ngay_sinh'] = sprintf('%04d-%02d-%02d', (int) $m[3], (int) $m[2], (int) $m[1]);
+            } elseif ($trimmedDob === '') {
+                $validated['ngay_sinh'] = null;
+            }
+        }
+
         if ($request->hasFile('anh_dai_dien')) {
             $result = $uploadService->uploadAvatar(
                 $request->file('anh_dai_dien'),

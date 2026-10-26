@@ -106,6 +106,7 @@ class Quan extends Model
             'gio_mo_cua'           => $this->gio_mo_cua,
             'gio_dong_cua'         => $this->gio_dong_cua,
             'luot_xem'             => (int) $this->luot_xem,
+            'diem_danh_gia'        => (float) round($this->relationLoaded('danhGia') ? ($this->danhGia->avg('so_sao') ?: 4.9) : ($this->danhGia()->avg('so_sao') ?: 4.9), 1),
             'trang_thai'           => $this->trang_thai,
             'is_noi_bat'           => (bool) $this->is_noi_bat,
             'is_xac_thuc'          => (bool) $this->is_xac_thuc,

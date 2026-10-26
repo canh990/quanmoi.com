@@ -31,7 +31,9 @@ class KhamPhaController extends Controller
         $coVideo     = $request->boolean('co_video');
         
         $isElastic   = in_array(config('scout.driver'), ['elastic', 'elasticsearch']);
-        $query       = Quan::search($tuKhoa)->whereIn('trang_thai', ['da_duyet']);
+        $query       = Quan::search($tuKhoa)
+            ->whereIn('trang_thai', ['da_duyet'])
+            ->query(fn ($eloquentQuery) => $eloquentQuery->withAvg('danhGia', 'so_sao')->withCount('danhGia'));
 
         if (!empty($danhMuc) && !in_array($danhMuc, ['Quán Nổi Bật', 'Quán Mới'])) {
             $categoryField = $isElastic ? 'loai_hinh_kinh_doanh.keyword' : 'loai_hinh_kinh_doanh';
@@ -132,9 +134,15 @@ class KhamPhaController extends Controller
             }
         }
 
-        // 3. Xử lý sắp xếp thông thường
+        // 3. Xử lý sắp xếp thông thường (Full tiêu chí)
         if ($sapXep === 'view_desc') {
             $query->orderBy('luot_xem', 'desc');
+        } elseif ($sapXep === 'rating_desc') {
+            $query->orderBy('diem_danh_gia', 'desc');
+        } elseif ($sapXep === 'price_asc') {
+            $query->orderBy('gia_nho_nhat', 'asc');
+        } elseif ($sapXep === 'price_desc') {
+            $query->orderBy('gia_lon_nhat', 'desc');
         } elseif ($sapXep === 'created_desc') {
             $query->orderBy('created_at', 'desc');
         } elseif ($sapXep !== 'near_me') {
@@ -513,7 +521,7 @@ class KhamPhaController extends Controller
         mixed $banKinh,
         string $sapXep
     ): array {
-        $q = Quan::query()->where('trang_thai', 'da_duyet');
+        $q = Quan::query()->where('trang_thai', 'da_duyet')->withAvg('danhGia', 'so_sao')->withCount('danhGia');
 
         if (!empty($danhMuc) && !in_array($danhMuc, ['Quán Nổi Bật', 'Quán Mới'])) {
             if ($danhMuc === 'Cà phê' || $danhMuc === 'Cà phê & Trà') {
@@ -599,6 +607,12 @@ class KhamPhaController extends Controller
 
         if ($sapXep === 'view_desc') {
             $items = $items->sortByDesc('luot_xem')->values();
+        } elseif ($sapXep === 'rating_desc') {
+            $items = $items->sortByDesc(fn (Quan $quan) => (float) ($quan->danh_gia_avg_so_sao ?: 4.9))->values();
+        } elseif ($sapXep === 'price_asc') {
+            $items = $items->sortBy(fn (Quan $quan) => (float) ($quan->gia_nho_nhat ?? PHP_FLOAT_MAX))->values();
+        } elseif ($sapXep === 'price_desc') {
+            $items = $items->sortByDesc(fn (Quan $quan) => (float) ($quan->gia_lon_nhat ?? 0))->values();
         } elseif ($sapXep === 'created_desc' || ($sapXep !== 'near_me' && $tuKhoa === '')) {
             $items = $items->sortByDesc('created_at')->values();
         }

@@ -40,6 +40,7 @@
         || !empty($dangMoCua) 
         || !empty($coShopee)
         || !empty($coVideo)
+        || (!empty($sapXep) && $sapXep !== '')
         || ($hasGps && ($sapXep === 'near_me' || !empty($banKinh)));
 
     $isNearMeActive = ($sapXep === 'near_me' && $hasGps);
@@ -509,6 +510,29 @@
                     </a>
                 @endif
 
+                {{-- Tiêu chí sắp xếp đang áp dụng --}}
+                @if(!empty($sapXep) && $sapXep !== 'near_me')
+                    @php
+                        $sapXepTag = match($sapXep) {
+                            'rating_desc'  => ['label' => 'Đánh giá cao nhất', 'icon' => 'star'],
+                            'view_desc'    => ['label' => 'Xem nhiều nhất', 'icon' => 'visibility'],
+                            'price_asc'    => ['label' => 'Giá: Thấp đến cao', 'icon' => 'payments'],
+                            'price_desc'   => ['label' => 'Giá: Cao đến thấp', 'icon' => 'payments'],
+                            'created_desc' => ['label' => 'Mới đăng gần đây', 'icon' => 'schedule'],
+                            default        => null,
+                        };
+                    @endphp
+                    @if($sapXepTag)
+                        <a href="{{ request()->fullUrlWithQuery(['sap_xep' => null, 'page' => null]) }}" 
+                           class="inline-flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-full px-3 py-1 text-[13px] font-bold transition-all group"
+                           title="Hủy sắp xếp này">
+                            <span class="material-symbols-outlined text-[15px]">{{ $sapXepTag['icon'] }}</span>
+                            <span>{{ $sapXepTag['label'] }}</span>
+                            <span class="material-symbols-outlined text-[15px] group-hover:rotate-90 transition-transform">close</span>
+                        </a>
+                    @endif
+                @endif
+
                 {{-- Nổi bật --}}
                 @if(!empty($isNoiBat) && !$isSpecialPage)
                     <a href="{{ request()->fullUrlWithQuery(['is_noi_bat' => null]) }}" 
@@ -537,10 +561,13 @@
             </p>
             <div class="flex items-center gap-3">
                 <label for="sap_xep" class="text-[14px] text-gray-500 font-medium whitespace-nowrap">Sắp xếp:</label>
-                <select id="sap_xep" class="border border-gray-200 rounded-xl px-3 py-2 text-[14px] bg-white outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 text-gray-700 font-medium cursor-pointer transition-all" onchange="handleSortSelectChange(this)">
+                <select id="sap_xep" class="border border-gray-200 rounded-xl px-3 py-2 text-[14px] bg-white outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 text-gray-700 font-medium cursor-pointer transition-all shadow-2xs" onchange="handleSortSelectChange(this)">
                     <option value="" {{ empty($sapXep) ? 'selected' : '' }}>Độ liên quan / Mặc định</option>
                     <option value="near_me" {{ ($sapXep ?? '') === 'near_me' ? 'selected' : '' }}>Gần tôi nhất (GPS)</option>
+                    <option value="rating_desc" {{ ($sapXep ?? '') === 'rating_desc' ? 'selected' : '' }}>Đánh giá cao nhất</option>
                     <option value="view_desc" {{ ($sapXep ?? '') === 'view_desc' ? 'selected' : '' }}>Xem nhiều nhất</option>
+                    <option value="price_asc" {{ ($sapXep ?? '') === 'price_asc' ? 'selected' : '' }}>Giá: Thấp đến cao</option>
+                    <option value="price_desc" {{ ($sapXep ?? '') === 'price_desc' ? 'selected' : '' }}>Giá: Cao đến thấp</option>
                     <option value="created_desc" {{ ($sapXep ?? '') === 'created_desc' ? 'selected' : '' }}>Mới đăng gần đây</option>
                 </select>
             </div>
@@ -721,7 +748,12 @@
             return;
         }
         const url = new URL(window.location.href);
-        url.searchParams.set('sap_xep', select.value);
+        if (select.value) {
+            url.searchParams.set('sap_xep', select.value);
+        } else {
+            url.searchParams.delete('sap_xep');
+        }
+        url.searchParams.delete('page');
         window.location.href = url.toString();
     }
 
