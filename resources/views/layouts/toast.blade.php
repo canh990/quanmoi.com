@@ -1,5 +1,5 @@
 <!-- Global Toast Notification Container -->
-<div id="global-toast-container" class="fixed top-[68px] right-4 sm:top-[84px] sm:right-6 z-[99999] flex flex-col gap-3 pointer-events-none max-w-[calc(100vw-2rem)] sm:max-w-[390px] w-full" aria-live="polite" aria-atomic="true">
+<div id="global-toast-container" class="fixed bottom-5 right-4 sm:bottom-6 sm:right-6 z-[99999999] flex flex-col-reverse gap-3 pointer-events-none max-w-[calc(100vw-2rem)] sm:max-w-[390px] w-full items-end" aria-live="polite" aria-atomic="true">
 </div>
 
 <style>
@@ -12,10 +12,32 @@
     .toast-heart-pop {
         animation: toastHeartPop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
     }
+    .toast-item {
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), 
+                    opacity 0.3s ease, 
+                    max-height 0.35s cubic-bezier(0.16, 1, 0.3, 1), 
+                    margin 0.35s ease, 
+                    padding 0.35s ease;
+        max-height: 200px;
+        will-change: transform, opacity, max-height;
+    }
+    .toast-item.dismissing {
+        opacity: 0 !important;
+        transform: translateX(110%) scale(0.94) !important;
+        max-height: 0 !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+        border-width: 0 !important;
+        box-shadow: none !important;
+        overflow: hidden !important;
+        pointer-events: none !important;
+    }
 </style>
 
 <template id="global-toast-template">
-    <div class="toast-item pointer-events-auto transform translate-x-6 opacity-0 scale-95 transition-all duration-300 ease-out bg-white/95 backdrop-blur-xl rounded-2xl p-3.5 sm:p-4 shadow-[0_14px_38px_-6px_rgba(25,28,29,0.14)] border border-outline-variant/50 flex items-start gap-3.5 overflow-hidden relative group">
+    <div class="toast-item pointer-events-auto transform translate-y-4 opacity-0 scale-95 transition-all duration-300 ease-out bg-white/95 backdrop-blur-xl rounded-2xl p-3.5 sm:p-4 shadow-[0_16px_40px_-6px_rgba(25,28,29,0.18)] border border-outline-variant/60 flex items-start gap-3.5 overflow-hidden relative group w-full">
         <!-- Toast Type Indicator Strip -->
         <div class="toast-indicator absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-primary-container to-primary"></div>
 
@@ -48,7 +70,7 @@
         </div>
 
         <!-- Close Button -->
-        <button type="button" class="toast-close-btn p-1.5 text-on-surface-variant/60 hover:text-on-surface hover:bg-surface-container rounded-xl transition-colors shrink-0 -mr-1 -mt-1" aria-label="Đóng thông báo">
+        <button type="button" class="toast-close-btn p-1.5 text-on-surface-variant/60 hover:text-on-surface hover:bg-surface-container rounded-xl transition-colors shrink-0 -mr-1 -mt-1 cursor-pointer" aria-label="Đóng thông báo">
             <span class="material-symbols-outlined text-[18px]">close</span>
         </button>
 
@@ -74,17 +96,36 @@
             image = null,
             actionText = null,
             actionUrl = null,
-            duration = 3600
+            duration = 3800
         } = options;
 
         const container = document.getElementById('global-toast-container');
         const template = document.getElementById('global-toast-template');
         if (!container || !template) return;
 
-        // Keep at most 2 active toasts so rapid clicks stay clean
-        const activeToasts = container.querySelectorAll('.toast-item');
-        if (activeToasts.length >= 2) {
-            activeToasts[0].remove();
+        // Debounce: Nếu thông báo cùng nội dung vừa xuất hiện trong vòng 1 giây thì làm mới countdown của thông báo đó
+        const existingToasts = Array.from(container.querySelectorAll('.toast-item:not(.dismissing)'));
+        const duplicateToast = existingToasts.find(t => {
+            const tTitle = t.querySelector('.toast-title')?.textContent;
+            const tMsg = t.querySelector('.toast-message')?.textContent || '';
+            return tTitle === title && tMsg === message;
+        });
+
+        if (duplicateToast && typeof duplicateToast._resetTimer === 'function') {
+            duplicateToast._resetTimer();
+            duplicateToast.classList.add('scale-105');
+            setTimeout(() => duplicateToast.classList.remove('scale-105'), 200);
+            return;
+        }
+
+        // Giữ tối đa 3 toast đang active để không che khuất màn hình
+        if (existingToasts.length >= 3) {
+            const oldestToast = existingToasts[0];
+            if (oldestToast && typeof oldestToast._dismiss === 'function') {
+                oldestToast._dismiss();
+            } else if (oldestToast) {
+                oldestToast.remove();
+            }
         }
 
         const toast = template.content.firstElementChild.cloneNode(true);
@@ -114,7 +155,7 @@
 
         // Configure Styling Based on Type
         if (type === 'saved') {
-            toast.classList.add('bg-gradient-to-br', 'from-[#fff9f5]', 'via-white', 'to-white', 'border-primary-fixed', 'shadow-[0_14px_38px_-6px_rgba(160,65,0,0.16)]');
+            toast.classList.add('bg-gradient-to-br', 'from-[#fff9f5]', 'via-white', 'to-white', 'border-primary-fixed', 'shadow-[0_16px_40px_-6px_rgba(160,65,0,0.18)]');
             indicator.className = 'toast-indicator absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-primary-container via-primary to-rose-500';
             iconWrap.className = 'toast-icon-wrap w-11 h-11 rounded-xl flex items-center justify-center shadow-xs bg-gradient-to-br from-primary-fixed to-[#ffe4d6] text-primary border border-primary/15';
             iconEl.textContent = 'favorite';
@@ -176,10 +217,10 @@
             progressBar.className = 'toast-progress-bar h-full w-full bg-secondary origin-left transition-all ease-linear';
         } else {
             // Default success
-            indicator.className = 'toast-indicator absolute left-0 top-0 bottom-0 w-1.5 bg-tertiary';
-            iconWrap.className = 'toast-icon-wrap w-11 h-11 rounded-xl flex items-center justify-center shadow-xs bg-tertiary-fixed/40 text-tertiary border border-tertiary/15';
+            indicator.className = 'toast-indicator absolute left-0 top-0 bottom-0 w-1.5 bg-emerald-500';
+            iconWrap.className = 'toast-icon-wrap w-11 h-11 rounded-xl flex items-center justify-center shadow-xs bg-emerald-50 text-emerald-600 border border-emerald-200';
             iconEl.textContent = 'check_circle';
-            progressBar.className = 'toast-progress-bar h-full w-full bg-tertiary origin-left transition-all ease-linear';
+            progressBar.className = 'toast-progress-bar h-full w-full bg-emerald-500 origin-left transition-all ease-linear';
         }
 
         // Action Link
@@ -193,8 +234,8 @@
 
         // Entrance animation
         requestAnimationFrame(() => {
-            toast.classList.remove('translate-x-6', 'opacity-0', 'scale-95');
-            toast.classList.add('translate-x-0', 'opacity-100', 'scale-100');
+            toast.classList.remove('translate-y-4', 'opacity-0', 'scale-95');
+            toast.classList.add('translate-y-0', 'opacity-100', 'scale-100');
 
             // Start progress countdown bar
             progressBar.style.transitionDuration = `${duration}ms`;
@@ -209,9 +250,26 @@
         const dismiss = () => {
             if (isDismissed) return;
             isDismissed = true;
-            toast.classList.remove('translate-x-0', 'opacity-100', 'scale-100');
-            toast.classList.add('translate-x-4', 'opacity-0', 'scale-95');
-            setTimeout(() => toast.remove(), 300);
+            toast.classList.add('dismissing');
+            setTimeout(() => {
+                if (toast.parentNode) toast.remove();
+            }, 350);
+        };
+
+        toast._dismiss = dismiss;
+
+        toast._resetTimer = () => {
+            if (isDismissed) return;
+            clearTimeout(timer);
+            remainingTime = duration;
+            startTime = Date.now();
+            progressBar.style.transitionDuration = '0ms';
+            progressBar.style.width = '100%';
+            requestAnimationFrame(() => {
+                progressBar.style.transitionDuration = `${duration}ms`;
+                progressBar.style.width = '0%';
+            });
+            timer = setTimeout(dismiss, remainingTime);
         };
 
         timer = setTimeout(dismiss, remainingTime);
@@ -235,7 +293,8 @@
             timer = setTimeout(dismiss, remainingTime);
         });
 
-        closeBtn.addEventListener('click', () => {
+        closeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
             clearTimeout(timer);
             dismiss();
         });
@@ -244,11 +303,23 @@
     // Auto-display Laravel session flash messages on page load
     document.addEventListener('DOMContentLoaded', () => {
         @if(session('success'))
-            window.showToast({
-                title: 'Thành công',
-                message: @json(session('success')),
-                type: 'success'
-            });
+            try {
+                localStorage.removeItem('qm_blog_active_draft');
+                sessionStorage.removeItem('qm_blog_active_draft');
+                sessionStorage.removeItem('qm_blog_modal_open');
+            } catch(e) {}
+
+            // Nếu trên trang đã có thông báo ở trên đầu thì không hiện thêm popup toast để tránh trùng lặp
+            const hasTopBanner = document.getElementById('blog-success-banner') || 
+                                 document.getElementById('user-blog-success-banner') ||
+                                 document.querySelector('.page-success-banner');
+            if (!hasTopBanner) {
+                window.showToast({
+                    title: 'Thành công',
+                    message: @json(session('success')),
+                    type: 'success'
+                });
+            }
         @endif
 
         @if(session('error'))
@@ -259,10 +330,26 @@
             });
         @endif
 
+        @if(session('warning'))
+            window.showToast({
+                title: 'Cảnh báo',
+                message: @json(session('warning')),
+                type: 'warning'
+            });
+        @endif
+
         @if(session('status'))
             window.showToast({
                 title: 'Thông báo',
                 message: @json(session('status')),
+                type: 'info'
+            });
+        @endif
+
+        @if(session('info'))
+            window.showToast({
+                title: 'Thông tin',
+                message: @json(session('info')),
                 type: 'info'
             });
         @endif

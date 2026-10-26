@@ -85,8 +85,8 @@
                         </td>
                         <td class="px-6 py-4">
                             <div class="flex items-center gap-2">
-                                <img src="{{ $blog->user->anh_dai_dien_url ?? 'https://ui-avatars.com/api/?name='.urlencode($blog->user->ho_ten) }}" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name={{ urlencode($blog->user->ho_ten ?? \'U\') }}';" class="w-6 h-6 rounded-full">
-                                <span class="text-gray-700">{{ $blog->user->ho_ten }}</span>
+                                <img src="{{ $blog->user?->anh_dai_dien_url ?? 'https://ui-avatars.com/api/?name=' . urlencode($blog->user?->ho_ten ?? 'User') }}" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=User';" class="w-6 h-6 rounded-full">
+                                <span class="text-gray-700">{{ $blog->user?->ho_ten ?? 'Không rõ' }}</span>
                             </div>
                         </td>
                         <td class="px-6 py-4">
