@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Schema;
 
 class HomeController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $hasFeaturedColumn = Schema::hasColumn('quan', 'is_noi_bat');
 
@@ -52,7 +52,128 @@ class HomeController extends Controller
             $savedQuanIds = $user->savedQuan()->pluck('quan_id')->toArray();
         }
 
-        return view('welcome', compact('quanNoiBat', 'quanMoi', 'totalQuanMoi', 'totalQuanNoiBat', 'savedQuanIds', 'videoShorts', 'latestBlogs'));
+        // Xử lý vị trí người dùng (hỗ trợ cả request param, plain cookie từ JS, và encrypted cookie)
+        $rawLat = $request->input('lat') ?? $request->cookie('user_lat') ?? $request->cookies->get('user_lat');
+        $rawLng = $request->input('lng') ?? $request->cookie('user_lng') ?? $request->cookies->get('user_lng');
+
+        foreach (['lat' => &$rawLat, 'lng' => &$rawLng] as $k => &$v) {
+            if ($v !== null && !is_numeric($v) && is_string($v)) {
+                try {
+                    $decrypted = \Illuminate\Support\Facades\Crypt::decrypt($v, false);
+                    if (is_string($decrypted) && str_contains($decrypted, '|')) {
+                        $decrypted = explode('|', $decrypted, 2)[1];
+                    }
+                    if (is_numeric($decrypted)) {
+                        $v = $decrypted;
+                    }
+                } catch (\Throwable $e) {
+                    // Bỏ qua lỗi giải mã nếu cookie không hợp lệ
+                }
+            }
+        }
+        unset($v);
+
+        $userLat = $rawLat;
+        $userLng = $rawLng;
+
+        $quanGanBan = collect();
+        $hasGps = false;
+
+        if ($userLat !== null && $userLng !== null && is_numeric($userLat) && is_numeric($userLng)) {
+            $lat = (float) $userLat;
+            $lng = (float) $userLng;
+
+            if ($lat >= -90 && $lat <= 90 && $lng >= -180 && $lng <= 180) {
+                $hasGps = true;
+                $radiusKm = 20.0; // Bán kính 20km bao phủ trọn vẹn khu vực đô thị (Thủ Đức -> Q.1 / Q.3 ~ 10-12km)
+                $earthKmPerDegLat = 111.045;
+                $deltaLat = $radiusKm / $earthKmPerDegLat;
+                $cosLat = max(abs(cos(deg2rad($lat))), 0.01);
+                $deltaLng = $radiusKm / ($earthKmPerDegLat * $cosLat);
+
+                $minLat = max(-90.0, $lat - $deltaLat);
+                $maxLat = min(90.0, $lat + $deltaLat);
+                $minLng = max(-180.0, $lng - $deltaLng);
+                $maxLng = min(180.0, $lng + $deltaLng);
+
+                $driver = \Illuminate\Support\Facades\DB::connection()->getDriverName();
+
+                $baseNearbyQuery = Quan::query()
+                    ->where('trang_thai', 'da_duyet')
+                    ->whereNotNull('vi_do')
+                    ->whereNotNull('kinh_do')
+                    ->whereBetween('vi_do', [$minLat, $maxLat])
+                    ->whereBetween('kinh_do', [$minLng, $maxLng]);
+
+                if (in_array($driver, ['mysql', 'mariadb', 'pgsql'], true)) {
+                    $haversineSql = '(6371 * ACOS(LEAST(1.0, GREATEST(-1.0, COS(RADIANS(?)) * COS(RADIANS(vi_do)) * COS(RADIANS(kinh_do) - RADIANS(?)) + SIN(RADIANS(?)) * SIN(RADIANS(vi_do))))))';
+
+                    $quanGanBan = (clone $baseNearbyQuery)
+                        ->selectRaw("quan.*, {$haversineSql} AS khoang_cach_km", [$lat, $lng, $lat])
+                        ->whereRaw("{$haversineSql} <= ?", [$lat, $lng, $lat, $radiusKm])
+                        ->orderBy('khoang_cach_km', 'asc')
+                        ->take(9)
+                        ->get()
+                        ->map(function ($q) {
+                            $q->khoang_cach_km = round((float) $q->khoang_cach_km, 2);
+                            return $q;
+                        });
+
+                    // Nếu trong 20km chưa có quán, tự động mở rộng quét trong 50km
+                    if ($quanGanBan->isEmpty()) {
+                        $expandRadius = 50.0;
+                        $expandDeltaLat = $expandRadius / $earthKmPerDegLat;
+                        $expandDeltaLng = $expandRadius / ($earthKmPerDegLat * $cosLat);
+                        $quanGanBan = Quan::query()
+                            ->where('trang_thai', 'da_duyet')
+                            ->whereNotNull('vi_do')
+                            ->whereNotNull('kinh_do')
+                            ->whereBetween('vi_do', [max(-90.0, $lat - $expandDeltaLat), min(90.0, $lat + $expandDeltaLat)])
+                            ->whereBetween('kinh_do', [max(-180.0, $lng - $expandDeltaLng), min(180.0, $lng + $expandDeltaLng)])
+                            ->selectRaw("quan.*, {$haversineSql} AS khoang_cach_km", [$lat, $lng, $lat])
+                            ->whereRaw("{$haversineSql} <= ?", [$lat, $lng, $lat, $expandRadius])
+                            ->orderBy('khoang_cach_km', 'asc')
+                            ->take(9)
+                            ->get()
+                            ->map(function ($q) {
+                                $q->khoang_cach_km = round((float) $q->khoang_cach_km, 2);
+                                return $q;
+                            });
+                    }
+                } else {
+                    $quanGanBan = $baseNearbyQuery->get()
+                        ->map(function ($q) use ($lat, $lng) {
+                            $earthRadius = 6371.0;
+                            $dLat = deg2rad((float) $q->vi_do - $lat);
+                            $dLon = deg2rad((float) $q->kinh_do - $lng);
+                            $a = sin($dLat / 2) * sin($dLat / 2)
+                                + cos(deg2rad($lat)) * cos(deg2rad((float) $q->vi_do))
+                                * sin($dLon / 2) * sin($dLon / 2);
+                            $c = 2 * atan2(sqrt($a), sqrt(max(0.0, 1 - $a)));
+                            $q->khoang_cach_km = round($earthRadius * $c, 2);
+                            return $q;
+                        })
+                        ->filter(fn ($q) => $q->khoang_cach_km <= $radiusKm)
+                        ->sortBy('khoang_cach_km')
+                        ->take(9)
+                        ->values();
+                }
+            }
+        }
+
+        return view('welcome', compact(
+            'quanNoiBat',
+            'quanMoi',
+            'totalQuanMoi',
+            'totalQuanNoiBat',
+            'savedQuanIds',
+            'videoShorts',
+            'latestBlogs',
+            'quanGanBan',
+            'hasGps',
+            'userLat',
+            'userLng'
+        ));
     }
 
     public function show($slug)

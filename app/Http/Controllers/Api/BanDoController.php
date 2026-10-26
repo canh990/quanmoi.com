@@ -31,7 +31,7 @@ class BanDoController extends Controller
         $validator = Validator::make($input, [
             'lat' => ['required', 'numeric', 'between:-90,90'],
             'lng' => ['required', 'numeric', 'between:-180,180'],
-            'radius' => ['required', 'numeric', 'in:1,3,5,10'],
+            'radius' => ['required', 'numeric', 'in:1,3,5,10,15,20,25,30,50'],
             'danh_muc' => ['nullable', 'string', 'max:100'],
             'q' => ['nullable', 'string', 'max:100'],
             'page' => ['nullable', 'integer', 'min:1'],
