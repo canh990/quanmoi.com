@@ -171,12 +171,51 @@ class BlogController extends Controller
             $blog->refresh();
         }
 
-        $relatedBlogs = Blog::where('status', 'published')
-            ->where('category_id', $blog->category_id)
+        // Lấy danh sách bài viết liên quan (ưu tiên cùng chuyên mục hoặc chung thẻ tag)
+        $tagIds = $blog->tags ? $blog->tags->pluck('id')->filter()->toArray() : [];
+
+        $relatedBlogs = Blog::with(['user', 'category'])
+            ->where('status', 'published')
             ->where('id', '!=', $blog->id)
+            ->where(function ($q) use ($blog, $tagIds) {
+                $hasCondition = false;
+                if ($blog->category_id) {
+                    $q->where('category_id', $blog->category_id);
+                    $hasCondition = true;
+                }
+                if (!empty($tagIds)) {
+                    if ($hasCondition) {
+                        $q->orWhereHas('tags', function ($tq) use ($tagIds) {
+                            $tq->whereIn('blog_tags.id', $tagIds);
+                        });
+                    } else {
+                        $q->whereHas('tags', function ($tq) use ($tagIds) {
+                            $tq->whereIn('blog_tags.id', $tagIds);
+                        });
+                        $hasCondition = true;
+                    }
+                }
+                // Nếu bài viết không có cả category lẫn tag, query sẽ lấy các bài viết khác
+                if (!$hasCondition) {
+                    $q->whereRaw('1 = 1');
+                }
+            })
             ->latest('published_at')
-            ->limit(3)
+            ->limit(4)
             ->get();
+
+        // Nếu chưa đủ 4 bài viết liên quan, bổ sung thêm các bài viết mới xuất bản khác để layout luôn cân đối
+        if ($relatedBlogs->count() < 4) {
+            $excludeIds = $relatedBlogs->pluck('id')->push($blog->id)->toArray();
+            $fallbackBlogs = Blog::with(['user', 'category'])
+                ->where('status', 'published')
+                ->whereNotIn('id', $excludeIds)
+                ->latest('published_at')
+                ->limit(4 - $relatedBlogs->count())
+                ->get();
+
+            $relatedBlogs = $relatedBlogs->concat($fallbackBlogs);
+        }
 
         // Hệ thống Gợi ý bài viết thông minh bằng AI (AI Recommendation Engine)
         $aiRecommendations = $this->blogAiService->getSmartRecommendations(
