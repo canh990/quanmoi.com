@@ -23,7 +23,8 @@ class QuanController extends Controller
      */
     public function create()
     {
-        return view('chu-quan.dang-quan');
+        $danhMucList = \App\Models\DanhMucQuan::hienThi()->orderBy('thu_tu')->get();
+        return view('chu-quan.dang-quan', compact('danhMucList'));
     }
 
     /**
@@ -82,10 +83,18 @@ class QuanController extends Controller
 
         try {
             $quan = DB::transaction(function () use ($validated, $chuQuanId, $slug, $anhBiaPath, $anhBiaKey, $galleryKeys, $galleryPaths) {
+                $loaiHinh = $validated['loai_hinh_kinh_doanh'] ?? 'Nhà hàng';
+                $danhMucId = $validated['danh_muc_id'] ?? request()->input('danh_muc_id');
+                if (!$danhMucId && !empty($loaiHinh)) {
+                    $catRecord = \App\Models\DanhMucQuan::where('ten_danh_muc', $loaiHinh)->first();
+                    $danhMucId = $catRecord?->id;
+                }
+
                 $q = Quan::create([
                     'chu_quan_id' => $chuQuanId,
                     'ten_quan' => $validated['ten_quan'],
-                    'loai_hinh_kinh_doanh' => $validated['loai_hinh_kinh_doanh'] ?? 'Quan an',
+                    'loai_hinh_kinh_doanh' => $loaiHinh,
+                    'danh_muc_id' => $danhMucId,
                     'slug' => $slug,
                     'mo_ta' => $validated['mo_ta'] ?? null,
                     'so_dien_thoai' => $validated['so_dien_thoai'],

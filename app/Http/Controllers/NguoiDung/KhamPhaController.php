@@ -336,16 +336,28 @@ class KhamPhaController extends Controller
 
     public function danhMuc($slug, Request $request)
     {
-        $danhMucMap = [
-            'nha-hang' => 'Nhà hàng',
-            'ca-phe-tra' => 'Cà phê & Trà',
-            'billiards-giai-tri' => 'Billiards & Giải trí',
-            'do-an-vat' => 'Đồ ăn vặt',
-            'lau-nuong' => 'Lẩu & Nướng',
-            'quan-dem-24-7' => 'Quán Đêm 24/7'
-        ];
+        $category = \App\Models\DanhMucQuan::where('slug', $slug)->first();
+        if ($category) {
+            $danhMuc = $category->ten_danh_muc;
+        } else {
+            $danhMucMap = [
+                'nha-hang' => 'Nhà hàng',
+                'ca-phe-tra' => 'Cà phê & Trà',
+                'billiards-giai-tri' => 'Billiards & Giải trí',
+                'do-an-vat' => 'Đồ ăn vặt',
+                'lau-nuong' => 'Lẩu & Nướng',
+                'quan-dem-24-7' => 'Quán Đêm 24/7',
+                'an-vat' => 'Đồ ăn vặt',
+                'quan-nhau' => 'Quán nhậu & Bar',
+                'tra-sua' => 'Trà sữa & Nước ép',
+                'tra-sua-nuoc-ep' => 'Trà sữa & Nước ép',
+                'tiem-banh' => 'Tiệm bánh',
+                'binh-dan' => 'Quán ăn bình dân',
+                'quan-an-binh-dan' => 'Quán ăn bình dân',
+            ];
+            $danhMuc = $danhMucMap[$slug] ?? null;
+        }
 
-        $danhMuc = $danhMucMap[$slug] ?? null;
         if (!$danhMuc) {
             abort(404);
         }

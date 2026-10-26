@@ -23,7 +23,7 @@ class HomeController extends Controller
         }
         $quanNoiBat = $quanNoiBat->orderBy('updated_at', 'desc')->take(9)->get();
 
-        $quanMoi = Quan::where('trang_thai', 'da_duyet')
+        $quanMoi = Quan::with('danhMuc')->where('trang_thai', 'da_duyet')
             ->orderBy('created_at', 'desc')
             ->take(12)
             ->get();
@@ -161,7 +161,10 @@ class HomeController extends Controller
             }
         }
 
+                $danhMucList = \App\Models\DanhMucQuan::hienThi()->noiBat()->orderBy('thu_tu')->orderBy('id')->get();
+
         return view('welcome', compact(
+            'danhMucList',
             'quanNoiBat',
             'quanMoi',
             'totalQuanMoi',

@@ -1,4 +1,5 @@
 <?php
+use App\Http\Controllers\Admin\QuanLyDanhMucController;
 
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AiToolsController;
@@ -65,6 +66,17 @@ Route::middleware(['auth', 'KiemTraQuyenHan:admin'])->group(function () {
     Route::delete('/quan/{id}/force', [QuanLyQuanController::class, 'forceDestroy'])->name('quan.force-destroy')->where('id', '[0-9a-fA-F\-]+');
     Route::put('/quan/{id}/toggle-noi-bat', [QuanLyQuanController::class, 'toggleNoiBat'])->name('quan.toggle-noi-bat')->where('id', '[0-9a-fA-F\-]+');
     Route::put('/quan/{id}/toggle-xac-thuc', [QuanLyQuanController::class, 'toggleXacThuc'])->name('quan.toggle-xac-thuc')->where('id', '[0-9a-fA-F\-]+');
+
+    
+    // 6.1 Quản lý Danh mục Quán
+    Route::prefix('danh-muc-quan')->name('danh-muc-quan.')->group(function () {
+        Route::get('/', [QuanLyDanhMucController::class, 'index'])->name('index');
+        Route::post('/', [QuanLyDanhMucController::class, 'store'])->name('store');
+        Route::put('/{id}', [QuanLyDanhMucController::class, 'update'])->name('update');
+        Route::delete('/{id}', [QuanLyDanhMucController::class, 'destroy'])->name('destroy');
+        Route::put('/{id}/toggle-hien-thi', [QuanLyDanhMucController::class, 'toggleHienThi'])->name('toggle-hien-thi');
+        Route::put('/{id}/toggle-noi-bat', [QuanLyDanhMucController::class, 'toggleNoiBat'])->name('toggle-noi-bat');
+    });
 
     // 7. Duyệt xác thực (Quán / User)
     Route::get('/duyet-xac-thuc', [DuyetXacThucController::class, 'index'])->name('duyet-xac-thuc.index');

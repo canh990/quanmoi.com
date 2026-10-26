@@ -14,6 +14,15 @@
             <span class="material-symbols-outlined text-[18px]">storefront</span>
             <span>Quản Lý Địa Điểm Quán</span>
         </a>
+        <a href="{{ route('admin.danh-muc-quan.index') }}" class="sidebar-item flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all {{ request()->routeIs('admin.danh-muc-quan.*') ? 'bg-[#F59E0B] text-white font-bold shadow-md' : 'text-slate-300 hover:bg-slate-800/80 hover:text-white' }}">
+            <div class="flex items-center gap-2.5">
+                <span class="material-symbols-outlined text-[18px]">category</span>
+                <span>Danh Mục Quán Ăn</span>
+            </div>
+            @php $catCount = \App\Models\DanhMucQuan::count(); @endphp
+            <span class="px-1.5 py-0.5 text-[10px] font-bold bg-slate-800 text-slate-300 rounded border border-slate-700/60">{{ $catCount }}</span>
+        </a>
+
         <a href="{{ route('admin.duyet-xac-thuc.index') }}" class="sidebar-item flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all {{ request()->routeIs('admin.duyet-xac-thuc.*') ? 'bg-[#F59E0B] text-white font-bold shadow-md' : 'text-slate-300 hover:bg-slate-800/80 hover:text-white' }}">
             <div class="flex items-center gap-2.5">
                 <span class="material-symbols-outlined text-[18px]">fact_check</span>

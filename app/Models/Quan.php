@@ -20,6 +20,7 @@ class Quan extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
+        'danh_muc_id',
         'chu_quan_id',
         'ten_quan',
         'loai_hinh_kinh_doanh',
@@ -300,4 +301,10 @@ class Quan extends Model
             })
             ->orderBy('created_at', 'desc');
     }
+
+    public function danhMuc()
+    {
+        return $this->belongsTo(DanhMucQuan::class, 'danh_muc_id');
+    }
+
 }

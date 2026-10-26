@@ -81,63 +81,75 @@
         </section>
 
         {{-- Categories Section --}}
-        <section class="max-w-[1240px] mx-auto py-16 px-container-margin relative z-10">
+        @php
+            $displayCategories = $danhMucList ?? collect();
+            if ($displayCategories->isEmpty()) {
+                $displayCategories = \App\Models\DanhMucQuan::hienThi()->noiBat()->orderBy('thu_tu')->orderBy('id')->get();
+            }
+            $totalCats = $displayCategories->count();
+        @endphp
+        <section class="max-w-[1240px] mx-auto py-16 px-container-margin relative z-10" id="home-categories-section">
             <div class="flex justify-between items-end mb-8">
                 <div>
                     <h2 class="text-2xl font-black text-on-surface">Danh mục khám phá</h2>
                     <p class="text-text-muted text-[15px] mt-1">Tìm địa điểm theo nhu cầu ẩm thực của bạn</p>
                 </div>
+                @if($totalCats > 6)
+                    <button type="button" onclick="toggleMoreCategories()" class="hidden md:inline-flex items-center gap-1.5 text-primary font-bold text-[14px] hover:underline cursor-pointer group">
+                        <span id="headerToggleText">Xem thêm ({{ $totalCats - 6 }})</span>
+                        <span id="headerToggleIcon" class="material-symbols-outlined text-[18px] group-hover:translate-y-0.5 transition-transform">expand_more</span>
+                    </button>
+                @endif
             </div>
-            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-5">
-                {{-- Category 1 --}}
-                <a href="{{ route('danh-muc', 'nha-hang') }}" title="Nhà hàng - Bữa chính đậm đà" class="block bg-surface-card rounded-2xl shadow-sm border border-surface-container hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer p-6 flex flex-col items-center text-center group">
-                    <div class="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-3 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
-                        <span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">restaurant</span>
-                    </div>
-                    <h3 class="font-bold text-[16px] text-on-surface">Nhà hàng</h3>
-                    <p class="text-text-muted text-[13px] mt-1">Bữa chính đậm đà</p>
-                </a>
-                {{-- Category 2 --}}
-                <a href="{{ route('danh-muc', 'ca-phe-tra') }}" title="Cà phê & Trà - Tụ tập & Làm việc" class="block bg-surface-card rounded-2xl shadow-sm border border-surface-container hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer p-6 flex flex-col items-center text-center group">
-                    <div class="w-16 h-16 rounded-2xl bg-secondary/10 flex items-center justify-center mb-3 text-secondary group-hover:bg-secondary group-hover:text-white transition-colors">
-                        <span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">local_cafe</span>
-                    </div>
-                    <h3 class="font-bold text-[16px] text-on-surface">Cà phê & Trà</h3>
-                    <p class="text-text-muted text-[13px] mt-1">Tụ tập & Làm việc</p>
-                </a>
-                {{-- Category 3 --}}
-                <a href="{{ route('danh-muc', 'billiards-giai-tri') }}" title="Billiards & Giải trí - Vui chơi cuối tuần" class="block bg-surface-card rounded-2xl shadow-sm border border-surface-container hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer p-6 flex flex-col items-center text-center group">
-                    <div class="w-16 h-16 rounded-2xl bg-tertiary/10 flex items-center justify-center mb-3 text-tertiary group-hover:bg-tertiary group-hover:text-white transition-colors">
-                        <span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">sports_esports</span>
-                    </div>
-                    <h3 class="font-bold text-[16px] text-on-surface">Billiards & Giải trí</h3>
-                    <p class="text-text-muted text-[13px] mt-1">Vui chơi cuối tuần</p>
-                </a>
-                {{-- Category 4 --}}
-                <a href="{{ route('danh-muc', 'do-an-vat') }}" title="Đồ ăn vặt - Ngon rẻ chuẩn gu" class="block bg-surface-card rounded-2xl shadow-sm border border-surface-container hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer p-6 flex flex-col items-center text-center group">
-                    <div class="w-16 h-16 rounded-2xl bg-red-500/10 flex items-center justify-center mb-3 text-red-600 group-hover:bg-red-600 group-hover:text-white transition-colors">
-                        <span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">fastfood</span>
-                    </div>
-                    <h3 class="font-bold text-[16px] text-on-surface">Đồ ăn vặt</h3>
-                    <p class="text-text-muted text-[13px] mt-1">Ngon rẻ chuẩn gu</p>
-                </a>
-                {{-- Category 5 --}}
-                <a href="{{ route('danh-muc', 'lau-nuong') }}" title="Lẩu & Nướng - Tiệc tùng nhóm" class="block bg-surface-card rounded-2xl shadow-sm border border-surface-container hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer p-6 flex flex-col items-center text-center group">
-                    <div class="w-16 h-16 rounded-2xl bg-amber-500/10 flex items-center justify-center mb-3 text-amber-600 group-hover:bg-amber-600 group-hover:text-white transition-colors">
-                        <span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">outdoor_grill</span>
-                    </div>
-                    <h3 class="font-bold text-[16px] text-on-surface">Lẩu & Nướng</h3>
-                    <p class="text-text-muted text-[13px] mt-1">Tiệc tùng nhóm</p>
-                </a>
-                {{-- Category 6 --}}
-                <a href="{{ route('danh-muc', 'quan-dem-24-7') }}" title="Quán Đêm 24/7 - Ăn đêm & Xuyên đêm" class="block bg-surface-card rounded-2xl shadow-sm border border-surface-container hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer p-6 flex flex-col items-center text-center group">
-                    <div class="w-16 h-16 rounded-2xl bg-purple-500/10 flex items-center justify-center mb-3 text-purple-600 group-hover:bg-purple-600 group-hover:text-white transition-colors">
-                        <span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">nightlife</span>
-                    </div>
-                    <h3 class="font-bold text-[16px] text-on-surface">Quán Đêm 24/7</h3>
-                    <p class="text-text-muted text-[13px] mt-1">Ăn đêm & Xuyên đêm</p>
-                </a>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-5" id="categoriesGrid">
+                @forelse($displayCategories as $index => $dm)
+                    @php
+                        $isExtra = $index >= 6;
+                        
+                        $scheme = match($dm->slug) {
+                            'nha-hang'           => ['box' => 'bg-primary/10 text-primary group-hover:bg-primary', 'default_icon' => 'restaurant'],
+                            'ca-phe-tra'         => ['box' => 'bg-secondary/10 text-secondary group-hover:bg-secondary', 'default_icon' => 'local_cafe'],
+                            'billiards-giai-tri' => ['box' => 'bg-tertiary/10 text-tertiary group-hover:bg-tertiary', 'default_icon' => 'sports_esports'],
+                            'do-an-vat'          => ['box' => 'bg-red-500/10 text-red-600 group-hover:bg-red-600', 'default_icon' => 'fastfood'],
+                            'lau-nuong'          => ['box' => 'bg-amber-500/10 text-amber-600 group-hover:bg-amber-600', 'default_icon' => 'outdoor_grill'],
+                            'quan-dem-24-7'      => ['box' => 'bg-purple-500/10 text-purple-600 group-hover:bg-purple-600', 'default_icon' => 'nightlife'],
+                            'quan-nhau'          => ['box' => 'bg-purple-500/10 text-purple-600 group-hover:bg-purple-600', 'default_icon' => 'local_bar'],
+                            'tra-sua-nuoc-ep'    => ['box' => 'bg-secondary/10 text-secondary group-hover:bg-secondary', 'default_icon' => 'emoji_food_beverage'],
+                            'tiem-banh'          => ['box' => 'bg-amber-500/10 text-amber-600 group-hover:bg-amber-600', 'default_icon' => 'bakery_dining'],
+                            'quan-an-binh-dan'   => ['box' => 'bg-primary/10 text-primary group-hover:bg-primary', 'default_icon' => 'lunch_dining'],
+                            default => match($index % 6) {
+                                0 => ['box' => 'bg-primary/10 text-primary group-hover:bg-primary', 'default_icon' => 'restaurant'],
+                                1 => ['box' => 'bg-secondary/10 text-secondary group-hover:bg-secondary', 'default_icon' => 'local_cafe'],
+                                2 => ['box' => 'bg-tertiary/10 text-tertiary group-hover:bg-tertiary', 'default_icon' => 'sports_esports'],
+                                3 => ['box' => 'bg-red-500/10 text-red-600 group-hover:bg-red-600', 'default_icon' => 'fastfood'],
+                                4 => ['box' => 'bg-amber-500/10 text-amber-600 group-hover:bg-amber-600', 'default_icon' => 'outdoor_grill'],
+                                default => ['box' => 'bg-purple-500/10 text-purple-600 group-hover:bg-purple-600', 'default_icon' => 'nightlife'],
+                            }
+                        };
+                        $boxClass = $scheme['box'];
+                        $displayIcon = $dm->icon ?: $scheme['default_icon'];
+                    @endphp
+                    <a href="{{ route('danh-muc', $dm->slug) }}" title="{{ $dm->ten_danh_muc }} - {{ $dm->mo_ta }}" class="{{ $isExtra ? 'extra-category hidden opacity-0 translate-y-3' : '' }} block bg-surface-card rounded-2xl shadow-sm border border-surface-container hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer p-6 flex flex-col items-center text-center group">
+                        <div class="w-16 h-16 rounded-2xl {{ $boxClass }} flex items-center justify-center mb-3 group-hover:text-white transition-colors">
+                            <span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">{{ $displayIcon }}</span>
+                        </div>
+                        <h3 class="font-bold text-[16px] text-on-surface">{{ $dm->ten_danh_muc }}</h3>
+                        <p class="text-text-muted text-[13px] mt-1">{{ $dm->mo_ta }}</p>
+                    </a>
+                @empty
+                    <div class="col-span-full py-8 text-center text-text-muted">Đang cập nhật danh mục ẩm thực...</div>
+                @endforelse
             </div>
+
+            @if($totalCats > 6)
+                <div class="mt-8 text-center">
+                    <button type="button" id="btnToggleCategories" onclick="toggleMoreCategories()" class="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-surface-card border border-surface-container hover:border-primary/40 hover:bg-primary/5 text-on-surface font-bold text-xs md:text-sm shadow-sm hover:shadow-md transition-all cursor-pointer group">
+                        <span id="btnToggleCategoriesText">Xem thêm ({{ $totalCats - 6 }} danh mục khác)</span>
+                        <span id="btnToggleCategoriesIcon" class="material-symbols-outlined text-[20px] text-primary group-hover:translate-y-0.5 transition-transform">expand_more</span>
+                    </button>
+                </div>
+            @endif
         </section>
 
         {{-- SECTION 1: Trending Venues / Quán Ăn Nổi Bật --}}
@@ -236,7 +248,11 @@
             </div>
         </section>
 
-                <div class="mt-10 rounded-[28px] bg-white border border-gray-100 shadow-sm p-6 md:p-7">
+                
+        {{-- SECTION: Mới từ cộng đồng (Giao diện cũ) --}}
+        <section class="bg-surface-container-low py-10 border-t border-gray-100/60" id="home-community-section">
+            <div class="max-w-[1240px] mx-auto px-container-margin">
+                <div class="rounded-[28px] bg-white border border-gray-100 shadow-sm p-6 md:p-7">
                     <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-6">
                         <div>
                             <div class="inline-flex items-center gap-2 text-secondary text-xs font-bold uppercase tracking-wider mb-1">
@@ -253,7 +269,46 @@
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         @forelse($quanMoi as $quan)
-                            <x-venue-card :quan="$quan" :saved-quan-ids="$savedQuanIds ?? []" />
+                        <a href="{{ route('quan.detail', $quan->slug) }}" class="group rounded-2xl border border-gray-100 bg-white hover:shadow-lg hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col h-full">
+                            <div class="relative w-full h-44 flex-shrink-0 overflow-hidden">
+                                <img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+                                     src="{{ $quan->anh_bia_url ?: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=600&q=80' }}" 
+                                     alt="{{ $quan->ten_quan }}"
+                                     loading="lazy" />
+                                <div class="absolute top-2 left-2 bg-secondary text-white px-2 py-1 rounded-lg text-[10px] font-bold shadow-sm">Mới Mở</div>
+                                <button type="button" 
+                                        data-quan-id="{{ $quan->id }}" 
+                                        data-saved="{{ in_array($quan->id, $savedQuanIds ?? []) ? '1' : '0' }}" 
+                                        onclick="event.preventDefault(); toggleSave(this, '{{ $quan->id }}')" 
+                                        class="absolute top-2 right-2 w-8 h-8 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center text-red-500 shadow-sm hover:scale-110 active:scale-90 transition-transform z-10" 
+                                        title="{{ in_array($quan->id, $savedQuanIds ?? []) ? 'Bỏ lưu quán' : 'Lưu quán' }}">
+                                    <span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' {{ in_array($quan->id, $savedQuanIds ?? []) ? '1' : '0' }};">favorite</span>
+                                </button>
+                            </div>
+                            <div class="p-4 flex flex-col flex-1">
+                                <div class="flex items-center gap-1.5 mb-1.5">
+                                    <span class="material-symbols-outlined text-[14px] text-primary">schedule</span>
+                                    <span class="text-[11px] text-primary font-bold">{{ $quan->created_at ? $quan->created_at->diffForHumans() : 'Mới đây' }}</span>
+                                </div>
+                                <div class="flex items-center justify-between gap-2">
+                                    <h4 class="font-bold text-[15px] text-on-surface group-hover:text-primary transition-colors truncate">{{ $quan->ten_quan }}</h4>
+                                    @if($quan->is_xac_thuc)
+                                        <span class="material-symbols-outlined text-tick-xanh text-[16px] flex-shrink-0" style="font-variation-settings: 'FILL' 1;" title="Đã xác thực">verified</span>
+                                    @endif
+                                </div>
+                                <p class="text-[12px] text-text-muted mt-1 truncate flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-[14px]">location_on</span>
+                                    {{ $quan->ten_quan_huyen ?? '' }}{{ $quan->ten_tinh_thanh ? ', ' . $quan->ten_tinh_thanh : '' }}
+                                </p>
+                                <div class="mt-3 pt-3 flex items-center justify-between border-t border-gray-100 gap-2 min-w-0">
+                                    <div class="flex gap-1.5 items-center min-w-0 flex-shrink">
+                                        <span class="bg-gray-50 text-gray-600 px-2 py-0.5 rounded-md text-[11px] font-medium whitespace-nowrap truncate max-w-[95px]" title="{{ $quan->danhMuc->ten_danh_muc ?? str_replace('_', ' ', \Illuminate\Support\Str::title($quan->loai_hinh_kinh_doanh ?? 'Quán ăn')) }}">{{ $quan->danhMuc->ten_danh_muc ?? str_replace('_', ' ', \Illuminate\Support\Str::title($quan->loai_hinh_kinh_doanh ?? 'Quán ăn')) }}</span>
+                                        <span class="flex items-center gap-0.5 text-gray-500 text-[11px] whitespace-nowrap flex-shrink-0"><span class="material-symbols-outlined text-[13px]">visibility</span>{{ number_format($quan->luot_xem ?? 0) }}</span>
+                                    </div>
+                                    <span class="font-bold text-primary text-[13px] whitespace-nowrap flex-shrink-0 ml-auto">{{ number_format($quan->gia_nho_nhat, 0, ',', '.') }}đ</span>
+                                </div>
+                            </div>
+                        </a>
                         @empty
                             <p class="sm:col-span-2 lg:col-span-4 text-center text-gray-500 py-10">Chưa có quán mới nào.</p>
                         @endforelse
@@ -270,8 +325,7 @@
                 </div>
             </div>
         </section>
-
-        {{-- SECTION 2: Video Reviews Carousel (Mới thêm) --}}
+{{-- SECTION 2: Video Reviews Carousel (Mới thêm) --}}
         <section class="max-w-[1240px] mx-auto py-16 px-container-margin">
             <div class="flex justify-between items-end mb-8">
                 <div>
@@ -655,6 +709,53 @@
             }, 4000);
         });
     </script>
+
+<script>
+    function toggleMoreCategories() {
+        const extraItems = document.querySelectorAll('.extra-category');
+        if (!extraItems.length) return;
+
+        const btnText = document.getElementById('btnToggleCategoriesText');
+        const btnIcon = document.getElementById('btnToggleCategoriesIcon');
+        const headerText = document.getElementById('headerToggleText');
+        const headerIcon = document.getElementById('headerToggleIcon');
+        const isCurrentlyHidden = extraItems[0].classList.contains('hidden');
+
+        if (isCurrentlyHidden) {
+            extraItems.forEach((el, idx) => {
+                el.classList.remove('hidden');
+                setTimeout(() => {
+                    el.classList.remove('opacity-0', 'translate-y-3');
+                }, idx * 35);
+            });
+            if (btnText) btnText.textContent = 'Thu gọn';
+            if (btnIcon) btnIcon.textContent = 'expand_less';
+            if (headerText) headerText.textContent = 'Thu gọn';
+            if (headerIcon) headerIcon.textContent = 'expand_less';
+        } else {
+            extraItems.forEach(el => {
+                el.classList.add('opacity-0', 'translate-y-3');
+                setTimeout(() => {
+                    el.classList.add('hidden');
+                }, 200);
+            });
+            const remainingCount = extraItems.length;
+            if (btnText) btnText.textContent = 'Xem thêm (' + remainingCount + ' danh mục khác)';
+            if (btnIcon) btnIcon.textContent = 'expand_more';
+            if (headerText) headerText.textContent = 'Xem thêm (' + remainingCount + ')';
+            if (headerIcon) headerIcon.textContent = 'expand_more';
+
+            const section = document.getElementById('home-categories-section');
+            if (section) {
+                const rect = section.getBoundingClientRect();
+                if (rect.top < 0) {
+                    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }
+        }
+    }
+</script>
+
 @endsection
 
 @push('scripts')

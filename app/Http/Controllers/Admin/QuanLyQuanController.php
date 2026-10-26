@@ -95,6 +95,13 @@ class QuanLyQuanController extends Controller
     {
         $this->authorize('create', Quan::class);
         $validated = $request->validated();
+        if (!empty($validated['loai_hinh_kinh_doanh'])) {
+            $catRecord = \App\Models\DanhMucQuan::where('ten_danh_muc', $validated['loai_hinh_kinh_doanh'])->first();
+            if ($catRecord) {
+                $validated['danh_muc_id'] = $catRecord->id;
+            }
+        }
+
 
         // 1. Assign owner (default to current admin if not specified)
         if (empty($validated['chu_quan_id'])) {
@@ -231,6 +238,13 @@ class QuanLyQuanController extends Controller
         $quan = Quan::withTrashed()->findOrFail($id);
         $this->authorize('update', $quan);
         $validated = $request->validated();
+        if (!empty($validated['loai_hinh_kinh_doanh'])) {
+            $catRecord = \App\Models\DanhMucQuan::where('ten_danh_muc', $validated['loai_hinh_kinh_doanh'])->first();
+            if ($catRecord) {
+                $validated['danh_muc_id'] = $catRecord->id;
+            }
+        }
+
 
         // 1. Handle Cover Image upload
         if ($request->hasFile('anh_bia')) {
@@ -450,7 +464,8 @@ class QuanLyQuanController extends Controller
 
     private function getBusinessTypes(): array
     {
-        return [
+        $dbTypes = \App\Models\DanhMucQuan::hienThi()->sapXep()->pluck('ten_danh_muc')->toArray();
+        return !empty($dbTypes) ? $dbTypes : [
             'Nhà hàng',
             'Cà phê & Trà',
             'Billiards & Giải trí',

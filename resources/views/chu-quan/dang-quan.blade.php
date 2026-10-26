@@ -25,7 +25,16 @@
 <main class="pt-20 pb-24 px-4 md:px-12 max-w-[1280px] mx-auto">
     <form id="dang-quan-form" onsubmit="event.preventDefault(); submitForm();" method="POST" enctype="multipart/form-data">
         @csrf
-        <input type="hidden" id="loai_hinh_kinh_doanh" name="loai_hinh_kinh_doanh" value="Nhà hàng" />
+        @php
+        $categories = (isset($danhMucList) && $danhMucList->isNotEmpty())
+            ? $danhMucList
+            : \App\Models\DanhMucQuan::hienThi()->orderBy('thu_tu')->get();
+        $defaultCat = $categories->first();
+        $selectedType = old('loai_hinh_kinh_doanh', $defaultCat->ten_danh_muc ?? 'Nhà hàng');
+        $selectedId = old('danh_muc_id', $defaultCat->id ?? '');
+    @endphp
+    <input type="hidden" id="loai_hinh_kinh_doanh" name="loai_hinh_kinh_doanh" value="{{ $selectedType }}" />
+    <input type="hidden" id="danh_muc_id" name="danh_muc_id" value="{{ $selectedId }}" />
 
         <div id="section-step-1">
             <div class="grid grid-cols-12 gap-6 lg:gap-8">
@@ -36,39 +45,57 @@
 
                     {{-- Business Type Selection --}}
                     <div class="bg-white p-6 rounded-xl shadow-[0px_4px_20px_rgba(0,0,0,0.05)] border border-gray-200 space-y-4">
-                        <label class="text-[12px] font-bold text-gray-500 tracking-wider uppercase block">LOẠI HÌNH KINH DOANH <span class="text-red-500">*</span></label>
-                        <div class="grid grid-cols-3 gap-4" id="business-type-container">
-                            {{-- 1. Nhà hàng --}}
-                            <button type="button" class="business-type-card active flex flex-col items-center gap-3 p-4 rounded-xl border-2 border-gray-200 hover:border-primary-container transition-all group active:scale-95 text-center cursor-pointer" onclick="selectType('Nhà hàng', this)">
-                                <span class="material-symbols-outlined text-3xl text-gray-600 group-hover:text-primary">restaurant</span>
-                                <span class="text-[14px] font-semibold">Nhà hàng</span>
-                            </button>
-                            {{-- 2. Cà phê --}}
-                            <button type="button" class="business-type-card flex flex-col items-center gap-3 p-4 rounded-xl border-2 border-gray-200 hover:border-primary-container transition-all group active:scale-95 text-center cursor-pointer" onclick="selectType('Cà phê & Trà', this)">
-                                <span class="material-symbols-outlined text-3xl text-gray-600 group-hover:text-primary">local_cafe</span>
-                                <span class="text-[14px] font-semibold">Cà phê & Trà</span>
-                            </button>
-                            {{-- 3. Billiards --}}
-                            <button type="button" class="business-type-card flex flex-col items-center gap-3 p-4 rounded-xl border-2 border-gray-200 hover:border-primary-container transition-all group active:scale-95 text-center cursor-pointer" onclick="selectType('Billiards & Giải trí', this)">
-                                <span class="material-symbols-outlined text-3xl text-gray-600 group-hover:text-primary">sports_golf</span>
-                                <span class="text-[14px] font-semibold">Billiards & Giải trí</span>
-                            </button>
-                            {{-- 4. Đồ ăn vặt --}}
-                            <button type="button" class="business-type-card flex flex-col items-center gap-3 p-4 rounded-xl border-2 border-gray-200 hover:border-primary-container transition-all group active:scale-95 text-center cursor-pointer" onclick="selectType('Đồ ăn vặt', this)">
-                                <span class="material-symbols-outlined text-3xl text-gray-600 group-hover:text-primary">fastfood</span>
-                                <span class="text-[14px] font-semibold">Đồ ăn vặt</span>
-                            </button>
-                            {{-- 5. Lẩu & Nướng --}}
-                            <button type="button" class="business-type-card flex flex-col items-center gap-3 p-4 rounded-xl border-2 border-gray-200 hover:border-primary-container transition-all group active:scale-95 text-center cursor-pointer" onclick="selectType('Lẩu & Nướng', this)">
-                                <span class="material-symbols-outlined text-3xl text-gray-600 group-hover:text-primary">outdoor_grill</span>
-                                <span class="text-[14px] font-semibold">Lẩu & Nướng</span>
-                            </button>
-                            {{-- 6. Quán Đêm 24/7 --}}
-                            <button type="button" class="business-type-card flex flex-col items-center gap-3 p-4 rounded-xl border-2 border-gray-200 hover:border-primary-container transition-all group active:scale-95 text-center cursor-pointer" onclick="selectType('Quán Đêm 24/7', this)">
-                                <span class="material-symbols-outlined text-3xl text-gray-600 group-hover:text-primary">nightlife</span>
-                                <span class="text-[14px] font-semibold">Quán Đêm 24/7</span>
-                            </button>
+                        @php
+                            $totalCats = $categories->count();
+                            $hasActiveInExtra = false;
+                            foreach($categories as $idx => $catItem) {
+                                if ($idx >= 6) {
+                                    $isThisActive = ($selectedId && $selectedId == $catItem->id) || (!$selectedId && $selectedType === $catItem->ten_danh_muc);
+                                    if ($isThisActive) {
+                                        $hasActiveInExtra = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        @endphp
+                        <div class="flex items-center justify-between">
+                            <label class="text-[12px] font-bold text-gray-500 tracking-wider uppercase block">LOẠI HÌNH KINH DOANH <span class="text-red-500">*</span></label>
+                            <span class="text-xs text-gray-400">Chọn 1 danh mục phù hợp nhất</span>
                         </div>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4" id="business-type-container">
+                            @forelse($categories as $index => $dm)
+                                @php
+                                    $isActive = ($selectedId && $selectedId == $dm->id) || (!$selectedId && $selectedType === $dm->ten_danh_muc);
+                                    $isExtra = $index >= 6;
+                                    $hideClass = ($isExtra && !$hasActiveInExtra) ? 'extra-biz-type hidden opacity-0 translate-y-2' : ($isExtra ? 'extra-biz-type' : '');
+                                @endphp
+                                <button type="button" 
+                                        data-type="{{ $dm->ten_danh_muc }}"
+                                        data-id="{{ $dm->id }}"
+                                        class="business-type-card {{ $isActive ? 'active' : '' }} {{ $hideClass }} flex flex-col items-center gap-3 p-4 rounded-xl border-2 border-gray-200 hover:border-primary-container transition-all group active:scale-95 text-center cursor-pointer" 
+                                        onclick="selectType('{{ $dm->ten_danh_muc }}', this, true, '{{ $dm->id }}')">
+                                    <span class="material-symbols-outlined text-3xl text-gray-600 group-hover:text-primary">{{ $dm->icon ?: 'restaurant' }}</span>
+                                    <span class="text-[14px] font-semibold">{{ $dm->ten_danh_muc }}</span>
+                                </button>
+                            @empty
+                                <button type="button" class="business-type-card active flex flex-col items-center gap-3 p-4 rounded-xl border-2 border-gray-200 hover:border-primary-container transition-all group active:scale-95 text-center cursor-pointer" onclick="selectType('Nhà hàng', this)">
+                                    <span class="material-symbols-outlined text-3xl text-gray-600 group-hover:text-primary">restaurant</span>
+                                    <span class="text-[14px] font-semibold">Nhà hàng</span>
+                                </button>
+                            @endforelse
+                        </div>
+
+                        @if($totalCats > 6)
+                            <div class="pt-2 text-center">
+                                <button type="button" 
+                                        id="btnToggleBizTypes" 
+                                        onclick="toggleMoreBizTypes()" 
+                                        class="inline-flex items-center gap-1.5 px-5 py-2 rounded-full border border-gray-200 hover:border-primary/40 hover:bg-primary/5 text-gray-700 hover:text-primary font-bold text-xs shadow-xs hover:shadow-sm transition-all cursor-pointer group">
+                                    <span id="btnToggleBizTypesText">{{ $hasActiveInExtra ? 'Thu gọn' : 'Xem thêm (' . ($totalCats - 6) . ' danh mục khác)' }}</span>
+                                    <span id="btnToggleBizTypesIcon" class="material-symbols-outlined text-[18px] text-primary group-hover:translate-y-0.5 transition-transform">{{ $hasActiveInExtra ? 'expand_less' : 'expand_more' }}</span>
+                                </button>
+                            </div>
+                        @endif
                     </div>
 
                     {{-- Basic Info Form --}}
@@ -261,7 +288,7 @@
                         lngId="kinh_do"
                         height="h-[250px]"
                         :showCoordInputs="false"
-                        :addressSelectors="['#dia_chi_chi_tiet', '#ten_phuong_xa', '#ten_quan_huyen', '#ten_tinh_thanh']"
+                        :addressSelectors="['#dia_chi_chi_tiet', '#select-xa', '#select-huyen', '#select-tinh', '#ten_phuong_xa', '#ten_quan_huyen', '#ten_tinh_thanh']"
                     />
                 </div>
             </section>
@@ -275,8 +302,43 @@
 
 @push('scripts')
 <script>
-    function selectType(typeVal, element, sync24h = true) {
+    
+    function toggleMoreBizTypes() {
+        const extraItems = document.querySelectorAll('.extra-biz-type');
+        if (!extraItems.length) return;
+
+        const btnText = document.getElementById('btnToggleBizTypesText');
+        const btnIcon = document.getElementById('btnToggleBizTypesIcon');
+        const isHidden = extraItems[0].classList.contains('hidden');
+
+        if (isHidden) {
+            extraItems.forEach((el, idx) => {
+                el.classList.remove('hidden');
+                setTimeout(() => {
+                    el.classList.remove('opacity-0', 'translate-y-2');
+                }, idx * 25);
+            });
+            if (btnText) btnText.textContent = 'Thu gọn';
+            if (btnIcon) btnIcon.textContent = 'expand_less';
+        } else {
+            extraItems.forEach(el => {
+                el.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => {
+                    el.classList.add('hidden');
+                }, 150);
+            });
+            const remainingCount = extraItems.length;
+            if (btnText) btnText.textContent = 'Xem thêm (' + remainingCount + ' danh mục khác)';
+            if (btnIcon) btnIcon.textContent = 'expand_more';
+        }
+    }
+
+    function selectType(typeVal, element, sync24h = true, danhMucId = null) {
         document.getElementById('loai_hinh_kinh_doanh').value = typeVal;
+        const dmIdInput = document.getElementById('danh_muc_id');
+        if (dmIdInput) {
+            dmIdInput.value = danhMucId || element.getAttribute('data-id') || '';
+        }
 
         document.querySelectorAll('.business-type-card').forEach(card => {
             card.classList.remove('active');
@@ -286,8 +348,8 @@
         
         if (sync24h) {
             const is24hCb = document.getElementById('is_24h');
-            if (typeVal === 'Quán Đêm 24/7') {
-                if (!is24hCb.checked) {
+            if (typeVal.toLowerCase().includes('24/7') || typeVal.toLowerCase().includes('quán đêm') || typeVal.toLowerCase().includes('xuyên đêm')) {
+                if (is24hCb && !is24hCb.checked) {
                     is24hCb.checked = true;
                     toggle24h(true, false);
                 }
@@ -314,7 +376,12 @@
             if (syncCategory) {
                 const btn247 = Array.from(document.querySelectorAll('.business-type-card')).find(b => b.textContent.includes('24/7'));
                 if (btn247 && !btn247.classList.contains('active')) {
-                    selectType('Quán Đêm 24/7', btn247, false);
+                    if (btn247.classList.contains('extra-biz-type') && btn247.classList.contains('hidden')) {
+                        toggleMoreBizTypes();
+                    }
+                    const typeName = btn247.getAttribute('data-type') || 'Quán Đêm 24/7';
+                    const typeId = btn247.getAttribute('data-id') || '';
+                    selectType(typeName, btn247, false, typeId);
                 }
             }
         } else {
@@ -439,10 +506,9 @@
         const previewEl = document.getElementById('address-preview-text');
         if (previewEl) previewEl.textContent = full;
 
-        // Update Google Maps iframe
-        const iframe = document.getElementById('map-iframe');
-        if (iframe && parts.length > 0) {
-            iframe.src = `https://maps.google.com/maps?q=${encodeURIComponent(full)}&t=&z=16&ie=UTF8&iwloc=&output=embed`;
+        // Tự động kích hoạt định vị bản đồ mượt mà theo địa chỉ đã chọn
+        if (window.QMMapPicker && parts.length > 0) {
+            window.QMMapPicker.scheduleAutoGeocode('dang-quan-map', 500);
         }
     }
 
