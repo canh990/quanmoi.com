@@ -30,6 +30,15 @@
                 <span class="material-symbols-outlined">person</span>
                 <span class="font-body-lg text-body-lg">Hồ sơ cá nhân</span>
             </a>
+            <a class="flex items-center justify-between px-4 py-3 rounded-lg {{ request()->routeIs('tai-khoan.vi-tien*') || request()->routeIs('tai-khoan.nap-tien*') ? 'bg-primary-container/10 text-primary font-bold' : 'text-on-surface-variant hover:bg-surface-container' }} transition-all" href="{{ route('tai-khoan.vi-tien') }}">
+                <div class="flex items-center gap-3">
+                    <span class="material-symbols-outlined">account_balance_wallet</span>
+                    <span class="font-body-lg text-body-lg">Ví & Nạp tiền</span>
+                </div>
+                <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-mono">
+                    {{ number_format($user->so_du ?? 0, 0, ',', '.') }}đ
+                </span>
+            </a>
             <a class="flex items-center gap-3 px-4 py-3 rounded-lg {{ request()->routeIs('nguoi-dung.blog.*') ? 'bg-primary-container/10 text-primary font-bold' : 'text-on-surface-variant hover:bg-surface-container' }} transition-all" href="{{ route('nguoi-dung.blog.index') }}">
                 <span class="material-symbols-outlined">article</span>
                 <span class="font-body-lg text-body-lg">Quản lý bài viết</span>

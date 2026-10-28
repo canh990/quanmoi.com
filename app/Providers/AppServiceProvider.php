@@ -36,6 +36,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if (request()->header('x-forwarded-proto') === 'https' || request()->isSecure()) {
+            \Illuminate\Support\Facades\URL::forceScheme('https');
+        }
         \Carbon\Carbon::setLocale('vi');
         app()->setLocale('vi');
 

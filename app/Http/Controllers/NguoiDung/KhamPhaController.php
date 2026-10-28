@@ -361,6 +361,8 @@ class KhamPhaController extends Controller
                 'tra-sua-nuoc-ep' => 'Trà sữa & Nước ép',
                 'tiem-banh' => 'Tiệm bánh',
                 'binh-dan' => 'Quán ăn bình dân',
+                'mon-ngon-duong-pho' => 'Đồ ăn vặt',
+                'ca-phe-tra-sua' => 'Cà phê & Trà',
                 'quan-an-binh-dan' => 'Quán ăn bình dân',
             ];
             $danhMuc = $danhMucMap[$slug] ?? null;
