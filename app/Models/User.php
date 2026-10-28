@@ -32,6 +32,7 @@ class User extends Authenticatable
         'da_xac_thuc',
         'ngay_xac_thuc',
         'vai_tro_id',
+        'so_du',
         'trang_thai',
         'anh_dai_dien',
         'anh_dai_dien_key',
@@ -55,6 +56,7 @@ class User extends Authenticatable
             'ngay_xac_thuc' => 'datetime',
             'mat_khau' => 'hashed',
             'cai_dat' => 'array',
+            'so_du' => 'decimal:2',
         ];
     }
 
@@ -269,5 +271,10 @@ class User extends Authenticatable
     {
         $settings = $this->cai_dat ?? [];
         return data_get($settings, $key, $default);
+    }
+
+    public function thanhToan(): HasMany
+    {
+        return $this->hasMany(ThanhToan::class, 'user_id')->orderBy('created_at', 'desc');
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\NguoiDung;
 
 use App\Http\Controllers\Controller;
+use App\Models\ThanhToan;
 use App\Http\Requests\CapNhatTaiKhoanRequest;
 use App\Http\Requests\DoiMatKhauRequest;
 use App\Services\DiaChiService;

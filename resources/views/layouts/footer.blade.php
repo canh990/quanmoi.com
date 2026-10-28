@@ -5,7 +5,7 @@
 
             {{-- Column 1: Brand Info (Spans 2 cols on lg) --}}
             <div class="lg:col-span-2 space-y-4">
-                <a href="/" class="inline-flex items-center gap-1.5 group">
+                <a href="{{ route('home') }}" class="inline-flex items-center gap-1.5 group">
                     <svg class="w-10 h-10 transition-transform duration-300 group-hover:scale-105 drop-shadow-sm" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                         <path d="M89.5 18C50.95 18 19.7 49.25 19.7 87.8C19.7 126.35 50.95 157.6 89.5 157.6C106.1 157.6 121.35 151.8 133.3 142.12L152.7 161.5L166.9 147.3L147.75 128.15C154.25 116.55 158 102.9 158 87.8C158 49.25 128.05 18 89.5 18ZM89.5 42.5C114.5 42.5 134.8 62.8 134.8 87.8C134.8 97.15 132 105.85 127.2 113.1L109.7 95.6H117V79H86.3V109.7H102.9V102.4L112.7 112.2C106.1 117.25 98.12 120.15 89.5 120.15C64.5 120.15 44.2 100 44.2 87.8C44.2 62.8 64.5 42.5 89.5 42.5Z" fill="#c97a3a" />
                         <path d="M63.8 101.5V84.8H73.4V101.5H63.8ZM80.2 101.5V70.2H89.8V101.5H80.2ZM96.6 101.5V58.3H106.2V101.5H96.6Z" fill="#1a1a1a" />
@@ -20,16 +20,16 @@
 
                 {{-- Social Icons --}}
                 <div class="flex items-center gap-3 pt-2">
-                    <a href="#" class="w-9 h-9 rounded-full bg-surface-container-low hover:bg-primary hover:text-white text-on-surface-variant flex items-center justify-center transition-all duration-200" title="Facebook">
+                    <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" class="w-9 h-9 rounded-full bg-surface-container-low hover:bg-primary hover:text-white text-on-surface-variant flex items-center justify-center transition-all duration-200" title="Facebook">
                         <span class="material-symbols-outlined text-[18px]">public</span>
                     </a>
-                    <a href="#" class="w-9 h-9 rounded-full bg-surface-container-low hover:bg-primary hover:text-white text-on-surface-variant flex items-center justify-center transition-all duration-200" title="Instagram">
+                    <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" class="w-9 h-9 rounded-full bg-surface-container-low hover:bg-primary hover:text-white text-on-surface-variant flex items-center justify-center transition-all duration-200" title="Instagram">
                         <span class="material-symbols-outlined text-[18px]">photo_camera</span>
                     </a>
-                    <a href="#" class="w-9 h-9 rounded-full bg-surface-container-low hover:bg-primary hover:text-white text-on-surface-variant flex items-center justify-center transition-all duration-200" title="Youtube">
+                    <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" class="w-9 h-9 rounded-full bg-surface-container-low hover:bg-primary hover:text-white text-on-surface-variant flex items-center justify-center transition-all duration-200" title="Youtube">
                         <span class="material-symbols-outlined text-[18px]">smart_display</span>
                     </a>
-                    <a href="#" class="w-9 h-9 rounded-full bg-surface-container-low hover:bg-primary hover:text-white text-on-surface-variant flex items-center justify-center transition-all duration-200" title="Email">
+                    <a href="mailto:contact@quanmoi.com" class="w-9 h-9 rounded-full bg-surface-container-low hover:bg-primary hover:text-white text-on-surface-variant flex items-center justify-center transition-all duration-200" title="Email">
                         <span class="material-symbols-outlined text-[18px]">mail</span>
                     </a>
                 </div>
@@ -39,11 +39,11 @@
             <div class="space-y-3">
                 <h4 class="font-bold text-[15px] text-on-surface uppercase tracking-wider">Khám phá</h4>
                 <ul class="space-y-2.5 text-[14px]">
-                    <li><a href="#" class="text-on-surface-variant hover:text-primary transition-colors">Quán mới mở</a></li>
-                    <li><a href="#" class="text-on-surface-variant hover:text-primary transition-colors">Top đánh giá cao</a></li>
-                    <li><a href="#" class="text-on-surface-variant hover:text-primary transition-colors">Món ngon đường phố</a></li>
-                    <li><a href="#" class="text-on-surface-variant hover:text-primary transition-colors">Lẩu & Nướng</a></li>
-                    <li><a href="#" class="text-on-surface-variant hover:text-primary transition-colors">Cà phê & Trà sữa</a></li>
+                    <li><a href="{{ route('quan-moi') }}" class="text-on-surface-variant hover:text-primary transition-colors">Quán mới mở</a></li>
+                    <li><a href="{{ route('kham-pha', ['sap_xep' => 'rating_desc']) }}" class="text-on-surface-variant hover:text-primary transition-colors">Top đánh giá cao</a></li>
+                    <li><a href="{{ route('danh-muc', 'do-an-vat') }}" class="text-on-surface-variant hover:text-primary transition-colors">Món ngon đường phố</a></li>
+                    <li><a href="{{ route('danh-muc', 'lau-nuong') }}" class="text-on-surface-variant hover:text-primary transition-colors">Lẩu & Nướng</a></li>
+                    <li><a href="{{ route('danh-muc', 'ca-phe-tra') }}" class="text-on-surface-variant hover:text-primary transition-colors">Cà phê & Trà sữa</a></li>
                 </ul>
             </div>
 
@@ -52,10 +52,10 @@
                 <h4 class="font-bold text-[15px] text-on-surface uppercase tracking-wider">Về Quán Mới</h4>
                 <ul class="space-y-2.5 text-[14px]">
                     <li><a href="{{ route('about') }}" class="text-on-surface-variant hover:text-primary transition-colors">Giới thiệu về chúng tôi</a></li>
-                    <li><a href="#" class="text-on-surface-variant hover:text-primary transition-colors">Blog ẩm thực</a></li>
-                    <li><a href="#" class="text-on-surface-variant hover:text-primary transition-colors">Dành cho chủ quán</a></li>
-                    <li><a href="#" class="text-on-surface-variant hover:text-primary transition-colors">Tuyển dụng</a></li>
-                    <li><a href="#" class="text-on-surface-variant hover:text-primary transition-colors">Liên hệ hợp tác</a></li>
+                    <li><a href="{{ route('blog.index') }}" class="text-on-surface-variant hover:text-primary transition-colors">Blog ẩm thực</a></li>
+                    <li><a href="{{ route('pages.chu-quan') }}" class="text-on-surface-variant hover:text-primary transition-colors">Dành cho chủ quán</a></li>
+                    <li><a href="{{ route('pages.tuyen-dung') }}" class="text-on-surface-variant hover:text-primary transition-colors">Tuyển dụng</a></li>
+                    <li><a href="{{ route('pages.lien-he') }}" class="text-on-surface-variant hover:text-primary transition-colors">Liên hệ hợp tác</a></li>
                 </ul>
             </div>
 
@@ -63,11 +63,11 @@
             <div class="space-y-3">
                 <h4 class="font-bold text-[15px] text-on-surface uppercase tracking-wider">Hỗ trợ</h4>
                 <ul class="space-y-2.5 text-[14px]">
-                    <li><a href="#" class="text-on-surface-variant hover:text-primary transition-colors">Trung tâm trợ giúp</a></li>
-                    <li><a href="#" class="text-on-surface-variant hover:text-primary transition-colors">Quy định sử dụng</a></li>
-                    <li><a href="#" class="text-on-surface-variant hover:text-primary transition-colors">Chính sách bảo mật</a></li>
-                    <li><a href="#" class="text-on-surface-variant hover:text-primary transition-colors">Giải quyết tranh chấp</a></li>
-                    <li><a href="#" class="text-on-surface-variant hover:text-primary transition-colors">Hotline: 1900 1234</a></li>
+                    <li><a href="{{ route('pages.tro-giup') }}" class="text-on-surface-variant hover:text-primary transition-colors">Trung tâm trợ giúp</a></li>
+                    <li><a href="{{ route('pages.dieu-khoan') }}" class="text-on-surface-variant hover:text-primary transition-colors">Quy định sử dụng</a></li>
+                    <li><a href="{{ route('pages.bao-mat') }}" class="text-on-surface-variant hover:text-primary transition-colors">Chính sách bảo mật</a></li>
+                    <li><a href="{{ route('pages.tranh-chap') }}" class="text-on-surface-variant hover:text-primary transition-colors">Giải quyết tranh chấp</a></li>
+                    <li><a href="tel:19001234" class="text-on-surface-variant hover:text-primary transition-colors font-semibold">Hotline: 1900 1234</a></li>
                 </ul>
             </div>
 
@@ -77,9 +77,9 @@
         <div class="pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-[13px] text-on-surface-variant">
             <p>© 2026 Quán Mới. Tất cả quyền được bảo lưu.</p>
             <div class="flex items-center gap-6">
-                <a href="#" class="hover:text-primary transition-colors">Bảo mật</a>
-                <a href="#" class="hover:text-primary transition-colors">Điều khoản</a>
-                <a href="#" class="hover:text-primary transition-colors">Cookie</a>
+                <a href="{{ route('pages.bao-mat') }}" class="hover:text-primary transition-colors">Bảo mật</a>
+                <a href="{{ route('pages.dieu-khoan') }}" class="hover:text-primary transition-colors">Điều khoản</a>
+                <a href="{{ route('pages.cookie') }}" class="hover:text-primary transition-colors">Cookie</a>
             </div>
         </div>
     </div>

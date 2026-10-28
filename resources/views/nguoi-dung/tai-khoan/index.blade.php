@@ -63,19 +63,49 @@
         </button>
     </div>
 
-    @if(session('error_conflict') || session('error'))
+    @if(session('error_conflict'))
     <div id="toast-conflict" class="mb-6 flex items-start sm:items-center gap-3 bg-amber-50 border border-amber-200 rounded-2xl px-5 py-4 shadow-lg shadow-amber-100/50">
         <div class="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0 text-amber-600">
             <span class="material-symbols-outlined text-[22px]">warning</span>
         </div>
         <div class="flex-1 min-w-0">
             <p class="font-bold text-amber-900 text-sm">Xung đột dữ liệu!</p>
-            <p class="text-amber-800 text-xs mt-0.5">{{ session('error_conflict') ?? session('error') }}</p>
+            <p class="text-amber-800 text-xs mt-0.5">{{ session('error_conflict') }}</p>
         </div>
         <a href="{{ route('tai-khoan.index') }}" class="shrink-0 px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-xs transition-all flex items-center gap-1.5 cursor-pointer">
             <span class="material-symbols-outlined text-[16px]">refresh</span>
             <span>Tải lại trang</span>
         </a>
+    </div>
+    @endif
+
+    @if(session('error'))
+    <div id="toast-error" class="mb-6 flex items-start sm:items-center gap-3 bg-rose-50 border border-rose-200 rounded-2xl px-5 py-4 shadow-lg shadow-rose-100/50">
+        <div class="w-9 h-9 rounded-xl bg-rose-100 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0 text-rose-600">
+            <span class="material-symbols-outlined text-[22px]">error</span>
+        </div>
+        <div class="flex-1 min-w-0">
+            <p class="font-bold text-rose-900 text-sm">Lỗi thanh toán / nạp tiền</p>
+            <p class="text-rose-800 text-xs mt-0.5">{{ session('error') }}</p>
+        </div>
+        <button type="button" onclick="document.getElementById('toast-error').remove()" class="text-rose-500 hover:text-rose-700 cursor-pointer">
+            <span class="material-symbols-outlined text-[18px]">close</span>
+        </button>
+    </div>
+    @endif
+
+    @if(session('info'))
+    <div id="toast-info" class="mb-6 flex items-start sm:items-center gap-3 bg-blue-50 border border-blue-200 rounded-2xl px-5 py-4 shadow-lg shadow-blue-100/50">
+        <div class="w-9 h-9 rounded-xl bg-blue-100 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0 text-blue-600">
+            <span class="material-symbols-outlined text-[22px]">info</span>
+        </div>
+        <div class="flex-1 min-w-0">
+            <p class="font-bold text-blue-900 text-sm">Thông báo</p>
+            <p class="text-blue-800 text-xs mt-0.5">{{ session('info') }}</p>
+        </div>
+        <button type="button" onclick="document.getElementById('toast-info').remove()" class="text-blue-500 hover:text-blue-700 cursor-pointer">
+            <span class="material-symbols-outlined text-[18px]">close</span>
+        </button>
     </div>
     @endif
 
@@ -375,16 +405,17 @@
             </section>
         </div>
     </div>
-</main>
 
 <script>
+    // =========================================================================
+    // 1. CLIENT VALIDATION CHO HỒ SƠ VÀ MẬT KHẨU
+    // =========================================================================
     function showFieldError(fieldName, message) {
         const input = document.getElementById(fieldName) || document.querySelector(`[name="${fieldName}"]`);
         if (!input) return;
         input.classList.remove('border-outline-variant', 'border-error');
         input.classList.add('border-rose-500', 'ring-1', 'ring-rose-500');
 
-        // Ẩn thông báo lỗi server cũ nếu có
         const serverError = document.querySelector(`.server-error-${fieldName}`);
         if (serverError) serverError.classList.add('hidden');
 
@@ -440,217 +471,9 @@
         }
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
-        const ngaySinhInput = document.getElementById('ngay_sinh');
-        const sdtInput = document.getElementById('so_dien_thoai');
-        const hoTenInput = document.getElementById('ho_ten');
-
-        const curPwdInput = document.getElementById('current_password');
-        const newPwdInput = document.getElementById('password');
-        const cfmPwdInput = document.getElementById('password_confirmation');
-
-        if (hoTenInput) {
-            hoTenInput.addEventListener('input', function() {
-                if (this.value.trim()) {
-                    clearFieldError('ho_ten');
-                    hideFormErrorBanner('profile-client-error-banner');
-                }
-            });
-        }
-
-        if (ngaySinhInput) {
-            const checkNgaySinh = function() {
-                const val = ngaySinhInput.value;
-                if (!val) {
-                    clearFieldError('ngay_sinh');
-                    return true;
-                }
-                const todayStr = new Date().toISOString().split('T')[0];
-                if (val > todayStr) {
-                    showFieldError('ngay_sinh', 'Ngày sinh không thể là ngày trong tương lai.');
-                    return false;
-                }
-                clearFieldError('ngay_sinh');
-                return true;
-            };
-
-            ngaySinhInput.addEventListener('change', checkNgaySinh);
-            ngaySinhInput.addEventListener('input', checkNgaySinh);
-            ngaySinhInput.addEventListener('blur', checkNgaySinh);
-        }
-
-        if (sdtInput) {
-            sdtInput.addEventListener('input', function() {
-                // Tự động giữ tối đa 11 số và chỉ chứa chữ số
-                this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11);
-                const val = this.value;
-                if (!val) {
-                    clearFieldError('so_dien_thoai');
-                    return;
-                }
-                if (!val.startsWith('0')) {
-                    showFieldError('so_dien_thoai', 'Số điện thoại phải bắt đầu bằng số 0.');
-                    return;
-                }
-                if (val.length < 10) {
-                    showFieldError('so_dien_thoai', 'Số điện thoại phải từ 10 đến 11 số (hiện có ' + val.length + ' số).');
-                    return;
-                }
-                clearFieldError('so_dien_thoai');
-            });
-
-            sdtInput.addEventListener('blur', function() {
-                const val = this.value.trim();
-                if (val && !/^0[0-9]{9,10}$/.test(val)) {
-                    showFieldError('so_dien_thoai', 'Số điện thoại không hợp lệ (phải bắt đầu bằng số 0 và có từ 10 đến 11 số).');
-                }
-            });
-        }
-
-        if (curPwdInput) {
-            curPwdInput.addEventListener('input', function() {
-                if (this.value) {
-                    clearFieldError('current_password');
-                    hideFormErrorBanner('pwd-client-error-banner');
-                }
-            });
-        }
-
-        if (newPwdInput) {
-            newPwdInput.addEventListener('input', function() {
-                if (this.value && this.value.length >= 8) {
-                    clearFieldError('password');
-                }
-            });
-        }
-
-        if (cfmPwdInput) {
-            cfmPwdInput.addEventListener('input', function() {
-                if (this.value && this.value === (newPwdInput ? newPwdInput.value : '')) {
-                    clearFieldError('password_confirmation');
-                }
-            });
-        }
-
-        ['form-update-profile', 'form-update-password'].forEach(function(formId) {
-            const form = document.getElementById(formId);
-            if (!form) return;
-
-            form.addEventListener('submit', function(e) {
-                if (formId === 'form-update-profile') {
-                    let errorMessages = [];
-                    hideFormErrorBanner('profile-client-error-banner');
-
-                    let firstInvalid = null;
-
-                    // 1. Kiểm tra Họ và tên
-                    const hoTenVal = hoTenInput ? hoTenInput.value.trim() : '';
-                    if (!hoTenVal) {
-                        showFieldError('ho_ten', 'Vui lòng nhập họ và tên.');
-                        errorMessages.push('Vui lòng nhập họ và tên.');
-                        if (!firstInvalid) firstInvalid = hoTenInput;
-                    }
-
-                    // 2. Kiểm tra Ngày sinh
-                    if (ngaySinhInput && ngaySinhInput.value) {
-                        const todayStr = new Date().toISOString().split('T')[0];
-                        if (ngaySinhInput.value > todayStr) {
-                            showFieldError('ngay_sinh', 'Ngày sinh không thể là ngày trong tương lai.');
-                            errorMessages.push('Ngày sinh không thể là ngày trong tương lai.');
-                            if (!firstInvalid) firstInvalid = ngaySinhInput;
-                        }
-                    }
-
-                    // 3. Kiểm tra Số điện thoại
-                    if (sdtInput && sdtInput.value.trim()) {
-                        const sdtVal = sdtInput.value.trim();
-                        if (!/^0[0-9]{9,10}$/.test(sdtVal)) {
-                            showFieldError('so_dien_thoai', 'Số điện thoại không hợp lệ (phải bắt đầu bằng số 0 và có từ 10 đến 11 số).');
-                            errorMessages.push('Số điện thoại không hợp lệ (phải bắt đầu bằng số 0 và có từ 10 đến 11 số).');
-                            if (!firstInvalid) firstInvalid = sdtInput;
-                        }
-                    }
-
-                    if (errorMessages.length > 0) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        showFormErrorBanner('profile-client-error-banner', 'profile-client-error-list', errorMessages);
-                        if (firstInvalid) {
-                            firstInvalid.focus();
-                        }
-                        return false;
-                    }
-                }
-
-                if (formId === 'form-update-password') {
-                    let pwdErrors = [];
-                    hideFormErrorBanner('pwd-client-error-banner');
-
-                    let firstInvalid = null;
-
-                    const curPwdVal = curPwdInput ? curPwdInput.value.trim() : '';
-                    const newPwdVal = newPwdInput ? newPwdInput.value : '';
-                    const cfmPwdVal = cfmPwdInput ? cfmPwdInput.value : '';
-
-                    if (!curPwdVal) {
-                        showFieldError('current_password', 'Vui lòng nhập mật khẩu hiện tại.');
-                        pwdErrors.push('Vui lòng nhập mật khẩu hiện tại.');
-                        if (!firstInvalid) firstInvalid = curPwdInput;
-                    }
-
-                    if (!newPwdVal) {
-                        showFieldError('password', 'Vui lòng nhập mật khẩu mới.');
-                        pwdErrors.push('Vui lòng nhập mật khẩu mới.');
-                        if (!firstInvalid) firstInvalid = newPwdInput;
-                    } else if (newPwdVal.length < 8) {
-                        showFieldError('password', 'Mật khẩu mới phải có ít nhất 8 ký tự.');
-                        pwdErrors.push('Mật khẩu mới phải có ít nhất 8 ký tự.');
-                        if (!firstInvalid) firstInvalid = newPwdInput;
-                    }
-
-                    if (!cfmPwdVal) {
-                        showFieldError('password_confirmation', 'Vui lòng xác nhận mật khẩu mới.');
-                        pwdErrors.push('Vui lòng xác nhận mật khẩu mới.');
-                        if (!firstInvalid) firstInvalid = cfmPwdInput;
-                    } else if (cfmPwdVal !== newPwdVal) {
-                        showFieldError('password_confirmation', 'Xác nhận mật khẩu mới không khớp.');
-                        pwdErrors.push('Xác nhận mật khẩu mới không khớp.');
-                        if (!firstInvalid) firstInvalid = cfmPwdInput;
-                    }
-
-                    if (pwdErrors.length > 0) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        showFormErrorBanner('pwd-client-error-banner', 'pwd-client-error-list', pwdErrors);
-                        if (firstInvalid) {
-                            firstInvalid.focus();
-                        }
-                        return false;
-                    }
-                }
-
-                const submitBtn = form.querySelector('button[type="submit"]');
-                if (submitBtn) {
-                    if (submitBtn.dataset.submitting === 'true') {
-                        e.preventDefault();
-                        return false;
-                    }
-                    submitBtn.dataset.submitting = 'true';
-                    submitBtn.style.pointerEvents = 'none';
-
-                    submitBtn.innerHTML = `
-                        <span class="material-symbols-outlined text-[18px] animate-spin inline-block mr-1.5">progress_activity</span>
-                        <span>Đang lưu...</span>
-                    `;
-
-                    setTimeout(function() {
-                        submitBtn.disabled = true;
-                    }, 50);
-                }
-            });
-        });
-    });
-
+// =========================================================================
+    // 4. BỎ LƯU QUÁN ĂN (OPTIMISTIC UI)
+    // =========================================================================
     function toggleSavePlace(btn, quanId) {
         if (btn.dataset.loading === 'true') return;
         const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
@@ -666,7 +489,6 @@
             if (match && match[1]) quanImg = match[1];
         }
 
-        // 1. SHOW TOAST NOTIFICATION IMMEDIATELY (0ms delay)
         if (window.showToast) {
             window.showToast({
                 eyebrow: 'Đã cập nhật danh sách',
@@ -677,7 +499,6 @@
             });
         }
 
-        // 2. OPTIMISTIC UI: Remove card instantly
         if (card) {
             card.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
             card.style.opacity = '0';

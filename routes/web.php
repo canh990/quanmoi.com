@@ -10,6 +10,7 @@ use App\Http\Controllers\ChuQuan\HinhAnhQuanController;
 use App\Http\Controllers\ChuQuan\QuanController;
 use App\Http\Controllers\NguoiDung\HomeController;
 use App\Http\Controllers\NguoiDung\TaiKhoanController;
+use App\Http\Controllers\NguoiDung\NapTienController;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Frontend\BlogController as FrontendBlogController;
@@ -37,7 +38,23 @@ Route::get('/api/blog/ai-search', [FrontendBlogController::class, 'aiSearch'])->
 Route::post('/api/blog/ai-chat', [FrontendBlogController::class, 'aiChat'])->middleware('throttle:15,1')->name('blog.ai.chat');
 Route::get('/api/blog/recommendations', [FrontendBlogController::class, 'recommendations'])->middleware('throttle:30,1')->name('blog.ai.recommendations');
 Route::get('/video-review', [\App\Http\Controllers\NguoiDung\VideoShortController::class, 'index'])->name('video-review.index');
+// ─── Trang thông tin nội dung tĩnh (Giới thiệu, Tuyển dụng, Đối tác, Hỗ trợ & Pháp lý) ───
 Route::view('/gioi-thieu', 'pages.about')->name('about');
+Route::view('/danh-cho-chu-quan', 'pages.chu-quan')->name('pages.chu-quan');
+Route::view('/tuyen-dung', 'pages.tuyen-dung')->name('pages.tuyen-dung');
+Route::view('/lien-he', 'pages.lien-he')->name('pages.lien-he');
+
+// Nhóm trang Hỗ trợ
+Route::view('/tro-giup', 'pages.ho-tro.tro-giup')->name('pages.tro-giup');
+Route::view('/giai-quyet-tranh-chap', 'pages.ho-tro.tranh-chap')->name('pages.tranh-chap');
+
+// Nhóm trang Pháp lý & Quy định
+Route::view('/quy-dinh-su-dung', 'pages.phap-ly.dieu-khoan')->name('pages.dieu-khoan');
+Route::view('/dieu-khoan', 'pages.phap-ly.dieu-khoan');
+Route::view('/chinh-sach-bao-mat', 'pages.phap-ly.bao-mat')->name('pages.bao-mat');
+Route::view('/bao-mat', 'pages.phap-ly.bao-mat');
+Route::view('/chinh-sach-cookie', 'pages.phap-ly.cookie')->name('pages.cookie');
+Route::view('/cookie', 'pages.phap-ly.cookie');
 Route::get('/media/venue/{path}', [HinhAnhQuanController::class, 'localImage'])
     ->where('path', '.*')
     ->name('media.venue.local');
@@ -132,6 +149,16 @@ Route::prefix('api')->group(function () {
 
 Route::middleware('auth')->group(function () {
     Route::get('/tai-khoan', [TaiKhoanController::class, 'index'])->name('tai-khoan.index');
+    // Ví tiền & Nạp tiền SePay
+    Route::get('/tai-khoan/vi-tien', [NapTienController::class, 'index'])->name('tai-khoan.vi-tien');
+    Route::get('/tai-khoan/nap-tien', [NapTienController::class, 'index'])->name('tai-khoan.nap-tien.index');
+    Route::get('/vi-tien', fn () => redirect()->route('tai-khoan.vi-tien'))->name('vi-tien');
+    // Nạp tiền qua Cổng thanh toán SePay
+    Route::post('/tai-khoan/nap-tien', [NapTienController::class, 'checkout'])->name('tai-khoan.nap-tien.checkout');
+    Route::get('/tai-khoan/nap-tien/thanh-cong', [NapTienController::class, 'success'])->name('tai-khoan.nap-tien.thanh-cong');
+    Route::get('/tai-khoan/nap-tien/that-bai', [NapTienController::class, 'error'])->name('tai-khoan.nap-tien.that-bai');
+    Route::get('/tai-khoan/nap-tien/huy', [NapTienController::class, 'cancel'])->name('tai-khoan.nap-tien.huy');
+
     Route::get('/tai-khoan/cai-dat', [TaiKhoanController::class, 'settings'])->name('tai-khoan.cai-dat');
     Route::put('/tai-khoan/cai-dat', [TaiKhoanController::class, 'updateSettings'])->name('tai-khoan.cai-dat.update');
     Route::post('/tai-khoan/yeu-cau-xac-thuc', [TaiKhoanController::class, 'requestVerification'])->name('tai-khoan.yeu-cau-xac-thuc');
@@ -180,3 +207,9 @@ Route::get('/{slug}', function (string $slug) {
     abort(404);
 })->where('slug', '^(?!admin$|api$|chu-quan$|thanh-vien$)[a-zA-Z0-9\-]+$');
 
+
+// SePay Webhooks & Gateway IPN endpoints
+Route::post('/sepay/webhook', [NapTienController::class, 'webhook'])->name('sepay.webhook');
+Route::post('/sepay/ipn', [NapTienController::class, 'ipn'])->name('sepay.ipn');
+Route::get('/tai-khoan/nap-tien/{code}/status', [NapTienController::class, 'status'])->name('sepay.status');
+Route::get('/tai-khoan/nap-tien/status/{code}', [NapTienController::class, 'status']);
