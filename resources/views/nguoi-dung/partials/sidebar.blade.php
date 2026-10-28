@@ -30,18 +30,21 @@
                 <span class="material-symbols-outlined">person</span>
                 <span class="font-body-lg text-body-lg">Hồ sơ cá nhân</span>
             </a>
-            <a class="flex items-center justify-between px-4 py-3 rounded-lg {{ request()->routeIs('tai-khoan.vi-tien*') || request()->routeIs('tai-khoan.nap-tien*') ? 'bg-primary-container/10 text-primary font-bold' : 'text-on-surface-variant hover:bg-surface-container' }} transition-all" href="{{ route('tai-khoan.vi-tien') }}">
-                <div class="flex items-center gap-3">
-                    <span class="material-symbols-outlined">account_balance_wallet</span>
-                    <span class="font-body-lg text-body-lg">Ví & Nạp tiền</span>
-                </div>
-                <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-mono">
-                    {{ number_format($user->so_du ?? 0, 0, ',', '.') }}đ
-                </span>
-            </a>
-            <a class="flex items-center gap-3 px-4 py-3 rounded-lg {{ request()->routeIs('nguoi-dung.blog.*') ? 'bg-primary-container/10 text-primary font-bold' : 'text-on-surface-variant hover:bg-surface-container' }} transition-all" href="{{ route('nguoi-dung.blog.index') }}">
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg {{ (request()->routeIs('nguoi-dung.blog.index') || request()->routeIs('nguoi-dung.blog.create') || request()->routeIs('nguoi-dung.blog.edit')) ? 'bg-primary-container/10 text-primary font-bold' : 'text-on-surface-variant hover:bg-surface-container' }} transition-all" href="{{ route('nguoi-dung.blog.index') }}">
                 <span class="material-symbols-outlined">article</span>
                 <span class="font-body-lg text-body-lg">Quản lý bài viết</span>
+            </a>
+            <a class="flex items-center justify-between px-4 py-3 rounded-lg {{ request()->routeIs('nguoi-dung.blog.saved') ? 'bg-primary-container/10 text-primary font-bold' : 'text-on-surface-variant hover:bg-surface-container' }} transition-all" href="{{ route('nguoi-dung.blog.saved') }}">
+                <div class="flex items-center gap-3">
+                    <span class="material-symbols-outlined" style="{{ request()->routeIs('nguoi-dung.blog.saved') ? "font-variation-settings: 'FILL' 1;" : '' }}">bookmark</span>
+                    <span class="font-body-lg text-body-lg">Bài viết đã lưu</span>
+                </div>
+                @php
+                    $totalSavedCount = $user ? $user->savedBlogs()->where('blogs.status', 'published')->count() : 0;
+                @endphp
+                <span id="sidebar-saved-blog-count" class="px-2 py-0.5 text-[11px] font-bold bg-amber-500 text-white rounded-full {{ $totalSavedCount > 0 ? '' : 'hidden' }}">
+                    {{ $totalSavedCount > 99 ? '99+' : $totalSavedCount }}
+                </span>
             </a>
             <a class="flex items-center justify-between px-4 py-3 rounded-lg {{ request()->routeIs('nguoi-dung.thong-bao.*') ? 'bg-primary-container/10 text-primary font-bold' : 'text-on-surface-variant hover:bg-surface-container' }} transition-all" href="{{ route('nguoi-dung.thong-bao.index') }}">
                 <div class="flex items-center gap-3">
