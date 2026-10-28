@@ -144,6 +144,16 @@
                 </div>
             </a>
         </div>
+        <!-- Nút Bookmark ở góc trên bên phải Hero -->
+        <button type="button" 
+                onclick="event.preventDefault(); event.stopPropagation(); toggleBlogBookmark(this, '{{ $heroBlog->id }}', '{{ $heroBlog->slug }}', '{{ addslashes($heroBlog->title) }}')" 
+                data-blog-id="{{ $heroBlog->id }}" 
+                data-blog-slug="{{ $heroBlog->slug }}" 
+                class="blog-bookmark-btn absolute top-4 right-4 z-20 w-10 h-10 rounded-full bg-black/40 hover:bg-black/60 text-white hover:text-amber-300 backdrop-blur-md border border-white/20 shadow-md flex items-center justify-center transition-all duration-200 active:scale-90 cursor-pointer" 
+                title="Lưu bài viết"
+                aria-label="Lưu bài viết">
+            <span class="material-symbols-outlined text-[22px]">bookmark</span>
+        </button>
     </section>
     @endif
 
@@ -225,17 +235,29 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
                     @foreach($blogs as $blog)
                         <!-- Blog Card -->
-                        <article class="level-1-card flex flex-col h-full group border border-outline-variant hover:border-amber-400/80 hover:ring-2 hover:ring-amber-400/30 hover:shadow-lg transition-all duration-300">
-                            <a href="{{ route('blog.show', $blog->slug) }}" class="blog-card-cover-frame">
-                                @if($blog->category)
-                                    <div class="absolute top-3 left-3 z-10 bg-primary-container text-on-primary px-2 py-0.5 rounded-md font-label-md text-label-md uppercase font-bold max-w-[calc(100%-1.5rem)] truncate">{{ $blog->category->name }}</div>
-                                @endif
-                                <div class="absolute bottom-3 right-3 z-10 px-2.5 py-0.5 rounded-md bg-black/60 backdrop-blur-md text-white font-semibold text-[10px] flex items-center gap-1 shadow-sm" title="Thời gian đăng: {{ ($blog->published_at ?? $blog->created_at)?->format('d/m/Y H:i') }}">
-                                    <span class="material-symbols-outlined text-[12px] text-amber-300">schedule</span>
-                                    <span>{{ ($blog->published_at ?? $blog->created_at)?->diffForHumans() ?? 'Vừa xong' }}</span>
-                                </div>
-                                <img src="{{ $blog->cover_image_url ?? 'https://placehold.co/600x400/png' }}" alt="{{ $blog->title }}"/>
-                            </a>
+                        <article class="level-1-card flex flex-col h-full group border border-outline-variant hover:border-amber-400/80 hover:ring-2 hover:ring-amber-400/30 hover:shadow-lg transition-all duration-300 relative">
+                            <div class="relative w-full">
+                                <a href="{{ route('blog.show', $blog->slug) }}" class="blog-card-cover-frame">
+                                    @if($blog->category)
+                                        <div class="absolute top-3 left-3 z-10 bg-primary-container text-on-primary px-2 py-0.5 rounded-md font-label-md text-label-md uppercase font-bold max-w-[calc(100%-4rem)] truncate">{{ $blog->category->name }}</div>
+                                    @endif
+                                    <div class="absolute bottom-3 right-3 z-10 px-2.5 py-0.5 rounded-md bg-black/60 backdrop-blur-md text-white font-semibold text-[10px] flex items-center gap-1 shadow-sm" title="Thời gian đăng: {{ ($blog->published_at ?? $blog->created_at)?->format('d/m/Y H:i') }}">
+                                        <span class="material-symbols-outlined text-[12px] text-amber-300">schedule</span>
+                                        <span>{{ ($blog->published_at ?? $blog->created_at)?->diffForHumans() ?? 'Vừa xong' }}</span>
+                                    </div>
+                                    <img src="{{ $blog->cover_image_url ?? 'https://placehold.co/600x400/png' }}" alt="{{ $blog->title }}"/>
+                                </a>
+                                {{-- Nút Bookmark ở góc trên bên phải ảnh --}}
+                                <button type="button" 
+                                        onclick="event.preventDefault(); event.stopPropagation(); toggleBlogBookmark(this, '{{ $blog->id }}', '{{ $blog->slug }}', '{{ addslashes($blog->title) }}')" 
+                                        data-blog-id="{{ $blog->id }}" 
+                                        data-blog-slug="{{ $blog->slug }}" 
+                                        class="blog-bookmark-btn absolute top-3 right-3 z-10 w-8 h-8 bg-white/90 hover:bg-white backdrop-blur-md rounded-full flex items-center justify-center text-slate-700 hover:text-amber-500 shadow-sm hover:scale-110 active:scale-90 transition-transform cursor-pointer" 
+                                        title="Lưu bài viết"
+                                        aria-label="Lưu bài viết">
+                                    <span class="material-symbols-outlined text-[18px]">bookmark</span>
+                                </button>
+                            </div>
                             <div class="p-4 flex flex-col flex-grow">
                                 <a href="{{ route('blog.show', $blog->slug) }}" class="flex-grow block">
                                     <h3 class="font-title-md text-title-md text-on-surface mb-2 line-clamp-2 group-hover:text-primary transition-colors font-bold">{{ $blog->title }}</h3>
@@ -1510,14 +1532,14 @@
             if (!data || (!data.slug && !data.blogId)) return;
             
             const selectors = [];
-            if (data.slug) selectors.push(`[data-blog-slug="${data.slug}"]`);
-            if (data.blogId) selectors.push(`[data-blog-id="${data.blogId}"]`);
+            if (data.slug) selectors.push(`.blog-view-count-wrap[data-blog-slug="${data.slug}"]`);
+            if (data.blogId) selectors.push(`.blog-view-count-wrap[data-blog-id="${data.blogId}"]`);
             
             const containers = document.querySelectorAll(selectors.join(', '));
             if (!containers || containers.length === 0) return;
 
             containers.forEach(wrap => {
-                const textEl = wrap.querySelector('.blog-view-count-text') || wrap;
+                const textEl = wrap.querySelector('.blog-view-count-text');
                 if (textEl) {
                     textEl.textContent = `${data.formatted} lượt xem`;
                 }

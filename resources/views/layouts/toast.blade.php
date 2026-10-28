@@ -134,7 +134,35 @@
         }
 
         // Configure Styling Based on Type with vivid, high-contrast icons
-        if (type === 'saved') {
+        if (type === 'bookmark') {
+            indicator.className = 'toast-indicator absolute left-0 top-0 bottom-0 w-1.5 bg-amber-500';
+            iconWrap.className = 'toast-icon-wrap w-10 h-10 rounded-xl flex items-center justify-center font-bold shrink-0';
+            iconWrap.style.cssText = 'background-color: #f59e0b !important; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.45) !important;';
+            iconEl.textContent = 'bookmark';
+            iconEl.style.cssText = "color: #ffffff !important; font-variation-settings: 'FILL' 1;";
+            iconEl.classList.add('toast-heart-pop');
+            progressBar.className = 'toast-progress-bar h-full w-full bg-amber-500 origin-left transition-all ease-linear';
+            if (eyebrowTextEl) eyebrowTextEl.innerHTML = `<span class="material-symbols-outlined text-[13px]">bookmark</span><span>${eyebrow || 'BÀI VIẾT ĐÃ LƯU'}</span>`;
+
+            if (image) {
+                iconWrap.classList.add('hidden');
+                thumbWrap.classList.remove('hidden');
+                thumbImg.src = image;
+                thumbBadge.classList.remove('hidden');
+                thumbBadge.className = 'toast-thumb-badge absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center ring-2 ring-slate-900 shadow-xs toast-heart-pop';
+                thumbBadge.style.cssText = 'background-color: #f59e0b !important; color: #ffffff !important;';
+                badgeIcon.textContent = 'bookmark';
+                badgeIcon.style.color = '#ffffff';
+            }
+        } else if (type === 'unbookmark') {
+            indicator.className = 'toast-indicator absolute left-0 top-0 bottom-0 w-1.5 bg-slate-500';
+            iconWrap.className = 'toast-icon-wrap w-10 h-10 rounded-xl flex items-center justify-center font-bold shrink-0';
+            iconWrap.style.cssText = 'background-color: #475569 !important; box-shadow: 0 4px 14px rgba(71, 85, 105, 0.45) !important;';
+            iconEl.textContent = 'bookmark_remove';
+            iconEl.style.cssText = "color: #ffffff !important; font-variation-settings: 'FILL' 0;";
+            progressBar.className = 'toast-progress-bar h-full w-full bg-slate-600 origin-left transition-all ease-linear';
+            if (eyebrowTextEl) eyebrowTextEl.innerHTML = `<span class="material-symbols-outlined text-[13px]">bookmark_remove</span><span>${eyebrow || 'ĐÃ BỎ LƯU BÀI VIẾT'}</span>`;
+        } else if (type === 'saved') {
             indicator.className = 'toast-indicator absolute left-0 top-0 bottom-0 w-1.5 bg-rose-500';
             iconWrap.className = 'toast-icon-wrap w-10 h-10 rounded-xl flex items-center justify-center font-bold shrink-0';
             iconWrap.style.cssText = 'background-color: #f43f5e !important; box-shadow: 0 4px 14px rgba(244, 63, 94, 0.45) !important;';

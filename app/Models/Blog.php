@@ -57,6 +57,16 @@ class Blog extends Model
     }
 
     /**
+     * Get the users who bookmarked this blog.
+     */
+    public function savedUsers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'blog_da_luu', 'blog_id', 'user_id')
+            ->withPivot(['da_doc', 'doc_luc'])
+            ->withTimestamps();
+    }
+
+    /**
      * Get the category of the blog.
      */
     public function category(): BelongsTo

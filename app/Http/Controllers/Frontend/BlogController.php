@@ -128,7 +128,10 @@ class BlogController extends Controller
             $aiSearchData = $this->blogAiService->semanticSearch($request->search, 6);
         }
 
-        return view('frontend.blog.index', compact('blogs', 'heroBlog', 'categories', 'tags', 'aiRecommendations', 'aiSearchData'));
+        // Số bài viết đã lưu của người dùng hiện tại
+        $savedBlogsCount = Auth::check() ? Auth::user()->savedBlogs()->where('blogs.status', 'published')->count() : 0;
+
+        return view('frontend.blog.index', compact('blogs', 'heroBlog', 'categories', 'tags', 'aiRecommendations', 'aiSearchData', 'savedBlogsCount'));
     }
 
     public function show(Request $request, string $slug)
@@ -227,6 +230,18 @@ class BlogController extends Controller
         );
             
         $tags = BlogTag::has('blogs')->limit(15)->get();
+
+        // Nếu người dùng đã đăng nhập và từng lưu bài viết này, đánh dấu là đã đọc (giảm số đếm chưa đọc trên sidebar)
+        if (Auth::check()) {
+            $currentUser = Auth::user();
+            $savedRecord = $currentUser->savedBlogs()->where('blog_id', $blog->id)->first();
+            if ($savedRecord && empty($savedRecord->pivot->da_doc)) {
+                $currentUser->savedBlogs()->updateExistingPivot($blog->id, [
+                    'da_doc' => true,
+                    'doc_luc' => now(),
+                ]);
+            }
+        }
 
         return view('frontend.blog.show', compact('blog', 'relatedBlogs', 'aiRecommendations', 'tags'));
     }
