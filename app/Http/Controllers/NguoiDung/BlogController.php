@@ -338,4 +338,148 @@ class BlogController extends Controller
         $blog->delete();
         return back()->with('success', 'Đã xóa bài viết.');
     }
+
+    /**
+     * Danh sách bài viết đã lưu (Bookmark / Đọc sau) của người dùng
+     */
+    public function savedIndex(Request $request)
+    {
+        $user = Auth::user();
+
+        $query = $user->savedBlogs()
+            ->with(['user', 'category'])
+            ->where('blogs.status', 'published');
+
+        if ($request->filled('tab')) {
+            if ($request->tab === 'unread') {
+                $query->wherePivot('da_doc', false);
+            } elseif ($request->tab === 'read') {
+                $query->wherePivot('da_doc', true);
+            }
+        }
+
+        if ($request->filled('category')) {
+            $query->whereHas('category', function ($q) use ($request) {
+                $q->where('slug', $request->category);
+            });
+        }
+
+        if ($request->filled('search')) {
+            $searchTerm = trim($request->search);
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('title', 'like', "%{$searchTerm}%")
+                  ->orWhere('excerpt', 'like', "%{$searchTerm}%")
+                  ->orWhereHas('category', function ($catQ) use ($searchTerm) {
+                      $catQ->where('name', 'like', "%{$searchTerm}%");
+                  })
+                  ->orWhereHas('user', function ($userQ) use ($searchTerm) {
+                      $userQ->where('ho_ten', 'like', "%{$searchTerm}%");
+                  });
+            });
+        }
+
+        $blogs = $query->orderBy('blog_da_luu.created_at', 'desc')
+            ->paginate(9)
+            ->withQueryString();
+
+        $totalCount = $user->savedBlogs()->where('blogs.status', 'published')->count();
+        $unreadCount = $user->unreadSavedBlogsCount();
+        $readCount = $totalCount - $unreadCount;
+        $categories = BlogCategory::where('status', true)->get();
+
+        return view('nguoi-dung.blog.saved', compact('blogs', 'totalCount', 'unreadCount', 'readCount', 'categories'));
+    }
+
+    /**
+     * Bật / tắt bookmark bài viết cho người dùng đã đăng nhập qua AJAX
+     */
+    public function toggleBookmark(Request $request, $blogId)
+    {
+        $user = Auth::user();
+        $blog = Blog::findOrFail($blogId);
+
+        $exists = $user->savedBlogs()->where('blog_id', $blog->id)->exists();
+
+        if ($exists) {
+            $user->savedBlogs()->detach($blog->id);
+            $status = 'unbookmarked';
+            $message = 'Đã bỏ lưu bài viết.';
+        } else {
+            $user->savedBlogs()->attach($blog->id, ['da_doc' => false]);
+            $status = 'bookmarked';
+            $message = 'Đã lưu bài viết thành công.';
+        }
+
+        $unreadCount = $user->unreadSavedBlogsCount();
+
+        return response()->json([
+            'success' => true,
+            'status' => $status,
+            'message' => $message,
+            'count' => $unreadCount,
+            'unread_count' => $unreadCount,
+            'total_count' => $user->savedBlogs()->where('blogs.status', 'published')->count(),
+        ]);
+    }
+
+    /**
+     * Đánh dấu bài viết đã lưu là đã đọc hoặc chưa đọc
+     */
+    public function toggleRead(Request $request, $blogId)
+    {
+        $user = Auth::user();
+        $record = $user->savedBlogs()->where('blog_id', $blogId)->first();
+
+        if ($record) {
+            $currentIsRead = !empty($record->pivot->da_doc);
+            $newIsRead = !$currentIsRead;
+
+            $user->savedBlogs()->updateExistingPivot($blogId, [
+                'da_doc' => $newIsRead,
+                'doc_luc' => $newIsRead ? now() : null,
+            ]);
+
+            $unreadCount = $user->unreadSavedBlogsCount();
+            $totalCount = $user->savedBlogs()->where('blogs.status', 'published')->count();
+
+            return response()->json([
+                'success' => true,
+                'da_doc' => $newIsRead,
+                'unread_count' => $unreadCount,
+                'total_count' => $totalCount,
+                'read_count' => $totalCount - $unreadCount,
+                'message' => $newIsRead ? 'Đã đánh dấu là đã đọc.' : 'Đã đánh dấu là chưa đọc.',
+            ]);
+        }
+
+        return response()->json(['success' => false, 'message' => 'Bài viết chưa được lưu.'], 404);
+    }
+
+    /**
+     * Đánh dấu bài viết đã lưu là đã đọc (khi click xem) mà không cần tải lại trang
+     */
+    public function markRead(Request $request, $blogId)
+    {
+        $user = Auth::user();
+        $record = $user->savedBlogs()->where('blog_id', $blogId)->first();
+
+        if ($record && empty($record->pivot->da_doc)) {
+            $user->savedBlogs()->updateExistingPivot($blogId, [
+                'da_doc' => true,
+                'doc_luc' => now(),
+            ]);
+        }
+
+        $unreadCount = $user->unreadSavedBlogsCount();
+        $totalCount = $user->savedBlogs()->where('blogs.status', 'published')->count();
+
+        return response()->json([
+            'success' => true,
+            'da_doc' => true,
+            'unread_count' => $unreadCount,
+            'total_count' => $totalCount,
+            'read_count' => $totalCount - $unreadCount,
+            'message' => 'Đã đánh dấu là đã đọc.',
+        ]);
+    }
 }

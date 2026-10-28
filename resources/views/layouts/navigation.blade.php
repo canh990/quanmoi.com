@@ -2,6 +2,7 @@
     $ownerNavUrl = $ownerNavUrl ?? route('chu-quan.dang-quan');
     $ownerNavLabel = $ownerNavLabel ?? 'Đăng quán';
     $isOwnerNav = $isOwnerNav ?? false;
+    $isAccountActive = request()->is('tai-khoan*') || request()->is('thanh-vien*') || request()->routeIs('tai-khoan.*') || request()->routeIs('nguoi-dung.*');
 @endphp
 @push('styles')
 <style>
@@ -39,7 +40,7 @@
                 Blog
             </a>
             @auth
-                <a class="nav-link py-2 text-[13px] lg:text-[15px] font-semibold transition-all duration-200 {{ request()->is('tai-khoan*') ? 'active text-primary font-bold' : 'text-on-surface-variant hover:text-primary' }}" href="{{ route('tai-khoan.index') }}">
+                <a class="nav-link py-2 text-[13px] lg:text-[15px] font-semibold transition-all duration-200 {{ $isAccountActive ? 'active text-primary font-bold' : 'text-on-surface-variant hover:text-primary' }}" href="{{ route('tai-khoan.index') }}">
                     Tài khoản
                 </a>
             @endauth
@@ -173,7 +174,7 @@
 
         @auth
             <a href="{{ route('tai-khoan.index') }}" class="flex flex-col items-center justify-center flex-1 h-full py-1 text-center group min-w-0">
-                <div class="px-4 py-1 rounded-full transition-all duration-300 {{ request()->is('tai-khoan*') ? 'bg-primary-fixed text-on-primary-fixed' : 'hover:bg-surface-container-high/50' }} inline-block">
+                <div class="px-4 py-1 rounded-full transition-all duration-300 {{ $isAccountActive ? 'bg-primary-fixed text-on-primary-fixed' : 'hover:bg-surface-container-high/50' }} inline-block">
                     <div class="relative inline-flex">
                         <img alt="Ảnh đại diện" class="w-[22px] h-[22px] rounded-full object-cover ring-2 ring-primary-fixed" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->ho_ten) }}&background=ffdbcc&color=a04100&bold=true&size=64';" src="{{ Auth::user()->anh_dai_dien ?? 'https://ui-avatars.com/api/?name=' . urlencode(Auth::user()->ho_ten) . '&background=ffdbcc&color=a04100&bold=true&size=64' }}"/>
                         @if(Auth::user()->da_xac_thuc)
@@ -183,7 +184,7 @@
                         @endif
                     </div>
                 </div>
-                <span class="text-[10px] font-bold mt-1 tracking-wide {{ request()->is('tai-khoan*') ? 'text-primary' : 'text-on-surface-variant' }} truncate w-full px-1">
+                <span class="text-[10px] font-bold mt-1 tracking-wide {{ $isAccountActive ? 'text-primary' : 'text-on-surface-variant' }} truncate w-full px-1">
                     Tài khoản
                 </span>
             </a>

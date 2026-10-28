@@ -185,6 +185,237 @@
                 matchingButtons.forEach(b => b.dataset.loading = 'false');
             }
         };
+
+        // Lưu / Bỏ lưu bài viết blog yêu thích (Bookmark / Đọc sau - Độc lập)
+        window.toggleBlogBookmark = async function(btn, blogId, blogSlug, blogTitle) {
+            const card = btn.closest('a, article, .group, div');
+            const title = blogTitle || card?.querySelector('h1, h3, h4, h5')?.textContent?.trim() || 'Bài viết';
+            const img = card?.querySelector('img')?.getAttribute('src') || null;
+
+            @guest
+                if (window.showToast) {
+                    window.showToast({
+                        eyebrow: 'Lưu bài viết yêu thích',
+                        title: 'Đăng nhập để lưu bài viết',
+                        message: title ? `Đăng nhập ngay để lưu bài viết "${title}" vào trang bài viết đã lưu của bạn.` : 'Vui lòng đăng nhập để lưu bài viết vào danh sách đọc sau.',
+                        type: 'warning',
+                        image: img,
+                        actionText: 'Đăng nhập ngay',
+                        actionUrl: "{{ route('login') }}"
+                    });
+                } else {
+                    window.location.href = "{{ route('login') }}";
+                }
+                return;
+            @endguest
+
+            const key = 'quanmoi_blog_bookmarks';
+            let bookmarks = [];
+            try {
+                bookmarks = JSON.parse(localStorage.getItem(key) || '[]');
+            } catch(e) {
+                bookmarks = [];
+            }
+
+            const identifier = String(blogSlug || blogId);
+            const index = bookmarks.indexOf(identifier);
+            const isSaved = index > -1;
+            const nextSaved = !isSaved;
+
+            if (nextSaved) {
+                bookmarks.push(identifier);
+            } else {
+                bookmarks.splice(index, 1);
+            }
+
+            try {
+                localStorage.setItem(key, JSON.stringify(bookmarks));
+            } catch(e) {}
+
+            // Cập nhật tất cả các nút cùng bài viết trên trang
+            const selector = `[data-blog-id="${blogId}"], [data-blog-slug="${blogSlug}"]`;
+            document.querySelectorAll(selector).forEach(b => {
+                b.dataset.saved = nextSaved ? '1' : '0';
+                b.setAttribute('title', nextSaved ? 'Bỏ lưu bài viết' : 'Lưu bài viết');
+                const icon = b.querySelector('.material-symbols-outlined');
+                if (icon) {
+                    icon.style.fontVariationSettings = nextSaved ? "'FILL' 1" : "'FILL' 0";
+                    if (nextSaved) {
+                        icon.classList.add('text-amber-500');
+                    } else {
+                        icon.classList.remove('text-amber-500');
+                    }
+                }
+                const label = b.querySelector('.blog-bookmark-text');
+                if (label) {
+                    label.textContent = nextSaved ? 'Đã lưu' : 'Lưu bài viết';
+                }
+                b.style.transform = 'scale(1.2)';
+                setTimeout(() => { b.style.transform = 'scale(1)'; }, 180);
+            });
+
+            // Toast thông báo kèm nút "Xem trang bài viết đã lưu"
+            if (window.showToast) {
+                if (nextSaved) {
+                    window.showToast({
+                        eyebrow: 'Lưu bài viết yêu thích',
+                        title: title ? `Đã lưu "${title}"` : 'Đã lưu bài viết!',
+                        message: 'Bài viết đã được chuyển vào trang "Bài viết đã lưu" của bạn.',
+                        type: 'bookmark',
+                        image: img,
+                        actionText: 'Xem trang bài viết đã lưu',
+                        actionUrl: "{{ route('nguoi-dung.blog.saved') }}",
+                        duration: 5000
+                    });
+                } else {
+                    window.showToast({
+                        eyebrow: 'Đã bỏ lưu bài viết',
+                        title: title ? `Đã bỏ lưu "${title}"` : 'Đã bỏ lưu bài viết',
+                        message: 'Bài viết đã được gỡ khỏi trang "Bài viết đã lưu".',
+                        type: 'unbookmark',
+                        image: img,
+                        duration: 3500
+                    });
+                }
+            }
+
+            @auth
+            if (blogId) {
+                try {
+                    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
+                    const res = await fetch(`/thanh-vien/blog/${blogId}/bookmark`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': token,
+                            'Accept': 'application/json'
+                        }
+                    });
+                    const data = await res.json();
+                    if (data) {
+                        const totalCount = typeof data.total_count !== 'undefined' ? data.total_count : null;
+                        if (totalCount !== null) {
+                            document.querySelectorAll('.blog-saved-total-count-badge, #sidebar-saved-blog-count').forEach(badge => {
+                                badge.textContent = totalCount > 99 ? '99+' : totalCount;
+                                if (totalCount > 0) {
+                                    badge.classList.remove('hidden');
+                                } else {
+                                    badge.classList.add('hidden');
+                                }
+                            });
+                        }
+
+                        // Phát broadcast sync để các tab khác đồng bộ số lượng và icon
+                        if ('BroadcastChannel' in window) {
+                            try {
+                                const bc = new BroadcastChannel('qm_blog_bookmarks_sync');
+                                bc.postMessage({
+                                    blogId: blogId,
+                                    blogSlug: blogSlug,
+                                    saved: nextSaved,
+                                    totalCount: totalCount
+                                });
+                                setTimeout(() => bc.close(), 1000);
+                            } catch(e) {}
+                        }
+                    }
+                } catch(err) {
+                    console.warn('Lỗi đồng bộ bookmark lên máy chủ:', err);
+                }
+            }
+            @endauth
+        };
+
+        @auth
+        @php
+            $authSavedBlogs = Auth::user()->savedBlogs()->where('blogs.status', 'published')->select('blogs.id', 'blogs.slug')->get();
+        @endphp
+        window.__SERVER_SAVED_BLOGS = @json($authSavedBlogs);
+        @endauth
+
+        // Tự động khôi phục trạng thái bookmark chuẩn xác khi tải trang
+        function initBlogBookmarks() {
+            try {
+                const key = 'quanmoi_blog_bookmarks';
+                let bookmarks = [];
+
+                // Khi đã đăng nhập, cơ sở dữ liệu là nguồn chuẩn xác nhất
+                if (window.__SERVER_SAVED_BLOGS && Array.isArray(window.__SERVER_SAVED_BLOGS)) {
+                    bookmarks = [];
+                    window.__SERVER_SAVED_BLOGS.forEach(b => {
+                        if (b.slug) bookmarks.push(String(b.slug));
+                        if (b.id) bookmarks.push(String(b.id));
+                    });
+                    try {
+                        localStorage.setItem(key, JSON.stringify(bookmarks));
+                    } catch(e) {}
+                } else {
+                    try {
+                        bookmarks = JSON.parse(localStorage.getItem(key) || '[]');
+                    } catch(e) {
+                        bookmarks = [];
+                    }
+                }
+
+                const set = new Set(bookmarks.map(String));
+                document.querySelectorAll('.blog-bookmark-btn').forEach(b => {
+                    const id = b.dataset.blogId ? String(b.dataset.blogId) : '';
+                    const slug = b.dataset.blogSlug ? String(b.dataset.blogSlug) : '';
+                    const isSaved = (id && set.has(id)) || (slug && set.has(slug));
+
+                    b.dataset.saved = isSaved ? '1' : '0';
+                    b.setAttribute('title', isSaved ? 'Bỏ lưu bài viết' : 'Lưu bài viết');
+                    const icon = b.querySelector('.material-symbols-outlined');
+                    if (icon) {
+                        icon.style.fontVariationSettings = isSaved ? "'FILL' 1" : "'FILL' 0";
+                        if (isSaved) {
+                            icon.classList.add('text-amber-500');
+                        } else {
+                            icon.classList.remove('text-amber-500');
+                        }
+                    }
+                    const label = b.querySelector('.blog-bookmark-text');
+                    if (label) {
+                        label.textContent = isSaved ? 'Đã lưu' : 'Lưu bài viết';
+                    }
+                });
+            } catch(e) {}
+        }
+
+        // Lắng nghe broadcast đồng bộ thời gian thực giữa các tab
+        if ('BroadcastChannel' in window) {
+            try {
+                const syncBc = new BroadcastChannel('qm_blog_bookmarks_sync');
+                syncBc.onmessage = function(ev) {
+                    const msg = ev.data;
+                    if (!msg) return;
+                    if (typeof msg.totalCount !== 'undefined' && msg.totalCount !== null) {
+                        document.querySelectorAll('.blog-saved-total-count-badge, #sidebar-saved-blog-count').forEach(badge => {
+                            badge.textContent = msg.totalCount > 99 ? '99+' : msg.totalCount;
+                            if (msg.totalCount > 0) badge.classList.remove('hidden');
+                            else badge.classList.add('hidden');
+                        });
+                    }
+                    if (msg.blogId || msg.blogSlug) {
+                        const selector = `[data-blog-id="${msg.blogId}"], [data-blog-slug="${msg.blogSlug}"]`;
+                        document.querySelectorAll(selector).forEach(b => {
+                            if (!b.classList.contains('blog-bookmark-btn')) return;
+                            b.dataset.saved = msg.saved ? '1' : '0';
+                            b.setAttribute('title', msg.saved ? 'Bỏ lưu bài viết' : 'Lưu bài viết');
+                            const icon = b.querySelector('.material-symbols-outlined');
+                            if (icon) {
+                                icon.style.fontVariationSettings = msg.saved ? "'FILL' 1" : "'FILL' 0";
+                                if (msg.saved) icon.classList.add('text-amber-500');
+                                else icon.classList.remove('text-amber-500');
+                            }
+                        });
+                    }
+                };
+            } catch(e) {}
+        }
+
+        document.addEventListener('DOMContentLoaded', initBlogBookmarks);
+        window.addEventListener('pageshow', initBlogBookmarks);
     </script>
     @stack('scripts')
     

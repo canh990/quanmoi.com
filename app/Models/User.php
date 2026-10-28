@@ -119,6 +119,21 @@ class User extends Authenticatable
         return $this->belongsToMany(Quan::class, 'quan_da_luu', 'nguoi_dung_id', 'quan_id')->withTimestamps();
     }
 
+    public function savedBlogs(): BelongsToMany
+    {
+        return $this->belongsToMany(Blog::class, 'blog_da_luu', 'user_id', 'blog_id')
+            ->withPivot(['da_doc', 'doc_luc'])
+            ->withTimestamps();
+    }
+
+    public function unreadSavedBlogsCount(): int
+    {
+        return $this->savedBlogs()
+            ->where('blogs.status', 'published')
+            ->wherePivot('da_doc', false)
+            ->count();
+    }
+
     public function blogModerationLogs(): HasMany
     {
         return $this->hasMany(BlogModerationLog::class, 'admin_id');

@@ -346,21 +346,33 @@
                             <article class="article-zoom-card flex flex-col h-full bg-white rounded-2xl border border-slate-200/90 hover:border-primary/40 shadow-xs hover:shadow-xl transition-all duration-300 overflow-hidden group">
                                 
                                 <!-- Cover Image with Glass Tag Overlay -->
-                                <a href="{{ route('blog.show', $blog->slug) }}" class="article-cover-frame">
-                                    @if($blog->category)
-                                        <div class="absolute top-3 left-3 z-10 px-2.5 py-1 rounded-lg bg-white/90 backdrop-blur-md text-slate-900 font-extrabold text-[10px] uppercase tracking-wider border border-white/50 shadow-sm max-w-[calc(100%-1.5rem)] truncate">
-                                            {{ $blog->category->name }}
+                                <div class="relative w-full">
+                                    <a href="{{ route('blog.show', $blog->slug) }}" class="article-cover-frame">
+                                        @if($blog->category)
+                                            <div class="absolute top-3 left-3 z-10 px-2.5 py-1 rounded-lg bg-white/90 backdrop-blur-md text-slate-900 font-extrabold text-[10px] uppercase tracking-wider border border-white/50 shadow-sm max-w-[calc(100%-4rem)] truncate">
+                                                {{ $blog->category->name }}
+                                            </div>
+                                        @endif
+                                        
+                                        <div class="absolute bottom-3 right-3 z-10 px-2.5 py-1 rounded-md bg-black/60 backdrop-blur-md text-white font-semibold text-[10.5px] flex items-center gap-1 shadow-sm" title="Thời gian đăng bài: {{ ($blog->published_at ?? $blog->created_at)?->format('d/m/Y H:i') }}">
+                                            <span class="material-symbols-outlined text-[13px] text-amber-300">schedule</span>
+                                            <span>{{ ($blog->published_at ?? $blog->created_at)?->diffForHumans() ?? 'Vừa xong' }}</span>
                                         </div>
-                                    @endif
-                                    
-                                    <div class="absolute bottom-3 right-3 z-10 px-2.5 py-1 rounded-md bg-black/60 backdrop-blur-md text-white font-semibold text-[10.5px] flex items-center gap-1 shadow-sm" title="Thời gian đăng bài: {{ ($blog->published_at ?? $blog->created_at)?->format('d/m/Y H:i') }}">
-                                        <span class="material-symbols-outlined text-[13px] text-amber-300">schedule</span>
-                                        <span>{{ ($blog->published_at ?? $blog->created_at)?->diffForHumans() ?? 'Vừa xong' }}</span>
-                                    </div>
 
-                                    <img src="{{ $blog->cover_image_url ?? 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=600&q=80' }}" 
-                                         alt="{{ $blog->title }}"/>
-                                </a>
+                                        <img src="{{ $blog->cover_image_url ?? 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=600&q=80' }}" 
+                                             alt="{{ $blog->title }}"/>
+                                    </a>
+                                    {{-- Nút Bookmark ở góc trên bên phải ảnh --}}
+                                    <button type="button" 
+                                            onclick="event.preventDefault(); event.stopPropagation(); toggleBlogBookmark(this, '{{ $blog->id }}', '{{ $blog->slug }}', '{{ addslashes($blog->title) }}')" 
+                                            data-blog-id="{{ $blog->id }}" 
+                                            data-blog-slug="{{ $blog->slug }}" 
+                                            class="blog-bookmark-btn absolute top-3 right-3 z-10 w-8 h-8 bg-white/90 hover:bg-white backdrop-blur-md rounded-full flex items-center justify-center text-slate-700 hover:text-amber-500 shadow-sm hover:scale-110 active:scale-90 transition-transform cursor-pointer" 
+                                            title="Lưu bài viết"
+                                            aria-label="Lưu bài viết">
+                                        <span class="material-symbols-outlined text-[18px]">bookmark</span>
+                                    </button>
+                                </div>
 
                                 <!-- Card Content -->
                                 <div class="p-4 sm:p-5 flex flex-col flex-grow">
@@ -673,14 +685,21 @@
 
     // Đồng bộ số lượt xem thời gian thực mà KHÔNG CẦN RELOAD TRANG
     function syncAuthorViewsInDom(data) {
-        if (!data) return;
-        const wrappers = document.querySelectorAll(`[data-blog-slug="${data.slug}"], [data-blog-id="${data.blogId}"]`);
+        if (!data || (!data.slug && !data.blogId)) return;
+        const selectors = [];
+        if (data.slug) selectors.push(`.blog-view-count-wrap[data-blog-slug="${data.slug}"]`);
+        if (data.blogId) selectors.push(`.blog-view-count-wrap[data-blog-id="${data.blogId}"]`);
+
+        const wrappers = document.querySelectorAll(selectors.join(', '));
         let hasUpdated = false;
         wrappers.forEach(el => {
-            const countEl = el.querySelector('.author-card-view-count') || el;
+            const countEl = el.querySelector('.author-card-view-count');
             if (countEl) {
                 countEl.textContent = data.formatted;
                 hasUpdated = true;
+            }
+            if (el.hasAttribute('title')) {
+                el.setAttribute('title', `${data.formatted} lượt xem`);
             }
         });
 

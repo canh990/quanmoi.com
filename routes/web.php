@@ -152,6 +152,10 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::prefix('thanh-vien/blog')->name('nguoi-dung.blog.')->group(function () {
+        Route::get('/da-luu', [UserBlogController::class, 'savedIndex'])->name('saved');
+        Route::post('/{blog}/bookmark', [UserBlogController::class, 'toggleBookmark'])->name('bookmark.toggle');
+        Route::post('/{blog}/toggle-read', [UserBlogController::class, 'toggleRead'])->name('toggle-read');
+        Route::post('/{blog}/mark-read', [UserBlogController::class, 'markRead'])->name('mark-read');
         Route::get('/', [UserBlogController::class, 'index'])->name('index');
         Route::get('/tao-moi', [UserBlogController::class, 'create'])->name('create');
         Route::post('/', [UserBlogController::class, 'store'])->name('store');

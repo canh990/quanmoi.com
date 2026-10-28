@@ -100,6 +100,18 @@
                     <span class="material-symbols-outlined text-[16px] text-primary">forum</span>
                     <span><strong id="blog-header-comment-count" class="font-semibold text-on-surface">{{ number_format($blog->comment_count) }}</strong> bình luận</span>
                 </a>
+                <div class="w-px h-6 bg-surface-dim"></div>
+                <!-- Nút Bookmark 🔖 trong trang chi tiết bài viết -->
+                <button type="button" 
+                        onclick="toggleBlogBookmark(this, '{{ $blog->id }}', '{{ $blog->slug }}', '{{ addslashes($blog->title) }}')" 
+                        data-blog-id="{{ $blog->id }}" 
+                        data-blog-slug="{{ $blog->slug }}" 
+                        class="blog-bookmark-btn font-label-sm text-label-sm text-on-surface-variant hover:text-amber-600 transition-all flex items-center gap-1.5 bg-surface-container/60 hover:bg-amber-50 px-3 py-1 rounded-full border border-transparent hover:border-amber-400 hover:ring-2 hover:ring-amber-400/30 hover:shadow-xs cursor-pointer active:scale-95" 
+                        title="Lưu bài viết"
+                        aria-label="Lưu bài viết">
+                    <span class="material-symbols-outlined text-[16px] text-amber-500">bookmark</span>
+                    <span class="blog-bookmark-text font-medium text-on-surface">Lưu bài viết</span>
+                </button>
             </div>
 
             <!-- AI Summarizer Feature Section -->
@@ -509,22 +521,24 @@
             @if($relatedBlogs->count() > 0)
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
                     @foreach($relatedBlogs as $related)
-                        <a href="{{ route('blog.show', $related->slug) }}" class="bg-surface-card rounded-2xl overflow-hidden shadow-xs hover:shadow-xl border border-outline-variant/30 hover:border-amber-400 hover:ring-2 hover:ring-amber-400/30 transition-all duration-300 hover:-translate-y-1.5 flex flex-col group">
-                            {{-- Cover Image --}}
-                            <div class="relative aspect-[16/10] overflow-hidden bg-slate-100">
-                                <img src="{{ $related->cover_image ? (Str::startsWith($related->cover_image, 'http') ? $related->cover_image : asset('storage/'.$related->cover_image)) : 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=600&q=80' }}" 
-                                     class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
-                                     alt="{{ $related->title }}"
-                                     loading="lazy"
-                                     onerror="this.src='https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=600&q=80'">
-                                
-                                {{-- Category Badge --}}
-                                @if($related->category)
-                                    <div class="absolute top-3 left-3 bg-white/95 backdrop-blur-md text-amber-700 text-[10px] font-bold px-2.5 py-1 rounded-full shadow-xs border border-amber-200/60 uppercase tracking-wider">
-                                        {{ $related->category->name }}
-                                    </div>
-                                @endif
-                            </div>
+                        <div class="relative bg-surface-card rounded-2xl overflow-hidden shadow-xs hover:shadow-xl border border-outline-variant/30 hover:border-amber-400 hover:ring-2 hover:ring-amber-400/30 transition-all duration-300 hover:-translate-y-1.5 flex flex-col group">
+                            <a href="{{ route('blog.show', $related->slug) }}" class="flex flex-col flex-1">
+                                {{-- Cover Image --}}
+                                <div class="relative w-full h-[200px] overflow-hidden bg-slate-100 flex-shrink-0" style="height: 200px;">
+                                    <img src="{{ $related->cover_image ? (Str::startsWith($related->cover_image, 'http') ? $related->cover_image : asset('storage/'.$related->cover_image)) : 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=600&q=80' }}" 
+                                         class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+                                         style="width: 100%; height: 100%; object-fit: cover; object-position: center;"
+                                         alt="{{ $related->title }}"
+                                         loading="lazy"
+                                         onerror="this.src='https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=600&q=80'">
+                                    
+                                    {{-- Category Badge --}}
+                                    @if($related->category)
+                                        <div class="absolute top-3 left-3 bg-white/95 backdrop-blur-md text-amber-700 text-[10px] font-bold px-2.5 py-1 rounded-full shadow-xs border border-amber-200/60 uppercase tracking-wider">
+                                            {{ $related->category->name }}
+                                        </div>
+                                    @endif
+                                </div>
 
                             {{-- Content --}}
                             <div class="p-4 sm:p-5 flex flex-col flex-1 justify-between gap-3">
@@ -561,6 +575,17 @@
                                 </div>
                             </div>
                         </a>
+                        {{-- Nút Bookmark ở góc trên bên phải card liên quan --}}
+                        <button type="button" 
+                                onclick="event.preventDefault(); event.stopPropagation(); toggleBlogBookmark(this, '{{ $related->id }}', '{{ $related->slug }}', '{{ addslashes($related->title) }}')" 
+                                data-blog-id="{{ $related->id }}" 
+                                data-blog-slug="{{ $related->slug }}" 
+                                class="blog-bookmark-btn absolute top-3 right-3 z-10 w-8 h-8 bg-white/90 hover:bg-white backdrop-blur-md rounded-full flex items-center justify-center text-slate-700 hover:text-amber-500 shadow-sm hover:scale-110 active:scale-90 transition-transform cursor-pointer" 
+                                title="Lưu bài viết"
+                                aria-label="Lưu bài viết">
+                            <span class="material-symbols-outlined text-[18px]">bookmark</span>
+                        </button>
+                    </div>
                     @endforeach
                 </div>
             @else
