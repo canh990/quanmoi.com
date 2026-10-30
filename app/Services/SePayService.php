@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\AdminAuditLog;
 use App\Models\ThanhToan;
 use App\Models\User;
+use App\Notifications\WalletTransactionNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -330,6 +331,7 @@ class SePayService
                     }
 
                     Log::info("SePay Webhook: Đã cộng {$transferAmount} VNĐ vào ví user {$user->id} ({$user->email}). Số dư mới: {$newBalance} VNĐ.");
+                    $this->notifyDepositSuccess($user, $code, $transferAmount, $newBalance);
                 }
             }
 
@@ -431,6 +433,7 @@ class SePayService
                         }
 
                         Log::info("SePay IPN: Đã cộng {$paidAmount} VNĐ vào tài khoản user {$user->id} ({$user->email}). Số dư mới: {$newBalance} VNĐ.");
+                        $this->notifyDepositSuccess($user, $invoiceNumber, $paidAmount, $newBalance);
                     }
                 }
 
@@ -537,6 +540,7 @@ class SePayService
                             }
 
                             Log::info("SePay Sync: Đã cộng {$amount} VNĐ vào ví user {$user->id} ({$user->email}). Số dư mới: {$newBalance} VNĐ.");
+                            $this->notifyDepositSuccess($user, $invoiceNumber, $amount, $newBalance);
                         }
                     }
 
@@ -557,6 +561,32 @@ class SePayService
         } catch (\Throwable $e) {
             Log::warning("Lỗi đồng bộ SePay cho đơn {$invoiceNumber}: " . $e->getMessage());
             return ['success' => false, 'message' => $e->getMessage(), 'status' => $thanhToan->trang_thai];
+        }
+    }
+
+    /**
+     * Gửi thông báo biến động số dư vào Chuông thông báo của người dùng
+     */
+    public function notifyDepositSuccess(User $user, string $code, float $amount, float $newBalance): void
+    {
+        try {
+            $amountFormatted = number_format($amount, 0, ',', '.') . 'đ';
+            $balanceFormatted = number_format($newBalance, 0, ',', '.') . 'đ';
+
+            $user->notify(new WalletTransactionNotification(
+                title: "Nạp tiền thành công +{$amountFormatted}",
+                message: "Giao dịch #{$code} đã hoàn tất. Số dư ví hiện tại của bạn là {$balanceFormatted}.",
+                action: 'wallet_deposit',
+                statusLabel: 'Ví & Nạp tiền',
+                link: route('tai-khoan.vi-tien'),
+                extra: [
+                    'ma_giao_dich' => $code,
+                    'so_tien' => $amount,
+                    'so_du_moi' => $newBalance,
+                ]
+            ));
+        } catch (\Throwable $e) {
+            Log::warning('Không thể tạo thông báo nạp tiền cho user: ' . $e->getMessage());
         }
     }
 

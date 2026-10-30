@@ -91,9 +91,23 @@
 <div>
     <p class="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Vận Hành & Phân Quyền</p>
     <div class="space-y-1">
+        <a href="{{ route('admin.thanh-toan.index') }}" class="sidebar-item flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all {{ request()->routeIs('admin.thanh-toan.*') ? 'bg-[#F59E0B] text-white font-bold shadow-md' : 'text-slate-300 hover:bg-slate-800/80 hover:text-white' }}">
+            <div class="flex items-center gap-2.5">
+                <span class="material-symbols-outlined text-[18px]">account_balance_wallet</span>
+                <span>Nạp Tiền & Doanh Thu</span>
+            </div>
+            @php
+                $pendingPaymentsCount = \Illuminate\Support\Facades\Schema::hasTable('thanh_toan')
+                    ? \App\Models\ThanhToan::whereIn('trang_thai', ['cho_thanh_toan', 'cho_xu_ly'])->count()
+                    : 0;
+            @endphp
+            <span class="px-1.5 py-0.5 text-[10px] font-bold bg-amber-500/20 text-amber-300 rounded border border-amber-500/30 {{ $pendingPaymentsCount > 0 ? '' : 'hidden' }}">
+                {{ $pendingPaymentsCount }}
+            </span>
+        </a>
         <a href="{{ route('admin.thong-ke.index') }}" class="sidebar-item flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all {{ request()->routeIs('admin.thong-ke.*') ? 'bg-[#F59E0B] text-white font-bold shadow-md' : 'text-slate-300 hover:bg-slate-800/80 hover:text-white' }}">
             <span class="material-symbols-outlined text-[18px]">query_stats</span>
-            <span>Thống Kê Doanh Thu</span>
+            <span>Thống Kê Hệ Thống</span>
         </a>
         <a href="{{ route('admin.vai-tro.index') }}" class="sidebar-item flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all {{ request()->routeIs('admin.vai-tro.*') || request()->routeIs('admin.phan-quyen.*') ? 'bg-[#F59E0B] text-white font-bold shadow-md' : 'text-slate-300 hover:bg-slate-800/80 hover:text-white' }}">
             <span class="material-symbols-outlined text-[18px]">admin_panel_settings</span>

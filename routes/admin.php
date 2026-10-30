@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\KhuyenMaiAiController;
 use App\Http\Controllers\Admin\PhanQuyenController;
 use App\Http\Controllers\Admin\QuanLyNguoiDungController;
 use App\Http\Controllers\Admin\QuanLyQuanController;
+use App\Http\Controllers\Admin\QuanLyThanhToanController;
 use App\Http\Controllers\Admin\QuanLyVideoController;
 use App\Http\Controllers\Admin\QuanNoiBatController;
 use App\Http\Controllers\Admin\SeoController;
@@ -31,6 +32,16 @@ Route::middleware(['auth', 'KiemTraQuyenHan:admin'])->group(function () {
     // 2. Thống kê
     Route::get('/thong-ke', [ThongKeController::class, 'index'])->name('thong-ke.index');
     Route::get('/thong-ke/export', [ThongKeController::class, 'export'])->name('thong-ke.export');
+
+    // 2.1. Quản lý Nạp tiền & Doanh thu Ví (SePay / VietQR)
+    Route::prefix('thanh-toan')->name('thanh-toan.')->group(function () {
+        Route::get('/', [QuanLyThanhToanController::class, 'index'])->name('index');
+        Route::get('/export', [QuanLyThanhToanController::class, 'export'])->name('export');
+        Route::post('/dieu-chinh-so-du', [QuanLyThanhToanController::class, 'adjustBalance'])->name('adjust-balance');
+        Route::put('/{id}/approve', [QuanLyThanhToanController::class, 'approve'])->name('approve');
+        Route::put('/{id}/cancel', [QuanLyThanhToanController::class, 'cancel'])->name('cancel');
+        Route::post('/{id}/sync', [QuanLyThanhToanController::class, 'syncSePay'])->name('sync');
+    });
 
     // 3. Quản lý Người dùng
     Route::get('/nguoi-dung', [QuanLyNguoiDungController::class, 'index'])->name('nguoi-dung.index');

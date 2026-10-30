@@ -12,42 +12,23 @@
 
 @section('content')
 <main class="max-w-[1200px] mx-auto px-container-margin py-stack-lg min-h-[819px] pt-6">
-
-    {{-- Alert thành công --}}
-    @if(session('success'))
-    <div id="toast-success" class="mb-6 flex items-start sm:items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-2xl px-5 py-4 shadow-lg shadow-emerald-100/50" role="alert">
-        <div class="w-9 h-9 rounded-xl bg-emerald-100 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0 text-emerald-600">
-            <span class="material-symbols-outlined text-[22px]">check_circle</span>
-        </div>
-        <div class="flex-1 min-w-0">
-            <p class="font-bold text-emerald-900 text-sm">Thành công!</p>
-            <p class="text-emerald-800 text-xs mt-0.5">{{ session('success') }}</p>
-        </div>
-        <button type="button" onclick="document.getElementById('toast-success').remove()" class="text-emerald-500 hover:text-emerald-700 cursor-pointer">
-            <span class="material-symbols-outlined text-[18px]">close</span>
-        </button>
-    </div>
-    @endif
-
-    {{-- Alert lỗi validation từ Server (Hiển thị ngay trên web) --}}
-    @if(isset($errors) && $errors->any())
-    <div id="toast-errors" class="mb-6 flex items-start sm:items-center gap-3 bg-rose-50 border border-rose-200 rounded-2xl px-5 py-4 shadow-lg shadow-rose-100/50" role="alert">
-        <div class="w-9 h-9 rounded-xl bg-rose-100 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0 text-rose-600">
-            <span class="material-symbols-outlined text-[22px]">error</span>
-        </div>
-        <div class="flex-1 min-w-0">
-            <p class="font-bold text-rose-900 text-sm">Vui lòng kiểm tra lại thông tin:</p>
-            <ul class="list-disc list-inside text-rose-800 text-xs mt-1 space-y-0.5">
-                @foreach($errors->all() as $err)
-                    <li>{{ $err }}</li>
-                @endforeach
-            </ul>
-        </div>
-        <button type="button" onclick="document.getElementById('toast-errors').remove()" class="text-rose-500 hover:text-rose-700 cursor-pointer">
-            <span class="material-symbols-outlined text-[18px]">close</span>
-        </button>
-    </div>
-    @endif
+    {{-- Breadcrumb Navigation Chuẩn SEO --}}
+    <nav aria-label="Breadcrumb" class="mb-4">
+        <ol class="flex items-center gap-2 text-xs font-medium text-text-muted">
+            <li>
+                <a href="{{ url('/') }}" class="hover:text-primary transition-colors flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[16px]">home</span>
+                    <span>Trang chủ</span>
+                </a>
+            </li>
+            <li><span class="text-outline-variant">/</span></li>
+            <li>
+                <a href="{{ route('tai-khoan.index') }}" class="hover:text-primary transition-colors">Tài khoản</a>
+            </li>
+            <li><span class="text-outline-variant">/</span></li>
+            <li class="text-on-surface font-semibold" aria-current="page">Hồ sơ cá nhân</li>
+        </ol>
+    </nav>
 
     {{-- Banner báo lỗi giao diện Web ở phía Client (Không dùng popup HTML trình duyệt) --}}
     <div id="client-error-banner" class="hidden mb-6 flex items-start sm:items-center gap-3 bg-rose-50 border border-rose-200 rounded-2xl px-5 py-4 shadow-lg shadow-rose-100/50" role="alert">
@@ -62,52 +43,6 @@
             <span class="material-symbols-outlined text-[18px]">close</span>
         </button>
     </div>
-
-    @if(session('error_conflict'))
-    <div id="toast-conflict" class="mb-6 flex items-start sm:items-center gap-3 bg-amber-50 border border-amber-200 rounded-2xl px-5 py-4 shadow-lg shadow-amber-100/50">
-        <div class="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0 text-amber-600">
-            <span class="material-symbols-outlined text-[22px]">warning</span>
-        </div>
-        <div class="flex-1 min-w-0">
-            <p class="font-bold text-amber-900 text-sm">Xung đột dữ liệu!</p>
-            <p class="text-amber-800 text-xs mt-0.5">{{ session('error_conflict') }}</p>
-        </div>
-        <a href="{{ route('tai-khoan.index') }}" class="shrink-0 px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-xs transition-all flex items-center gap-1.5 cursor-pointer">
-            <span class="material-symbols-outlined text-[16px]">refresh</span>
-            <span>Tải lại trang</span>
-        </a>
-    </div>
-    @endif
-
-    @if(session('error'))
-    <div id="toast-error" class="mb-6 flex items-start sm:items-center gap-3 bg-rose-50 border border-rose-200 rounded-2xl px-5 py-4 shadow-lg shadow-rose-100/50">
-        <div class="w-9 h-9 rounded-xl bg-rose-100 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0 text-rose-600">
-            <span class="material-symbols-outlined text-[22px]">error</span>
-        </div>
-        <div class="flex-1 min-w-0">
-            <p class="font-bold text-rose-900 text-sm">Lỗi thanh toán / nạp tiền</p>
-            <p class="text-rose-800 text-xs mt-0.5">{{ session('error') }}</p>
-        </div>
-        <button type="button" onclick="document.getElementById('toast-error').remove()" class="text-rose-500 hover:text-rose-700 cursor-pointer">
-            <span class="material-symbols-outlined text-[18px]">close</span>
-        </button>
-    </div>
-    @endif
-
-    @if(session('info'))
-    <div id="toast-info" class="mb-6 flex items-start sm:items-center gap-3 bg-blue-50 border border-blue-200 rounded-2xl px-5 py-4 shadow-lg shadow-blue-100/50">
-        <div class="w-9 h-9 rounded-xl bg-blue-100 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0 text-blue-600">
-            <span class="material-symbols-outlined text-[22px]">info</span>
-        </div>
-        <div class="flex-1 min-w-0">
-            <p class="font-bold text-blue-900 text-sm">Thông báo</p>
-            <p class="text-blue-800 text-xs mt-0.5">{{ session('info') }}</p>
-        </div>
-        <button type="button" onclick="document.getElementById('toast-info').remove()" class="text-blue-500 hover:text-blue-700 cursor-pointer">
-            <span class="material-symbols-outlined text-[18px]">close</span>
-        </button>
-    </div>
-    @endif
 
     <div class="grid grid-cols-1 md:grid-cols-12 gap-stack-lg">
         <!-- Sidebar Navigation -->

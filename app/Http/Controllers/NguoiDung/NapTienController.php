@@ -32,6 +32,32 @@ class NapTienController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
+        // Đồng bộ thông báo cho các giao dịch nạp tiền thành công trước đó nếu chưa có trong chuông thông báo
+        try {
+            $successfulDeposits = $lichSuNapTien->getCollection()->where('trang_thai', 'thanh_cong');
+            if ($successfulDeposits->isNotEmpty()) {
+                $existingCodes = $user->notifications()
+                    ->where('data->action', 'wallet_deposit')
+                    ->get()
+                    ->pluck('data.ma_giao_dich')
+                    ->filter()
+                    ->all();
+
+                foreach ($successfulDeposits as $deposit) {
+                    if ($deposit->ma_giao_dich && !in_array($deposit->ma_giao_dich, $existingCodes, true)) {
+                        $this->sePayService->notifyDepositSuccess(
+                            $user,
+                            (string) $deposit->ma_giao_dich,
+                            (float) $deposit->so_tien,
+                            (float) ($user->so_du ?? 0)
+                        );
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            // Bỏ qua nếu bảng notifications chưa sẵn sàng
+        }
+
         return view('nguoi-dung.tai-khoan.vi-tien', compact('user', 'lichSuNapTien'));
     }
 

@@ -1147,7 +1147,7 @@
                     gridNearby.classList.remove('hidden');
                     gridNearby.classList.add('grid');
                     gridNearby.innerHTML = `
-                        <div class="col-span-1 sm:col-span-2 lg:col-span-3 bg-white rounded-2xl p-8 text-center border border-gray-100 shadow-sm">
+                        <div class="col-span-full w-full max-w-2xl mx-auto bg-white rounded-2xl p-8 text-center border border-gray-100 shadow-sm flex flex-col items-center justify-center" style="grid-column: 1 / -1;">
                             <span class="material-symbols-outlined text-4xl text-amber-500 mb-2">location_off</span>
                             <h3 class="font-bold text-gray-900 text-base mb-1">Chưa có quán ăn trong bán kính lân cận</h3>
                             <p class="text-xs text-gray-500 max-w-md mx-auto">Hiện tại chưa có quán ăn nào thuộc hệ thống Quán Mới gần tọa độ của bạn. Bạn hãy khám phá các quán ăn nổi bật phía trên nhé!</p>

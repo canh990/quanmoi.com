@@ -80,7 +80,7 @@ class ThongBaoController extends Controller
             $query->where('data->action', 'new_review');
         } elseif ($tab === 'he_thong') {
             $query->where(function ($q) {
-                $q->whereIn('data->action', ['broadcast', 'role_updated', 'verified', 'verification_rejected', 'permission_granted', 'permission_denied', 'permission_reset', 'status_updated']);
+                $q->whereIn('data->action', ['broadcast', 'role_updated', 'verified', 'verification_rejected', 'permission_granted', 'permission_denied', 'permission_reset', 'status_updated', 'wallet_deposit', 'security_updated']);
             });
         }
 
@@ -210,8 +210,13 @@ class ThongBaoController extends Controller
             return route('blog.show', $data['slug']);
         }
 
+        // Ví & Nạp tiền
+        if ($action === 'wallet_deposit') {
+            return route('tai-khoan.vi-tien');
+        }
+
         // Tài khoản, phân quyền, xác thực
-        if (in_array($action, ['verified', 'verification_rejected', 'verification_requested', 'role_updated', 'status_updated', 'broadcast']) || str_starts_with($action, 'permission_')) {
+        if (in_array($action, ['verified', 'verification_rejected', 'verification_requested', 'role_updated', 'status_updated', 'broadcast', 'security_updated']) || str_starts_with($action, 'permission_')) {
             return route('tai-khoan.index');
         }
 

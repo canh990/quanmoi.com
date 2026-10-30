@@ -553,27 +553,21 @@
 
 @push('scripts')
 <script>
-    function showToast(msg, icon = 'check_circle') {
-        const toast = document.getElementById('author-toast');
-        const toastMsg = document.getElementById('toast-msg');
-        const toastIcon = document.getElementById('toast-icon');
-        if (!toast) return;
-
-        toastMsg.textContent = msg;
-        toastIcon.textContent = icon;
-        toast.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
-        toast.classList.add('translate-y-0', 'opacity-100');
-
-        setTimeout(() => {
-            toast.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
-            toast.classList.remove('translate-y-0', 'opacity-100');
-        }, 3000);
+    function showAuthorToast(msg, icon = 'check_circle') {
+        if (window.showToast) {
+            window.showToast({
+                title: 'Thông báo',
+                message: msg,
+                type: icon === 'notifications_off' ? 'info' : 'success'
+            });
+            return;
+        }
     }
 
     function copyAuthorLink() {
         const url = window.location.href;
         navigator.clipboard.writeText(url).then(() => {
-            showToast('Đã sao chép đường dẫn hồ sơ tác giả!', 'link');
+            showAuthorToast('Đã sao chép đường dẫn hồ sơ tác giả!', 'link');
         }).catch(() => {
             prompt('Sao chép đường dẫn:', url);
         });
@@ -591,13 +585,13 @@
             btn.className = 'w-full px-4 py-2.5 rounded-xl bg-primary hover:bg-primary/95 text-white font-bold text-xs shadow-xs hover:shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-98';
             btnText.textContent = 'Theo dõi tác giả';
             btnIcon.textContent = 'bookmark_add';
-            showToast('Đã bỏ theo dõi tác giả', 'notifications_off');
+            showAuthorToast('Đã bỏ theo dõi tác giả', 'notifications_off');
         } else {
             localStorage.setItem(key, 'true');
             btn.className = 'w-full px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs hover:shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-98';
             btnText.textContent = 'Đang theo dõi';
             btnIcon.textContent = 'done_all';
-            showToast('Đã theo dõi tác giả! Bạn sẽ nhận thông báo khi có bài viết mới.', 'favorite');
+            showAuthorToast('Đã theo dõi tác giả! Bạn sẽ nhận thông báo khi có bài viết mới.', 'favorite');
         }
     }
 
