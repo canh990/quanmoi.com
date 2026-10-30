@@ -104,4 +104,64 @@ class BlogComment extends Model
 
         return $this->likes()->where('user_id', $user->id)->exists();
     }
+
+    /**
+     * Lấy cảm xúc của user hiện tại trên bình luận.
+     */
+    public function userReaction(?User $user = null): ?BlogCommentLike
+    {
+        $userId = $user ? $user->id : auth()->id();
+        if (! $userId) {
+            return null;
+        }
+
+        if ($this->relationLoaded('likes')) {
+            return $this->likes->firstWhere('user_id', $userId);
+        }
+
+        return $this->likes()->where('user_id', $userId)->first();
+    }
+
+    /**
+     * Thống kê tổng hợp số lượng và icon cảm xúc nhiều nhất trên bình luận.
+     */
+    public function getReactionsSummaryAttribute(): array
+    {
+        try {
+            if ($this->relationLoaded('likes')) {
+                $likesCollection = $this->likes;
+                $total = $likesCollection->count();
+                if ($total === 0) {
+                    return ['total' => 0, 'breakdown' => [], 'top' => [], 'top_one' => null];
+                }
+                $breakdown = [];
+                foreach ($likesCollection as $like) {
+                    $r = !empty($like->reaction) ? $like->reaction : 'like';
+                    $breakdown[$r] = ($breakdown[$r] ?? 0) + 1;
+                }
+            } else {
+                $breakdown = $this->likes()
+                    ->selectRaw("COALESCE(NULLIF(reaction, ''), 'like') as reaction_key, count(*) as count")
+                    ->groupBy('reaction_key')
+                    ->orderByRaw('count(*) DESC')
+                    ->pluck('count', 'reaction_key')
+                    ->toArray();
+
+                $total = (int) array_sum($breakdown);
+            }
+
+            arsort($breakdown);
+            $top = array_slice(array_keys($breakdown), 0, 3);
+            $topOne = !empty($top) ? $top[0] : null;
+
+            return [
+                'total' => $total,
+                'breakdown' => $breakdown,
+                'top' => $top,
+                'top_one' => $topOne,
+            ];
+        } catch (\Throwable $e) {
+            return ['total' => 0, 'breakdown' => [], 'top' => [], 'top_one' => null];
+        }
+    }
 }

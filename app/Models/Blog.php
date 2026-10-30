@@ -126,6 +126,62 @@ class Blog extends Model
     }
 
     /**
+     * Get the food reactions for the blog.
+     */
+    public function reactions(): HasMany
+    {
+        return $this->hasMany(BlogReaction::class);
+    }
+
+    /**
+     * Lấy cảm xúc của người dùng hiện tại đối với bài viết này.
+     */
+    public function userReaction(?User $user = null): ?BlogReaction
+    {
+        $userId = $user ? $user->id : auth()->id();
+        if (! $userId) {
+            return null;
+        }
+
+        try {
+            return $this->reactions()->where('user_id', $userId)->first();
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
+
+    /**
+     * Thống kê tổng hợp số lượng và breakdown cảm xúc ẩm thực.
+     */
+    public function getReactionsSummaryAttribute(): array
+    {
+        try {
+            if (! \Illuminate\Support\Facades\Schema::hasTable('blog_reactions')) {
+                return ['total' => 0, 'breakdown' => [], 'top' => []];
+            }
+
+            $breakdown = $this->reactions()
+                ->selectRaw('reaction, count(*) as count')
+                ->groupBy('reaction')
+                ->orderByRaw('count(*) DESC')
+                ->pluck('count', 'reaction')
+                ->toArray();
+
+            $total = (int) array_sum($breakdown);
+            arsort($breakdown);
+            $top = array_slice(array_keys($breakdown), 0, 3);
+
+            return [
+                'total' => $total,
+                'breakdown' => $breakdown,
+                'top' => $top,
+            ];
+        } catch (\Throwable $e) {
+            return ['total' => 0, 'breakdown' => [], 'top' => []];
+        }
+    }
+
+    /**
      * Get the moderation logs for the blog.
      */
     public function moderationLogs(): HasMany

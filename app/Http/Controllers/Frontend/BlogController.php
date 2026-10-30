@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Frontend;
 use App\Http\Controllers\Controller;
 use App\Models\Blog;
 use App\Models\BlogCategory;
+use App\Models\BlogReaction;
 use App\Models\BlogSubscriber;
 use App\Models\BlogTag;
 use App\Models\User;
@@ -243,7 +244,10 @@ class BlogController extends Controller
             }
         }
 
-        return view('frontend.blog.show', compact('blog', 'relatedBlogs', 'aiRecommendations', 'tags'));
+        $userReaction = Auth::check() ? $blog->userReaction(Auth::user()) : null;
+        $reactionsSummary = $blog->reactions_summary;
+
+        return view('frontend.blog.show', compact('blog', 'relatedBlogs', 'aiRecommendations', 'tags', 'userReaction', 'reactionsSummary'));
     }
 
     /**
@@ -271,6 +275,93 @@ class BlogController extends Controller
             'incremented' => $incremented,
             'view_count' => (int) $blog->view_count,
             'formatted_view_count' => number_format((int) $blog->view_count),
+        ]);
+    }
+
+    /**
+     * Thả / thay đổi / gỡ cảm xúc ẩm thực (Food Reactions) cho bài viết blog.
+     * Hỗ trợ 6 loại cảm xúc: like, love, drool, fire, cry, angry.
+     */
+    public function toggleReaction(Request $request, string $slug)
+    {
+        if (! Auth::check()) {
+            return response()->json([
+                'success' => false,
+                'require_auth' => true,
+                'login_url' => route('login'),
+                'message' => 'Vui lòng đăng nhập để thả cảm xúc ẩm thực cho bài viết này.',
+            ], 401);
+        }
+
+        $user = Auth::user();
+        $blog = Blog::where('slug', $slug)->firstOrFail();
+
+        $validReactions = array_keys(BlogReaction::TYPES);
+        $chosenReaction = $request->input('reaction', 'like');
+
+        if (! in_array($chosenReaction, $validReactions, true)) {
+            $chosenReaction = 'like';
+        }
+
+        // Tự động khởi tạo bảng blog_reactions an toàn nếu chưa chạy migrate
+        if (! \Illuminate\Support\Facades\Schema::hasTable('blog_reactions')) {
+            \Illuminate\Support\Facades\Schema::create('blog_reactions', function ($table) {
+                $table->id();
+                $table->foreignId('blog_id')->constrained('blogs')->onDelete('cascade');
+                $table->string('user_id', 36);
+                $table->foreign('user_id')->references('id')->on('nguoi_dung')->onDelete('cascade');
+                $table->string('reaction', 20)->default('like');
+                $table->timestamps();
+                $table->unique(['blog_id', 'user_id']);
+                $table->index(['blog_id', 'reaction']);
+            });
+        }
+
+        $existing = BlogReaction::where('blog_id', $blog->id)
+            ->where('user_id', $user->id)
+            ->first();
+
+        $action = 'added';
+        $currentReactionKey = null;
+
+        if ($existing) {
+            if ($existing->reaction === $chosenReaction) {
+                // Nhấn lại cùng một cảm xúc -> Hủy cảm xúc (Toggle off)
+                $existing->delete();
+                $action = 'removed';
+                $currentReactionKey = null;
+            } else {
+                // Đổi sang cảm xúc khác
+                $existing->update(['reaction' => $chosenReaction]);
+                $action = 'updated';
+                $currentReactionKey = $chosenReaction;
+            }
+        } else {
+            // Thả cảm xúc mới
+            BlogReaction::create([
+                'blog_id' => $blog->id,
+                'user_id' => $user->id,
+                'reaction' => $chosenReaction,
+            ]);
+            $action = 'added';
+            $currentReactionKey = $chosenReaction;
+        }
+
+        $summary = $blog->reactions_summary;
+        $reactionConfig = $currentReactionKey ? BlogReaction::TYPES[$currentReactionKey] : null;
+
+        return response()->json([
+            'success' => true,
+            'action' => $action,
+            'current_reaction' => $currentReactionKey,
+            'reaction_info' => $reactionConfig,
+            'total_count' => $summary['total'],
+            'formatted_count' => number_format($summary['total']),
+            'breakdown' => $summary['breakdown'],
+            'top_reactions' => $summary['top'],
+            'message' => $action === 'removed'
+                ? 'Đã gỡ cảm xúc.'
+                : 'Đã thả cảm xúc ' . ($reactionConfig['name'] ?? '') . ' ' . ($reactionConfig['emoji'] ?? ''),
         ]);
     }
 
@@ -467,7 +558,7 @@ class BlogController extends Controller
     }
 
     /**
-     * Thích / Bỏ thích bình luận
+     * Thả cảm xúc / Bỏ cảm xúc bình luận (Food Reactions for Comments)
      */
     public function toggleLikeComment(Request $request, string $slug, $commentId)
     {
@@ -481,32 +572,190 @@ class BlogController extends Controller
         if (! $user) {
             return response()->json([
                 'success' => false, 
-                'message' => 'Vui lòng đăng nhập để thích bình luận.'
+                'require_auth' => true,
+                'login_url' => route('login'),
+                'message' => 'Vui lòng đăng nhập để thả cảm xúc bình luận.'
             ], 401);
+        }
+
+        // Đảm bảo cột reaction tồn tại an toàn
+        if (! \Illuminate\Support\Facades\Schema::hasColumn('blog_comment_likes', 'reaction')) {
+            \Illuminate\Support\Facades\Schema::table('blog_comment_likes', function ($table) {
+                $table->string('reaction', 20)->default('like')->after('user_id');
+                $table->index(['comment_id', 'reaction']);
+            });
+        }
+
+        $validReactions = array_keys(\App\Models\BlogReaction::TYPES);
+        $chosenReaction = $request->input('reaction', 'like');
+        if (! in_array($chosenReaction, $validReactions, true)) {
+            $chosenReaction = 'like';
         }
 
         $existingLike = \App\Models\BlogCommentLike::where('comment_id', $comment->id)
             ->where('user_id', $user->id)
             ->first();
 
+        $action = 'added';
+        $currentReactionKey = null;
+
         if ($existingLike) {
-            $existingLike->delete();
-            $comment->decrement('likes_count');
-            $liked = false;
+            if ($existingLike->reaction === $chosenReaction) {
+                // Nhấn cùng cảm xúc -> Gỡ bỏ (Toggle off)
+                $existingLike->delete();
+                $comment->decrement('likes_count');
+                $action = 'removed';
+                $currentReactionKey = null;
+            } else {
+                // Đổi cảm xúc khác
+                $existingLike->update(['reaction' => $chosenReaction]);
+                $action = 'updated';
+                $currentReactionKey = $chosenReaction;
+            }
         } else {
+            // Thả cảm xúc mới
             \App\Models\BlogCommentLike::create([
                 'comment_id' => $comment->id,
                 'user_id' => $user->id,
+                'reaction' => $chosenReaction,
             ]);
             $comment->increment('likes_count');
-            $liked = true;
+            $action = 'added';
+            $currentReactionKey = $chosenReaction;
         }
+
+        $summary = $comment->fresh(['likes'])->reactions_summary;
+        $reactionConfig = $currentReactionKey && isset(\App\Models\BlogReaction::TYPES[$currentReactionKey]) 
+            ? \App\Models\BlogReaction::TYPES[$currentReactionKey] 
+            : null;
+
+        $topOneKey = $summary['top_one'] ?? null;
+        $topOneConfig = $topOneKey && isset(\App\Models\BlogReaction::TYPES[$topOneKey])
+            ? \App\Models\BlogReaction::TYPES[$topOneKey]
+            : null;
 
         return response()->json([
             'success' => true,
-            'liked' => $liked,
-            'likes_count' => max(0, (int) $comment->fresh()->likes_count),
+            'action' => $action,
+            'liked' => !empty($currentReactionKey),
+            'current_reaction' => $currentReactionKey,
+            'reaction_info' => $reactionConfig,
+            'total_count' => $summary['total'],
+            'formatted_count' => number_format($summary['total']),
+            'likes_count' => $summary['total'],
+            'top_one' => $topOneKey,
+            'top_one_emoji' => $topOneConfig ? $topOneConfig['emoji'] : '👍',
+            'top_one_name' => $topOneConfig ? $topOneConfig['name'] : 'Hữu ích',
+            'breakdown' => $summary['breakdown'],
+            'message' => $action === 'removed' 
+                ? 'Đã gỡ cảm xúc bình luận.' 
+                : 'Đã thả cảm xúc ' . ($reactionConfig['name'] ?? ''),
         ]);
+    }
+
+    /**
+     * Lấy danh sách người đã thả cảm xúc cho bài viết blog.
+     */
+    public function getReactionsList(Request $request, string $slug)
+    {
+        $blog = Blog::where('slug', $slug)->firstOrFail();
+        $filter = $request->query('reaction', 'all');
+
+        $allReactions = $blog->reactions()->with(['user.vaiTro'])->latest()->get();
+
+        $counts = [
+            'all' => $allReactions->count(),
+        ];
+        foreach (array_keys(\App\Models\BlogReaction::TYPES) as $typeKey) {
+            $counts[$typeKey] = $allReactions->where('reaction', $typeKey)->count();
+        }
+
+        $filtered = ($filter && $filter !== 'all')
+            ? $allReactions->where('reaction', $filter)
+            : $allReactions;
+
+        $users = $filtered->map(function ($r) use ($blog) {
+            $u = $r->user;
+            $type = \App\Models\BlogReaction::TYPES[$r->reaction] ?? \App\Models\BlogReaction::TYPES['like'];
+            return [
+                'id' => $u ? $u->id : null,
+                'name' => $u ? $u->ho_ten : 'Người dùng',
+                'avatar' => $u ? $u->anh_dai_dien_url : 'https://ui-avatars.com/api/?name=User&background=random',
+                'reaction' => $r->reaction,
+                'reaction_emoji' => $type['emoji'],
+                'reaction_name' => $type['name'],
+                'reaction_color' => $type['color'] ?? '#f59e0b',
+                'created_at_human' => $r->created_at ? $r->created_at->diffForHumans() : 'Mới đây',
+                'is_author' => $u && $u->id === $blog->user_id,
+                'is_admin' => $u && $u->isAdmin(),
+            ];
+        })->values();
+
+        return response()->json([
+            'success' => true,
+            'title' => 'Cảm xúc bài viết',
+            'total_count' => $counts['all'],
+            'counts' => $counts,
+            'users' => $users,
+        ]);
+    }
+
+    /**
+     * Lấy danh sách người đã thả cảm xúc cho bình luận hoặc phản hồi.
+     */
+    public function getCommentReactionsList(Request $request, string $slug, $commentId)
+    {
+        try {
+            $blog = Blog::where('slug', $slug)->firstOrFail();
+            $comment = \App\Models\BlogComment::where('id', $commentId)->where('blog_id', $blog->id)->firstOrFail();
+            $filter = $request->query('reaction', 'all');
+
+            $allLikes = $comment->likes()->with(['user.vaiTro'])->latest()->get();
+
+            $counts = [
+                'all' => $allLikes->count(),
+            ];
+            foreach (array_keys(\App\Models\BlogReaction::TYPES) as $typeKey) {
+                $counts[$typeKey] = $allLikes->where('reaction', $typeKey)->count();
+            }
+
+            $filtered = ($filter && $filter !== 'all')
+                ? $allLikes->where('reaction', $filter)
+                : $allLikes;
+
+            $users = $filtered->map(function ($like) use ($blog, $comment) {
+                $u = $like->user;
+                $reactionKey = $like->reaction ?: 'like';
+                $type = \App\Models\BlogReaction::TYPES[$reactionKey] ?? \App\Models\BlogReaction::TYPES['like'];
+                return [
+                    'id' => $u ? $u->id : null,
+                    'name' => $u ? $u->ho_ten : 'Người dùng',
+                    'avatar' => $u ? $u->anh_dai_dien_url : 'https://ui-avatars.com/api/?name=User&background=random',
+                    'reaction' => $reactionKey,
+                    'reaction_emoji' => $type['emoji'],
+                    'reaction_name' => $type['name'],
+                    'reaction_color' => $type['color'] ?? '#f59e0b',
+                    'created_at_human' => $like->created_at ? $like->created_at->diffForHumans() : 'Mới đây',
+                    'is_author' => $u && $u->id === $blog->user_id,
+                    'is_comment_author' => $u && $u->id === $comment->user_id,
+                    'is_admin' => $u && $u->isAdmin(),
+                ];
+            })->values();
+
+            return response()->json([
+                'success' => true,
+                'title' => 'Cảm xúc bình luận',
+                'total_count' => $counts['all'],
+                'counts' => $counts,
+                'users' => $users,
+            ]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('getCommentReactionsList error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**

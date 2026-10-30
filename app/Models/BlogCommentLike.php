@@ -13,6 +13,7 @@ class BlogCommentLike extends Model
     protected $fillable = [
         'comment_id',
         'user_id',
+        'reaction',
     ];
 
     public function comment(): BelongsTo
