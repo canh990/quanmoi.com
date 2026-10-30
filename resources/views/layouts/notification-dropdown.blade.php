@@ -205,6 +205,16 @@
                             $nIconClass = 'bg-indigo-100 text-indigo-700';
                             $nBadgeClass = 'bg-indigo-100 text-indigo-700';
                             $nStatusLabel = 'Chờ xác thực';
+                        } elseif ($nAction === 'wallet_deposit') {
+                            $nIcon = 'account_balance_wallet';
+                            $nIconClass = 'bg-emerald-100 text-emerald-700';
+                            $nBadgeClass = 'bg-emerald-100 text-emerald-700';
+                            $nStatusLabel = $nData['status_label'] ?? 'Ví & Nạp tiền';
+                        } elseif ($nAction === 'security_updated') {
+                            $nIcon = 'lock';
+                            $nIconClass = 'bg-blue-100 text-blue-700';
+                            $nBadgeClass = 'bg-blue-100 text-blue-700';
+                            $nStatusLabel = $nData['status_label'] ?? 'Bảo mật';
                         }
                     @endphp
                     <div onclick="handleNotifClick('{{ $notifId }}', '{{ $nLink }}')" class="p-3.5 hover:bg-gray-50/80 transition-colors cursor-pointer flex items-start gap-3 relative {{ $isUnread ? 'bg-amber-50/30' : '' }}">

@@ -223,6 +223,16 @@ class TaiKhoanController extends Controller
             'mat_khau' => Hash::make($request->password),
         ]);
 
+        try {
+            $user->notify(new \App\Notifications\WalletTransactionNotification(
+                title: 'Đổi mật khẩu thành công',
+                message: 'Mật khẩu tài khoản của bạn vừa được cập nhật an toàn.',
+                action: 'security_updated',
+                statusLabel: 'Bảo mật',
+                link: route('tai-khoan.index')
+            ));
+        } catch (\Throwable $e) {}
+
         return redirect()->route('tai-khoan.index')->with('success', 'Đổi mật khẩu thành công.');
     }
 

@@ -233,12 +233,28 @@
             }
         }
 
-        // Show floating toast in Vietnamese (Dark theme chuẩn Hình 3)
+        // Show floating toast in Vietnamese (Đồng bộ 1 giao diện duy nhất qua window.showToast)
         window.showUserToast = function(title, message, link = '', type = 'info', icon = 'notifications_active') {
+            playChime();
+
+            if (window.showToast) {
+                window.showToast({
+                    eyebrow: isAdmin ? 'THÔNG BÁO QUẢN TRỊ' : 'THÔNG BÁO MỚI',
+                    title: title || 'Thông báo mới',
+                    message: message || '',
+                    type: type || 'info',
+                    actionText: link ? 'Xem chi tiết' : null,
+                    actionUrl: link || null,
+                    duration: 5000
+                });
+                return;
+            }
+
             const container = document.getElementById('user-floating-toast-container');
             if (!container) return;
 
-            playChime();
+            // Chỉ giữ duy nhất 1 thông báo hiển thị tại một thời điểm
+            container.innerHTML = '';
 
             let bgHex = '#10b981'; // Emerald (thành công)
             let shadowHex = 'rgba(16, 185, 129, 0.45)';
@@ -549,6 +565,14 @@
                     iconName = 'verified_user';
                     iconClass = 'bg-indigo-100 text-indigo-700';
                     statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-700">Chờ xác thực</span>';
+                } else if (action === 'wallet_deposit') {
+                    iconName = 'account_balance_wallet';
+                    iconClass = 'bg-emerald-100 text-emerald-700';
+                    statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">' + (item.status_label || 'Ví & Nạp tiền') + '</span>';
+                } else if (action === 'security_updated') {
+                    iconName = 'lock';
+                    iconClass = 'bg-blue-100 text-blue-700';
+                    statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700">' + (item.status_label || 'Bảo mật') + '</span>';
                 }
 
                 return `
@@ -802,9 +826,9 @@
                         let toastType = 'info';
                         let toastIcon = 'notifications';
 
-                        if (['published', 'approved', 'verified', 'verified_granted', 'permission_granted', 'restored', 'featured_granted'].includes(action)) {
+                        if (['published', 'approved', 'verified', 'verified_granted', 'permission_granted', 'restored', 'featured_granted', 'wallet_deposit', 'security_updated'].includes(action)) {
                             toastType = 'success';
-                            toastIcon = action === 'featured_granted' ? 'hotel_class' : (['verified', 'verified_granted'].includes(action) ? 'verified' : (action === 'permission_granted' ? 'lock_open' : (action === 'restored' ? 'unarchive' : 'check_circle')));
+                            toastIcon = action === 'wallet_deposit' ? 'account_balance_wallet' : (action === 'security_updated' ? 'lock' : (action === 'featured_granted' ? 'hotel_class' : (['verified', 'verified_granted'].includes(action) ? 'verified' : (action === 'permission_granted' ? 'lock_open' : (action === 'restored' ? 'unarchive' : 'check_circle')))));
                         } else if (['rejected', 'verification_rejected', 'permission_denied', 'deleted', 'force_deleted'].includes(action)) {
                             toastType = 'error';
                             toastIcon = action === 'permission_denied' ? 'lock' : (['deleted', 'force_deleted'].includes(action) ? 'delete_forever' : (action === 'verification_rejected' ? 'gpp_bad' : 'cancel'));

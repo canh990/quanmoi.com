@@ -958,6 +958,10 @@
                     <span class="material-symbols-outlined text-[18px]">manage_accounts</span>
                     <span>Quản Lý Người Dùng & Tài Khoản</span>
                 </a>
+                <a href="{{ route('admin.thanh-toan.index') }}" class="cmd-item flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 text-slate-700 font-medium transition-colors">
+                    <span class="material-symbols-outlined text-[18px]">account_balance_wallet</span>
+                    <span>Quản Lý Nạp Tiền & Doanh Thu Ví</span>
+                </a>
                 <a href="{{ route('admin.thong-ke.index') }}" class="cmd-item flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 text-slate-700 font-medium transition-colors">
                     <span class="material-symbols-outlined text-[18px]">query_stats</span>
                     <span>Báo Cáo & Thống Kê Doanh Thu</span>

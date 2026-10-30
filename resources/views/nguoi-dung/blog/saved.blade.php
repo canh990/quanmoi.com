@@ -31,23 +31,28 @@
 
 @section('content')
 <main class="max-w-[1200px] mx-auto px-container-margin py-stack-lg min-h-[819px] pt-6">
+    {{-- Breadcrumb Navigation Chuẩn SEO --}}
+    <nav aria-label="Breadcrumb" class="mb-4">
+        <ol class="flex items-center gap-2 text-xs font-medium text-text-muted">
+            <li>
+                <a href="{{ url('/') }}" class="hover:text-primary transition-colors flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[16px]">home</span>
+                    <span>Trang chủ</span>
+                </a>
+            </li>
+            <li><span class="text-outline-variant">/</span></li>
+            <li>
+                <a href="{{ route('tai-khoan.index') }}" class="hover:text-primary transition-colors">Tài khoản</a>
+            </li>
+            <li><span class="text-outline-variant">/</span></li>
+            <li class="text-on-surface font-semibold" aria-current="page">Bài viết đã lưu</li>
+        </ol>
+    </nav>
 
     <div class="grid grid-cols-1 md:grid-cols-12 gap-stack-lg">
         @include('nguoi-dung.partials.sidebar')
 
         <div class="md:col-span-9 space-y-stack-lg">
-            {{-- Breadcrumbs --}}
-            <nav class="flex items-center gap-2 text-xs text-text-muted mb-2 font-medium" aria-label="Breadcrumb">
-                <a href="{{ route('home') }}" class="hover:text-primary transition-colors flex items-center gap-1">
-                    <span class="material-symbols-outlined text-sm">home</span>
-                    <span>Trang chủ</span>
-                </a>
-                <span class="text-slate-300">/</span>
-                <a href="{{ route('tai-khoan.index') }}" class="hover:text-primary transition-colors">Tài khoản</a>
-                <span class="text-slate-300">/</span>
-                <span class="text-on-surface font-semibold">Bài viết đã lưu</span>
-            </nav>
-
             {{-- Header --}}
             <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-200/80 gap-4">
                 <div>

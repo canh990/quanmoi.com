@@ -78,7 +78,29 @@
 @endpush
 
 @section('content')
-<main class="max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-screen">
+<main class="max-w-[1200px] mx-auto px-container-margin py-stack-lg min-h-[819px] pt-6">
+    {{-- Breadcrumb Navigation Chuẩn SEO --}}
+    <nav aria-label="Breadcrumb" class="mb-4">
+        <ol class="flex items-center gap-2 text-xs font-medium text-text-muted">
+            <li>
+                <a href="{{ url('/') }}" class="hover:text-primary transition-colors flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[16px]">home</span>
+                    <span>Trang chủ</span>
+                </a>
+            </li>
+            <li><span class="text-outline-variant">/</span></li>
+            <li>
+                <a href="{{ route('tai-khoan.index') }}" class="hover:text-primary transition-colors">Tài khoản</a>
+            </li>
+            <li><span class="text-outline-variant">/</span></li>
+            <li>
+                <a href="{{ route('nguoi-dung.blog.index') }}" class="hover:text-primary transition-colors">Quản lý bài viết</a>
+            </li>
+            <li><span class="text-outline-variant">/</span></li>
+            <li class="text-on-surface font-semibold" aria-current="page">Viết bài mới</li>
+        </ol>
+    </nav>
+
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         @include('nguoi-dung.partials.sidebar')
         
@@ -115,23 +137,6 @@
                     </button>
                 </div>
             </div>
-
-    @if(session('success'))
-        <div class="page-success-banner mb-6 p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl shadow-sm flex items-center justify-between gap-3">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
-                    <span class="material-symbols-outlined text-2xl">check_circle</span>
-                </div>
-                <div>
-                    <h4 class="font-bold text-sm text-emerald-900">Thành công!</h4>
-                    <p class="text-xs text-emerald-700 mt-0.5">{{ session('success') }}</p>
-                </div>
-            </div>
-            <button type="button" onclick="this.closest('.page-success-banner')?.remove()" class="p-1.5 text-emerald-500 hover:text-emerald-700 hover:bg-emerald-100 rounded-lg transition-colors cursor-pointer" title="Đóng">
-                <span class="material-symbols-outlined text-lg">close</span>
-            </button>
-        </div>
-    @endif
 
     @if ($errors->any())
         <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">

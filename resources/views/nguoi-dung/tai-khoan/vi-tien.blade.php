@@ -27,52 +27,6 @@
         </ol>
     </nav>
 
-    {{-- Session Flash Notifications --}}
-    @if(session('success'))
-    <div id="toast-success" class="mb-6 flex items-start sm:items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-2xl px-5 py-4 shadow-sm" role="alert">
-        <div class="w-9 h-9 rounded-xl bg-emerald-100 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0 text-emerald-600">
-            <span class="material-symbols-outlined text-[22px]">check_circle</span>
-        </div>
-        <div class="flex-1 min-w-0">
-            <p class="font-bold text-emerald-900 text-sm">Thao tác thành công!</p>
-            <p class="text-emerald-800 text-xs mt-0.5">{{ session('success') }}</p>
-        </div>
-        <button type="button" onclick="document.getElementById('toast-success').remove()" class="text-emerald-500 hover:text-emerald-700 cursor-pointer">
-            <span class="material-symbols-outlined text-[18px]">close</span>
-        </button>
-    </div>
-    @endif
-
-    @if(session('error'))
-    <div id="toast-error" class="mb-6 flex items-start sm:items-center gap-3 bg-rose-50 border border-rose-200 rounded-2xl px-5 py-4 shadow-sm" role="alert">
-        <div class="w-9 h-9 rounded-xl bg-rose-100 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0 text-rose-600">
-            <span class="material-symbols-outlined text-[22px]">error</span>
-        </div>
-        <div class="flex-1 min-w-0">
-            <p class="font-bold text-rose-900 text-sm">Lỗi thanh toán</p>
-            <p class="text-rose-800 text-xs mt-0.5">{{ session('error') }}</p>
-        </div>
-        <button type="button" onclick="document.getElementById('toast-error').remove()" class="text-rose-500 hover:text-rose-700 cursor-pointer">
-            <span class="material-symbols-outlined text-[18px]">close</span>
-        </button>
-    </div>
-    @endif
-
-    @if(session('info'))
-    <div id="toast-info" class="mb-6 flex items-start sm:items-center gap-3 bg-blue-50 border border-blue-200 rounded-2xl px-5 py-4 shadow-sm" role="alert">
-        <div class="w-9 h-9 rounded-xl bg-blue-100 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0 text-blue-600">
-            <span class="material-symbols-outlined text-[22px]">info</span>
-        </div>
-        <div class="flex-1 min-w-0">
-            <p class="font-bold text-blue-900 text-sm">Thông báo</p>
-            <p class="text-blue-800 text-xs mt-0.5">{{ session('info') }}</p>
-        </div>
-        <button type="button" onclick="document.getElementById('toast-info').remove()" class="text-blue-500 hover:text-blue-700 cursor-pointer">
-            <span class="material-symbols-outlined text-[18px]">close</span>
-        </button>
-    </div>
-    @endif
-
     <div class="grid grid-cols-1 md:grid-cols-12 gap-stack-lg">
         <!-- Sidebar Navigation -->
         @include('nguoi-dung.partials.sidebar')
@@ -357,10 +311,18 @@
     }
 
     function showError(msg) {
+        if (window.showToast) {
+            window.showToast({
+                title: 'Số tiền không hợp lệ',
+                message: msg,
+                type: 'error'
+            });
+            return;
+        }
         const banner = document.getElementById('deposit-client-error-banner');
         const text = document.getElementById('deposit-client-error-text');
-        text.textContent = msg;
-        banner.classList.remove('hidden');
+        if (text) text.textContent = msg;
+        if (banner) banner.classList.remove('hidden');
     }
 
     function hideError() {

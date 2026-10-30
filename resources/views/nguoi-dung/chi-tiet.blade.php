@@ -817,10 +817,6 @@
                             @endif
                         </div>
 
-                        @if(session('success'))
-                            <p class="mb-3 rounded-lg bg-green-50 px-3 py-2 text-xs text-green-700">{{ session('success') }}</p>
-                        @endif
-
                         @auth
                             <form method="POST" action="{{ route('quan.danh-gia.store', $quan->slug) }}" class="mb-5 rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
                                 @csrf

@@ -124,7 +124,7 @@
         </div>
 
         {{-- KPI 4: Package Revenue --}}
-        <div onclick="instantNavigate('{{ route('admin.thong-ke.index') }}')" class="bg-white rounded-xl p-5 border border-slate-200/90 shadow-xs hover:border-emerald-400 hover:shadow-md cursor-pointer transition-all group" title="Bấm để xem báo cáo thống kê doanh thu">
+        <div onclick="instantNavigate('{{ route('admin.thanh-toan.index') }}')" class="bg-white rounded-xl p-5 border border-slate-200/90 shadow-xs hover:border-emerald-400 hover:shadow-md cursor-pointer transition-all group" title="Bấm để quản lý nạp tiền và doanh thu">
             <div class="flex items-center justify-between">
                 <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider group-hover:text-emerald-600 transition-colors">Doanh thu dịch vụ</span>
                 <span class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition-colors">
@@ -140,9 +140,9 @@
                 </span>
             </div>
             <div class="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                <span>Dữ liệu thực tế:</span>
-                <a href="{{ route('admin.thong-ke.index') }}" onclick="event.stopPropagation();" class="font-semibold text-emerald-600 hover:underline flex items-center gap-0.5">
-                    <span>Thanh toán thành công</span>
+                <span>Quản lý giao dịch:</span>
+                <a href="{{ route('admin.thanh-toan.index') }}" onclick="event.stopPropagation();" class="font-semibold text-emerald-600 hover:underline flex items-center gap-0.5">
+                    <span>Nạp tiền & Ví</span>
                     <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
                 </a>
             </div>

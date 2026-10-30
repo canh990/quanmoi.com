@@ -73,23 +73,6 @@
 <!-- Main Content -->
 <main class="mt-6 md:mt-10 max-w-[1200px] mx-auto px-container-margin pb-16">
 
-    @if(session('success'))
-        <div id="blog-success-banner" class="mb-6 p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl shadow-sm animate-modal-in flex items-center justify-between gap-3">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
-                    <span class="material-symbols-outlined text-2xl">check_circle</span>
-                </div>
-                <div>
-                    <h4 class="font-bold text-sm text-emerald-900">Thành công!</h4>
-                    <p class="text-xs text-emerald-700 mt-0.5">{{ session('success') }}</p>
-                </div>
-            </div>
-            <button type="button" onclick="document.getElementById('blog-success-banner')?.remove()" class="p-1.5 text-emerald-500 hover:text-emerald-700 hover:bg-emerald-100 rounded-lg transition-colors cursor-pointer" title="Đóng">
-                <span class="material-symbols-outlined text-lg">close</span>
-            </button>
-        </div>
-    @endif
-
     @if($errors->any())
         <div class="mb-6 p-4 bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl shadow-sm animate-modal-in">
             <div class="flex items-center gap-2 mb-1">
