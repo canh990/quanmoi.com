@@ -30,9 +30,12 @@ Route::get('/blog/huy-dang-ky-nhan-tin/{token}', [FrontendBlogController::class,
 Route::get('/blog/tac-gia/{id}', [FrontendBlogController::class, 'author'])->name('blog.author');
 Route::get('/blog/{slug}', [FrontendBlogController::class, 'show'])->name('blog.show');
 Route::post('/blog/{slug}/luot-xem', [FrontendBlogController::class, 'recordView'])->middleware('throttle:60,1')->name('blog.view.record');
+Route::post('/blog/{slug}/cam-xuc', [FrontendBlogController::class, 'toggleReaction'])->middleware('throttle:60,1')->name('blog.reaction.toggle');
+Route::get('/blog/{slug}/danh-sach-cam-xuc', [FrontendBlogController::class, 'getReactionsList'])->name('blog.reaction.list');
 Route::post('/blog/{slug}/binh-luan', [FrontendBlogController::class, 'storeComment'])->middleware(['auth', 'throttle:30,1'])->name('blog.comment.store');
 Route::delete('/blog/{slug}/binh-luan/{commentId}', [FrontendBlogController::class, 'deleteComment'])->middleware('auth')->name('blog.comment.destroy');
 Route::post('/blog/{slug}/binh-luan/{commentId}/thich', [FrontendBlogController::class, 'toggleLikeComment'])->middleware('auth')->name('blog.comment.like');
+Route::get('/blog/{slug}/binh-luan/{commentId}/danh-sach-cam-xuc', [FrontendBlogController::class, 'getCommentReactionsList'])->name('blog.comment.reaction.list');
 Route::post('/blog/{slug}/ai-tom-tat', [FrontendBlogController::class, 'summarize'])->middleware('throttle:15,1')->name('blog.ai.summarize');
 Route::get('/api/blog/ai-search', [FrontendBlogController::class, 'aiSearch'])->middleware('throttle:30,1')->name('blog.ai.search');
 Route::post('/api/blog/ai-chat', [FrontendBlogController::class, 'aiChat'])->middleware('throttle:15,1')->name('blog.ai.chat');

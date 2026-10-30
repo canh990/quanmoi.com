@@ -114,9 +114,9 @@
                     <p class="text-xs opacity-75 flex items-center gap-2 flex-wrap">
                         <span>{{ $heroBlog->published_at ? $heroBlog->published_at->format('d/m/Y') : '' }}</span>
                         <span>•</span>
-                        <span class="blog-view-count-wrap inline-flex items-center gap-1 font-medium px-2 py-0.5 rounded-full border border-transparent hover:border-amber-400 hover:ring-2 hover:ring-amber-400/30 transition-all cursor-pointer" data-blog-slug="{{ $heroBlog->slug }}" data-blog-id="{{ $heroBlog->id }}" title="Lượt xem bài viết">
+                        <span class="blog-view-count-wrap inline-flex items-center gap-1 font-medium px-2 py-0.5 rounded-full border border-transparent hover:border-amber-400 hover:ring-2 hover:ring-amber-400/30 transition-all cursor-pointer whitespace-nowrap" data-blog-slug="{{ $heroBlog->slug }}" data-blog-id="{{ $heroBlog->id }}" title="{{ number_format($heroBlog->view_count ?? 0) }} lượt xem">
                             <span class="material-symbols-outlined text-[15px] text-amber-300">visibility</span>
-                            <span class="blog-view-count-text">{{ number_format($heroBlog->view_count ?? 0) }} lượt xem</span>
+                            <span class="blog-view-count-text">{{ number_format($heroBlog->view_count ?? 0) }}</span>
                         </span>
                         <span>•</span>
                         <span class="inline-flex items-center gap-1 font-medium" title="Bình luận bài viết">
@@ -246,24 +246,24 @@
                                     <h3 class="font-title-md text-title-md text-on-surface mb-2 line-clamp-2 group-hover:text-primary transition-colors font-bold">{{ $blog->title }}</h3>
                                     <p class="text-text-muted font-body-sm text-body-sm mb-4 line-clamp-3">{{ $blog->excerpt ?? Str::limit(strip_tags($blog->content), 120) }}</p>
                                 </a>
-                                <div class="mt-auto pt-4 border-t border-outline-variant flex justify-between items-center">
-                                    <span class="font-label-sm text-label-sm text-text-muted flex items-center gap-1">
+                                <div class="mt-auto pt-4 border-t border-outline-variant flex justify-between items-center gap-2">
+                                    <span class="font-label-sm text-label-sm text-text-muted flex items-center gap-1 truncate min-w-0">
                                         @if($blog->user)
-                                            <a href="{{ route('blog.author', $blog->user->id) }}" class="hover:text-primary transition-colors font-medium hover:underline" title="Xem bài viết của tác giả {{ $blog->user->ho_ten }}">
+                                            <a href="{{ route('blog.author', $blog->user->id) }}" class="hover:text-primary transition-colors font-medium hover:underline truncate" title="Xem bài viết của tác giả {{ $blog->user->ho_ten }}">
                                                 {{ Str::limit($blog->user->ho_ten, 15) }}
                                             </a>
                                         @else
                                             <span>Tác giả</span>
                                         @endif
                                         <span>•</span>
-                                        <span>{{ ($blog->published_at ?? $blog->created_at)?->format('d/m/Y') ?? 'Mới' }}</span>
+                                        <span class="shrink-0">{{ ($blog->published_at ?? $blog->created_at)?->format('d/m/Y') ?? 'Mới' }}</span>
                                     </span>
-                                    <div class="font-label-sm text-label-sm text-text-muted flex items-center gap-2">
-                                        <span class="blog-view-count-wrap flex items-center gap-1 font-semibold text-slate-600 hover:text-amber-700 transition-all px-2 py-0.5 rounded-lg border border-transparent hover:border-amber-400 hover:ring-2 hover:ring-amber-400/30 hover:shadow-xs cursor-pointer" data-blog-slug="{{ $blog->slug }}" data-blog-id="{{ $blog->id }}" title="{{ number_format($blog->view_count ?? 0) }} lượt xem">
+                                    <div class="font-label-sm text-label-sm text-text-muted flex items-center gap-1.5 sm:gap-2 shrink-0">
+                                        <span class="blog-view-count-wrap flex items-center gap-1 font-semibold text-slate-600 hover:text-amber-700 transition-all px-2 py-0.5 rounded-lg border border-transparent hover:border-amber-400 hover:ring-2 hover:ring-amber-400/30 hover:shadow-xs cursor-pointer whitespace-nowrap" data-blog-slug="{{ $blog->slug }}" data-blog-id="{{ $blog->id }}" title="{{ number_format($blog->view_count ?? 0) }} lượt xem">
                                             <span class="material-symbols-outlined text-[15px] text-amber-600">visibility</span>
-                                            <span class="blog-view-count-text">{{ number_format($blog->view_count ?? 0) }} lượt xem</span>
+                                            <span class="blog-view-count-text">{{ number_format($blog->view_count ?? 0) }}</span>
                                         </span>
-                                        <span class="flex items-center gap-1 font-semibold text-slate-600 hover:text-primary transition-all px-2 py-0.5 rounded-lg border border-transparent hover:border-amber-400 hover:ring-2 hover:ring-amber-400/30 hover:shadow-xs cursor-pointer" title="{{ number_format($blog->comment_count ?? 0) }} bình luận">
+                                        <span class="flex items-center gap-1 font-semibold text-slate-600 hover:text-primary transition-all px-2 py-0.5 rounded-lg border border-transparent hover:border-amber-400 hover:ring-2 hover:ring-amber-400/30 hover:shadow-xs cursor-pointer whitespace-nowrap" title="{{ number_format($blog->comment_count ?? 0) }} bình luận">
                                             <span class="material-symbols-outlined text-[15px] text-primary">forum</span>
                                             <span>{{ number_format($blog->comment_count ?? 0) }}</span>
                                         </span>
@@ -381,9 +381,9 @@
                             <span class="text-2xl font-bold text-primary-container/30 group-hover:text-primary transition-colors">{{ str_pad($index + 1, 2, '0', STR_PAD_LEFT) }}</span>
                             <div>
                                 <h5 class="font-label-md text-label-md text-on-surface group-hover:text-primary transition-colors line-clamp-2 font-semibold">{{ $popularBlog->title }}</h5>
-                                <p class="blog-view-count-wrap text-[11px] text-slate-500 font-semibold mt-1 flex items-center gap-1 px-1.5 py-0.5 rounded-md border border-transparent hover:border-amber-400 hover:ring-2 hover:ring-amber-400/30 transition-all inline-flex cursor-pointer" data-blog-slug="{{ $popularBlog->slug }}" data-blog-id="{{ $popularBlog->id }}" title="{{ number_format($popularBlog->view_count ?? 0) }} lượt xem">
+                                <p class="blog-view-count-wrap text-[11px] text-slate-500 font-semibold mt-1 flex items-center gap-1 px-1.5 py-0.5 rounded-md border border-transparent hover:border-amber-400 hover:ring-2 hover:ring-amber-400/30 transition-all inline-flex cursor-pointer whitespace-nowrap" data-blog-slug="{{ $popularBlog->slug }}" data-blog-id="{{ $popularBlog->id }}" title="{{ number_format($popularBlog->view_count ?? 0) }} lượt xem">
                                     <span class="material-symbols-outlined text-[13px] text-amber-600">visibility</span>
-                                    <span class="blog-view-count-text">{{ number_format($popularBlog->view_count ?? 0) }} lượt xem</span>
+                                    <span class="blog-view-count-text">{{ number_format($popularBlog->view_count ?? 0) }}</span>
                                 </p>
                             </div>
                         </a>
@@ -1524,7 +1524,7 @@
             containers.forEach(wrap => {
                 const textEl = wrap.querySelector('.blog-view-count-text');
                 if (textEl) {
-                    textEl.textContent = `${data.formatted} lượt xem`;
+                    textEl.textContent = data.formatted;
                 }
                 if (wrap.hasAttribute('title')) {
                     wrap.setAttribute('title', `${data.formatted} lượt xem`);
