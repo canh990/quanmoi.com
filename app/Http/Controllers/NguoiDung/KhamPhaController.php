@@ -160,9 +160,34 @@ class KhamPhaController extends Controller
                 $quans = $query->paginate(12);
 
                 // Phong ve: Neu Scout bao co ket qua (total > 0) nhung so luong ban ghi thuc te bi thieu
-                // do index Elasticsearch bi lech voi co so du lieu (stale ID sau khi re-seed/xoa du lieu DB)
+                // hoac so luong trong index Elasticsearch bi lech so voi Database MySQL (chua dong bo scout:import)
                 $expectedCount = min(12, max(0, $quans->total() - ($quans->currentPage() - 1) * 12));
-                if ($quans->total() > 0 && ($quans->isEmpty() || $quans->count() < $expectedCount)) {
+                $isIndexOutOfSync = false;
+
+                if ($tuKhoa === '' && !$hasGps && !$dangMoCua && $mucGia === '' && empty($tinhCodes) && empty($huyenCodes)) {
+                    $dbCountQuery = Quan::query()->where('trang_thai', 'da_duyet');
+                    if ($isNoiBat) {
+                        $dbCountQuery->where('is_noi_bat', true);
+                    }
+                    if (!empty($danhMuc) && !in_array($danhMuc, ['Quán Nổi Bật', 'Quán Mới'])) {
+                        if ($danhMuc === 'Cà phê' || $danhMuc === 'Cà phê & Trà') {
+                            $dbCountQuery->whereIn('loai_hinh_kinh_doanh', ['Cà phê & Trà', 'Cà phê']);
+                        } elseif ($danhMuc === 'Ăn vặt' || $danhMuc === 'Đồ ăn vặt') {
+                            $dbCountQuery->whereIn('loai_hinh_kinh_doanh', ['Đồ ăn vặt', 'Ăn vặt']);
+                        } else {
+                            $dbCountQuery->where('loai_hinh_kinh_doanh', $danhMuc);
+                        }
+                    }
+                    if ($isXacThuc) {
+                        $dbCountQuery->where('is_xac_thuc', true);
+                    }
+                    $dbCount = $dbCountQuery->count();
+                    if ($quans->total() !== $dbCount) {
+                        $isIndexOutOfSync = true;
+                    }
+                }
+
+                if ($isIndexOutOfSync || ($quans->total() > 0 && ($quans->isEmpty() || $quans->count() < $expectedCount))) {
                     $usedEloquentFallback = true;
                     [$quans, $fallbackQuanIds] = $this->paginateWithEloquentFallback(
                         $request,

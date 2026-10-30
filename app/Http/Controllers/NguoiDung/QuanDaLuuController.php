@@ -56,7 +56,7 @@ class QuanDaLuuController extends Controller
                 : ($quan->gia_nho_nhat ? 'Từ ' . number_format($quan->gia_nho_nhat, 0, ',', '.') . 'đ' : 'Đang cập nhật');
 
             return [
-                'id' => (int) $quan->id,
+                'id' => (string) $quan->id,
                 'name' => (string) $quan->ten_quan,
                 'slug' => (string) $quan->slug,
                 'url' => route('quan.detail', $quan->slug),

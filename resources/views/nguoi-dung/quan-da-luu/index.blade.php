@@ -9,8 +9,35 @@
     .saved-page-wrap {
         max-width: 1200px;
         margin: 0 auto;
-        padding: 24px 16px 64px;
+        padding: 18px 12px 64px;
         font-family: 'Be Vietnam Pro', ui-sans-serif, system-ui, sans-serif;
+        overflow-x: hidden;
+    }
+
+    @media (min-width: 640px) {
+        .saved-page-wrap {
+            padding: 24px 16px 64px;
+        }
+    }
+
+    #saved-places-grid-desktop {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+    @media (min-width: 640px) {
+        #saved-places-grid-desktop {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 20px;
+        }
+    }
+
+    @media (min-width: 1024px) {
+        #saved-places-grid-desktop {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 24px;
+        }
     }
 
     .saved-filter-pill {
@@ -177,19 +204,19 @@
 
 @section('content')
 <main class="saved-page-wrap">
-    <div class="w-full">
+    <div class="w-full min-w-0">
         {{-- HEADER: TIÊU ĐỀ + CHẾ ĐỘ XEM (LƯỚI / BẢN ĐỒ) --}}
-        <header class="mb-6 flex flex-col md:flex-row md:justify-between md:items-end gap-4 pb-4 border-b border-gray-100">
+        <header class="mb-5 sm:mb-6 flex flex-col md:flex-row md:justify-between md:items-end gap-3.5 sm:gap-4 pb-4 border-b border-gray-100">
             <div>
                 <div class="flex items-center gap-2 mb-1">
                     <span class="w-2.5 h-2.5 rounded-full bg-primary animate-pulse"></span>
                     <span class="text-xs font-bold uppercase tracking-wider text-primary">Bộ sưu tập cá nhân</span>
                 </div>
                 <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">Quán đã lưu</h1>
-                <p class="text-sm text-gray-500 mt-1">Khám phá lại những địa điểm yêu thích của bạn.</p>
+                <p class="text-xs sm:text-sm text-gray-500 mt-1">Khám phá lại những địa điểm yêu thích của bạn.</p>
             </div>
 
-            <div class="flex flex-wrap items-center gap-2">
+            <div class="flex flex-wrap items-center justify-between sm:justify-start gap-2 w-full md:w-auto">
                 {{-- Toggle Chế độ xem: Lưới (Grid) vs Bản đồ (Map) --}}
                 <div class="inline-flex p-1 bg-gray-100 rounded-xl border border-gray-200">
                     <button type="button" 
@@ -197,7 +224,7 @@
                             onclick="switchSavedView('grid')" 
                             class="saved-view-toggle-btn is-active" 
                             title="Chế độ xem dạng lưới">
-                        <span class="material-symbols-outlined text-[17px]">grid_view</span>
+                        <span class="material-symbols-outlined text-[16px] sm:text-[17px]">grid_view</span>
                         <span>Danh sách (<span id="saved-total-count">{{ $quanDaLuu->count() }}</span>)</span>
                     </button>
                     <button type="button" 
@@ -205,14 +232,14 @@
                             onclick="switchSavedView('map')" 
                             class="saved-view-toggle-btn" 
                             title="Xem tất cả quán trên bản đồ">
-                        <span class="material-symbols-outlined text-[17px]">map</span>
+                        <span class="material-symbols-outlined text-[16px] sm:text-[17px]">map</span>
                         <span>Bản đồ</span>
                     </button>
                 </div>
 
                 {{-- Nút chuyển sang trang Bản đồ lân cận --}}
-                <a href="{{ route('ban-do') }}" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-primary/10 hover:bg-primary/20 text-primary font-bold text-xs rounded-xl transition-all" title="Khám phá quán quanh bạn theo GPS">
-                    <span class="material-symbols-outlined text-[17px]">near_me</span>
+                <a href="{{ route('ban-do') }}" class="inline-flex items-center gap-1.5 px-3 py-2 bg-primary/10 hover:bg-primary/20 text-primary font-bold text-xs rounded-xl transition-all shrink-0" title="Khám phá quán quanh bạn theo GPS">
+                    <span class="material-symbols-outlined text-[16px] sm:text-[17px]">near_me</span>
                     <span>Quét quán gần bạn</span>
                 </a>
             </div>
@@ -220,10 +247,10 @@
 
         @if($quanDaLuu->count() > 0)
         {{-- THANH TÌM KIẾM & BỘ LỌC THÔNG MINH --}}
-        <div class="mb-6 space-y-3" id="saved-filter-toolbar">
-            <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        <div class="mb-5 sm:mb-6 space-y-3 min-w-0" id="saved-filter-toolbar">
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-3">
                 {{-- Ô tìm kiếm tức thì theo tên/địa chỉ quán đã lưu --}}
-                <div class="relative flex-1 max-w-md">
+                <div class="relative flex-1 sm:max-w-md">
                     <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-[19px]">search</span>
                     <input type="text" 
                            id="saved-search-input" 
@@ -236,16 +263,16 @@
                 </div>
 
                 {{-- Bộ lọc mở cửa & Sắp xếp --}}
-                <div class="flex items-center gap-2 self-end sm:self-auto">
+                <div class="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto">
                     <button type="button" 
                             id="saved-filter-open-btn" 
                             onclick="toggleFilterOpenNow()" 
-                            class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition-all cursor-pointer">
+                            class="inline-flex items-center justify-center gap-1.5 px-3 py-2 h-10 rounded-xl text-xs font-bold border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition-all cursor-pointer shrink-0">
                         <span class="material-symbols-outlined text-[15px]">schedule</span>
                         <span>Đang mở cửa</span>
                     </button>
 
-                    <select id="saved-sort-select" onchange="sortSavedPlaces(this.value)" class="h-10 px-3 rounded-xl border border-gray-200 bg-white text-xs font-bold text-gray-700 focus:outline-none focus:border-primary">
+                    <select id="saved-sort-select" onchange="sortSavedPlaces(this.value)" class="h-10 px-3 rounded-xl border border-gray-200 bg-white text-xs font-bold text-gray-700 focus:outline-none focus:border-primary flex-1 sm:flex-initial">
                         <option value="newest">Mới lưu nhất</option>
                         <option value="rating_desc">Đánh giá cao nhất</option>
                         <option value="price_asc">Giá: Thấp đến cao</option>
@@ -255,7 +282,7 @@
             </div>
 
             {{-- Danh mục ẩm thực thực tế từ các quán người dùng đã lưu --}}
-            <div class="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar pt-1">
+            <div class="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar pt-1 max-w-full">
                 <button type="button" 
                         onclick="filterByCategory('')" 
                         data-category="" 
@@ -279,17 +306,18 @@
         @endif
 
         {{-- 1. CHẾ ĐỘ XEM DẠNG LƯỚI (GRID VIEW) --}}
-        <div id="saved-view-grid-wrap">
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6" id="saved-places-grid-desktop">
+        <div id="saved-view-grid-wrap" class="min-w-0">
+            <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6" id="saved-places-grid-desktop">
                 @forelse($quanDaLuu as $quan)
                 @php
                     $primaryImg = $quan->hinhAnh->first()->url ?? ($quan->anh_bia_url ?? 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80');
                     $isOpen = method_exists($quan, 'isDangMoCua') ? $quan->isDangMoCua() : true;
                     $avgRating = round((float)($quan->danh_gia_avg_so_sao ?? 0), 1);
                     $ratingCount = (int)($quan->danh_gia_count ?? 0);
+                    $tenLoaiHinh = str_replace('_', ' ', \Illuminate\Support\Str::title($quan->loai_hinh_kinh_doanh ?? 'Quán ăn'));
                     $priceText = ($quan->gia_nho_nhat && $quan->gia_lon_nhat)
                         ? number_format($quan->gia_nho_nhat, 0, ',', '.') . 'đ - ' . number_format($quan->gia_lon_nhat, 0, ',', '.') . 'đ'
-                        : ($quan->gia_nho_nhat ? 'Từ ' . number_format($quan->gia_nho_nhat, 0, ',', '.') . 'đ' : 'Đang cập nhật giá');
+                        : ($quan->gia_nho_nhat ? 'Từ ' . number_format($quan->gia_nho_nhat, 0, ',', '.') . 'đ' : 'Đang cập nhật');
                     
                     $addressFull = trim(implode(', ', array_filter([
                         $quan->dia_chi_chi_tiet,
@@ -312,93 +340,92 @@
                          data-price="{{ (int)($quan->gia_nho_nhat ?? 0) }}"
                          data-lat="{{ $quan->vi_do }}"
                          data-lng="{{ $quan->kinh_do }}"
-                         class="saved-card saved-item-element group">
+                         class="qm-venue-card saved-item-element group relative">
                     
-                    {{-- Hình ảnh thumbnail --}}
-                    <div class="saved-card-thumb-wrap">
-                        <img class="saved-card-img" src="{{ $primaryImg }}" alt="{{ $quan->ten_quan }}" loading="lazy" />
+                    {{-- Hình ảnh thumbnail đồng bộ chuẩn .qm-venue-thumb --}}
+                    <div class="qm-venue-thumb">
+                        <a href="{{ route('quan.detail', $quan->slug) }}" class="block w-full h-full">
+                            <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="{{ $primaryImg }}" alt="{{ $quan->ten_quan }}" loading="lazy" />
+                        </a>
                         
-                        {{-- Nút Trái tim thả/bỏ lưu --}}
-                        <button type="button" 
-                                onclick="toggleSave(this, '{{ $quan->id }}')" 
-                                class="saved-heart-btn" 
-                                title="Bỏ lưu quán">
-                            <span class="material-symbols-outlined text-[21px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
-                        </button>
+                        {{-- Góc trên bên trái: Đánh giá sao --}}
+                        <div class="qm-venue-pos-tl pointer-events-none">
+                            <div class="qm-venue-badge-rating">
+                                <span class="material-symbols-outlined text-[13px] text-amber-500" style="font-variation-settings: 'FILL' 1;">star</span>
+                                <span>{{ $avgRating > 0 ? number_format($avgRating, 1) : '4.9' }}</span>
+                                @if($ratingCount > 0)
+                                    <span class="hidden sm:inline text-slate-400 font-semibold text-[10px]">({{ $ratingCount }})</span>
+                                @endif
+                            </div>
+                        </div>
 
-                        {{-- Link phủ card --}}
-                        <a href="{{ route('quan.detail', $quan->slug) }}" class="absolute inset-0 z-10" aria-label="Xem chi tiết {{ $quan->ten_quan }}"></a>
-
-                        {{-- Badge Trạng thái mở cửa --}}
-                        <div class="absolute top-3 left-3 z-10 pointer-events-none">
+                        {{-- Góc trên bên phải: Trạng thái mở cửa --}}
+                        <div class="qm-venue-pos-tr pointer-events-none">
                             @if($isOpen)
-                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-600/90 backdrop-blur-md text-white text-[11px] font-extrabold shadow-sm">
+                                <span class="qm-venue-badge-status bg-emerald-600/95 text-white">
                                     <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
-                                    Đang mở cửa
+                                    <span>Mở cửa</span>
                                 </span>
                             @else
-                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-900/80 backdrop-blur-md text-white text-[11px] font-extrabold shadow-sm">
-                                    Tạm đóng cửa
+                                <span class="qm-venue-badge-status bg-slate-900/85 text-white">
+                                    <span>Tạm đóng</span>
                                 </span>
                             @endif
                         </div>
 
-                        {{-- Badge Đánh giá sao thực tế --}}
-                        <div class="absolute bottom-3 left-3 px-2.5 py-1 bg-black/70 backdrop-blur-md text-white rounded-lg text-xs font-bold flex items-center gap-1 z-10 pointer-events-none">
-                            <span class="material-symbols-outlined text-[15px] text-amber-400" style="font-variation-settings: 'FILL' 1;">star</span>
-                            <span>{{ $avgRating > 0 ? $avgRating : 'Mới' }}</span>
-                            @if($ratingCount > 0)
-                                <span class="text-white/70 font-normal">({{ $ratingCount }})</span>
-                            @endif
+                        {{-- Góc dưới bên trái: Tên danh mục quán --}}
+                        <div class="qm-venue-pos-bl">
+                            <span class="qm-venue-badge-category truncate" title="{{ $tenLoaiHinh }}">
+                                <span class="material-symbols-outlined text-[12px] text-primary shrink-0">storefront</span>
+                                <span class="truncate">{{ $tenLoaiHinh }}</span>
+                            </span>
                         </div>
+
+                        {{-- Góc dưới bên phải: Nút Trái tim bỏ lưu --}}
+                        <button type="button" 
+                                onclick="event.preventDefault(); event.stopPropagation(); toggleSave(this, '{{ $quan->id }}')" 
+                                class="qm-venue-save-btn cursor-pointer" 
+                                title="Bỏ lưu quán">
+                            <span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
+                        </button>
                     </div>
 
                     {{-- Nội dung thông tin quán --}}
-                    <div class="p-4 flex flex-col flex-1 justify-between gap-3">
-                        <div>
-                            {{-- Danh mục & Loại hình --}}
-                            <div class="flex items-center justify-between gap-2 mb-1">
-                                <span class="text-[11px] font-extrabold text-primary uppercase tracking-wider">
-                                    {{ $quan->loai_hinh_kinh_doanh ?: 'Quán ăn' }}
-                                </span>
+                    <div class="qm-venue-body">
+                        <div class="space-y-1 sm:space-y-2 min-w-0">
+                            {{-- Tên quán + Tích xanh xác thực --}}
+                            <div class="flex items-start justify-between gap-1 sm:gap-2 min-w-0">
+                                <h3 class="min-w-0 flex-1 font-bold text-[13px] sm:text-[16px] leading-snug text-slate-900 line-clamp-1 group-hover:text-primary transition-colors">
+                                    <a href="{{ route('quan.detail', $quan->slug) }}">
+                                        {{ $quan->ten_quan }}
+                                    </a>
+                                </h3>
                                 @if($quan->is_xac_thuc)
-                                    <span class="inline-flex items-center gap-0.5 text-blue-600 text-[11px] font-bold" title="Quán đã xác thực">
-                                        <span class="material-symbols-outlined text-[15px]" style="font-variation-settings: 'FILL' 1;">verified</span>
-                                        Đã xác thực
+                                    <span class="inline-flex items-center justify-center w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-emerald-50 text-emerald-600 shrink-0 mt-0.5" title="Quán đã xác thực uy tín">
+                                        <span class="material-symbols-outlined text-[13px] sm:text-[15px]" style="font-variation-settings: 'FILL' 1;">verified</span>
                                     </span>
                                 @endif
                             </div>
 
-                            {{-- Tên quán --}}
-                            <h3 class="text-base font-bold text-gray-900 group-hover:text-primary transition-colors line-clamp-1 mb-1.5">
-                                <a href="{{ route('quan.detail', $quan->slug) }}" class="hover:underline">
-                                    {{ $quan->ten_quan }}
-                                </a>
-                            </h3>
-
                             {{-- Địa chỉ đầy đủ --}}
-                            <p class="text-xs text-gray-500 line-clamp-1 flex items-center gap-1">
-                                <span class="material-symbols-outlined text-[15px] text-gray-400 flex-shrink-0">location_on</span>
-                                <span>{{ $addressFull ?: 'Đang cập nhật địa chỉ' }}</span>
-                            </p>
+                            <div class="flex items-start gap-1.5 sm:gap-2 text-slate-500 text-[11px] sm:text-[12.5px] min-w-0">
+                                <span class="qm-venue-loc-icon">
+                                    <span class="material-symbols-outlined text-[11px] sm:text-[13px]" style="font-variation-settings: 'FILL' 1;">location_on</span>
+                                </span>
+                                <span class="line-clamp-1 sm:line-clamp-2 leading-relaxed text-slate-600">{{ $addressFull ?: 'Đang cập nhật địa chỉ' }}</span>
+                            </div>
                         </div>
 
-                        {{-- Footer Card: Giá cả & Nút chỉ đường --}}
-                        <div class="pt-3 border-t border-gray-100 flex items-center justify-between text-xs">
-                            <div class="font-extrabold text-gray-800">
-                                {{ $priceText }}
-                            </div>
+                        {{-- Footer Card: Chỉ đường & Giá cả --}}
+                        <div class="flex flex-wrap items-center justify-between pt-2 sm:pt-2.5 border-t border-slate-100 gap-1 sm:gap-2 min-w-0 mt-auto">
+                            <a href="{{ $directionsUrl }}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-700 font-bold text-[10.5px] sm:text-[12px] inline-flex items-center gap-0.5 hover:underline whitespace-nowrap shrink-0" title="Chỉ đường trên Google Maps">
+                                <span class="material-symbols-outlined text-[12px] sm:text-[14px]">directions</span>
+                                <span>Chỉ đường</span>
+                            </a>
 
-                            <div class="flex items-center gap-3">
-                                <a href="{{ $directionsUrl }}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-700 font-bold inline-flex items-center gap-0.5 hover:underline" title="Chỉ đường trên Google Maps">
-                                    <span class="material-symbols-outlined text-[14px]">directions</span>
-                                    <span>Chỉ đường</span>
-                                </a>
-                                <a href="{{ route('quan.detail', $quan->slug) }}" class="text-primary hover:text-primary/80 font-extrabold inline-flex items-center">
-                                    <span>Xem</span>
-                                    <span class="material-symbols-outlined text-[14px]">chevron_right</span>
-                                </a>
-                            </div>
+                            <span class="qm-venue-price-pill ml-auto truncate max-w-full">
+                                <span class="truncate">{{ $priceText }}</span>
+                            </span>
                         </div>
                     </div>
                 </article>

@@ -35,178 +35,109 @@
         <div class="md:col-span-9 space-y-6">
             
             {{-- ============================================================== --}}
-            {{-- 1. PAGE HEADER & SỐ DƯ TÀI KHOẢN (THIẾT KẾ CLEAN, TRANG NHÃ) --}}
+            {{-- 1. SỐ DƯ VÍ & NẠP TIỀN NHANH (GỌN GÀNG, TRỰC QUAN) --}}
             {{-- ============================================================== --}}
-            <header class="bg-surface-card p-6 md:p-8 rounded-2xl border border-surface-container shadow-[0px_4px_20px_rgba(0,0,0,0.03)]">
-                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-                    <div class="space-y-1">
-                        <div class="flex items-center gap-2">
-                            <span class="px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-bold tracking-wide uppercase">
-                                Ví Quán Mới
-                            </span>
-                            <span class="text-text-muted text-xs flex items-center gap-1">
-                                <span class="material-symbols-outlined text-[14px] text-emerald-600">verified</span>
-                                <span>Cổng SePay bảo mật</span>
-                            </span>
-                        </div>
-                        <h1 class="text-2xl md:text-3xl font-extrabold text-on-surface tracking-tight flex items-center gap-2.5 pt-1">
-                            <span>Quản lý Ví tiền & Nạp tiền</span>
+            <section id="khung-nap-tien" class="bg-surface-card rounded-2xl p-5 sm:p-7 shadow-[0px_4px_20px_rgba(0,0,0,0.03)] border border-surface-container space-y-6">
+                {{-- Hàng trên: Tiêu đề + Số dư khả dụng --}}
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-surface-container">
+                    <div>
+                        <h1 class="text-xl sm:text-2xl font-extrabold text-on-surface tracking-tight">
+                            Ví & Nạp tiền
                         </h1>
-                        <p class="text-xs sm:text-sm text-text-muted">
-                            Sử dụng số dư ví để thanh toán nhanh các dịch vụ, gói ưu đãi và đặt bàn tại Quán Mới.
+                        <p class="text-xs text-text-muted mt-0.5">
+                            Nạp tiền tự động qua mã QR ngân hàng (SePay)
                         </p>
                     </div>
 
-                    {{-- Khối Số Dư Nổi Bật --}}
-                    <div class="bg-surface-container-low/70 border border-surface-container p-4 sm:p-5 rounded-2xl flex items-center gap-4 shrink-0">
-                        <div class="w-12 h-12 rounded-xl bg-primary text-white flex items-center justify-center shadow-md shadow-primary/20 shrink-0">
-                            <span class="material-symbols-outlined text-[26px]">account_balance_wallet</span>
+                    <div class="bg-surface-container-low/80 border border-surface-container px-4 py-3 rounded-xl flex items-center gap-3.5 shrink-0">
+                        <div class="w-10 h-10 rounded-xl bg-primary text-white flex items-center justify-center shadow-xs shrink-0">
+                            <span class="material-symbols-outlined text-[22px]">account_balance_wallet</span>
                         </div>
                         <div>
-                            <span class="text-xs font-semibold text-text-muted uppercase tracking-wider block">Số dư khả dụng</span>
-                            <div class="flex items-baseline gap-1.5 mt-0.5">
-                                <span class="text-2xl sm:text-3xl font-extrabold text-on-surface tracking-tight font-mono" id="user-so-du-display">
+                            <span class="text-[11px] font-semibold text-text-muted uppercase tracking-wider block">Số dư khả dụng</span>
+                            <div class="flex items-baseline gap-1">
+                                <span class="text-xl sm:text-2xl font-extrabold text-on-surface tracking-tight font-mono" id="user-so-du-display">
                                     {{ number_format($user->so_du ?? 0, 0, ',', '.') }}
                                 </span>
-                                <span class="text-xs sm:text-sm font-bold text-primary">VNĐ</span>
+                                <span class="text-xs font-bold text-primary">đ</span>
                             </div>
                         </div>
                     </div>
                 </div>
-            </header>
 
-            {{-- ============================================================== --}}
-            {{-- 2. KHUNG NẠP TIỀN QUA CỔNG SEPAY GATEWAY --}}
-            {{-- ============================================================== --}}
-            <section id="khung-nap-tien" class="bg-surface-card rounded-2xl p-6 md:p-8 shadow-[0px_4px_20px_rgba(0,0,0,0.03)] border border-surface-container space-y-6">
-                <div class="flex items-center justify-between pb-4 border-b border-surface-container">
-                    <div class="space-y-0.5">
-                        <h2 class="text-lg md:text-xl font-bold text-on-surface flex items-center gap-2">
-                            <span class="w-2.5 h-2.5 rounded-full bg-primary"></span>
-                            <span>Nạp tiền vào ví</span>
-                        </h2>
-                        <p class="text-xs text-text-muted">Chọn số tiền nạp và thanh toán nhanh qua Cổng SePay</p>
-                    </div>
-                    <div class="hidden sm:flex items-center gap-1.5 text-xs text-text-muted bg-surface-container-low px-3 py-1.5 rounded-lg border border-surface-container">
-                        <span class="material-symbols-outlined text-[16px] text-emerald-600">security</span>
-                        <span>Chuẩn PCI-DSS quốc tế</span>
-                    </div>
-                </div>
-
-                <form id="form-nap-tien" action="{{ route('tai-khoan.nap-tien.checkout') }}" method="POST" novalidate class="space-y-6">
+                {{-- Form Nạp tiền --}}
+                <form id="form-nap-tien" action="{{ route('tai-khoan.nap-tien.checkout') }}" method="POST" novalidate class="space-y-5">
                     @csrf
                     <input type="hidden" name="phuong_thuc" value="SEPAY_GATEWAY" />
 
                     {{-- Client error alert --}}
-                    <div id="deposit-client-error-banner" class="hidden p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2.5">
-                        <span class="material-symbols-outlined text-[20px] shrink-0 text-rose-600">error</span>
+                    <div id="deposit-client-error-banner" class="hidden p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[18px] shrink-0 text-rose-600">error</span>
                         <span id="deposit-client-error-text" class="font-medium">Vui lòng kiểm tra lại số tiền nạp.</span>
                     </div>
 
-                    {{-- Bước 1: Chọn số tiền nhanh --}}
-                    <div class="space-y-3">
+                    {{-- Chọn mệnh giá nhanh --}}
+                    <div class="space-y-2.5">
                         <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant">
-                            1. Chọn số tiền muốn nạp
+                            Chọn nhanh mệnh giá
                         </label>
-                        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
-                            <button type="button" onclick="selectPresetAmount(50000)" class="preset-btn py-3 px-3 rounded-xl border border-outline-variant/60 font-semibold text-xs text-on-surface hover:border-primary hover:text-primary hover:bg-primary/5 transition-all cursor-pointer text-center">
-                                50.000 đ
+                        <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                            <button type="button" onclick="selectPresetAmount(50000)" class="preset-btn py-2.5 px-2 rounded-xl border border-outline-variant/60 font-semibold text-xs text-on-surface hover:border-primary hover:text-primary hover:bg-primary/5 transition-all cursor-pointer text-center">
+                                50.000đ
                             </button>
-                            <button type="button" onclick="selectPresetAmount(100000)" class="preset-btn py-3 px-3 rounded-xl border-2 border-primary bg-primary/10 font-bold text-xs text-primary transition-all cursor-pointer text-center">
-                                100.000 đ
+                            <button type="button" onclick="selectPresetAmount(100000)" class="preset-btn py-2.5 px-2 rounded-xl border-2 border-primary bg-primary/10 font-bold text-xs text-primary transition-all cursor-pointer text-center">
+                                100.000đ
                             </button>
-                            <button type="button" onclick="selectPresetAmount(200000)" class="preset-btn py-3 px-3 rounded-xl border border-outline-variant/60 font-semibold text-xs text-on-surface hover:border-primary hover:text-primary hover:bg-primary/5 transition-all cursor-pointer text-center">
-                                200.000 đ
+                            <button type="button" onclick="selectPresetAmount(200000)" class="preset-btn py-2.5 px-2 rounded-xl border border-outline-variant/60 font-semibold text-xs text-on-surface hover:border-primary hover:text-primary hover:bg-primary/5 transition-all cursor-pointer text-center">
+                                200.000đ
                             </button>
-                            <button type="button" onclick="selectPresetAmount(500000)" class="preset-btn py-3 px-3 rounded-xl border border-outline-variant/60 font-semibold text-xs text-on-surface hover:border-primary hover:text-primary hover:bg-primary/5 transition-all cursor-pointer text-center">
-                                500.000 đ
+                            <button type="button" onclick="selectPresetAmount(500000)" class="preset-btn py-2.5 px-2 rounded-xl border border-outline-variant/60 font-semibold text-xs text-on-surface hover:border-primary hover:text-primary hover:bg-primary/5 transition-all cursor-pointer text-center">
+                                500.000đ
                             </button>
-                            <button type="button" onclick="selectPresetAmount(1000000)" class="preset-btn py-3 px-3 rounded-xl border border-outline-variant/60 font-semibold text-xs text-on-surface hover:border-primary hover:text-primary hover:bg-primary/5 transition-all cursor-pointer text-center">
-                                1.000.000 đ
+                            <button type="button" onclick="selectPresetAmount(1000000)" class="preset-btn py-2.5 px-2 rounded-xl border border-outline-variant/60 font-semibold text-xs text-on-surface hover:border-primary hover:text-primary hover:bg-primary/5 transition-all cursor-pointer text-center">
+                                1.000.000đ
                             </button>
-                            <button type="button" onclick="selectPresetAmount(2000000)" class="preset-btn py-3 px-3 rounded-xl border border-outline-variant/60 font-semibold text-xs text-on-surface hover:border-primary hover:text-primary hover:bg-primary/5 transition-all cursor-pointer text-center">
-                                2.000.000 đ
+                            <button type="button" onclick="selectPresetAmount(2000000)" class="preset-btn py-2.5 px-2 rounded-xl border border-outline-variant/60 font-semibold text-xs text-on-surface hover:border-primary hover:text-primary hover:bg-primary/5 transition-all cursor-pointer text-center">
+                                2.000.000đ
                             </button>
                         </div>
+                    </div>
 
-                        {{-- Tự nhập số tiền --}}
-                        <div class="pt-2">
-                            <label for="deposit-custom-amount" class="block text-xs font-medium text-text-muted mb-1.5">
-                                Hoặc tự nhập số tiền khác (VNĐ):
-                            </label>
-                            <div class="relative max-w-sm">
+                    {{-- Ô nhập số tiền + Nút Nạp tiền trên cùng 1 hàng --}}
+                    <div class="pt-1">
+                        <label for="deposit-custom-amount" class="block text-xs font-medium text-text-muted mb-1.5">
+                            Số tiền nạp (tối thiểu 10.000đ):
+                        </label>
+                        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                            <div class="relative flex-1">
                                 <input type="text" 
                                        id="deposit-custom-amount" 
                                        inputmode="numeric"
-                                       placeholder="Tối thiểu 10.000 VNĐ"
+                                       placeholder="Tối thiểu 10.000"
                                        value="100.000"
-                                       class="w-full pl-4 pr-16 py-2.5 bg-surface-container-low border border-outline-variant rounded-xl text-base font-bold text-on-surface focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all font-mono" />
+                                       class="w-full pl-4 pr-14 py-3 bg-surface-container-low border border-outline-variant rounded-xl text-base font-bold text-on-surface focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all font-mono" />
                                 <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-text-muted">VNĐ</span>
                             </div>
                             <input type="hidden" name="so_tien" id="deposit-real-amount" value="100000" />
-                            <p class="text-[11px] text-text-muted mt-1.5">Hạn mức nạp: Tối thiểu 10.000 VNĐ — Tối đa 50.000.000 VNĐ mỗi lần.</p>
+
+                            <button type="submit" 
+                                    id="btn-submit-deposit"
+                                    class="px-7 py-3 rounded-xl bg-primary text-white font-bold text-sm shadow-md hover:bg-primary/95 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0">
+                                <span class="material-symbols-outlined text-[19px]">qr_code_scanner</span>
+                                <span id="btn-deposit-label">NẠP TIỀN NGAY</span>
+                            </button>
                         </div>
-                    </div>
-
-                    {{-- Bước 2: Phương thức thanh toán --}}
-                    <div class="space-y-3 pt-2">
-                        <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant">
-                            2. Phương thức thanh toán
-                        </label>
-
-                        <div class="p-4 sm:p-5 rounded-2xl border border-primary/30 bg-primary/[0.03] flex items-start gap-4">
-                            <div class="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5">
-                                <span class="material-symbols-outlined text-[24px]">account_balance</span>
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <div class="flex items-center gap-2 flex-wrap">
-                                    <span class="font-bold text-on-surface text-sm">Cổng thanh toán SePay</span>
-                                    <span class="px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-bold">Tự động cộng tiền</span>
-                                </div>
-                                <p class="text-xs text-text-muted mt-1 leading-relaxed">
-                                    Hỗ trợ quét <strong>Mã VietQR 24/7</strong> mọi ngân hàng, <strong>Thẻ ATM nội địa (Napas)</strong> và <strong>Thẻ Visa / Mastercard</strong>.
-                                </p>
-                                <div class="flex items-center gap-4 mt-2.5 flex-wrap text-[11px]">
-                                    <span class="inline-flex items-center gap-1 text-emerald-700 font-semibold">
-                                        <span class="material-symbols-outlined text-[14px]">bolt</span>
-                                        Tiền vào ví tức thì
-                                    </span>
-                                    <span class="inline-flex items-center gap-1 text-text-muted">
-                                        <span class="material-symbols-outlined text-[14px] text-primary">verified_user</span>
-                                        Không thu phí giao dịch
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Nút Xác nhận nạp tiền --}}
-                    <div class="pt-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-surface-container">
-                        <div class="text-xs text-text-muted flex items-center gap-1.5">
-                            <span class="material-symbols-outlined text-[16px] text-emerald-600">lock</span>
-                            <span>Giao dịch an toàn được mã hóa SSL 256-bit</span>
-                        </div>
-
-                        <button type="submit" 
-                                id="btn-submit-deposit"
-                                class="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-primary text-white font-bold text-sm shadow-md hover:bg-primary/95 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer">
-                            <span class="material-symbols-outlined text-[20px]">credit_card</span>
-                            <span id="btn-deposit-label">TIẾN HÀNH NẠP TIỀN</span>
-                        </button>
                     </div>
                 </form>
             </section>
 
             {{-- ============================================================== --}}
-            {{-- 3. BẢNG LỊCH SỬ NẠP TIỀN --}}
+            {{-- 2. BẢNG LỊCH SỬ NẠP TIỀN --}}
             {{-- ============================================================== --}}
-            <section id="lich-su-giao-dich" class="bg-surface-card rounded-2xl p-6 md:p-8 shadow-[0px_4px_20px_rgba(0,0,0,0.03)] border border-surface-container space-y-4">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-surface-container">
-                    <div class="flex items-center gap-2">
-                        <span class="material-symbols-outlined text-primary text-[24px]">receipt_long</span>
-                        <h2 class="text-lg md:text-xl font-bold text-on-surface">Lịch sử nạp tiền</h2>
-                    </div>
-                    <span class="text-xs text-text-muted">Cập nhật theo thời gian thực</span>
+            <section id="lich-su-giao-dich" class="bg-surface-card rounded-2xl p-5 sm:p-7 shadow-[0px_4px_20px_rgba(0,0,0,0.03)] border border-surface-container space-y-4">
+                <div class="flex items-center gap-2 pb-3 border-b border-surface-container">
+                    <span class="material-symbols-outlined text-primary text-[22px]">receipt_long</span>
+                    <h2 class="text-base sm:text-lg font-bold text-on-surface">Lịch sử nạp tiền</h2>
                 </div>
 
                 @if(isset($lichSuNapTien) && $lichSuNapTien->count() > 0)
@@ -216,24 +147,21 @@
                                 <tr>
                                     <th class="py-3 px-4">Mã giao dịch</th>
                                     <th class="py-3 px-4">Số tiền</th>
-                                    <th class="py-3 px-4 hidden sm:table-cell">Phương thức</th>
                                     <th class="py-3 px-4">Trạng thái</th>
-                                    <th class="py-3 px-4 hidden md:table-cell">Thời gian</th>
+                                    <th class="py-3 px-4 hidden sm:table-cell text-right">Thời gian</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-outline-variant/20">
                                 @foreach($lichSuNapTien as $tt)
                                     <tr class="hover:bg-surface-container-lowest/50 transition-colors">
                                         <td class="py-3 px-4 font-mono text-xs font-bold text-on-surface">
-                                            {{ $tt->ma_giao_dich }}
+                                            <div>{{ $tt->ma_giao_dich }}</div>
+                                            <div class="sm:hidden font-sans font-normal text-[11px] text-text-muted mt-0.5">
+                                                {{ $tt->created_at ? $tt->created_at->format('d/m/Y H:i') : '—' }}
+                                            </div>
                                         </td>
-                                        <td class="py-3 px-4 font-bold font-mono text-primary">
+                                        <td class="py-3 px-4 font-bold font-mono text-primary whitespace-nowrap">
                                             +{{ number_format($tt->so_tien, 0, ',', '.') }} đ
-                                        </td>
-                                        <td class="py-3 px-4 text-xs text-on-surface-variant hidden sm:table-cell">
-                                            <span class="inline-flex items-center gap-1 font-medium text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
-                                                <span class="material-symbols-outlined text-[13px]">credit_card</span> Cổng SePay
-                                            </span>
                                         </td>
                                         <td class="py-3 px-4">
                                             @if($tt->trang_thai === 'thanh_cong')
@@ -256,7 +184,7 @@
                                                 <span class="text-xs text-text-muted">{{ $tt->trang_thai }}</span>
                                             @endif
                                         </td>
-                                        <td class="py-3 px-4 text-xs text-text-muted hidden md:table-cell">
+                                        <td class="py-3 px-4 text-xs text-text-muted hidden sm:table-cell text-right whitespace-nowrap">
                                             {{ $tt->created_at ? $tt->created_at->format('d/m/Y H:i') : '—' }}
                                         </td>
                                     </tr>
@@ -272,14 +200,11 @@
                         </div>
                     @endif
                 @else
-                    <div class="py-12 text-center space-y-3">
-                        <div class="w-14 h-14 mx-auto rounded-full bg-surface-container-low flex items-center justify-center text-text-muted">
-                            <span class="material-symbols-outlined text-[32px]">receipt</span>
+                    <div class="py-10 text-center space-y-2">
+                        <div class="w-12 h-12 mx-auto rounded-full bg-surface-container-low flex items-center justify-center text-text-muted">
+                            <span class="material-symbols-outlined text-[26px]">receipt</span>
                         </div>
                         <p class="text-sm font-semibold text-on-surface">Chưa có giao dịch nạp tiền nào</p>
-                        <p class="text-xs text-text-muted max-w-sm mx-auto">
-                            Khi bạn thực hiện nạp tiền vào ví qua Cổng SePay, chi tiết các giao dịch sẽ hiển thị đầy đủ tại đây.
-                        </p>
                     </div>
                 @endif
             </section>
