@@ -685,7 +685,7 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
                             @foreach($quansGoiY as $quan)
                                 <x-venue-card :quan="$quan" :saved-quan-ids="$savedQuanIds ?? []" />
                             @endforeach
@@ -695,7 +695,7 @@
             </div>
         @else
             {{-- Grid quán ăn --}}
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
                 @foreach($quans as $quan)
                     <x-venue-card :quan="$quan" :saved-quan-ids="$savedQuanIds ?? []" />
                 @endforeach

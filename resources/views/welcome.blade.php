@@ -40,10 +40,10 @@
 @endpush
 
 @section('content')
-    {{-- DESKTOP Main Content --}}
-    <main class="hidden md:block flex-grow">
+    {{-- Unified Responsive Main Content (Đầy đủ 100% chức năng trên cả Desktop & Mobile) --}}
+    <main class="flex-grow">
         {{-- Hero Section --}}
-        <section class="relative w-full h-[480px] flex items-center justify-center z-30">
+        <section class="relative w-full min-h-[420px] md:h-[480px] py-10 md:py-0 flex items-center justify-center z-30">
             {{-- Slider Track Container --}}
             <div class="absolute inset-0 overflow-hidden pointer-events-none">
                 <div id="hero-slider-track" class="absolute inset-0 flex w-[300%] transition-transform duration-1000 ease-in-out" style="transform: translateX(0%);">
@@ -61,15 +61,15 @@
                     </div>
                 </div>
             </div>
-            <div class="relative z-20 text-center px-4 max-w-4xl space-y-6">
-                <div class="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-4 py-1.5 rounded-full text-white text-sm font-semibold border border-white/30 mb-2">
+            <div class="relative z-20 text-center px-4 w-full max-w-4xl space-y-4 sm:space-y-6">
+                <div class="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-3.5 sm:px-4 py-1.5 rounded-full text-white text-xs sm:text-sm font-semibold border border-white/30 mb-1">
                     <span class="material-symbols-outlined text-[18px] text-tick-xanh" style="font-variation-settings: 'FILL' 1;">verified</span>
                     Cộng đồng ẩm thực & giải trí hàng đầu
                 </div>
-                <h1 class="text-white font-display-lg text-[52px] leading-[62px] font-black drop-shadow-lg tracking-tight">
+                <h1 class="text-white font-display-lg text-3xl sm:text-4xl md:text-[52px] leading-tight md:leading-[62px] font-black drop-shadow-lg tracking-tight">
                     Khám phá <span class="text-primary-fixed">tinh hoa ẩm thực</span> địa phương
                 </h1>
-                <p class="text-white/90 text-lg max-w-2xl mx-auto font-normal drop-shadow">
+                <p class="text-white/90 text-sm sm:text-base md:text-lg max-w-2xl mx-auto font-normal drop-shadow">
                     Tìm kiếm hàng ngàn quán ăn, quán cà phê, tiệm trà sữa và địa điểm giải trí được yêu thích nhất gần bạn.
                 </p>
 
@@ -88,21 +88,21 @@
             }
             $totalCats = $displayCategories->count();
         @endphp
-        <section class="max-w-[1240px] mx-auto py-16 px-container-margin relative z-10" id="home-categories-section">
-            <div class="flex justify-between items-end mb-8">
+        <section class="max-w-[1240px] mx-auto py-10 md:py-16 px-container-margin relative z-10" id="home-categories-section">
+            <div class="flex justify-between items-end gap-3 mb-6 md:mb-8">
                 <div>
-                    <h2 class="text-2xl font-black text-on-surface">Danh mục khám phá</h2>
-                    <p class="text-text-muted text-[15px] mt-1">Tìm địa điểm theo nhu cầu ẩm thực của bạn</p>
+                    <h2 class="text-xl sm:text-2xl font-black text-on-surface">Danh mục khám phá</h2>
+                    <p class="text-text-muted text-xs sm:text-[15px] mt-1">Tìm địa điểm theo nhu cầu ẩm thực của bạn</p>
                 </div>
                 @if($totalCats > 6)
-                    <button type="button" onclick="toggleMoreCategories()" class="hidden md:inline-flex items-center gap-1.5 text-primary font-bold text-[14px] hover:underline cursor-pointer group">
+                    <button type="button" onclick="toggleMoreCategories()" class="inline-flex items-center gap-1 text-primary font-bold text-xs sm:text-[14px] hover:underline cursor-pointer group shrink-0">
                         <span id="headerToggleText">Xem thêm ({{ $totalCats - 6 }})</span>
                         <span id="headerToggleIcon" class="material-symbols-outlined text-[18px] group-hover:translate-y-0.5 transition-transform">expand_more</span>
                     </button>
                 @endif
             </div>
 
-            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-5" id="categoriesGrid">
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3.5 sm:gap-5" id="categoriesGrid">
                 @forelse($displayCategories as $index => $dm)
                     @php
                         $isExtra = $index >= 6;
@@ -170,11 +170,11 @@
                 </div>
 
                 {{-- Grid Quán Nổi Bật --}}
-                <div id="venues-grid-featured" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 xl:gap-8">
+                <div id="venues-grid-featured" class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 xl:gap-8">
                     @forelse($quanNoiBat as $quan)
                         <x-venue-card :quan="$quan" :saved-quan-ids="$savedQuanIds ?? []" />
                     @empty
-                        <p class="col-span-3 text-center text-gray-500 py-10">Chưa có quán nào nổi bật.</p>
+                        <p class="col-span-full text-center text-gray-500 py-10">Chưa có quán nào nổi bật.</p>
                     @endforelse
                 </div>
 
@@ -238,7 +238,7 @@
                 </div>
 
                 {{-- Grid Quán Gần Bạn --}}
-                <div id="venues-grid-nearby" class="{{ ($hasGps && $quanGanBan->isNotEmpty()) ? 'grid' : 'hidden' }} grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 xl:gap-8">
+                <div id="venues-grid-nearby" class="{{ ($hasGps && $quanGanBan->isNotEmpty()) ? 'grid' : 'hidden' }} grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 xl:gap-8">
                     @if($hasGps && $quanGanBan->isNotEmpty())
                         @foreach($quanGanBan as $quan)
                             <x-venue-card :quan="$quan" :saved-quan-ids="$savedQuanIds ?? []" />
@@ -252,60 +252,60 @@
         {{-- SECTION: Mới từ cộng đồng (Giao diện cũ) --}}
         <section class="bg-surface-container-low py-10 border-t border-gray-100/60" id="home-community-section">
             <div class="max-w-[1240px] mx-auto px-container-margin">
-                <div class="rounded-[28px] bg-white border border-gray-100 shadow-sm p-6 md:p-7">
-                    <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-6">
+                <div class="rounded-[24px] sm:rounded-[28px] bg-white border border-gray-100 shadow-sm p-4 sm:p-6 md:p-7">
+                    <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-3 sm:gap-4 mb-5 sm:mb-6">
                         <div>
                             <div class="inline-flex items-center gap-2 text-secondary text-xs font-bold uppercase tracking-wider mb-1">
                                 <span class="material-symbols-outlined text-[16px]">new_releases</span>
                                 Mới từ cộng đồng
                             </div>
                             <h3 class="text-xl md:text-2xl font-black text-on-surface">Quán mới vừa được thêm gần đây</h3>
-                            <p class="text-text-muted text-[15px] mt-1">Những địa điểm mới lên sóng để bạn khám phá sớm trước khi thành trend.</p>
+                            <p class="text-text-muted text-xs sm:text-[15px] mt-1">Những địa điểm mới lên sóng để bạn khám phá sớm trước khi thành trend.</p>
                         </div>
-                        <a class="text-primary font-bold text-[14px] flex items-center gap-1 hover:underline" href="{{ route('chu-quan.dang-quan') }}">
+                        <a class="text-primary font-bold text-xs sm:text-[14px] flex items-center gap-1 hover:underline" href="{{ route('chu-quan.dang-quan') }}">
                             Thêm quán của bạn <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
                         </a>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                         @forelse($quanMoi as $quan)
                         <a href="{{ route('quan.detail', $quan->slug) }}" class="group rounded-2xl border border-gray-100 bg-white hover:shadow-lg hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col h-full">
-                            <div class="relative w-full h-44 flex-shrink-0 overflow-hidden">
+                            <div class="relative w-full h-32 sm:h-44 flex-shrink-0 overflow-hidden">
                                 <img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
                                      src="{{ $quan->anh_bia_url ?: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=600&q=80' }}" 
                                      alt="{{ $quan->ten_quan }}"
                                      loading="lazy" />
-                                <div class="absolute top-2 left-2 bg-secondary text-white px-2 py-1 rounded-lg text-[10px] font-bold shadow-sm">Mới Mở</div>
+                                <div class="absolute top-2 left-2 bg-secondary text-white px-2 py-0.5 sm:py-1 rounded-lg text-[9.5px] sm:text-[10px] font-bold shadow-sm">Mới Mở</div>
                                 <button type="button" 
                                         data-quan-id="{{ $quan->id }}" 
                                         data-saved="{{ in_array($quan->id, $savedQuanIds ?? []) ? '1' : '0' }}" 
                                         onclick="event.preventDefault(); toggleSave(this, '{{ $quan->id }}')" 
-                                        class="absolute top-2 right-2 w-8 h-8 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center text-red-500 shadow-sm hover:scale-110 active:scale-90 transition-transform z-10" 
+                                        class="absolute top-2 right-2 w-7 h-7 sm:w-8 sm:h-8 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center text-red-500 shadow-sm hover:scale-110 active:scale-90 transition-transform z-10" 
                                         title="{{ in_array($quan->id, $savedQuanIds ?? []) ? 'Bỏ lưu quán' : 'Lưu quán' }}">
-                                    <span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' {{ in_array($quan->id, $savedQuanIds ?? []) ? '1' : '0' }};">favorite</span>
+                                    <span class="material-symbols-outlined text-[15px] sm:text-[18px]" style="font-variation-settings: 'FILL' {{ in_array($quan->id, $savedQuanIds ?? []) ? '1' : '0' }};">favorite</span>
                                 </button>
                             </div>
-                            <div class="p-4 flex flex-col flex-1">
-                                <div class="flex items-center gap-1.5 mb-1.5">
-                                    <span class="material-symbols-outlined text-[14px] text-primary">schedule</span>
-                                    <span class="text-[11px] text-primary font-bold">{{ $quan->created_at ? $quan->created_at->diffForHumans() : 'Mới đây' }}</span>
+                            <div class="p-2.5 sm:p-4 flex flex-col flex-1">
+                                <div class="flex items-center gap-1 mb-1 sm:mb-1.5">
+                                    <span class="material-symbols-outlined text-[12px] sm:text-[14px] text-primary">schedule</span>
+                                    <span class="text-[10px] sm:text-[11px] text-primary font-bold truncate">{{ $quan->created_at ? $quan->created_at->diffForHumans() : 'Mới đây' }}</span>
                                 </div>
-                                <div class="flex items-center justify-between gap-2">
-                                    <h4 class="font-bold text-[15px] text-on-surface group-hover:text-primary transition-colors truncate">{{ $quan->ten_quan }}</h4>
+                                <div class="flex items-center justify-between gap-1 sm:gap-2">
+                                    <h4 class="font-bold text-[13px] sm:text-[15px] text-on-surface group-hover:text-primary transition-colors truncate">{{ $quan->ten_quan }}</h4>
                                     @if($quan->is_xac_thuc)
-                                        <span class="material-symbols-outlined text-tick-xanh text-[16px] flex-shrink-0" style="font-variation-settings: 'FILL' 1;" title="Đã xác thực">verified</span>
+                                        <span class="material-symbols-outlined text-tick-xanh text-[14px] sm:text-[16px] flex-shrink-0" style="font-variation-settings: 'FILL' 1;" title="Đã xác thực">verified</span>
                                     @endif
                                 </div>
-                                <p class="text-[12px] text-text-muted mt-1 truncate flex items-center gap-1">
-                                    <span class="material-symbols-outlined text-[14px]">location_on</span>
-                                    {{ $quan->ten_quan_huyen ?? '' }}{{ $quan->ten_tinh_thanh ? ', ' . $quan->ten_tinh_thanh : '' }}
+                                <p class="text-[11px] sm:text-[12px] text-text-muted mt-1 truncate flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-[12px] sm:text-[14px]">location_on</span>
+                                    <span class="truncate">{{ $quan->ten_quan_huyen ?? '' }}{{ $quan->ten_tinh_thanh ? ', ' . $quan->ten_tinh_thanh : '' }}</span>
                                 </p>
-                                <div class="mt-3 pt-3 flex items-center justify-between border-t border-gray-100 gap-2 min-w-0">
-                                    <div class="flex gap-1.5 items-center min-w-0 flex-shrink">
-                                        <span class="bg-gray-50 text-gray-600 px-2 py-0.5 rounded-md text-[11px] font-medium whitespace-nowrap truncate max-w-[95px]" title="{{ $quan->danhMuc->ten_danh_muc ?? str_replace('_', ' ', \Illuminate\Support\Str::title($quan->loai_hinh_kinh_doanh ?? 'Quán ăn')) }}">{{ $quan->danhMuc->ten_danh_muc ?? str_replace('_', ' ', \Illuminate\Support\Str::title($quan->loai_hinh_kinh_doanh ?? 'Quán ăn')) }}</span>
-                                        <span class="flex items-center gap-0.5 text-gray-500 text-[11px] whitespace-nowrap flex-shrink-0"><span class="material-symbols-outlined text-[13px]">visibility</span>{{ number_format($quan->luot_xem ?? 0) }}</span>
+                                <div class="mt-2.5 sm:mt-3 pt-2 sm:pt-3 flex flex-wrap items-center justify-between border-t border-gray-100 gap-1 sm:gap-2 min-w-0">
+                                    <div class="flex gap-1 sm:gap-1.5 items-center min-w-0 flex-shrink">
+                                        <span class="hidden sm:inline-block bg-gray-50 text-gray-600 px-2 py-0.5 rounded-md text-[11px] font-medium whitespace-nowrap truncate max-w-[95px]" title="{{ $quan->danhMuc->ten_danh_muc ?? str_replace('_', ' ', \Illuminate\Support\Str::title($quan->loai_hinh_kinh_doanh ?? 'Quán ăn')) }}">{{ $quan->danhMuc->ten_danh_muc ?? str_replace('_', ' ', \Illuminate\Support\Str::title($quan->loai_hinh_kinh_doanh ?? 'Quán ăn')) }}</span>
+                                        <span class="flex items-center gap-0.5 text-gray-500 text-[10.5px] sm:text-[11px] whitespace-nowrap flex-shrink-0"><span class="material-symbols-outlined text-[12px] sm:text-[13px]">visibility</span>{{ number_format($quan->luot_xem ?? 0) }}</span>
                                     </div>
-                                    <span class="font-bold text-primary text-[13px] whitespace-nowrap flex-shrink-0 ml-auto">{{ number_format($quan->gia_nho_nhat, 0, ',', '.') }}đ</span>
+                                    <span class="font-bold text-primary text-[11.5px] sm:text-[13px] whitespace-nowrap flex-shrink-0 ml-auto">{{ number_format($quan->gia_nho_nhat, 0, ',', '.') }}đ</span>
                                 </div>
                             </div>
                         </a>
@@ -442,257 +442,6 @@
             </div>
         </section>
 
-    </main>
-
-    {{-- MOBILE Main Content --}}
-    <main class="max-w-[1200px] mx-auto w-full md:hidden flex-grow space-y-6 pb-12">
-        {{-- Hero Section --}}
-        <section class="px-4 pt-4 pb-6 bg-white rounded-b-2xl shadow-sm relative overflow-hidden border-b border-gray-100">
-            <div class="relative z-10 space-y-3">
-                <div class="inline-flex items-center gap-1 text-primary text-[11px] font-bold uppercase tracking-wider">
-                    <span class="material-symbols-outlined text-[14px]">restaurant</span>
-                    Khám phá địa điểm gần bạn
-                </div>
-                <h1 class="text-xl font-black text-on-surface">Hôm nay bạn muốn ăn gì?</h1>
-                <div class="mt-2">
-                    <x-search-bar prefix="mhero" />
-                </div>
-            </div>
-        </section>
-
-        {{-- Categories Grid Mobile (6 items) --}}
-        <section class="px-4">
-            <div class="grid grid-cols-3 gap-3">
-                <a class="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-white border border-gray-100 shadow-sm active:scale-95 transition-transform" href="{{ route('kham-pha', ['danh_muc' => 'Nhà hàng']) }}">
-                    <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                        <span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">restaurant</span>
-                    </div>
-                    <span class="text-[12px] font-bold text-center text-on-surface">Nhà hàng</span>
-                </a>
-                <a class="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-white border border-gray-100 shadow-sm active:scale-95 transition-transform" href="{{ route('kham-pha', ['danh_muc' => 'Cà phê & Trà']) }}">
-                    <div class="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary">
-                        <span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">local_cafe</span>
-                    </div>
-                    <span class="text-[12px] font-bold text-center text-on-surface">Cà phê & Trà</span>
-                </a>
-                <a class="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-white border border-gray-100 shadow-sm active:scale-95 transition-transform" href="{{ route('kham-pha', ['danh_muc' => 'Billiards & Giải trí']) }}">
-                    <div class="w-12 h-12 rounded-xl bg-tertiary/10 flex items-center justify-center text-tertiary">
-                        <span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">sports_esports</span>
-                    </div>
-                    <span class="text-[12px] font-bold text-center text-on-surface">Billiards & Giải trí</span>
-                </a>
-                <a class="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-white border border-gray-100 shadow-sm active:scale-95 transition-transform" href="{{ route('kham-pha', ['danh_muc' => 'Đồ ăn vặt']) }}">
-                    <div class="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center text-red-600">
-                        <span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">fastfood</span>
-                    </div>
-                    <span class="text-[12px] font-bold text-center text-on-surface">Đồ ăn vặt</span>
-                </a>
-                <a class="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-white border border-gray-100 shadow-sm active:scale-95 transition-transform" href="{{ route('kham-pha', ['danh_muc' => 'Lẩu & Nướng']) }}">
-                    <div class="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center text-amber-700">
-                        <span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">outdoor_grill</span>
-                    </div>
-                    <span class="text-[12px] font-bold text-center text-on-surface">Lẩu & Nướng</span>
-                </a>
-                <a class="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-white border border-gray-100 shadow-sm active:scale-95 transition-transform" href="{{ route('kham-pha', ['danh_muc' => 'Quán Đêm 24/7']) }}">
-                    <div class="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center text-purple-700">
-                        <span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">nightlife</span>
-                    </div>
-                    <span class="text-[12px] font-bold text-center text-on-surface">Quán Đêm 24/7</span>
-                </a>
-            </div>
-        </section>
-
-        {{-- 1. Recommended List Mobile: Quán Nổi Bật --}}
-        <section class="px-4">
-            <div class="flex justify-between items-center mb-3">
-                <div>
-                    <h2 class="font-bold text-[16px] text-on-surface">Quán gợi ý nổi bật</h2>
-                    <p class="text-[12px] text-gray-500">Địa điểm đánh giá cao được yêu thích nhất</p>
-                </div>
-                <a class="text-xs text-primary font-bold flex items-center gap-0.5" href="{{ route('quan-noi-bat') }}">Xem tất cả <span class="material-symbols-outlined text-[14px]">chevron_right</span></a>
-            </div>
-
-            <div class="flex flex-col gap-3" id="mobile-venues-featured">
-                @forelse($quanNoiBat as $quan)
-                <a href="{{ route('quan.detail', $quan->slug) }}" class="bg-white rounded-2xl p-3 flex gap-3 shadow-sm border border-gray-100 active:bg-gray-50 transition-colors">
-                    <div class="w-24 h-24 rounded-xl overflow-hidden flex-shrink-0 relative">
-                        <img class="w-full h-full object-cover" src="{{ $quan->anh_bia_url ?: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=300&q=80' }}" loading="lazy"/>
-                        <div class="absolute bottom-1 right-1 bg-black/70 text-white px-1.5 py-0.5 rounded-md text-[10px] font-bold flex items-center gap-0.5">
-                            <span class="material-symbols-outlined text-[10px] text-amber-400" style="font-variation-settings: 'FILL' 1;">star</span> 4.9
-                        </div>
-                    </div>
-                    <div class="flex flex-col justify-between flex-1 py-0.5">
-                        <div>
-                            <h3 class="font-bold text-[15px] text-on-surface leading-tight flex items-center gap-1">{{ $quan->ten_quan }} @if($quan->is_xac_thuc)<span class="material-symbols-outlined text-tick-xanh text-[15px]" style="font-variation-settings: 'FILL' 1;">verified</span>@endif</h3>
-                            <p class="text-[12px] text-text-muted mt-1 truncate">{{ $quan->dia_chi_chi_tiet }}, {{ $quan->ten_quan_huyen }}</p>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <span class="text-xs font-bold text-primary">{{ number_format($quan->gia_nho_nhat, 0, ',', '.') }}đ - {{ number_format($quan->gia_lon_nhat, 0, ',', '.') }}đ</span>
-                            <span class="text-[11px] text-gray-400 flex items-center gap-0.5"><span class="material-symbols-outlined text-[12px]">visibility</span> {{ $quan->luot_xem ?? 0 }}</span>
-                        </div>
-                    </div>
-                </a>
-                @empty
-                <p class="text-center text-gray-500 py-4">Chưa có quán nào.</p>
-                @endforelse
-            </div>
-        </section>
-
-        {{-- 2. Nearby List Mobile: Quán Ăn Gần Bạn (Tách riêng nằm dưới) --}}
-        <section class="px-4 pt-4" id="mobile-nearby-section">
-            <div class="flex justify-between items-center mb-3">
-                <div>
-                    <h2 class="font-bold text-[16px] text-on-surface flex items-center gap-1.5">
-                        <span class="material-symbols-outlined text-emerald-600 text-[18px]">near_me</span>
-                        <span>Quán ăn gần bạn</span>
-                    </h2>
-                    <p class="text-[12px] text-gray-500" id="mobile-nearby-subtitle">
-                        {{ ($hasGps && $quanGanBan->isNotEmpty()) ? 'Sắp xếp theo khoảng cách gần nhất' : 'Khám phá quán ngon quanh vị trí của bạn' }}
-                    </p>
-                </div>
-                <button type="button" onclick="requestUserLocation(true)" class="text-xs text-emerald-700 font-bold flex items-center gap-0.5 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-200">
-                    <span class="material-symbols-outlined text-[14px]">my_location</span> Định vị
-                </button>
-            </div>
-
-            <div class="flex flex-col gap-3" id="mobile-venues-nearby">
-                @if($hasGps && $quanGanBan->isNotEmpty())
-                    @foreach($quanGanBan as $quan)
-                    <a href="{{ route('quan.detail', $quan->slug) }}" class="bg-white rounded-2xl p-3 flex gap-3 shadow-sm border border-gray-100 active:bg-gray-50 transition-colors">
-                        <div class="w-24 h-24 rounded-xl overflow-hidden flex-shrink-0 relative">
-                            <img class="w-full h-full object-cover" src="{{ $quan->anh_bia_url ?: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=300&q=80' }}" loading="lazy"/>
-                            <div class="absolute bottom-1 right-1 bg-black/70 text-white px-1.5 py-0.5 rounded-md text-[10px] font-bold flex items-center gap-0.5">
-                                <span class="material-symbols-outlined text-[10px] text-amber-400" style="font-variation-settings: 'FILL' 1;">star</span> 4.9
-                            </div>
-                        </div>
-                        <div class="flex flex-col justify-between flex-1 py-0.5">
-                            <div>
-                                <h3 class="font-bold text-[15px] text-on-surface leading-tight flex items-center gap-1">{{ $quan->ten_quan }} @if($quan->is_xac_thuc)<span class="material-symbols-outlined text-tick-xanh text-[15px]" style="font-variation-settings: 'FILL' 1;">verified</span>@endif</h3>
-                                <p class="text-[12px] text-text-muted mt-1 truncate">{{ $quan->dia_chi_chi_tiet }}, {{ $quan->ten_quan_huyen }}</p>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <span class="text-xs font-bold text-primary">{{ number_format($quan->gia_nho_nhat, 0, ',', '.') }}đ - {{ number_format($quan->gia_lon_nhat, 0, ',', '.') }}đ</span>
-                                <span class="text-[11px] text-emerald-600 font-bold flex items-center gap-0.5"><span class="material-symbols-outlined text-[12px]">near_me</span> {{ $quan->khoang_cach_km }} km</span>
-                            </div>
-                        </div>
-                    </a>
-                    @endforeach
-                @else
-                    <div id="mobile-nearby-prompt" class="bg-emerald-50/70 border border-emerald-100 rounded-2xl p-4 text-center">
-                        <span class="material-symbols-outlined text-3xl text-emerald-600 mb-1">near_me</span>
-                        <p class="text-xs text-gray-700 font-medium mb-3">Bật vị trí để Quán Mới tìm các quán ăn gần bạn nhất</p>
-                        <button type="button" onclick="requestUserLocation(true)" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold shadow-xs">
-                            <span class="material-symbols-outlined text-[15px]">location_on</span>
-                            <span>Cho phép truy cập vị trí</span>
-                        </button>
-                    </div>
-                @endif
-            </div>
-        </section>
-
-        {{-- Video Shorts Carousel Mobile --}}
-        <section class="px-4">
-            <div class="flex justify-between items-center mb-3">
-                <div>
-                    <div class="inline-flex items-center gap-1 text-red-600 text-[11px] font-bold uppercase tracking-wider">
-                        <span class="material-symbols-outlined text-[14px]">play_circle</span>
-                        Short Video Review
-                    </div>
-                    <h2 class="font-bold text-[16px] text-on-surface">Video trải nghiệm thực tế</h2>
-                </div>
-                <a class="text-xs text-primary font-bold flex items-center gap-0.5" href="{{ route('video-review.index') }}">Tất cả <span class="material-symbols-outlined text-[14px]">chevron_right</span></a>
-            </div>
-            <div class="flex overflow-x-auto no-scrollbar gap-3 snap-x snap-mandatory -mx-4 px-4 pb-2">
-                @forelse($videoShorts as $video)
-                <a href="{{ route('video-review.index') }}" class="min-w-[200px] w-[55%] snap-center relative h-72 rounded-2xl overflow-hidden group cursor-pointer shadow-sm border border-gray-100 flex-shrink-0 block bg-gray-900">
-                    <img src="{{ $video->effective_thumbnail }}"
-                         alt="Video review {{ $video->nguoi_dang }}"
-                         loading="lazy"
-                         onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=400&q=80';"
-                         class="absolute inset-0 w-full h-full object-cover" />
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-black/20"></div>
-                    <div class="absolute inset-0 flex items-center justify-center">
-                        <div class="w-11 h-11 rounded-full bg-white/30 backdrop-blur-md flex items-center justify-center text-white">
-                            <span class="material-symbols-outlined text-2xl ml-0.5" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
-                        </div>
-                    </div>
-                    <div class="absolute top-2.5 right-2.5 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-full text-white text-[10px] font-bold flex items-center gap-0.5">
-                        <span class="material-symbols-outlined text-[12px]">visibility</span> {{ number_format($video->luot_xem) }}
-                    </div>
-                    <div class="absolute bottom-3 inset-x-3 text-white space-y-1">
-                        <h4 class="font-bold text-[13px] leading-tight line-clamp-2">{{ $video->tieu_de }}</h4>
-                        <p class="text-white/80 text-[11px]">{{ $video->nguoi_dang }}</p>
-                    </div>
-                </a>
-                @empty
-                    <div class="text-center text-gray-500 py-4 w-full">Đang cập nhật video review.</div>
-                @endforelse
-            </div>
-        </section>
-
-        {{-- Curated Collections Mobile --}}
-        <section class="px-4">
-            <div class="mb-3">
-                <h2 class="font-bold text-[16px] text-on-surface">Bộ sưu tập đề xuất</h2>
-                <p class="text-[12px] text-gray-500">Tuyển chọn các quán ăn theo gu</p>
-            </div>
-            <div class="flex overflow-x-auto no-scrollbar gap-3 snap-x snap-mandatory -mx-4 px-4 pb-2">
-                {{-- Collection 1 --}}
-                <a href="{{ route('kham-pha', ['tu_khoa' => 'Cà phê muối']) }}" class="block min-w-[240px] w-[70%] snap-center relative h-44 rounded-2xl overflow-hidden group cursor-pointer shadow-sm border border-gray-100 flex-shrink-0">
-                    <img src="https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&w=400&q=80" alt="BST Cà Phê Muối" class="absolute inset-0 w-full h-full object-cover" />
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
-                    <div class="absolute bottom-3 inset-x-3 space-y-0.5">
-                        <span class="bg-primary/80 backdrop-blur-sm text-white text-[9px] font-bold px-2 py-0.5 rounded">15 Địa điểm</span>
-                        <h3 class="font-bold text-[14px] text-white leading-tight">BST Cà phê muối béo ngậy</h3>
-                    </div>
-                </a>
-
-                {{-- Collection 2 --}}
-                <a href="{{ route('kham-pha', ['danh_muc' => 'Lẩu & Nướng']) }}" class="block min-w-[240px] w-[70%] snap-center relative h-44 rounded-2xl overflow-hidden group cursor-pointer shadow-sm border border-gray-100 flex-shrink-0">
-                    <img src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=400&q=80" alt="BST Quán Nướng" class="absolute inset-0 w-full h-full object-cover" />
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
-                    <div class="absolute bottom-3 inset-x-3 space-y-0.5">
-                        <span class="bg-secondary/80 backdrop-blur-sm text-white text-[9px] font-bold px-2 py-0.5 rounded">24 Địa điểm</span>
-                        <h3 class="font-bold text-[14px] text-white leading-tight">Top Lẩu nướng sân vườn</h3>
-                    </div>
-                </a>
-
-                {{-- Collection 3 --}}
-                <a href="{{ route('kham-pha', ['danh_muc' => 'Quán Đêm 24/7']) }}" class="block min-w-[240px] w-[70%] snap-center relative h-44 rounded-2xl overflow-hidden group cursor-pointer shadow-sm border border-gray-100 flex-shrink-0">
-                    <img src="https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=400&q=80" alt="BST Ăn Đêm" class="absolute inset-0 w-full h-full object-cover" />
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
-                    <div class="absolute bottom-3 inset-x-3 space-y-0.5">
-                        <span class="bg-tertiary/80 backdrop-blur-sm text-white text-[9px] font-bold px-2 py-0.5 rounded">18 Địa điểm</span>
-                        <h3 class="font-bold text-[14px] text-white leading-tight">Quán ăn đêm 24/7 ngon mịt</h3>
-                    </div>
-                </a>
-            </div>
-        </section>
-
-        {{-- Community Impact Stats Mobile --}}
-        <section class="px-4 pt-2">
-            <div class="bg-gradient-to-br from-primary-fixed via-amber-50 to-orange-100 rounded-2xl p-5 border border-amber-200 space-y-4 shadow-sm">
-                <div class="space-y-1">
-                    <span class="bg-primary/10 text-primary px-2.5 py-0.5 rounded-full text-[10px] font-bold">Cộng đồng Quán Mới</span>
-                    <h3 class="font-black text-xl text-on-primary-fixed">1,200+ Quán ăn đã xác thực</h3>
-                    <p class="text-[12px] text-on-surface-variant">Hơn 85,000+ thành viên đã đóng góp hơn 150,000+ đánh giá thật.</p>
-                </div>
-                <div class="grid grid-cols-3 gap-2 text-center pt-1">
-                    <div class="bg-white/80 p-2.5 rounded-xl border border-white">
-                        <div class="font-black text-lg text-primary">1.2k+</div>
-                        <div class="text-[10px] text-gray-600 font-bold">Quán ăn</div>
-                    </div>
-                    <div class="bg-white/80 p-2.5 rounded-xl border border-white">
-                        <div class="font-black text-lg text-secondary">85k+</div>
-                        <div class="text-[10px] text-gray-600 font-bold">Thành viên</div>
-                    </div>
-                    <div class="bg-white/80 p-2.5 rounded-xl border border-white">
-                        <div class="font-black text-lg text-tertiary">150k+</div>
-                        <div class="text-[10px] text-gray-600 font-bold">Review thật</div>
-                    </div>
-                </div>
-            </div>
-        </section>
     </main>
 
     <script>
@@ -932,42 +681,43 @@
         const distanceKm = quan.khoang_cach_km !== undefined ? quan.khoang_cach_km : null;
 
         return `
-        <a href="${quan.url}" class="block bg-white rounded-2xl shadow-sm overflow-hidden group cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-gray-100 flex flex-col h-full animate-fadeIn">
-            <div class="relative h-48 sm:h-52 w-full overflow-hidden flex-shrink-0">
+        <a href="${quan.url}" class="qm-venue-card group cursor-pointer animate-fadeIn">
+            <div class="qm-venue-thumb">
                 <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
                      src="${anhBia}" 
                      alt="${escapeHtml(quan.ten_quan)}" 
                      loading="lazy" />
                 
-                <div class="absolute top-3 left-3 z-10">
-                    <div class="bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-xl text-primary font-bold text-xs flex items-center gap-1 shadow-sm">
-                        <span class="material-symbols-outlined text-[15px] text-amber-500" style="font-variation-settings: 'FILL' 1;">star</span>
+                <div class="absolute top-2 left-2 sm:top-3 sm:left-3 z-10">
+                    <div class="qm-venue-badge-rating">
+                        <span class="material-symbols-outlined text-[12px] sm:text-[14px] text-amber-500" style="font-variation-settings: 'FILL' 1;">star</span>
                         <span>${rating}</span>
                     </div>
                 </div>
 
-                <div class="absolute bottom-3 left-3 z-10 flex items-center gap-1.5 max-w-[calc(100%-54px)] pointer-events-none">
-                    <span class="bg-white/95 backdrop-blur-md text-gray-800 px-2.5 py-1 rounded-xl text-[11px] sm:text-[11.5px] font-bold shadow-sm border border-gray-100/60 truncate" title="${loaiHinh}">
-                        ${loaiHinh}
-                    </span>
-                    ${distanceKm !== null ? `
-                        <span class="bg-primary/95 text-white backdrop-blur-md px-2 py-1 rounded-xl font-bold text-[11px] flex items-center gap-0.5 shadow-sm whitespace-nowrap" title="Cách vị trí của bạn ${distanceKm} km">
-                            <span class="material-symbols-outlined text-[13px]">near_me</span>
-                            <span>${distanceKm} km</span>
+                <div class="absolute top-2 right-2 sm:top-3 sm:right-3 flex items-center gap-1 sm:gap-1.5 z-10">
+                    ${quan.dang_mo_cua ? `
+                        <span class="qm-venue-badge-status bg-emerald-600/95 text-white">
+                            <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+                            <span>Mở cửa</span>
+                        </span>
+                    ` : ''}
+                    ${quan.is_noi_bat ? `
+                        <span class="qm-venue-badge-hot" title="Quán nổi bật">
+                            <span class="material-symbols-outlined text-[12px] sm:text-[14px]" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
                         </span>
                     ` : ''}
                 </div>
 
-                <div class="absolute top-3 right-3 flex items-center gap-1 z-10">
-                    ${quan.dang_mo_cua ? `
-                        <span class="bg-emerald-600/90 backdrop-blur-md text-white px-2 py-0.5 rounded-lg text-[10.5px] font-bold flex items-center gap-1 shadow-sm">
-                            <span class="w-1.5 h-1.5 rounded-full bg-white"></span>
-                            Mở cửa
-                        </span>
-                    ` : ''}
-                    ${quan.is_noi_bat ? `
-                        <span class="bg-amber-500 text-white font-bold text-[10.5px] px-2 py-0.5 rounded-lg shadow-sm flex items-center gap-0.5" title="Quán nổi bật">
-                            <span class="material-symbols-outlined text-[12px]" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+                <div class="absolute bottom-2 left-2 sm:bottom-3 sm:left-3 z-10 flex items-center gap-1 sm:gap-1.5 max-w-[calc(100%-44px)] sm:max-w-[calc(100%-56px)] pointer-events-none">
+                    <span class="qm-venue-badge-category truncate" title="${loaiHinh}">
+                        <span class="material-symbols-outlined text-[11px] sm:text-[13px] text-primary shrink-0">storefront</span>
+                        <span class="truncate">${loaiHinh}</span>
+                    </span>
+                    ${distanceKm !== null ? `
+                        <span class="qm-venue-badge-status bg-primary/95 text-white whitespace-nowrap" title="Cách vị trí của bạn ${distanceKm} km">
+                            <span class="material-symbols-outlined text-[11px] sm:text-[12px]" style="font-variation-settings: 'FILL' 1;">near_me</span>
+                            <span>${distanceKm} km</span>
                         </span>
                     ` : ''}
                 </div>
@@ -976,37 +726,41 @@
                         data-quan-id="${quan.id}" 
                         data-saved="${isSaved ? '1' : '0'}"
                         onclick="event.preventDefault(); toggleSave(this, '${quan.id}')" 
-                        class="absolute bottom-3 right-3 w-9 h-9 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center text-red-500 shadow-sm hover:scale-110 active:scale-90 transition-transform z-10" 
+                        class="qm-venue-save-btn absolute bottom-2 right-2 sm:bottom-3 sm:right-3 z-10 cursor-pointer" 
                         title="${isSaved ? 'Bỏ lưu quán' : 'Lưu quán'}">
-                    <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' ${isSaved ? '1' : '0'};">favorite</span>
+                    <span class="material-symbols-outlined text-[15px] sm:text-[18px]" style="font-variation-settings: 'FILL' ${isSaved ? '1' : '0'};">favorite</span>
                 </button>
             </div>
 
-            <div class="p-4 sm:p-5 flex flex-col flex-1 justify-between gap-2.5">
-                <div class="space-y-1.5">
-                    <div class="flex items-center justify-between gap-1.5">
-                        <h3 class="min-w-0 flex-1 font-bold text-[16px] sm:text-[17px] text-on-surface break-words [overflow-wrap:anywhere] group-hover:text-primary transition-colors pr-1">${escapeHtml(quan.ten_quan)}</h3>
+            <div class="p-2.5 sm:p-4 flex flex-col flex-1 justify-between gap-2 sm:gap-3">
+                <div class="space-y-1 sm:space-y-2">
+                    <div class="flex items-start justify-between gap-1 sm:gap-2">
+                        <h3 class="min-w-0 flex-1 font-bold text-[13px] sm:text-[16px] leading-snug text-slate-900 line-clamp-1 group-hover:text-primary transition-colors">${escapeHtml(quan.ten_quan)}</h3>
                         ${quan.is_xac_thuc ? `
-                            <span class="material-symbols-outlined text-tick-xanh text-[18px] sm:text-[19px] flex-shrink-0" style="font-variation-settings: 'FILL' 1;" title="Đã xác thực">verified</span>
+                            <span class="inline-flex items-center justify-center w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-emerald-50 text-emerald-600 shrink-0 mt-0.5" title="Quán đã xác thực uy tín">
+                                <span class="material-symbols-outlined text-[13px] sm:text-[15px]" style="font-variation-settings: 'FILL' 1;">verified</span>
+                            </span>
                         ` : ''}
                     </div>
 
-                    <p class="text-text-muted text-[13px] flex items-start gap-1">
-                        <span class="material-symbols-outlined text-[16px] text-gray-400 flex-shrink-0 mt-0.5">location_on</span>
-                        <span class="line-clamp-2 leading-relaxed">${escapeHtml(quan.dia_chi || '')}</span>
-                    </p>
+                    <div class="flex items-start gap-1.5 sm:gap-2 text-slate-500 text-[11px] sm:text-[12.5px]">
+                        <span class="qm-venue-loc-icon">
+                            <span class="material-symbols-outlined text-[11px] sm:text-[13px]" style="font-variation-settings: 'FILL' 1;">location_on</span>
+                        </span>
+                        <span class="line-clamp-1 sm:line-clamp-2 leading-relaxed text-slate-600">${escapeHtml(quan.dia_chi || '')}</span>
+                    </div>
                 </div>
 
-                <div class="flex items-center justify-between pt-2.5 border-t border-gray-100 gap-2 min-w-0 mt-auto">
-                    <div class="flex items-center gap-2 min-w-0 flex-shrink">
-                        <span class="flex items-center gap-1 text-gray-500 text-[11.5px] whitespace-nowrap flex-shrink-0">
-                            <span class="material-symbols-outlined text-[14px]">visibility</span>
-                            <span>${quan.luot_xem || 0}</span>
+                <div class="flex flex-wrap items-center justify-between pt-2 sm:pt-2.5 border-t border-slate-100 gap-1 sm:gap-2 min-w-0 mt-auto">
+                    <div class="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-shrink">
+                        <span class="inline-flex items-center gap-1 text-slate-500 text-[10.5px] sm:text-[12px] font-medium whitespace-nowrap flex-shrink-0">
+                            <span class="material-symbols-outlined text-[12px] sm:text-[14px] text-slate-400">visibility</span>
+                            <span>${Number(quan.luot_xem || 0).toLocaleString('vi-VN')}</span>
                         </span>
                     </div>
 
-                    <span class="text-primary font-bold text-[12.5px] xl:text-[13.5px] whitespace-nowrap flex-shrink-0 ml-auto">
-                        ${giaNhoNhat}đ - ${giaLonNhat}đ
+                    <span class="qm-venue-price-pill ml-auto">
+                        <span>${giaNhoNhat}đ - ${giaLonNhat}đ</span>
                     </span>
                 </div>
             </div>

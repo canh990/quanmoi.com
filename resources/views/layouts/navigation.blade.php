@@ -115,8 +115,8 @@
 </header>
 
 {{-- Mobile Top App Bar --}}
-<header class="flex md:hidden justify-between items-center px-4 h-14 w-full fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100 shadow-sm" style="z-index: 9999;">
-    <button class="p-2 rounded-full hover:bg-surface-container active:scale-90 transition-all" aria-label="Menu">
+<header class="flex md:hidden justify-between items-center px-3.5 h-14 w-full fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100 shadow-sm" style="z-index: 9999;">
+    <button type="button" onclick="toggleMobileNavDrawer()" class="p-2 rounded-full hover:bg-surface-container active:scale-90 transition-all cursor-pointer" aria-label="Mở menu điều hướng">
         <span class="material-symbols-outlined text-on-surface-variant text-[22px]">menu</span>
     </button>
     <a href="/" class="flex items-center gap-1.5">
@@ -126,57 +126,227 @@
             <path d="M61.2 72.7L77.5 60.1L88.1 67.4L106.8 48.6" stroke="#1a1a1a" stroke-width="5.4" stroke-linecap="round" stroke-linejoin="round" />
             <path d="M99 48.6H106.8V56.4" stroke="#1a1a1a" stroke-width="5.4" stroke-linecap="round" stroke-linejoin="round" />
         </svg>
-        <span class="text-[22px] tracking-tight font-extrabold" style="font-family: 'Raleway', sans-serif; color: #1a1a1a; line-height: 0.88; letter-spacing: -0.05em;">QuanMoi</span>
+        <span class="text-[21px] tracking-tight font-extrabold" style="font-family: 'Raleway', sans-serif; color: #1a1a1a; line-height: 0.88; letter-spacing: -0.05em;">QuanMoi</span>
     </a>
-    <div class="flex items-center gap-1">
+    <div class="flex items-center gap-0.5">
         @auth
             <div class="relative" id="user-mobile-notif-wrapper">
                 <button id="user-mobile-notif-btn" type="button" onclick="toggleUserNotifDropdown(event)" class="relative p-2 rounded-full hover:bg-surface-container active:scale-90 transition-all text-on-surface-variant hover:text-primary cursor-pointer" title="{{ $isAdmin ? 'Thông báo Quản trị' : 'Thông báo' }}">
-                    <span class="material-symbols-outlined text-[22px]">notifications</span>
-                    <span id="user-mobile-notif-badge" class="{{ ($navCount ?? 0) > 0 ? '' : 'hidden' }} absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 bg-red-600 text-white text-[9px] font-extrabold rounded-full ring-2 ring-white flex items-center justify-center animate-pulse">{{ ($navCount ?? 0) > 99 ? '99+' : ($navCount ?? 0) }}</span>
+                    <span class="material-symbols-outlined text-[21px]">notifications</span>
+                    <span id="user-mobile-notif-badge" class="{{ ($navCount ?? 0) > 0 ? '' : 'hidden' }} absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] px-1 bg-red-600 text-white text-[9px] font-extrabold rounded-full ring-2 ring-white flex items-center justify-center animate-pulse">{{ ($navCount ?? 0) > 99 ? '99+' : ($navCount ?? 0) }}</span>
                 </button>
                 @include('layouts.notification-dropdown', ['isMobile' => true, 'isAdmin' => $isAdmin, 'navUnreadCount' => $navCount, 'navNotifications' => $navList])
             </div>
         @endauth
-        <a href="{{ route('ban-do') }}" class="p-2 rounded-full hover:bg-surface-container active:scale-90 transition-all text-on-surface-variant hover:text-primary" title="Bản đồ quán lân cận">
-            <span class="material-symbols-outlined text-[22px]">map</span>
+        <a href="{{ route('blog.index') }}" class="p-2 rounded-full hover:bg-surface-container active:scale-90 transition-all text-on-surface-variant hover:text-primary" title="Blog ẩm thực">
+            <span class="material-symbols-outlined text-[21px]">article</span>
         </a>
         <a href="{{ route('kham-pha') }}" class="p-2 rounded-full hover:bg-surface-container active:scale-90 transition-all text-on-surface-variant hover:text-primary" title="Tìm món ăn">
-            <span class="material-symbols-outlined text-[22px]">search</span>
+            <span class="material-symbols-outlined text-[21px]">search</span>
         </a>
     </div>
 </header>
 
-{{-- Mobile Bottom Navigation --}}
+{{-- Mobile Slide-Out Navigation Drawer (Đầy đủ 100% chức năng như Desktop) --}}
+<style>
+    #mobile-nav-backdrop {
+        z-index: 10000;
+        background-color: rgba(2, 6, 23, 0.55);
+        backdrop-filter: blur(2px);
+    }
+    #mobile-nav-drawer {
+        z-index: 10001;
+        width: 290px;
+        max-width: 85vw;
+        transform: translateX(-100%);
+        transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    #mobile-nav-drawer.is-open {
+        transform: translateX(0);
+    }
+</style>
+<div id="mobile-nav-backdrop" onclick="toggleMobileNavDrawer(false)" class="fixed inset-0 hidden md:hidden transition-opacity"></div>
+<aside id="mobile-nav-drawer" class="fixed top-0 left-0 bottom-0 bg-white md:hidden flex flex-col shadow-2xl border-r border-slate-100">
+    {{-- Drawer Header --}}
+    <div class="flex items-center justify-between px-4 py-3.5 border-b border-slate-100 bg-slate-50/70">
+        <a href="/" class="flex items-center gap-2">
+            <svg class="w-7 h-7" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M89.5 18C50.95 18 19.7 49.25 19.7 87.8C19.7 126.35 50.95 157.6 89.5 157.6C106.1 157.6 121.35 151.8 133.3 142.12L152.7 161.5L166.9 147.3L147.75 128.15C154.25 116.55 158 102.9 158 87.8C158 49.25 128.05 18 89.5 18ZM89.5 42.5C114.5 42.5 134.8 62.8 134.8 87.8C134.8 97.15 132 105.85 127.2 113.1L109.7 95.6H117V79H86.3V109.7H102.9V102.4L112.7 112.2C106.1 117.25 98.12 120.15 89.5 120.15C64.5 120.15 44.2 100 44.2 87.8C44.2 62.8 64.5 42.5 89.5 42.5Z" fill="#c97a3a" />
+                <path d="M63.8 101.5V84.8H73.4V101.5H63.8ZM80.2 101.5V70.2H89.8V101.5H80.2ZM96.6 101.5V58.3H106.2V101.5H96.6Z" fill="#1a1a1a" />
+            </svg>
+            <span class="text-lg font-extrabold text-slate-900">Quán Mới</span>
+        </a>
+        <button type="button" onclick="toggleMobileNavDrawer(false)" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer" aria-label="Đóng menu">
+            <span class="material-symbols-outlined text-[20px]">close</span>
+        </button>
+    </div>
+
+    {{-- User Summary / Auth Card --}}
+    <div class="p-4 border-b border-slate-100">
+        @auth
+            <div class="flex items-center gap-3 mb-3">
+                <img alt="Ảnh đại diện" class="w-11 h-11 rounded-full object-cover ring-2 ring-primary-fixed shrink-0" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->ho_ten) }}&background=ffdbcc&color=a04100&bold=true&size=128';" src="{{ Auth::user()->anh_dai_dien ?? 'https://ui-avatars.com/api/?name=' . urlencode(Auth::user()->ho_ten) . '&background=ffdbcc&color=a04100&bold=true&size=128' }}"/>
+                <div class="min-w-0 flex-1">
+                    <div class="font-bold text-sm text-slate-900 truncate flex items-center gap-1">
+                        <span class="truncate">{{ Auth::user()->ho_ten }}</span>
+                        @if(Auth::user()->da_xac_thuc)
+                            <span class="material-symbols-outlined text-[14px] text-tick-xanh shrink-0" style="font-variation-settings: 'FILL' 1;">verified</span>
+                        @endif
+                    </div>
+                    <p class="text-[11px] text-slate-500 truncate">{{ Auth::user()->email }}</p>
+                </div>
+            </div>
+            <a href="{{ route('tai-khoan.vi-tien') }}" class="flex items-center justify-between px-3 py-2 rounded-xl bg-emerald-50 border border-emerald-200/80 text-emerald-900 text-xs font-bold">
+                <span class="flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-[16px] text-emerald-600">account_balance_wallet</span>
+                    <span>Số dư ví:</span>
+                </span>
+                <span class="font-extrabold text-emerald-700">{{ number_format((float) (Auth::user()->so_du ?? 0), 0, ',', '.') }}đ</span>
+            </a>
+        @else
+            <p class="text-xs text-slate-500 mb-2.5">Đăng nhập để lưu quán yêu thích, viết bài review và quản lý ví Quán Mới.</p>
+            <div class="grid grid-cols-2 gap-2">
+                <a href="{{ route('login') }}" class="py-2 px-3 rounded-xl bg-primary text-white font-bold text-xs text-center shadow-xs">Đăng nhập</a>
+                <a href="{{ route('register') }}" class="py-2 px-3 rounded-xl bg-slate-100 text-slate-800 font-bold text-xs text-center">Đăng ký</a>
+            </div>
+        @endauth
+    </div>
+
+    {{-- Drawer Links --}}
+    <div class="flex-1 overflow-y-auto p-3 space-y-4 text-[13px]">
+        <div>
+            <p class="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Khám Phá Ẩm Thực</p>
+            <div class="space-y-0.5">
+                <a href="/" class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold {{ request()->is('/') ? 'bg-primary/10 text-primary font-bold' : 'text-slate-700 hover:bg-slate-50' }}">
+                    <span class="material-symbols-outlined text-[19px]">home</span>
+                    <span>Trang chủ</span>
+                </a>
+                <a href="{{ route('kham-pha') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold {{ request()->routeIs('kham-pha') ? 'bg-primary/10 text-primary font-bold' : 'text-slate-700 hover:bg-slate-50' }}">
+                    <span class="material-symbols-outlined text-[19px]">manage_search</span>
+                    <span>Tìm kiếm & Bộ lọc quán</span>
+                </a>
+                <a href="{{ route('quan-noi-bat') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold {{ request()->routeIs('quan-noi-bat') ? 'bg-primary/10 text-primary font-bold' : 'text-slate-700 hover:bg-slate-50' }}">
+                    <span class="material-symbols-outlined text-[19px] text-amber-500">local_fire_department</span>
+                    <span>Quán ăn nổi bật</span>
+                </a>
+                <a href="{{ route('quan-moi') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold {{ request()->routeIs('quan-moi') ? 'bg-primary/10 text-primary font-bold' : 'text-slate-700 hover:bg-slate-50' }}">
+                    <span class="material-symbols-outlined text-[19px] text-emerald-600">new_releases</span>
+                    <span>Quán mới lên sóng</span>
+                </a>
+                <a href="{{ route('ban-do') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold {{ request()->routeIs('ban-do') ? 'bg-primary/10 text-primary font-bold' : 'text-slate-700 hover:bg-slate-50' }}">
+                    <span class="material-symbols-outlined text-[19px] text-blue-600">map</span>
+                    <span>Bản đồ quán gần bạn</span>
+                </a>
+                <a href="{{ route('video-review.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold {{ request()->routeIs('video-review.*') ? 'bg-primary/10 text-primary font-bold' : 'text-slate-700 hover:bg-slate-50' }}">
+                    <span class="material-symbols-outlined text-[19px] text-rose-600">play_circle</span>
+                    <span>Video Review Shorts</span>
+                </a>
+                <a href="{{ route('blog.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold {{ request()->routeIs('blog.*') ? 'bg-primary/10 text-primary font-bold' : 'text-slate-700 hover:bg-slate-50' }}">
+                    <span class="material-symbols-outlined text-[19px] text-indigo-600">article</span>
+                    <span>Blog & Cẩm nang ẩm thực</span>
+                </a>
+                <a href="{{ route('quan-da-luu.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold {{ request()->routeIs('quan-da-luu.index') ? 'bg-primary/10 text-primary font-bold' : 'text-slate-700 hover:bg-slate-50' }}">
+                    <span class="material-symbols-outlined text-[19px] text-rose-500">favorite</span>
+                    <span>Quán đã lưu yêu thích</span>
+                </a>
+            </div>
+        </div>
+
+        {{-- Dành cho Chủ Quán --}}
+        <div>
+            <p class="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Dành Cho Chủ Quán</p>
+            <a href="{{ $ownerNavUrl }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-gradient-to-r from-primary to-amber-600 text-white font-bold shadow-xs">
+                <span class="material-symbols-outlined text-[19px]">{{ $ownerNavIcon ?? 'add_location_alt' }}</span>
+                <span>{{ $ownerNavLabel }}</span>
+            </a>
+        </div>
+
+        @auth
+            <div>
+                <p class="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Tài Khoản & Cá Nhân</p>
+                <div class="space-y-0.5">
+                    @if(Auth::user()->isAdmin())
+                        <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-amber-700 bg-amber-50 border border-amber-200/70 mb-1">
+                            <span class="material-symbols-outlined text-[19px]">space_dashboard</span>
+                            <span>Bảng Điều Khiển Admin</span>
+                        </a>
+                    @endif
+                    <a href="{{ route('tai-khoan.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold {{ request()->routeIs('tai-khoan.index') ? 'bg-primary/10 text-primary font-bold' : 'text-slate-700 hover:bg-slate-50' }}">
+                        <span class="material-symbols-outlined text-[19px]">person</span>
+                        <span>Hồ sơ cá nhân</span>
+                    </a>
+                    <a href="{{ route('tai-khoan.vi-tien') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold {{ request()->routeIs('tai-khoan.vi-tien*') ? 'bg-primary/10 text-primary font-bold' : 'text-slate-700 hover:bg-slate-50' }}">
+                        <span class="material-symbols-outlined text-[19px]">account_balance_wallet</span>
+                        <span>Ví & Nạp tiền SePay</span>
+                    </a>
+                    <a href="{{ route('nguoi-dung.blog.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold {{ request()->routeIs('nguoi-dung.blog.index') ? 'bg-primary/10 text-primary font-bold' : 'text-slate-700 hover:bg-slate-50' }}">
+                        <span class="material-symbols-outlined text-[19px]">edit_note</span>
+                        <span>Quản lý bài viết của tôi</span>
+                    </a>
+                    <a href="{{ route('nguoi-dung.blog.saved') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold {{ request()->routeIs('nguoi-dung.blog.saved') ? 'bg-primary/10 text-primary font-bold' : 'text-slate-700 hover:bg-slate-50' }}">
+                        <span class="material-symbols-outlined text-[19px]">bookmark</span>
+                        <span>Bài viết đã lưu</span>
+                    </a>
+                    <a href="{{ route('nguoi-dung.thong-bao.index') }}" class="flex items-center justify-between px-3 py-2.5 rounded-xl font-semibold {{ request()->routeIs('nguoi-dung.thong-bao.*') ? 'bg-primary/10 text-primary font-bold' : 'text-slate-700 hover:bg-slate-50' }}">
+                        <span class="flex items-center gap-3">
+                            <span class="material-symbols-outlined text-[19px]">notifications</span>
+                            <span>Tất cả thông báo</span>
+                        </span>
+                        @if(($navCount ?? 0) > 0)
+                            <span class="px-2 py-0.5 text-[10px] font-bold bg-rose-500 text-white rounded-full">{{ $navCount }}</span>
+                        @endif
+                    </a>
+                    <a href="{{ route('tai-khoan.cai-dat') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold {{ request()->routeIs('tai-khoan.cai-dat*') ? 'bg-primary/10 text-primary font-bold' : 'text-slate-700 hover:bg-slate-50' }}">
+                        <span class="material-symbols-outlined text-[19px]">settings</span>
+                        <span>Cài đặt & Bảo mật</span>
+                    </a>
+                    <button type="button" onclick="toggleMobileNavDrawer(false); openLogoutModal();" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-rose-600 hover:bg-rose-50 text-left cursor-pointer">
+                        <span class="material-symbols-outlined text-[19px]">logout</span>
+                        <span>Đăng xuất</span>
+                    </button>
+                </div>
+            </div>
+        @endauth
+    </div>
+</aside>
+
+{{-- Mobile Bottom Navigation (5 Tabs đầy đủ) --}}
 <nav class="fixed bottom-0 left-0 w-full z-50 md:hidden">
-    <div class="h-4 bg-gradient-to-t from-surface/90 to-transparent pointer-events-none"></div>
+    <div class="h-3 bg-gradient-to-t from-surface/90 to-transparent pointer-events-none"></div>
     <div class="bg-white border-t border-gray-100 pb-safe h-[64px] flex justify-around items-center px-1 shadow-lg">
         <a href="/" class="flex flex-col items-center justify-center flex-1 h-full py-1 text-center group min-w-0">
-            <div class="px-4 py-1 rounded-full transition-all duration-300 {{ request()->is('/') ? 'bg-primary-fixed text-on-primary-fixed' : 'text-on-surface-variant hover:bg-surface-container-high/50' }}">
-                <span class="material-symbols-outlined text-[22px] block {{ request()->is('/') ? 'material-symbols-filled' : '' }}">explore</span>
+            <div class="px-3 py-1 rounded-full transition-all duration-300 {{ request()->is('/') ? 'bg-primary-fixed text-on-primary-fixed' : 'text-on-surface-variant hover:bg-surface-container-high/50' }}">
+                <span class="material-symbols-outlined text-[21px] block {{ request()->is('/') ? 'material-symbols-filled' : '' }}">explore</span>
             </div>
-            <span class="text-[10px] font-bold mt-1 tracking-wide {{ request()->is('/') ? 'text-primary' : 'text-on-surface-variant' }} truncate w-full px-1">Khám phá</span>
+            <span class="text-[10px] font-bold mt-0.5 tracking-wide {{ request()->is('/') ? 'text-primary' : 'text-on-surface-variant' }} truncate w-full px-0.5">Khám phá</span>
+        </a>
+
+        <a href="{{ route('ban-do') }}" class="flex flex-col items-center justify-center flex-1 h-full py-1 text-center group min-w-0">
+            <div class="px-3 py-1 rounded-full transition-all duration-300 {{ request()->routeIs('ban-do') ? 'bg-primary-fixed text-on-primary-fixed' : 'text-on-surface-variant hover:bg-surface-container-high/50' }}">
+                <span class="material-symbols-outlined text-[21px] block {{ request()->routeIs('ban-do') ? 'material-symbols-filled' : '' }}">map</span>
+            </div>
+            <span class="text-[10px] font-bold mt-0.5 tracking-wide {{ request()->routeIs('ban-do') ? 'text-primary' : 'text-on-surface-variant' }} truncate w-full px-0.5">Bản đồ</span>
         </a>
 
         <a href="{{ $ownerNavUrl }}" class="flex flex-col items-center justify-center flex-1 h-full py-1 text-center group min-w-0">
-            <div class="px-4 py-1 rounded-full transition-all duration-300 {{ request()->is('chu-quan/dang-quan') || request()->is('chu-quan/quan') || request()->is('chu-quan/quan/*') ? 'bg-primary-fixed text-on-primary-fixed' : 'text-primary hover:bg-primary/5' }}">
-                <span class="material-symbols-outlined text-[22px] block">{{ $ownerNavIcon ?? 'add_location_alt' }}</span>
+            <div class="px-3 py-1 rounded-full transition-all duration-300 {{ request()->is('chu-quan/dang-quan') || request()->is('chu-quan/quan') || request()->is('chu-quan/quan/*') ? 'bg-primary-fixed text-on-primary-fixed' : 'text-primary hover:bg-primary/5' }}">
+                <span class="material-symbols-outlined text-[21px] block">{{ $ownerNavIcon ?? 'add_location_alt' }}</span>
             </div>
-            <span class="text-[10px] font-bold mt-1 tracking-wide text-primary truncate w-full px-1">{{ $ownerNavLabel === 'Quản lý cửa hàng' ? 'Cửa hàng' : $ownerNavLabel }}</span>
+            <span class="text-[10px] font-bold mt-0.5 tracking-wide text-primary truncate w-full px-0.5">{{ $ownerNavLabel === 'Quản lý cửa hàng' ? 'Cửa hàng' : $ownerNavLabel }}</span>
         </a>
 
-        <a href="{{ route('quan-da-luu.index') }}" class="flex flex-col items-center justify-center flex-1 h-full py-1 text-center group min-w-0">
-            <div class="px-4 py-1 rounded-full transition-all duration-300 {{ request()->routeIs('quan-da-luu.index') ? 'bg-primary-fixed text-on-primary-fixed' : 'text-on-surface-variant hover:bg-surface-container-high/50' }}">
-                <span class="material-symbols-outlined text-[22px] block {{ request()->routeIs('quan-da-luu.index') ? 'material-symbols-filled' : '' }}">favorite</span>
+        <a href="{{ route('video-review.index') }}" class="flex flex-col items-center justify-center flex-1 h-full py-1 text-center group min-w-0">
+            <div class="px-3 py-1 rounded-full transition-all duration-300 {{ request()->routeIs('video-review.*') ? 'bg-primary-fixed text-on-primary-fixed' : 'text-on-surface-variant hover:bg-surface-container-high/50' }}">
+                <span class="material-symbols-outlined text-[21px] block {{ request()->routeIs('video-review.*') ? 'material-symbols-filled' : '' }}">play_circle</span>
             </div>
-            <span class="text-[10px] font-bold mt-1 tracking-wide {{ request()->routeIs('quan-da-luu.index') ? 'text-primary' : 'text-on-surface-variant' }} truncate w-full px-1">Đã lưu</span>
+            <span class="text-[10px] font-bold mt-0.5 tracking-wide {{ request()->routeIs('video-review.*') ? 'text-primary' : 'text-on-surface-variant' }} truncate w-full px-0.5">Video</span>
         </a>
 
         @auth
             <a href="{{ route('tai-khoan.index') }}" class="flex flex-col items-center justify-center flex-1 h-full py-1 text-center group min-w-0">
-                <div class="px-4 py-1 rounded-full transition-all duration-300 {{ $isAccountActive ? 'bg-primary-fixed text-on-primary-fixed' : 'hover:bg-surface-container-high/50' }} inline-block">
+                <div class="px-3 py-1 rounded-full transition-all duration-300 {{ $isAccountActive ? 'bg-primary-fixed text-on-primary-fixed' : 'hover:bg-surface-container-high/50' }} inline-block">
                     <div class="relative inline-flex">
-                        <img alt="Ảnh đại diện" class="w-[22px] h-[22px] rounded-full object-cover ring-2 ring-primary-fixed" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->ho_ten) }}&background=ffdbcc&color=a04100&bold=true&size=64';" src="{{ Auth::user()->anh_dai_dien ?? 'https://ui-avatars.com/api/?name=' . urlencode(Auth::user()->ho_ten) . '&background=ffdbcc&color=a04100&bold=true&size=64' }}"/>
+                        <img alt="Ảnh đại diện" class="w-[21px] h-[21px] rounded-full object-cover ring-2 ring-primary-fixed" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->ho_ten) }}&background=ffdbcc&color=a04100&bold=true&size=64';" src="{{ Auth::user()->anh_dai_dien ?? 'https://ui-avatars.com/api/?name=' . urlencode(Auth::user()->ho_ten) . '&background=ffdbcc&color=a04100&bold=true&size=64' }}"/>
                         @if(Auth::user()->da_xac_thuc)
                             <span class="absolute -top-1 -right-1.5 bg-white rounded-full flex items-center justify-center leading-none">
                                 <span class="material-symbols-outlined text-tick-xanh text-[11px]" style="font-variation-settings: 'FILL' 1;">verified</span>
@@ -184,20 +354,41 @@
                         @endif
                     </div>
                 </div>
-                <span class="text-[10px] font-bold mt-1 tracking-wide {{ $isAccountActive ? 'text-primary' : 'text-on-surface-variant' }} truncate w-full px-1">
+                <span class="text-[10px] font-bold mt-0.5 tracking-wide {{ $isAccountActive ? 'text-primary' : 'text-on-surface-variant' }} truncate w-full px-0.5">
                     Tài khoản
                 </span>
             </a>
         @else
             <a href="{{ route('login') }}" class="flex flex-col items-center justify-center flex-1 h-full py-1 text-center group min-w-0">
-                <div class="px-4 py-1 rounded-full transition-all duration-300 {{ (request()->is('dang-nhap') || request()->is('dang-ky') || request()->is('dangnhap') || request()->is('dangky')) ? 'bg-primary-fixed text-on-primary-fixed' : 'text-on-surface-variant hover:bg-surface-container-high/50' }}">
-                    <span class="material-symbols-outlined text-[22px] block {{ (request()->is('dang-nhap') || request()->is('dang-ky') || request()->is('dangnhap') || request()->is('dangky')) ? 'material-symbols-filled' : '' }}">person</span>
+                <div class="px-3 py-1 rounded-full transition-all duration-300 {{ (request()->is('dang-nhap') || request()->is('dang-ky') || request()->is('dangnhap') || request()->is('dangky')) ? 'bg-primary-fixed text-on-primary-fixed' : 'text-on-surface-variant hover:bg-surface-container-high/50' }}">
+                    <span class="material-symbols-outlined text-[21px] block {{ (request()->is('dang-nhap') || request()->is('dang-ky') || request()->is('dangnhap') || request()->is('dangky')) ? 'material-symbols-filled' : '' }}">person</span>
                 </div>
-                <span class="text-[10px] font-bold mt-1 tracking-wide {{ (request()->is('dang-nhap') || request()->is('dang-ky') || request()->is('dangnhap') || request()->is('dangky')) ? 'text-primary' : 'text-on-surface-variant' }} truncate w-full px-1">Tài khoản</span>
+                <span class="text-[10px] font-bold mt-0.5 tracking-wide {{ (request()->is('dang-nhap') || request()->is('dang-ky') || request()->is('dangnhap') || request()->is('dangky')) ? 'text-primary' : 'text-on-surface-variant' }} truncate w-full px-0.5">Tài khoản</span>
             </a>
         @endauth
     </div>
 </nav>
+
+<script>
+    window.toggleMobileNavDrawer = function(forceOpen) {
+        const drawer = document.getElementById('mobile-nav-drawer');
+        const backdrop = document.getElementById('mobile-nav-backdrop');
+        if (!drawer || !backdrop) return;
+
+        const isOpen = drawer.classList.contains('is-open');
+        const shouldOpen = typeof forceOpen === 'boolean' ? forceOpen : !isOpen;
+
+        if (shouldOpen) {
+            backdrop.classList.remove('hidden');
+            drawer.classList.add('is-open');
+            document.body.style.overflow = 'hidden';
+        } else {
+            drawer.classList.remove('is-open');
+            backdrop.classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+    };
+</script>
 
 
 {{-- Floating Vietnamese Toast Container for Users (Góc trên bên phải) --}}

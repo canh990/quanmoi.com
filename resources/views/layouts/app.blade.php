@@ -13,11 +13,284 @@
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block" rel="stylesheet"/>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
+        .material-symbols-outlined {
+            line-height: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            vertical-align: middle;
+        }
         .material-symbols-outlined.fill-1,
         .material-symbols-outlined.fill-icon,
         .material-symbols-outlined.material-symbols-filled,
         .material-symbols-filled {
             font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        /* Đảm bảo toàn bộ kích thước icon/text tùy chỉnh hoạt động chuẩn xác */
+        .text-\[9px\] { font-size: 9px !important; }
+        .text-\[9\.5px\] { font-size: 9.5px !important; }
+        .text-\[10px\] { font-size: 10px !important; }
+        .text-\[10\.5px\] { font-size: 10.5px !important; }
+        .text-\[11px\] { font-size: 11px !important; }
+        .text-\[11\.5px\] { font-size: 11.5px !important; }
+        .text-\[12px\] { font-size: 12px !important; }
+        .text-\[12\.5px\] { font-size: 12.5px !important; }
+        .text-\[13px\] { font-size: 13px !important; }
+        .text-\[13\.5px\] { font-size: 13.5px !important; }
+        .text-\[14px\] { font-size: 14px !important; }
+        .text-\[15px\] { font-size: 15px !important; }
+        .text-\[15\.5px\] { font-size: 15.5px !important; }
+        .text-\[16px\] { font-size: 16px !important; }
+        .text-\[17px\] { font-size: 17px !important; }
+        .text-\[18px\] { font-size: 18px !important; }
+        .text-\[19px\] { font-size: 19px !important; }
+        .text-\[20px\] { font-size: 20px !important; }
+        .text-\[21px\] { font-size: 21px !important; }
+        .text-\[22px\] { font-size: 22px !important; }
+        .text-\[24px\] { font-size: 24px !important; }
+
+        /* ==========================================================================
+           QUÁN MỚI VENUE CARD - CHUẨN UI/UX CHUYÊN NGHIỆP
+           ========================================================================== */
+        .qm-venue-card {
+            background: #ffffff;
+            border-radius: 18px;
+            border: 1px solid rgba(226, 232, 240, 0.9);
+            box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            min-width: 0;
+            max-width: 100%;
+            transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+                        box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+                        border-color 0.25s ease;
+        }
+        .qm-venue-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(160, 65, 0, 0.22);
+            box-shadow: 0 18px 36px -10px rgba(15, 23, 42, 0.12), 0 4px 12px -2px rgba(160, 65, 0, 0.06);
+        }
+        .qm-venue-thumb {
+            position: relative;
+            height: 204px;
+            width: 100%;
+            overflow: hidden;
+            flex-shrink: 0;
+            background: #f1f5f9;
+        }
+        .qm-venue-thumb::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.18) 0%, rgba(15, 23, 42, 0) 35%, rgba(15, 23, 42, 0) 55%, rgba(15, 23, 42, 0.52) 100%);
+            pointer-events: none;
+            z-index: 1;
+        }
+        .qm-venue-badge-rating {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            height: 26px;
+            padding: 0 10px;
+            border-radius: 9999px;
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(8px);
+            color: #0f172a;
+            font-size: 12px;
+            font-weight: 800;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.12);
+        }
+        .qm-venue-badge-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            height: 26px;
+            padding: 0 10px;
+            border-radius: 9999px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.12);
+        }
+        .qm-venue-badge-hot {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 26px;
+            height: 26px;
+            border-radius: 9999px;
+            background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
+            color: #ffffff;
+            box-shadow: 0 2px 8px rgba(234, 88, 12, 0.35);
+        }
+        .qm-venue-badge-category {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            height: 26px;
+            padding: 0 10px;
+            border-radius: 9999px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+            color: #1e293b;
+            font-size: 11px;
+            font-weight: 700;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.14);
+            max-width: 100%;
+        }
+        .qm-venue-save-btn {
+            width: 34px;
+            height: 34px;
+            border-radius: 9999px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #e11d48;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.16);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.15s ease;
+        }
+        .qm-venue-save-btn:hover {
+            transform: scale(1.1);
+            background: #ffffff;
+        }
+        .qm-venue-loc-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 6px;
+            background: #fff7ed;
+            color: #c2410c;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+        .qm-venue-price-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 9px;
+            border-radius: 8px;
+            background: #fff7ed;
+            border: 1px solid #ffedd5;
+            color: #9a3412;
+            font-size: 12px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+        .qm-venue-pos-tl {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            z-index: 10;
+        }
+        .qm-venue-pos-tr {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .qm-venue-pos-bl {
+            position: absolute;
+            bottom: 12px;
+            left: 12px;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            max-width: calc(100% - 56px);
+            pointer-events: none;
+        }
+        .qm-venue-save-btn {
+            position: absolute;
+            bottom: 12px;
+            right: 12px;
+            z-index: 20;
+        }
+        .qm-venue-body {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            flex: 1 1 0%;
+            justify-content: space-between;
+            gap: 12px;
+            min-width: 0;
+        }
+        @media (max-width: 639px) {
+            .qm-venue-card {
+                border-radius: 14px;
+            }
+            .qm-venue-thumb {
+                height: 132px;
+            }
+            .qm-venue-pos-tl {
+                top: 8px !important;
+                left: 8px !important;
+            }
+            .qm-venue-pos-tr {
+                top: 8px !important;
+                right: 8px !important;
+                gap: 4px !important;
+            }
+            .qm-venue-pos-bl {
+                bottom: 8px !important;
+                left: 8px !important;
+                gap: 4px !important;
+                max-width: calc(100% - 42px) !important;
+            }
+            .qm-venue-badge-rating {
+                height: 22px;
+                padding: 0 7px;
+                font-size: 10.5px;
+                gap: 2.5px;
+            }
+            .qm-venue-badge-status {
+                height: 22px;
+                padding: 0 6px;
+                font-size: 9.5px;
+                gap: 3px;
+            }
+            .qm-venue-badge-hot {
+                width: 22px;
+                height: 22px;
+            }
+            .qm-venue-badge-category {
+                height: 22px;
+                padding: 0 7px;
+                font-size: 9.5px;
+                gap: 3px;
+            }
+            .qm-venue-save-btn {
+                bottom: 8px !important;
+                right: 8px !important;
+                width: 28px;
+                height: 28px;
+            }
+            .qm-venue-body {
+                padding: 10px !important;
+                gap: 8px !important;
+            }
+            .qm-venue-loc-icon {
+                width: 16px;
+                height: 16px;
+                border-radius: 4px;
+            }
+            .qm-venue-price-pill {
+                padding: 2px 6px;
+                border-radius: 6px;
+                font-size: 10px;
+                font-weight: 800;
+            }
         }
     </style>
     @stack('styles')
