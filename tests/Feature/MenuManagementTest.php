@@ -95,6 +95,30 @@ class MenuManagementTest extends TestCase
             ->assertSee('value="'.$shopeefoodUrl.'"', false);
     }
 
+    public function test_shopeefood_link_must_belong_to_shopeefood_domain(): void
+    {
+        $owner = $this->owner();
+        $quan = Quan::factory()->create(['chu_quan_id' => $owner->id]);
+
+        $response = $this->actingAs($owner)
+            ->postJson(route('chu-quan.quan.menu.update', $quan->slug), [
+                'menu_data' => json_encode([
+                    [
+                        'name' => 'Món chính',
+                        'items' => [[
+                            'tmp_id' => 1,
+                            'name' => 'Phở bò',
+                            'price' => 50000,
+                            'shopeefood_url' => 'https://facebook.com/not-shopeefood',
+                        ]],
+                    ],
+                ]),
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['menu_categories_array.0.items.0.shopeefood_url']);
+    }
+
     private function owner(): User
     {
         return User::factory()->create([

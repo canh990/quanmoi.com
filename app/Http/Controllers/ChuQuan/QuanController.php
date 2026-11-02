@@ -7,6 +7,7 @@ use App\Http\Requests\DangKyQuanRequest;
 use App\Models\HinhAnhQuan;
 use App\Models\Quan;
 use App\Models\VideoShort;
+use App\Services\ReviewAiSummaryService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -178,6 +179,8 @@ class QuanController extends Controller
     {
         $quanList = $request->user()
             ->quan()
+            ->whereNull('ngay_xoa')
+            ->where('trang_thai', '!=', 'bi_khoa')
             ->latest()
             ->get();
 
@@ -187,7 +190,7 @@ class QuanController extends Controller
     /**
      * Xem chi tiet quan danh cho chu quan
      */
-    public function show($slug)
+    public function show($slug, ReviewAiSummaryService $aiReviewService)
     {
         $user = Auth::user();
         $query = Quan::where('slug', $slug);
@@ -208,8 +211,13 @@ class QuanController extends Controller
         $luotLuu = $quan->savedByUsers()->count();
         $luotVideo = $quan->videos->count();
         $videos = $quan->videos;
+        $ownerReviews = $quan->danhGia->sortByDesc('updated_at');
+        $ownerReviewCount = $ownerReviews->count();
+        $ownerUnrepliedCount = $ownerReviews->whereNull('phan_hoi')->count();
+        $ownerAverageRating = $ownerReviewCount ? $ownerReviews->avg('so_sao') : 0;
+        $aiReviewSummary = $aiReviewService->getOwnerSummary($quan, false);
 
-        return view('chu-quan.chi-tiet-quan', compact('quan', 'luotLuu', 'luotVideo', 'videos'));
+        return view('chu-quan.chi-tiet-quan', compact('quan', 'luotLuu', 'luotVideo', 'videos', 'aiReviewSummary', 'ownerReviews', 'ownerReviewCount', 'ownerUnrepliedCount', 'ownerAverageRating'));
     }
 
     private function storeVenueImage(string $objectKey, string $contents): array
@@ -303,7 +311,12 @@ class QuanController extends Controller
             'gia_nho_nhat' => 'nullable|numeric|min:0',
             'gia_lon_nhat' => 'nullable|numeric|min:0',
             'tiktok_url' => 'nullable|url|max:255',
-            'shopeefood_url' => 'nullable|url:http,https|max:500',
+            'shopeefood_url' => [
+                'nullable',
+                'url:http,https',
+                'max:500',
+                'regex:/^https?:\/\/(?:[a-zA-Z0-9-]+\.)*(?:shopeefood\.vn|shopee\.vn)(\/.*)?$/i',
+            ],
             'anh_bia' => 'nullable|image|max:5120',
         ], [
             'so_dien_thoai.required' => 'Số điện thoại không được để trống.',
@@ -318,6 +331,7 @@ class QuanController extends Controller
             'gia_lon_nhat.numeric' => 'Giá lớn nhất phải là định dạng số.',
             'tiktok_url.url' => 'Đường dẫn TikTok không hợp lệ.',
             'shopeefood_url.url' => 'Đường dẫn ShopeeFood không hợp lệ.',
+            'shopeefood_url.regex' => 'Đường dẫn ShopeeFood phải là liên kết hợp lệ từ shopeefood.vn hoặc shopee.vn.',
             'anh_bia.image' => 'Ảnh bìa phải là định dạng hình ảnh.',
             'anh_bia.max' => 'Dung lượng ảnh bìa không được vượt quá 5MB.',
         ]);

@@ -57,21 +57,30 @@ class MenuController extends Controller
 
         $validatedData = $request->validate([
             'menu_categories_array' => 'array',
-            'menu_categories_array.*.name' => 'required|string|max:255',
+            'menu_categories_array.*.name' => 'required|string|max:100',
             'menu_categories_array.*.db_id' => 'nullable|string',
             'menu_categories_array.*.items' => 'nullable|array',
-            'menu_categories_array.*.items.*.name' => 'required|string|max:255',
+            'menu_categories_array.*.items.*.name' => 'required|string|max:100',
             'menu_categories_array.*.items.*.db_id' => 'nullable|string',
             'menu_categories_array.*.items.*.tmp_id' => 'nullable|integer',
             'menu_categories_array.*.items.*.price' => 'nullable|numeric|min:0|max:999999999',
-            'menu_categories_array.*.items.*.description' => 'nullable|string|max:2000',
-            'menu_categories_array.*.items.*.shopeefood_url' => 'nullable|url:http,https|max:2048',
+            'menu_categories_array.*.items.*.description' => 'nullable|string|max:500',
+            'menu_categories_array.*.items.*.shopeefood_url' => [
+                'nullable',
+                'url:http,https',
+                'max:2048',
+                'regex:/^https?:\/\/(?:[a-zA-Z0-9-]+\.)*(?:shopeefood\.vn|shopee\.vn)(\/.*)?$/i',
+            ],
         ], [
             'menu_categories_array.*.name.required' => 'Tên danh mục thực đơn không được để trống.',
+            'menu_categories_array.*.name.max' => 'Tên danh mục không được vượt quá 100 ký tự.',
             'menu_categories_array.*.items.*.name.required' => 'Tên món ăn không được để trống.',
+            'menu_categories_array.*.items.*.name.max' => 'Tên món ăn không được vượt quá 100 ký tự.',
             'menu_categories_array.*.items.*.price.numeric' => 'Giá món ăn phải là định dạng số.',
             'menu_categories_array.*.items.*.price.min' => 'Giá món ăn phải lớn hơn hoặc bằng 0.',
+            'menu_categories_array.*.items.*.description.max' => 'Giới thiệu ngắn món ăn không được vượt quá 500 ký tự.',
             'menu_categories_array.*.items.*.shopeefood_url.url' => 'Đường dẫn ShopeeFood của món ăn không hợp lệ.',
+            'menu_categories_array.*.items.*.shopeefood_url.regex' => 'Đường dẫn ShopeeFood phải là liên kết hợp lệ từ shopeefood.vn hoặc shopee.vn.',
         ]);
 
         $safeMenuCategories = $validatedData['menu_categories_array'];

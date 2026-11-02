@@ -74,6 +74,48 @@
         const badge = document.getElementById(`owner-quan-badge-${quanId}`);
         const noteBox = document.getElementById(`owner-quan-note-${quanId}`);
 
+        // Check if restaurant is rejected or deleted by admin
+        const isRejectedOrDeleted = ['rejected', 'deleted', 'force_deleted', 'khong_duyet'].includes(notif.action) ||
+                                    ['bi_khoa', 'tu_choi'].includes(notif.status);
+
+        if (isRejectedOrDeleted) {
+            if (card) {
+                // Highlight with red ring then smoothly remove without reloading page
+                card.classList.remove('ring-primary');
+                card.classList.add('ring-2', 'ring-rose-500', 'shadow-xl');
+
+                setTimeout(() => {
+                    card.style.transition = 'all 0.45s cubic-bezier(0.4, 0, 0.2, 1)';
+                    card.style.transform = 'scale(0.85) translateY(20px)';
+                    card.style.opacity = '0';
+
+                    setTimeout(() => {
+                        card.remove();
+
+                        // If all cards removed, display empty state
+                        const grid = document.getElementById('owner-quan-grid');
+                        const remainingCards = grid ? grid.querySelectorAll('article') : [];
+                        if (grid && remainingCards.length === 0) {
+                            grid.innerHTML = `
+                                <div class="md:col-span-2 xl:col-span-3 rounded-[28px] border border-dashed border-gray-200 bg-white p-10 text-center animate-fade-in">
+                                    <div class="w-16 h-16 rounded-full bg-rose-50 text-rose-500 mx-auto flex items-center justify-center mb-4">
+                                        <span class="material-symbols-outlined text-3xl">storefront</span>
+                                    </div>
+                                    <h2 class="text-2xl font-black text-on-surface">Bạn chưa có cửa hàng nào</h2>
+                                    <p class="text-gray-500 mt-2">Cơ sở ẩm thực đã được cập nhật bởi Ban quản trị.</p>
+                                    <a href="{{ route('chu-quan.dang-quan') }}" class="inline-flex items-center gap-2 mt-5 px-5 py-3 rounded-2xl bg-primary text-white font-bold shadow-sm hover:bg-primary/90 transition-all">
+                                        <span class="material-symbols-outlined">add_location_alt</span>
+                                        Đăng quán ngay
+                                    </a>
+                                </div>
+                            `;
+                        }
+                    }, 450);
+                }, 200);
+            }
+            return;
+        }
+
         if (card) {
             // Highlight card
             card.classList.add('ring-2', 'ring-primary', 'shadow-lg');
@@ -84,9 +126,6 @@
                 if (notif.action === 'approved' || notif.status === 'da_duyet') {
                     badge.className = 'whitespace-nowrap flex-shrink-0 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 transition-all';
                     badge.textContent = 'Đã duyệt';
-                } else if (notif.action === 'rejected' || notif.status === 'bi_khoa') {
-                    badge.className = 'whitespace-nowrap flex-shrink-0 px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-700 transition-all';
-                    badge.textContent = 'Từ chối / Khóa';
                 }
             }
 
@@ -103,7 +142,7 @@
                 `;
             }
         } else {
-            // Background sync grid
+            // Background sync grid for new approved venues
             fetch(window.location.href, {
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
             })
@@ -120,5 +159,41 @@
             .catch(() => {});
         }
     });
+
+    // Background sync polling every 3.5s: automatically removes any venue rejected/deleted without manual refresh
+    setInterval(() => {
+        fetch(window.location.href, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(res => res.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const newCards = doc.querySelectorAll('#owner-quan-grid > article');
+            const currentCards = document.querySelectorAll('#owner-quan-grid > article');
+
+            const newIds = Array.from(newCards).map(el => el.id);
+            currentCards.forEach(c => {
+                if (!newIds.includes(c.id)) {
+                    // Removed on server -> smoothly remove on client
+                    c.style.transition = 'all 0.4s ease-out';
+                    c.style.transform = 'scale(0.85) translateY(15px)';
+                    c.style.opacity = '0';
+                    setTimeout(() => {
+                        c.remove();
+                        const remaining = document.querySelectorAll('#owner-quan-grid > article');
+                        if (remaining.length === 0) {
+                            const grid = document.getElementById('owner-quan-grid');
+                            const emptyHtml = doc.querySelector('#owner-quan-grid > div');
+                            if (grid && emptyHtml) {
+                                grid.innerHTML = emptyHtml.outerHTML;
+                            }
+                        }
+                    }, 400);
+                }
+            });
+        })
+        .catch(() => {});
+    }, 3500);
 </script>
 @endsection

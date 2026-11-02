@@ -52,15 +52,26 @@ class DangKyQuanRequest extends FormRequest
             'gia_nho_nhat'      => 'nullable|numeric|min:0',
             'gia_lon_nhat'      => 'nullable|numeric|min:0',
             'tiktok_url'        => 'nullable|url|max:255',
-            'shopeefood_url'    => 'nullable|url|max:500',
+            'shopeefood_url'    => [
+                'nullable',
+                'url',
+                'max:500',
+                'regex:/^https?:\/\/(?:[a-zA-Z0-9-]+\.)*(?:shopeefood\.vn|shopee\.vn)(\/.*)?$/i',
+            ],
             'anh_bia'           => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
             'danh_sach_anh.*'   => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
             'danh_sach_anh'     => 'nullable|array|max:5',
             'menu_categories'   => 'nullable|array',
-            'menu_categories.*.name' => 'required|string|max:255',
+            'menu_categories.*.name' => 'required|string|max:100',
             'menu_categories.*.items' => 'required|array|min:1',
-            'menu_categories.*.items.*.name' => 'required|string|max:255',
+            'menu_categories.*.items.*.name' => 'required|string|max:100',
             'menu_categories.*.items.*.price' => 'nullable|numeric|min:0',
+            'menu_categories.*.items.*.shopeefood_url' => [
+                'nullable',
+                'url',
+                'max:2048',
+                'regex:/^https?:\/\/(?:[a-zA-Z0-9-]+\.)*(?:shopeefood\.vn|shopee\.vn)(\/.*)?$/i',
+            ],
         ];
     }
 
@@ -74,13 +85,17 @@ class DangKyQuanRequest extends FormRequest
             'ten_quan_huyen.required'   => 'Vui lòng chọn Quận/Huyện.',
             'gio_mo_cua.required'       => 'Vui lòng chọn giờ mở cửa.',
             'gio_dong_cua.required'     => 'Vui lòng chọn giờ đóng cửa.',
+            'shopeefood_url.regex'      => 'Đường dẫn ShopeeFood phải là liên kết hợp lệ từ shopeefood.vn hoặc shopee.vn.',
             'anh_bia.image'             => 'File ảnh bìa không hợp lệ.',
             'anh_bia.max'               => 'Ảnh bìa tối đa 5MB.',
             'menu_categories.*.name.required' => 'Tên danh mục không được để trống.',
+            'menu_categories.*.name.max' => 'Tên danh mục không được vượt quá 100 ký tự.',
             'menu_categories.*.items.min' => 'Mỗi danh mục phải có ít nhất 1 món ăn.',
             'menu_categories.*.items.*.name.required' => 'Tên món ăn không được để trống.',
+            'menu_categories.*.items.*.name.max' => 'Tên món ăn không được vượt quá 100 ký tự.',
             'menu_categories.*.items.*.price.numeric' => 'Giá món ăn phải là số.',
             'menu_categories.*.items.*.price.min' => 'Giá món ăn không được nhỏ hơn 0.',
+            'menu_categories.*.items.*.shopeefood_url.regex' => 'Đường dẫn ShopeeFood của món phải thuộc miền shopeefood.vn hoặc shopee.vn.',
         ];
     }
 }

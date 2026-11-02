@@ -75,6 +75,14 @@ Route::prefix('chu-quan')->group(function () {
         Route::get('/quan/{slug}', [QuanController::class, 'show'])->name('chu-quan.quan.show');
         Route::put('/quan/{slug}/danh-gia/{reviewId}/phan-hoi', [\App\Http\Controllers\ChuQuan\QuanDanhGiaController::class, 'reply'])
             ->name('chu-quan.quan.danh-gia.reply');
+        Route::get('/quan/{slug}/danh-gia/realtime-check', [\App\Http\Controllers\ChuQuan\QuanDanhGiaController::class, 'realtimeCheck'])
+            ->name('chu-quan.quan.danh-gia.realtime-check');
+        Route::post('/quan/{slug}/danh-gia/ai-summary', [\App\Http\Controllers\ChuQuan\QuanDanhGiaController::class, 'aiSummary'])
+            ->middleware('throttle:20,1')
+            ->name('chu-quan.quan.danh-gia.ai-summary');
+        Route::post('/quan/{slug}/danh-gia/{reviewId}/ai-suggest-reply', [\App\Http\Controllers\ChuQuan\QuanDanhGiaController::class, 'suggestReply'])
+            ->middleware('throttle:30,1')
+            ->name('chu-quan.quan.danh-gia.ai-suggest-reply');
         Route::post('/quan/{quanId}/hinh-anh', [HinhAnhQuanController::class, 'store'])->name('chu-quan.hinh-anh.store');
         Route::delete('/hinh-anh/{id}', [HinhAnhQuanController::class, 'destroy'])->name('chu-quan.hinh-anh.destroy');
         Route::get('/quan/{slug}/thuc-don', [\App\Http\Controllers\ChuQuan\MenuController::class, 'edit'])->name('chu-quan.quan.menu.edit');
