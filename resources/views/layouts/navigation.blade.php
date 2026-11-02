@@ -391,9 +391,7 @@
 </script>
 
 
-{{-- Floating Vietnamese Toast Container for Users (Góc trên bên phải) --}}
-<div id="user-floating-toast-container" class="fixed top-20 right-4 sm:right-6 z-[99999] flex flex-col gap-3 max-w-sm w-[calc(100vw-32px)] sm:w-96 pointer-events-none"></div>
-
+{{-- Unified Toast container is handled globally by layouts.toast --}}
 @auth
 <script>
     (function() {
@@ -428,72 +426,23 @@
         window.showUserToast = function(title, message, link = '', type = 'info', icon = 'notifications_active') {
             playChime();
 
-            if (window.showToast) {
+            let mappedType = 'info';
+            if (type === 'error' || type === 'danger') mappedType = 'error';
+            else if (type === 'warning') mappedType = 'warning';
+            else if (type === 'success' || type === 'emerald') mappedType = 'success';
+            else mappedType = 'info';
+
+            if (typeof window.showToast === 'function') {
                 window.showToast({
-                    eyebrow: isAdmin ? 'THÔNG BÁO QUẢN TRỊ' : 'THÔNG BÁO MỚI',
                     title: title || 'Thông báo mới',
                     message: message || '',
-                    type: type || 'info',
-                    actionText: link ? 'Xem chi tiết' : null,
+                    type: mappedType,
                     actionUrl: link || null,
+                    actionText: link ? 'Xem chi tiết' : null,
+                    eyebrow: isAdmin ? 'THÔNG BÁO QUẢN TRỊ' : 'THÔNG BÁO MỚI',
                     duration: 5000
                 });
-                return;
             }
-
-            const container = document.getElementById('user-floating-toast-container');
-            if (!container) return;
-
-            // Chỉ giữ duy nhất 1 thông báo hiển thị tại một thời điểm
-            container.innerHTML = '';
-
-            let bgHex = '#10b981'; // Emerald (thành công)
-            let shadowHex = 'rgba(16, 185, 129, 0.45)';
-
-            if (type === 'error') {
-                bgHex = '#f43f5e'; // Rose
-                shadowHex = 'rgba(244, 63, 94, 0.45)';
-            } else if (type === 'warning') {
-                bgHex = '#f59e0b'; // Amber
-                shadowHex = 'rgba(245, 158, 11, 0.45)';
-            } else if (type === 'info') {
-                bgHex = '#3b82f6'; // Bright Blue
-                shadowHex = 'rgba(59, 130, 246, 0.45)';
-            }
-
-            const toast = document.createElement('div');
-            toast.className = 'pointer-events-auto bg-slate-900 text-white rounded-2xl p-4 shadow-2xl border border-slate-700/80 flex items-start gap-3.5 transform translate-x-full transition-all duration-300 ease-out hover:border-amber-400/80 ' + (link ? 'cursor-pointer' : '');
-            if (link) {
-                toast.onclick = () => window.location.href = link;
-            }
-
-            toast.innerHTML = `
-                <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 font-bold shadow-lg transition-transform hover:scale-105" style="background-color: ${bgHex} !important; box-shadow: 0 4px 14px ${shadowHex};">
-                    <span class="material-symbols-outlined text-[22px]" style="color: #ffffff !important; font-variation-settings: 'FILL' 1;">${icon}</span>
-                </div>
-                <div class="flex-1 min-w-0 pr-1">
-                    <div class="flex items-center justify-between gap-2 mb-1">
-                        <span class="text-[10px] font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1">
-                            <span class="material-symbols-outlined text-[13px]">notifications_active</span>
-                            <span>${isAdmin ? 'THÔNG BÁO QUẢN TRỊ' : 'THÔNG BÁO MỚI'}</span>
-                        </span>
-                        <span class="text-[10px] text-slate-400 whitespace-nowrap">Vừa xong</span>
-                    </div>
-                    <h4 class="text-xs font-bold text-white truncate">${title}</h4>
-                    <p class="text-[11px] text-slate-300 mt-0.5 line-clamp-2 leading-relaxed">${message}</p>
-                </div>
-                <button type="button" onclick="event.stopPropagation(); this.closest('div.pointer-events-auto').remove()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors shrink-0 -mr-1 -mt-1 cursor-pointer" title="Đóng thông báo">
-                    <span class="material-symbols-outlined text-[16px]">close</span>
-                </button>
-            `;
-
-            container.appendChild(toast);
-            setTimeout(() => toast.classList.remove('translate-x-full'), 30);
-
-            setTimeout(() => {
-                toast.classList.add('translate-x-full', 'opacity-0');
-                setTimeout(() => toast.remove(), 350);
-            }, 8000);
         };
 
         // Update badge counts on desktop and mobile

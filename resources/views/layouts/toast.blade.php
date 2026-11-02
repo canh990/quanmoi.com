@@ -4,6 +4,28 @@
 <div class="hidden" aria-hidden="true">{{ session('success') }} {{ session('error') }} {{ session('error_conflict') }} {{ session('info') }} {{ session('status') }}</div>
 @endif
 
+<!-- Global Centered Modal Dialog (Alert & Confirm ở giữa màn hình) -->
+<div id="global-center-modal" class="fixed inset-0 z-[999999] bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 hidden" aria-modal="true" role="dialog">
+    <div id="global-center-box" class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center space-y-4 transform transition-all scale-95 duration-200">
+        <div id="global-center-icon-wrap" class="w-14 h-14 rounded-2xl mx-auto flex items-center justify-center bg-red-100 text-red-600 transition-colors" style="background-color: #fee2e2; color: #dc2626;">
+            <span id="global-center-icon" class="material-symbols-outlined text-3xl">delete</span>
+        </div>
+        <div class="space-y-1.5">
+            <h3 id="global-center-title" class="text-base font-bold text-gray-900">Xác Nhận Thao Tác</h3>
+            <div id="global-center-message" class="text-xs text-gray-600 leading-relaxed"></div>
+        </div>
+        <div class="pt-2 flex items-center justify-center gap-2.5">
+            <button type="button" id="global-center-cancel-btn" onclick="window.closeCenterModal(false)" class="flex-1 py-2.5 px-4 rounded-xl border border-gray-200 bg-white text-gray-700 font-bold text-xs hover:bg-gray-50 active:scale-95 transition cursor-pointer">
+                Hủy bỏ
+            </button>
+            <button type="button" id="global-center-confirm-btn" onclick="window.handleCenterModalSubmit()" class="flex-1 py-2.5 px-4 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-95" style="background-color: #dc2626; color: #ffffff;">
+                <span id="global-center-btn-icon" class="material-symbols-outlined text-base">delete</span>
+                <span id="global-center-btn-text">Xác nhận</span>
+            </button>
+        </div>
+    </div>
+</div>
+
 <style>
     .qm-toast-container {
         position: fixed;
@@ -347,15 +369,21 @@
         const template = document.getElementById('global-toast-template');
         if (!container || !template) return;
 
-        // Deduplicate identical toasts appearing in quick succession
-        const cleanTitle = (title || '').trim();
-        const cleanMsg = (message || '').trim();
+        // Deduplicate identical or redundant toasts appearing in quick succession (< 3s)
+        const cleanTitle = (title || '').trim().toLowerCase();
+        const cleanMsg = (message || '').trim().toLowerCase();
         const existingToasts = container.querySelectorAll('.toast-item:not(.is-dismissing)');
         for (let i = 0; i < existingToasts.length; i++) {
-            const exTitle = existingToasts[i].querySelector('.toast-title')?.textContent?.trim() || '';
-            const exMsg = existingToasts[i].querySelector('.toast-message')?.textContent?.trim() || '';
+            const exTitle = (existingToasts[i].querySelector('.toast-title')?.textContent || '').trim().toLowerCase();
+            const exMsg = (existingToasts[i].querySelector('.toast-message')?.textContent || '').trim().toLowerCase();
             if (exTitle === cleanTitle && exMsg === cleanMsg) {
                 return;
+            }
+            // Suppress duplicate or redundant menu update toasts appearing together
+            const isThisMenu = cleanTitle.includes('thực đơn') || cleanMsg.includes('thực đơn');
+            const isExMenu = exTitle.includes('thực đơn') || exMsg.includes('thực đơn');
+            if (isThisMenu && isExMenu) {
+                return; // Already showing a menu notification
             }
         }
 
@@ -639,6 +667,181 @@
             clearTimeout(timer);
             dismiss();
         });
+    };
+
+    let centerModalConfirmCallback = null;
+    let centerModalCancelCallback = null;
+
+    window.showConfirmDialog = function(options) {
+        return new Promise((resolve) => {
+            const modal = document.getElementById('global-center-modal');
+            const box = document.getElementById('global-center-box');
+            const titleEl = document.getElementById('global-center-title');
+            const msgEl = document.getElementById('global-center-message');
+            const iconEl = document.getElementById('global-center-icon');
+            const iconWrap = document.getElementById('global-center-icon-wrap');
+            const cancelBtn = document.getElementById('global-center-cancel-btn');
+            const confirmBtn = document.getElementById('global-center-confirm-btn');
+            const btnText = document.getElementById('global-center-btn-text');
+            const btnIcon = document.getElementById('global-center-btn-icon');
+
+            if (!modal) {
+                resolve(false);
+                return;
+            }
+
+            centerModalConfirmCallback = () => {
+                if (typeof options.onConfirm === 'function') options.onConfirm();
+                resolve(true);
+            };
+            centerModalCancelCallback = () => {
+                if (typeof options.onCancel === 'function') options.onCancel();
+                resolve(false);
+            };
+
+            titleEl.textContent = options.title || 'Xác nhận thao tác';
+            msgEl.innerHTML = options.message || 'Bạn có chắc chắn muốn thực hiện hành động này?';
+            cancelBtn.classList.remove('hidden');
+            cancelBtn.textContent = options.cancelText || 'Hủy bỏ';
+
+            btnText.textContent = options.confirmText || 'Xác nhận';
+            btnIcon.textContent = options.confirmIcon || options.icon || 'delete';
+
+            const type = options.type || 'danger';
+            if (type === 'danger') {
+                iconWrap.className = 'w-14 h-14 rounded-2xl mx-auto flex items-center justify-center bg-red-100 text-red-600';
+                iconWrap.style.cssText = 'background-color: #fee2e2 !important; color: #dc2626 !important;';
+                iconEl.textContent = options.icon || 'delete';
+                confirmBtn.className = 'flex-1 py-2.5 px-4 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-95';
+                confirmBtn.style.cssText = 'background-color: #dc2626 !important; color: #ffffff !important;';
+            } else if (type === 'warning') {
+                iconWrap.className = 'w-14 h-14 rounded-2xl mx-auto flex items-center justify-center bg-amber-100 text-amber-600';
+                iconWrap.style.cssText = 'background-color: #fef3c7 !important; color: #d97706 !important;';
+                iconEl.textContent = options.icon || 'warning';
+                confirmBtn.className = 'flex-1 py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-95';
+                confirmBtn.style.cssText = 'background-color: #f59e0b !important; color: #ffffff !important;';
+            } else {
+                iconWrap.className = 'w-14 h-14 rounded-2xl mx-auto flex items-center justify-center bg-emerald-100 text-emerald-600';
+                iconWrap.style.cssText = 'background-color: #d1fae5 !important; color: #059669 !important;';
+                iconEl.textContent = options.icon || 'check_circle';
+                confirmBtn.className = 'flex-1 py-2.5 px-4 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold text-xs shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-95';
+                confirmBtn.style.cssText = '';
+            }
+
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                box.classList.remove('scale-95');
+                box.classList.add('scale-100');
+            }, 10);
+        });
+    };
+
+    window.showAlertDialog = function(options) {
+        if (typeof options === 'string') {
+            options = { message: options };
+        }
+        return new Promise((resolve) => {
+            const modal = document.getElementById('global-center-modal');
+            const box = document.getElementById('global-center-box');
+            const titleEl = document.getElementById('global-center-title');
+            const msgEl = document.getElementById('global-center-message');
+            const iconEl = document.getElementById('global-center-icon');
+            const iconWrap = document.getElementById('global-center-icon-wrap');
+            const cancelBtn = document.getElementById('global-center-cancel-btn');
+            const confirmBtn = document.getElementById('global-center-confirm-btn');
+            const btnText = document.getElementById('global-center-btn-text');
+            const btnIcon = document.getElementById('global-center-btn-icon');
+
+            if (!modal) {
+                resolve(true);
+                return;
+            }
+
+            centerModalConfirmCallback = () => {
+                if (typeof options.onOk === 'function') options.onOk();
+                resolve(true);
+            };
+            centerModalCancelCallback = null;
+
+            titleEl.textContent = options.title || 'Thông báo';
+            msgEl.innerHTML = options.message || '';
+            cancelBtn.classList.add('hidden');
+
+            btnText.textContent = options.okText || 'Đồng ý';
+            btnIcon.textContent = options.icon || 'check_circle';
+
+            const type = options.type || 'warning';
+            if (type === 'warning') {
+                iconWrap.className = 'w-14 h-14 rounded-2xl mx-auto flex items-center justify-center bg-amber-100 text-amber-600';
+                iconWrap.style.cssText = 'background-color: #fef3c7 !important; color: #d97706 !important;';
+                iconEl.textContent = options.icon || 'warning';
+                confirmBtn.className = 'flex-1 py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-95';
+                confirmBtn.style.cssText = 'background-color: #f59e0b !important; color: #ffffff !important;';
+            } else if (type === 'error') {
+                iconWrap.className = 'w-14 h-14 rounded-2xl mx-auto flex items-center justify-center bg-red-100 text-red-600';
+                iconWrap.style.cssText = 'background-color: #fee2e2 !important; color: #dc2626 !important;';
+                iconEl.textContent = options.icon || 'error';
+                confirmBtn.className = 'flex-1 py-2.5 px-4 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-95';
+                confirmBtn.style.cssText = 'background-color: #dc2626 !important; color: #ffffff !important;';
+            } else {
+                iconWrap.className = 'w-14 h-14 rounded-2xl mx-auto flex items-center justify-center bg-primary/10 text-primary';
+                iconWrap.style.cssText = '';
+                iconEl.textContent = options.icon || 'info';
+                confirmBtn.className = 'flex-1 py-2.5 px-4 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold text-xs shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-95';
+                confirmBtn.style.cssText = '';
+            }
+
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                box.classList.remove('scale-95');
+                box.classList.add('scale-100');
+            }, 10);
+        });
+    };
+
+    window.closeCenterModal = function(isConfirm = false) {
+        const modal = document.getElementById('global-center-modal');
+        const box = document.getElementById('global-center-box');
+        if (!modal) return;
+
+        box.classList.remove('scale-100');
+        box.classList.add('scale-95');
+        setTimeout(() => {
+            modal.classList.add('hidden');
+            if (!isConfirm && typeof centerModalCancelCallback === 'function') {
+                const cb = centerModalCancelCallback;
+                centerModalCancelCallback = null;
+                cb();
+            }
+        }, 150);
+    };
+
+    window.handleCenterModalSubmit = function() {
+        const modal = document.getElementById('global-center-modal');
+        const box = document.getElementById('global-center-box');
+        if (!modal) return;
+
+        box.classList.remove('scale-100');
+        box.classList.add('scale-95');
+        setTimeout(() => {
+            modal.classList.add('hidden');
+            if (typeof centerModalConfirmCallback === 'function') {
+                const cb = centerModalConfirmCallback;
+                centerModalConfirmCallback = null;
+                cb();
+            }
+        }, 150);
+    };
+
+    // Override browser native alert globally so all alerts appear in the center of the screen
+    window.alert = function(msg) {
+        if (document.getElementById('global-center-modal')) {
+            window.showAlertDialog({
+                title: 'Thông báo',
+                message: String(msg),
+                type: 'warning'
+            });
+        }
     };
 
     // Auto-display Laravel session flash messages on page load (Đồng bộ 1 giao diện Toast duy nhất toàn website)
