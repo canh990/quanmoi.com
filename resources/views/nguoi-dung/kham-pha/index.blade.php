@@ -59,14 +59,46 @@
     $isVideoActive = !empty($coVideo);
     $isCategoryActive = !empty($danhMuc) && !$isSpecialPage;
     $activeCategoryLabel = $isCategoryActive ? $danhMuc : 'Danh mục quán';
-    $danhMucList = [
-        ['ten' => 'Lẩu & Nướng', 'icon' => 'outdoor_grill', 'desc' => 'Buffet nướng, lẩu thái, nướng than'],
-        ['ten' => 'Cà phê & Trà', 'icon' => 'local_cafe', 'desc' => 'Cafe chill, trà sữa, acoustic'],
-        ['ten' => 'Đồ ăn vặt', 'icon' => 'fastfood', 'desc' => 'Bánh tráng, xiên que, trà chanh'],
-        ['ten' => 'Nhà hàng', 'icon' => 'restaurant', 'desc' => 'Gia đình, sang trọng, tiệc tùng'],
-        ['ten' => 'Quán Đêm 24/7', 'icon' => 'nightlife', 'desc' => 'Mở xuyên đêm, ăn khuya'],
-        ['ten' => 'Billiards & Giải trí', 'icon' => 'sports_esports', 'desc' => 'Bida, board game, giải trí'],
+
+    $defaultDanhMucMap = [
+        'Nhà hàng'             => ['ten' => 'Nhà hàng', 'icon' => 'restaurant', 'desc' => 'Gia đình, sang trọng, tiệc tùng'],
+        'Cà phê & Trà'         => ['ten' => 'Cà phê & Trà', 'icon' => 'local_cafe', 'desc' => 'Cafe chill, trà sữa, acoustic'],
+        'Lẩu & Nướng'          => ['ten' => 'Lẩu & Nướng', 'icon' => 'outdoor_grill', 'desc' => 'Buffet nướng, lẩu thái, nướng than'],
+        'Đồ ăn vặt'            => ['ten' => 'Đồ ăn vặt', 'icon' => 'fastfood', 'desc' => 'Bánh tráng, xiên que, trà chanh'],
+        'Quán ăn bình dân'     => ['ten' => 'Quán ăn bình dân', 'icon' => 'lunch_dining', 'desc' => 'Bữa ăn thân thuộc giá sinh viên'],
+        'Quán nhậu & Bar'      => ['ten' => 'Quán nhậu & Bar', 'icon' => 'local_bar', 'desc' => 'Chill hết nấc cùng bạn bè'],
+        'Trà sữa & Nước ép'    => ['ten' => 'Trà sữa & Nước ép', 'icon' => 'emoji_food_beverage', 'desc' => 'Thanh mát ngọt ngào'],
+        'Tiệm bánh'            => ['ten' => 'Tiệm bánh', 'icon' => 'bakery_dining', 'desc' => 'Bánh ngọt thơm lừng'],
+        'Quán Đêm 24/7'        => ['ten' => 'Quán Đêm 24/7', 'icon' => 'nightlife', 'desc' => 'Mở xuyên đêm, ăn khuya'],
+        'Billiards & Giải trí' => ['ten' => 'Billiards & Giải trí', 'icon' => 'sports_esports', 'desc' => 'Bida, board game, giải trí'],
     ];
+
+    $danhMucList = [];
+    $hasDanhMucTableData = false;
+    try {
+        if (\Illuminate\Support\Facades\Schema::hasTable('danh_muc_quan') && \App\Models\DanhMucQuan::count() > 0) {
+            $hasDanhMucTableData = true;
+            $dbCategories = \App\Models\DanhMucQuan::hienThi()->sapXep()->get();
+            foreach ($dbCategories as $cat) {
+                $catName = trim((string) $cat->ten_danh_muc);
+                if ($catName === '') {
+                    continue;
+                }
+                $fallbackMeta = $defaultDanhMucMap[$catName] ?? null;
+                $danhMucList[] = [
+                    'ten'  => $catName,
+                    'icon' => $cat->icon ?: ($fallbackMeta['icon'] ?? 'restaurant'),
+                    'desc' => $cat->mo_ta ?: ($fallbackMeta['desc'] ?? 'Khám phá địa điểm ẩm thực'),
+                ];
+            }
+        }
+    } catch (\Throwable $e) {
+        // Fallback sang danh sách mặc định bên dưới nếu chưa có bảng
+    }
+
+    if (!$hasDanhMucTableData) {
+        $danhMucList = array_values($defaultDanhMucMap);
+    }
 @endphp
 
 @section('title', $seo->meta_title ?: (($danhMuc ? $danhMuc . ' - ' : '') . 'Khám phá quán ngon | Quán Mới'))
@@ -271,7 +303,9 @@
                     <a href="{{ $isShopeeActive ? request()->fullUrlWithQuery(['co_shopeefood' => null]) : request()->fullUrlWithQuery(['co_shopeefood' => 1]) }}" 
                        class="filter-pill-btn {{ $isShopeeActive ? 'bg-[#EE4D2D] text-white border-[#EE4D2D] shadow-sm font-bold' : 'bg-white/95 text-gray-700 hover:text-[#EE4D2D] hover:bg-white border-gray-200/90 hover:border-orange-300 font-semibold' }}"
                        style="height: 38px; min-height: 38px; box-sizing: border-box;">
-                        <span class="material-symbols-outlined text-[18px] flex-shrink-0 {{ $isShopeeActive ? 'text-white' : 'text-[#EE4D2D]' }}">moped</span>
+                        <svg class="w-4 h-4 flex-shrink-0 fill-current {{ $isShopeeActive ? 'text-white' : 'text-[#EE4D2D]' }}" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M19 7c0-1.1-.9-2-2-2h-3v2h3v2.65L13.52 14H10V9H6c-2.21 0-4 1.79-4 4v3h2c0 1.66 1.34 3 3 3s3-1.34 3-3h4.18c.41 1.16 1.51 2 2.82 2 1.66 0 3-1.34 3-3h2v-5l-3-3zm-12 10c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm11 0c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zM5 11h3v3H4.2c.4-1.2 1.5-2 2.8-2z"/>
+                        </svg>
                         <span>ShopeeFood</span>
                     </a>
                 </div>
@@ -335,7 +369,7 @@
                 </div>
 
                 {{-- Popover Dropdown Danh mục quán (Nằm ngoài overflow-x-auto) --}}
-                <div id="category-dropdown-menu" class="hidden fixed z-[99999] w-72 bg-white rounded-2xl shadow-[0_16px_50px_rgba(0,0,0,0.2)] border border-gray-100 p-2 text-left">
+                <div id="category-dropdown-menu" class="hidden fixed z-[99999] w-72 max-h-[420px] overflow-y-auto bg-white rounded-2xl shadow-[0_16px_50px_rgba(0,0,0,0.2)] border border-gray-100 p-2 text-left">
                     <div class="px-3 py-1.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider flex items-center justify-between">
                         <span>Danh mục quán</span>
                         @if($isCategoryActive)
@@ -504,7 +538,9 @@
                     <a href="{{ request()->fullUrlWithQuery(['co_shopeefood' => null]) }}" 
                        class="inline-flex items-center gap-1.5 bg-orange-50 hover:bg-orange-100 text-[#EE4D2D] border border-orange-200 rounded-full px-3 py-1 text-[13px] font-bold transition-all group"
                        title="Bỏ lọc ShopeeFood">
-                        <span class="material-symbols-outlined text-[15px]">moped</span>
+                        <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M19 7c0-1.1-.9-2-2-2h-3v2h3v2.65L13.52 14H10V9H6c-2.21 0-4 1.79-4 4v3h2c0 1.66 1.34 3 3 3s3-1.34 3-3h4.18c.41 1.16 1.51 2 2.82 2 1.66 0 3-1.34 3-3h2v-5l-3-3zm-12 10c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm11 0c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zM5 11h3v3H4.2c.4-1.2 1.5-2 2.8-2z"/>
+                        </svg>
                         <span>ShopeeFood</span>
                         <span class="material-symbols-outlined text-[15px] group-hover:rotate-90 transition-transform">close</span>
                     </a>

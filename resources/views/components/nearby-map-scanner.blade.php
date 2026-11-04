@@ -12,15 +12,36 @@
     $hasInitialGps = is_numeric($initialLat) && is_numeric($initialLng);
     $sectionId = $prefix === 'nearby' ? 'nearby-scanner-section' : $prefix . '-scanner-section';
 
-    $mapCategories = [
-        '' => 'Tất cả',
-        'Nhà hàng' => 'Nhà hàng',
-        'Cà phê & Trà' => 'Cà phê & Trà',
-        'Lẩu & Nướng' => 'Lẩu & Nướng',
-        'Ăn vặt' => 'Ăn vặt',
-        'Billiards & Giải trí' => 'Billiards & Giải trí',
-        'Quán Đêm 24/7' => 'Quán Đêm 24/7',
-    ];
+    $mapCategories = ['' => 'Tất cả'];
+    $hasDbCategories = false;
+    try {
+        if (\Illuminate\Support\Facades\Schema::hasTable('danh_muc_quan') && \App\Models\DanhMucQuan::count() > 0) {
+            $hasDbCategories = true;
+            $dbCats = \App\Models\DanhMucQuan::hienThi()->sapXep()->get();
+            foreach ($dbCats as $c) {
+                $cName = trim((string) $c->ten_danh_muc);
+                if ($cName !== '') {
+                    $mapCategories[$cName] = $cName;
+                }
+            }
+        }
+    } catch (\Throwable $e) {}
+
+    if (!$hasDbCategories) {
+        $mapCategories = [
+            '' => 'Tất cả',
+            'Nhà hàng' => 'Nhà hàng',
+            'Cà phê & Trà' => 'Cà phê & Trà',
+            'Lẩu & Nướng' => 'Lẩu & Nướng',
+            'Ăn vặt' => 'Ăn vặt',
+            'Quán ăn bình dân' => 'Quán ăn bình dân',
+            'Quán nhậu & Bar' => 'Quán nhậu & Bar',
+            'Trà sữa & Nước ép' => 'Trà sữa & Nước ép',
+            'Tiệm bánh' => 'Tiệm bánh',
+            'Billiards & Giải trí' => 'Billiards & Giải trí',
+            'Quán Đêm 24/7' => 'Quán Đêm 24/7',
+        ];
+    }
 @endphp
 
 @once

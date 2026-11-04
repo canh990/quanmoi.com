@@ -20,9 +20,10 @@ use Intervention\Image\Drivers\Gd\Driver;
 
 class TaiKhoanController extends Controller
 {
-    public function index()
+    public function index(DiaChiService $diaChiService)
     {
         $user = Auth::user();
+        $tinhThanhs = $diaChiService->getTinhThanh();
         $savedQuan = $user->savedQuan()
             ->with(['hinhAnh' => function ($q) {
                 $q->limit(1);
@@ -32,7 +33,7 @@ class TaiKhoanController extends Controller
             ->orderByPivot('created_at', 'desc')
             ->get();
 
-        return view('nguoi-dung.tai-khoan.index', compact('user', 'savedQuan'));
+        return view('nguoi-dung.tai-khoan.index', compact('user', 'savedQuan', 'tinhThanhs'));
     }
 
     public function settings(DiaChiService $diaChiService)

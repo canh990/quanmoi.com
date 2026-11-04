@@ -26,12 +26,20 @@
             </div>
         </div>
 
-        {{-- Góc trên bên phải: Các huy hiệu trạng thái (Video, Mở cửa, Quán Nổi bật) --}}
+        {{-- Góc trên bên phải: Các huy hiệu trạng thái (Video, Giao hàng, Mở cửa, Quán Nổi bật) --}}
         <div class="qm-venue-pos-tr">
             @if($hasVideo)
                 <span class="qm-venue-badge-status bg-purple-600/95 text-white" title="Có video review">
                     <span class="material-symbols-outlined text-[12px]" style="font-variation-settings: 'FILL' 1;">play_circle</span>
                     <span class="hidden sm:inline">Video</span>
+                </span>
+            @endif
+            @if(!empty($quan->shopeefood_url))
+                <span class="qm-venue-badge-status bg-[#EE4D2D]/95 text-white shadow-sm" title="Có giao hàng qua ShopeeFood">
+                    <svg class="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-current shrink-0" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M19 7c0-1.1-.9-2-2-2h-3v2h3v2.65L13.52 14H10V9H6c-2.21 0-4 1.79-4 4v3h2c0 1.66 1.34 3 3 3s3-1.34 3-3h4.18c.41 1.16 1.51 2 2.82 2 1.66 0 3-1.34 3-3h2v-5l-3-3zm-12 10c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm11 0c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zM5 11h3v3H4.2c.4-1.2 1.5-2 2.8-2z"/>
+                    </svg>
+                    <span>Giao hàng</span>
                 </span>
             @endif
             @if($isDangMo)
@@ -105,10 +113,13 @@
                     <span>{{ number_format($quan->luot_xem ?? 0, 0, ',', '.') }}</span>
                 </span>
 
-                {{-- ShopeeFood (nếu có) --}}
+                {{-- ShopeeFood / Giao hàng (nếu có) --}}
                 @if(!empty($quan->shopeefood_url))
-                    <span class="bg-orange-50 text-[#EE4D2D] border border-orange-200/60 px-1 sm:px-1.5 py-0.5 rounded-md text-[10px] sm:text-[10.5px] font-bold whitespace-nowrap inline-flex items-center gap-0.5" title="Có đặt trên ShopeeFood">
-                        <span class="material-symbols-outlined text-[11px] sm:text-[12px]">moped</span>
+                    <span class="bg-orange-50 text-[#EE4D2D] border border-orange-200/80 px-1.5 py-0.5 rounded-md text-[10px] sm:text-[11px] font-bold whitespace-nowrap inline-flex items-center gap-1 shadow-sm" title="Có đặt giao hàng trên ShopeeFood">
+                        <svg class="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-current shrink-0" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M19 7c0-1.1-.9-2-2-2h-3v2h3v2.65L13.52 14H10V9H6c-2.21 0-4 1.79-4 4v3h2c0 1.66 1.34 3 3 3s3-1.34 3-3h4.18c.41 1.16 1.51 2 2.82 2 1.66 0 3-1.34 3-3h2v-5l-3-3zm-12 10c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm11 0c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zM5 11h3v3H4.2c.4-1.2 1.5-2 2.8-2z"/>
+                        </svg>
+                        <span>Giao hàng</span>
                     </span>
                 @endif
             </div>

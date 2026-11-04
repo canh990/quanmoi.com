@@ -428,4 +428,30 @@ class SePayNapTienTest extends TestCase
         $aliasRes = $this->actingAs($user)->get('/vi-tien');
         $aliasRes->assertRedirect(route('tai-khoan.vi-tien'));
     }
+
+    public function test_huy_giao_dich_hoac_quay_lai_cap_nhat_da_huy_va_hien_thi_thong_bao(): void
+    {
+        $user = User::factory()->create(['so_du' => 0]);
+
+        $thanhToan = ThanhToan::create([
+            'user_id' => $user->id,
+            'ma_giao_dich' => 'NAP_BACK_TEST_01',
+            'ten_goi_dich_vu' => 'Nạp tiền vào tài khoản ví Quán Mới',
+            'so_tien' => 100000,
+            'phuong_thuc' => 'sepay',
+            'trang_thai' => 'cho_thanh_toan',
+        ]);
+
+        // Khi người dùng bấm quay lại mà không kèm query ?invoice=... vẫn tự động hủy giao dịch đang chờ mới nhất
+        $resCancel = $this->actingAs($user)
+            ->followingRedirects()
+            ->get(route('tai-khoan.nap-tien.huy'));
+
+        $resCancel->assertStatus(200);
+        $resCancel->assertSee('Đã hủy giao dịch nạp tiền');
+        $resCancel->assertSee('NAP_BACK_TEST_01');
+
+        $thanhToan->refresh();
+        $this->assertEquals('da_huy', $thanhToan->trang_thai);
+    }
 }

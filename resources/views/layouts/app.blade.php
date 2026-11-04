@@ -327,10 +327,11 @@
 
     <!-- Scroll to Top Button -->
     <button id="scrollToTopBtn" 
-        class="fixed bottom-24 right-6 z-40 p-3 bg-primary text-white rounded-full shadow-[0_4px_14px_rgba(160,65,0,0.25)] opacity-0 translate-y-10 pointer-events-none transition-all duration-300 hover:bg-primary/90 hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(160,65,0,0.35)] focus:outline-none flex items-center justify-center group"
+        style="display: none;"
+        class="fixed bottom-[76px] md:bottom-24 right-4 md:right-6 z-40 p-2.5 sm:p-3 bg-primary text-white rounded-full shadow-[0_4px_14px_rgba(160,65,0,0.25)] opacity-0 translate-y-10 pointer-events-none transition-all duration-300 hover:bg-primary/90 hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(160,65,0,0.35)] focus:outline-none items-center justify-center group"
         title="Lên đầu trang"
         aria-label="Lên đầu trang">
-        <span class="material-symbols-outlined text-[24px] group-hover:-translate-y-0.5 transition-transform">arrow_upward</span>
+        <span class="material-symbols-outlined text-[22px] sm:text-[24px] group-hover:-translate-y-0.5 transition-transform">arrow_upward</span>
     </button>
 
     <!-- Floating AI Chatbot Widget (Bottom Right) -->
@@ -699,11 +700,19 @@
             if (scrollToTopBtn) {
                 window.addEventListener('scroll', () => {
                     if (window.scrollY > 300) {
-                        scrollToTopBtn.classList.remove('opacity-0', 'translate-y-10', 'pointer-events-none');
-                        scrollToTopBtn.classList.add('opacity-100', 'translate-y-0');
+                        scrollToTopBtn.style.display = 'flex';
+                        requestAnimationFrame(() => {
+                            scrollToTopBtn.classList.remove('opacity-0', 'translate-y-10', 'pointer-events-none');
+                            scrollToTopBtn.classList.add('opacity-100', 'translate-y-0');
+                        });
                     } else {
                         scrollToTopBtn.classList.add('opacity-0', 'translate-y-10', 'pointer-events-none');
                         scrollToTopBtn.classList.remove('opacity-100', 'translate-y-0');
+                        setTimeout(() => {
+                            if (window.scrollY <= 300) {
+                                scrollToTopBtn.style.display = 'none';
+                            }
+                        }, 320);
                     }
                 });
 
