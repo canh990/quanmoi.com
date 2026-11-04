@@ -49,7 +49,12 @@
                     <span class="font-body-lg text-body-lg">Bài viết đã lưu</span>
                 </div>
                 @php
-                    $totalSavedCount = $user ? $user->savedBlogs()->where('blogs.status', 'published')->count() : 0;
+                    $totalSavedCount = 0;
+                    try {
+                        if ($user && \Illuminate\Support\Facades\Schema::hasTable('blog_da_luu')) {
+                            $totalSavedCount = $user->savedBlogs()->where('blogs.status', 'published')->count();
+                        }
+                    } catch (\Throwable $e) {}
                 @endphp
                 <span id="sidebar-saved-blog-count" class="px-2 py-0.5 text-[11px] font-bold bg-amber-500 text-white rounded-full {{ $totalSavedCount > 0 ? '' : 'hidden' }}">
                     {{ $totalSavedCount > 99 ? '99+' : $totalSavedCount }}
