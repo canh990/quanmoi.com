@@ -1,7 +1,7 @@
 <!-- Global Toast Notification Container (Đồng bộ toàn website Quán Mới) -->
 <div id="global-toast-container" class="qm-toast-container" aria-live="polite" aria-atomic="true"></div>
-@if(session('success') || session('error') || session('error_conflict') || session('info') || session('status'))
-<div class="hidden" aria-hidden="true">{{ session('success') }} {{ session('error') }} {{ session('error_conflict') }} {{ session('info') }} {{ session('status') }}</div>
+@if(session('success') || session('error') || session('error_conflict') || session('warning') || session('info') || session('status'))
+<div class="hidden" aria-hidden="true">{{ session('success') }} {{ session('error') }} {{ session('error_conflict') }} {{ session('warning') }} {{ session('info') }} {{ session('status') }}</div>
 @endif
 
 <style>
@@ -681,7 +681,14 @@
             });
         @endif
 
-        @if(session('info'))
+        @if(session('warning'))
+            window.showToast({
+                title: 'Đã hủy giao dịch',
+                message: @json(session('warning')),
+                type: 'warning',
+                duration: 5000
+            });
+        @elseif(session('info'))
             window.showToast({
                 title: 'Thông báo',
                 message: @json(session('info')),

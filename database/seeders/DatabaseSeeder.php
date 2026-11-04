@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             QuanSeeder::class,
             MonAnSeeder::class,
             PhoSeeder::class,
+            ShopeeFoodQuanSeeder::class,
             VideoShortSeeder::class,
             BlogSeeder::class,
             QuanDanhGiaSeeder::class,

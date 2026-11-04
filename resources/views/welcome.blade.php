@@ -696,6 +696,14 @@
                 </div>
 
                 <div class="absolute top-2 right-2 sm:top-3 sm:right-3 flex items-center gap-1 sm:gap-1.5 z-10">
+                    ${(quan.shopeefood_url || quan.co_shopeefood) ? `
+                        <span class="qm-venue-badge-status bg-[#EE4D2D]/95 text-white shadow-sm" title="Có giao hàng qua ShopeeFood">
+                            <svg class="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-current shrink-0" viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M19 7c0-1.1-.9-2-2-2h-3v2h3v2.65L13.52 14H10V9H6c-2.21 0-4 1.79-4 4v3h2c0 1.66 1.34 3 3 3s3-1.34 3-3h4.18c.41 1.16 1.51 2 2.82 2 1.66 0 3-1.34 3-3h2v-5l-3-3zm-12 10c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm11 0c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zM5 11h3v3H4.2c.4-1.2 1.5-2 2.8-2z"/>
+                            </svg>
+                            <span>Giao hàng</span>
+                        </span>
+                    ` : ''}
                     ${quan.dang_mo_cua ? `
                         <span class="qm-venue-badge-status bg-emerald-600/95 text-white">
                             <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
@@ -757,6 +765,15 @@
                             <span class="material-symbols-outlined text-[12px] sm:text-[14px] text-slate-400">visibility</span>
                             <span>${Number(quan.luot_xem || 0).toLocaleString('vi-VN')}</span>
                         </span>
+
+                        ${(quan.shopeefood_url || quan.co_shopeefood) ? `
+                            <span class="bg-orange-50 text-[#EE4D2D] border border-orange-200/80 px-1.5 py-0.5 rounded-md text-[10px] sm:text-[11px] font-bold whitespace-nowrap inline-flex items-center gap-1 shadow-sm" title="Có đặt giao hàng trên ShopeeFood">
+                                <svg class="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-current shrink-0" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M19 7c0-1.1-.9-2-2-2h-3v2h3v2.65L13.52 14H10V9H6c-2.21 0-4 1.79-4 4v3h2c0 1.66 1.34 3 3 3s3-1.34 3-3h4.18c.41 1.16 1.51 2 2.82 2 1.66 0 3-1.34 3-3h2v-5l-3-3zm-12 10c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm11 0c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zM5 11h3v3H4.2c.4-1.2 1.5-2 2.8-2z"/>
+                                </svg>
+                                <span>Giao hàng</span>
+                            </span>
+                        ` : ''}
                     </div>
 
                     <span class="qm-venue-price-pill ml-auto">

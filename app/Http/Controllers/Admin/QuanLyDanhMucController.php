@@ -7,6 +7,7 @@ use App\Models\AdminAuditLog;
 use App\Models\DanhMucQuan;
 use App\Models\Quan;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 class QuanLyDanhMucController extends Controller
@@ -120,6 +121,8 @@ class QuanLyDanhMucController extends Controller
             ]);
         } catch (\Throwable $e) {}
 
+        Cache::forget('bando_categories_v2');
+
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
@@ -181,6 +184,8 @@ class QuanLyDanhMucController extends Controller
             ]);
         } catch (\Throwable $e) {}
 
+        Cache::forget('bando_categories_v2');
+
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
@@ -212,6 +217,8 @@ class QuanLyDanhMucController extends Controller
             ]);
         } catch (\Throwable $e) {}
 
+        Cache::forget('bando_categories_v2');
+
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
@@ -228,6 +235,8 @@ class QuanLyDanhMucController extends Controller
         $category->is_hien_thi = !$category->is_hien_thi;
         $category->save();
 
+        Cache::forget('bando_categories_v2');
+
         return response()->json([
             'success' => true,
             'is_hien_thi' => $category->is_hien_thi,
@@ -240,6 +249,8 @@ class QuanLyDanhMucController extends Controller
         $category = DanhMucQuan::findOrFail($id);
         $category->is_noi_bat = !$category->is_noi_bat;
         $category->save();
+
+        Cache::forget('bando_categories_v2');
 
         return response()->json([
             'success' => true,
