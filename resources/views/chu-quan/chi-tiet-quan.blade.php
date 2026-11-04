@@ -97,9 +97,12 @@
                     <input type="file" id="cover-upload-input" accept="image/*" class="hidden"
                            onchange="uploadCoverImage(this, '{{ $quan->slug }}')"/>
 
-                    <a href="/quan/{{ $quan->slug }}" target="_blank"
-                       class="px-4 py-2.5 bg-white/20 hover:bg-white/30 backdrop-blur-md text-white font-bold text-[13.5px] rounded-xl transition-all flex items-center gap-1.5 border border-white/30 cursor-pointer relative z-20 hidden md:flex">
-                        <span class="material-symbols-outlined text-[18px]">visibility</span> Xem trang khách
+                    {{-- Nút Xem trang khách: Chuyển hướng trực tiếp trong cùng tab, không mở tab mới, không hiện khung popup --}}
+                    <a href="{{ route('quan.detail', ['slug' => $quan->slug]) }}"
+                       class="px-3.5 py-2 sm:px-4 sm:py-2.5 bg-white/20 hover:bg-white/30 backdrop-blur-md text-white font-bold text-xs sm:text-[13.5px] rounded-xl transition-all flex items-center gap-1.5 border border-white/30 cursor-pointer relative z-20 shadow-2xs"
+                       title="Xem trực tiếp giao diện của thực khách">
+                        <span class="material-symbols-outlined text-[18px]">visibility</span>
+                        <span>Xem trang khách</span>
                     </a>
                 </div>
             </div>
@@ -143,7 +146,13 @@
                     <span class="material-symbols-outlined text-[16px] text-orange-500">smart_display</span>
                     VIDEO REVIEW ({{ $videos->count() }})
                 </a>
-                <a href="#owner-reviews-section" class="text-gray-500 hover:text-primary py-3 text-xs sm:text-sm font-semibold whitespace-nowrap px-1 transition-colors">ĐÁNH GIÁ</a>
+                <a href="#owner-reviews-section" class="text-gray-500 hover:text-primary py-3 text-xs sm:text-sm font-semibold whitespace-nowrap px-1 transition-colors flex items-center gap-1.5" onclick="markOwnerReviewsAsSeen('{{ $quan->slug }}')">
+                    <span class="material-symbols-outlined text-[16px] text-amber-500">rate_review</span>
+                    <span>ĐÁNH GIÁ (<span id="owner-reviews-total-count">{{ $ownerReviewCount ?? 0 }}</span>)</span>
+                    <span id="owner-reviews-tab-badge" class="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 {{ ($ownerUnrepliedCount ?? 0) > 0 ? '' : 'hidden' }}" title="Số đánh giá chưa phản hồi">
+                        <span id="owner-reviews-unreplied-count">{{ $ownerUnrepliedCount ?? 0 }}</span> chưa trả lời
+                    </span>
+                </a>
                 <a href="#owner-info-section" class="text-gray-500 hover:text-primary py-3 text-xs sm:text-sm font-semibold whitespace-nowrap px-1 transition-colors">THÔNG TIN</a>
                 <a href="#owner-gallery-section" class="text-gray-500 hover:text-primary py-3 text-xs sm:text-sm font-semibold whitespace-nowrap px-1 transition-colors">HÌNH ẢNH</a>
             </nav>
@@ -282,62 +291,203 @@
             </section>
 
             {{-- Read-only customer reviews for the owner --}}
-            <section hidden class="bg-white rounded-[24px] p-6 md:p-8 border border-gray-100 shadow-sm space-y-4" id="owner-reviews-section">
+            <section hidden class="bg-white rounded-[24px] p-6 md:p-8 border border-gray-100 shadow-sm space-y-6" id="owner-reviews-section">
                 @php
                     $ownerReviews = $quan->danhGia->sortByDesc('updated_at');
                     $ownerReviewCount = $ownerReviews->count();
                     $ownerAverageRating = $ownerReviewCount ? $ownerReviews->avg('so_sao') : 0;
+                    $summaryData = $aiReviewSummary ?? null;
+                    $hasAiSummary = !empty($summaryData) && !empty($summaryData['eligible']);
                 @endphp
                 <div class="flex flex-wrap items-center justify-between gap-3">
                     <h3 class="text-xl font-extrabold text-on-surface flex items-center gap-2">
                         <span class="material-symbols-outlined text-amber-500">star</span>
-                        Đánh giá của khách ({{ $ownerReviewCount }})
+                        <span>Đánh giá của khách</span>
+                        (<span id="owner-reviews-header-count">{{ $ownerReviewCount }}</span>)
                     </h3>
-                    @if($ownerReviewCount)
-                        <p class="font-bold text-amber-600">★ {{ number_format($ownerAverageRating, 1) }} / 5</p>
+                    <p id="owner-reviews-avg-rating" class="font-bold text-amber-600 {{ $ownerReviewCount ? '' : 'hidden' }}">
+                        ★ {{ number_format($ownerAverageRating, 1) }} / 5
+                    </p>
+                </div>
+
+                {{-- KHUNG AI TÓM TẮT & PHÂN TÍCH ĐÁNH GIÁ DÀNH CHO CHỦ QUÁN --}}
+                <div id="ai-review-summary-card" class="rounded-3xl border border-purple-100 bg-gradient-to-br from-purple-50/60 via-white to-indigo-50/40 p-5 md:p-6 shadow-xs relative overflow-hidden">
+                    <div class="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-gradient-to-br from-purple-400/10 to-indigo-500/10 blur-2xl pointer-events-none"></div>
+
+                    @if(!$hasAiSummary)
+                        {{-- Chưa đủ đánh giá để phân tích --}}
+                        <div id="ai-summary-empty-state" class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                            <div class="flex items-start gap-3">
+                                <div class="w-10 h-10 rounded-2xl bg-purple-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+                                    <span class="material-symbols-outlined text-xl">auto_awesome</span>
+                                </div>
+                                <div class="space-y-1">
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <h4 class="font-bold text-sm text-gray-900">Kira AI • Trợ lý Phân tích Đánh giá</h4>
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-700">Dành riêng cho Chủ quán</span>
+                                    </div>
+                                    <p class="text-xs text-gray-600 leading-relaxed">
+                                        {{ $summaryData['message'] ?? 'Khi quán có từ 2 đánh giá trở lên, Kira AI sẽ tự động phân tích khẩu vị thực khách, thống kê tỷ lệ hài lòng và đề xuất các giải pháp nâng cao chất lượng dịch vụ.' }}
+                                    </p>
+                                </div>
+                            </div>
+                            @if($ownerReviewCount >= 2)
+                                <button type="button" onclick="refreshAiReviewSummary('{{ $quan->slug }}')"
+                                        id="btn-trigger-ai-summary"
+                                        class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 shrink-0 cursor-pointer">
+                                    <span class="material-symbols-outlined text-sm">auto_awesome</span>
+                                    <span>Kích hoạt phân tích AI</span>
+                                </button>
+                            @endif
+                        </div>
+                    @else
+                        {{-- Đã có dữ liệu phân tích --}}
+                        <div id="ai-summary-content" class="space-y-5">
+                            {{-- Header của Báo cáo AI --}}
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-purple-100/80">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 text-white flex items-center justify-center shadow-sm shrink-0">
+                                        <span class="material-symbols-outlined text-xl">smart_toy</span>
+                                    </div>
+                                    <div>
+                                        <div class="flex items-center gap-2 flex-wrap">
+                                            <h4 class="font-extrabold text-sm sm:text-base text-gray-900">Báo cáo Phân tích Trải nghiệm Khách hàng</h4>
+                                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-700 border border-purple-200">
+                                                Nội bộ Chủ quán
+                                            </span>
+                                        </div>
+                                        <p class="text-[11px] text-gray-500 mt-0.5 flex items-center gap-1.5">
+                                            <span>Tổng hợp từ <strong>{{ $summaryData['review_count'] ?? $ownerReviewCount }}</strong> đánh giá</span>
+                                            <span>•</span>
+                                            <span>Cập nhật: <span id="ai-summary-time">{{ $summaryData['analyzed_at'] ?? 'Mới nhất' }}</span></span>
+                                        </p>
+                                    </div>
+                                </div>
+                                <button type="button" onclick="refreshAiReviewSummary('{{ $quan->slug }}')"
+                                        id="btn-refresh-ai-summary"
+                                        title="Quét và phân tích lại với các đánh giá mới nhất"
+                                        class="px-3.5 py-1.5 bg-white hover:bg-purple-50 text-purple-700 border border-purple-200 text-xs font-bold rounded-xl shadow-2xs transition flex items-center gap-1.5 self-start sm:self-auto cursor-pointer">
+                                    <span class="material-symbols-outlined text-sm" id="icon-refresh-ai">sync</span>
+                                    <span>Phân tích lại</span>
+                                </button>
+                            </div>
+
+                            {{-- Tổng quan vận hành --}}
+                            <div class="p-3.5 rounded-2xl bg-white/80 border border-purple-100 shadow-2xs">
+                                <p class="text-xs font-bold text-purple-900 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                                    <span class="material-symbols-outlined text-sm text-purple-600">summarize</span>
+                                    Tổng kết vận hành:
+                                </p>
+                                <p id="ai-summary-tong-quan" class="text-xs sm:text-sm text-gray-700 leading-relaxed font-medium">
+                                    {{ $summaryData['tong_quan'] ?? '' }}
+                                </p>
+                            </div>
+
+                            {{-- Tỉ lệ hài lòng --}}
+                            @php
+                                $tiLe = $summaryData['ti_le_hai_long'] ?? ['tich_cuc' => 80, 'trung_tinh' => 15, 'can_cai_thien' => 5];
+                                $tichCuc = $tiLe['tich_cuc'] ?? 80;
+                                $trungTinh = $tiLe['trung_tinh'] ?? 15;
+                                $canCaiThien = $tiLe['can_cai_thien'] ?? 5;
+                            @endphp
+                            <div class="space-y-1.5">
+                                <div class="flex items-center justify-between text-xs font-bold">
+                                    <span class="text-gray-700 flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-sm text-indigo-600">pie_chart</span>
+                                        Tỉ lệ cảm xúc khách hàng:
+                                    </span>
+                                    <div class="flex items-center gap-3 text-[11px]">
+                                        <span class="text-emerald-700 font-bold">● {{ $tichCuc }}% Hài lòng</span>
+                                        <span class="text-amber-700 font-bold">● {{ $trungTinh }}% Bình thường</span>
+                                        <span class="text-rose-700 font-bold">● {{ $canCaiThien }}% Góp ý/Phàn nàn</span>
+                                    </div>
+                                </div>
+                                <div class="w-full h-3 rounded-full bg-gray-100 overflow-hidden flex shadow-inner">
+                                    <div style="width: {{ $tichCuc }}%;" class="bg-emerald-500 h-full transition-all duration-500" title="{{ $tichCuc }}% Hài lòng"></div>
+                                    <div style="width: {{ $trungTinh }}%;" class="bg-amber-400 h-full transition-all duration-500" title="{{ $trungTinh }}% Bình thường"></div>
+                                    <div style="width: {{ $canCaiThien }}%;" class="bg-rose-500 h-full transition-all duration-500" title="{{ $canCaiThien }}% Cần cải thiện"></div>
+                                </div>
+                            </div>
+
+                            {{-- Lưới 2 cột: Khách khen & Khách góp ý --}}
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {{-- Điểm khen --}}
+                                <div class="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-100 space-y-2">
+                                    <h5 class="text-xs font-bold text-emerald-900 flex items-center gap-1.5 uppercase tracking-wide">
+                                        <span class="material-symbols-outlined text-sm text-emerald-600">thumb_up</span>
+                                        Điểm khách khen nhiều nhất:
+                                    </h5>
+                                    <ul id="ai-summary-diem-khen" class="space-y-1.5 text-xs text-gray-700">
+                                        @foreach($summaryData['diem_khen'] ?? [] as $khen)
+                                            <li class="flex items-start gap-1.5">
+                                                <span class="text-emerald-600 font-bold mt-0.5">✓</span>
+                                                <span>{{ $khen }}</span>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+
+                                {{-- Điểm cần khắc phục --}}
+                                <div class="p-4 rounded-2xl bg-amber-50/60 border border-amber-100 space-y-2">
+                                    <h5 class="text-xs font-bold text-amber-900 flex items-center gap-1.5 uppercase tracking-wide">
+                                        <span class="material-symbols-outlined text-sm text-amber-600">warning</span>
+                                        Vấn đề khách góp ý / phàn nàn:
+                                    </h5>
+                                    <ul id="ai-summary-diem-che" class="space-y-1.5 text-xs text-gray-700">
+                                        @foreach($summaryData['diem_can_khac_phuc'] ?? [] as $che)
+                                            <li class="flex items-start gap-1.5">
+                                                <span class="text-amber-600 font-bold mt-0.5">⚠</span>
+                                                <span>{{ $che }}</span>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            </div>
+
+                            {{-- Lưới 2 khối: Top món ăn & Đề xuất hành động --}}
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+                                {{-- Món ăn nổi bật --}}
+                                <div class="p-4 rounded-2xl bg-white border border-gray-100 shadow-2xs space-y-2.5">
+                                    <h5 class="text-xs font-bold text-gray-800 flex items-center gap-1.5">
+                                        <span class="material-symbols-outlined text-sm text-orange-500">restaurant</span>
+                                        Món được khen nhiều (Nên đẩy mạnh):
+                                    </h5>
+                                    <div id="ai-summary-top-mon" class="flex flex-wrap gap-1.5">
+                                        @forelse($summaryData['top_mon_an'] ?? [] as $mon)
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-semibold bg-orange-50 text-orange-700 border border-orange-100">
+                                                <span>🍲</span>
+                                                <span>{{ $mon }}</span>
+                                            </span>
+                                        @empty
+                                            <span class="text-xs text-gray-400">Chưa đủ dữ liệu tên món</span>
+                                        @endforelse
+                                    </div>
+                                </div>
+
+                                {{-- Đề xuất hành động --}}
+                                <div class="p-4 rounded-2xl bg-purple-50/70 border border-purple-100 space-y-2.5">
+                                    <h5 class="text-xs font-bold text-purple-900 flex items-center gap-1.5">
+                                        <span class="material-symbols-outlined text-sm text-purple-600">lightbulb</span>
+                                        Đề xuất hành động:
+                                    </h5>
+                                    <ul id="ai-summary-khuyen-nghi" class="space-y-1.5 text-xs text-gray-700">
+                                        @foreach($summaryData['khuyen_nghi_chuyen_gia'] ?? [] as $index => $action)
+                                            <li class="flex items-start gap-1.5">
+                                                <span class="w-4 h-4 rounded-full bg-purple-200 text-purple-800 text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                                                    {{ $index + 1 }}
+                                                </span>
+                                                <span class="font-medium">{{ $action }}</span>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
                     @endif
                 </div>
 
-                <div class="space-y-3">
-                    @forelse($ownerReviews as $danhGia)
-                        <article class="rounded-xl border border-gray-100 p-4">
-                            <div class="flex flex-wrap items-center justify-between gap-2">
-                                <h4 class="font-bold text-sm break-words [overflow-wrap:anywhere]">{{ $danhGia->nguoiDung?->ho_ten ?? 'Thành viên' }}</h4>
-                                <time class="text-xs text-gray-400" datetime="{{ $danhGia->updated_at?->toISOString() }}">
-                                    {{ $danhGia->updated_at?->timezone('Asia/Ho_Chi_Minh')->format('d/m/Y H:i') }}
-                                </time>
-                            </div>
-                            <p class="mt-1 text-amber-500" aria-label="{{ $danhGia->so_sao }} trên 5 sao">{{ str_repeat('★', (int) $danhGia->so_sao) }}{{ str_repeat('☆', 5 - (int) $danhGia->so_sao) }}</p>
-                            @if($danhGia->binh_luan)
-                                <p class="mt-2 text-sm text-gray-600 whitespace-pre-line break-words [overflow-wrap:anywhere]">{{ $danhGia->binh_luan }}</p>
-                            @endif
-
-                            @if($danhGia->phan_hoi)
-                                <div class="mt-3 rounded-lg bg-orange-50 p-3">
-                                    <p class="text-xs font-bold text-primary">Phản hồi của quán</p>
-                                    <p class="mt-1 whitespace-pre-line break-words text-sm text-gray-700 [overflow-wrap:anywhere]">{{ $danhGia->phan_hoi }}</p>
-                                    @if($danhGia->phan_hoi_luc)
-                                        <time class="mt-1 block text-[11px] text-gray-400">{{ $danhGia->phan_hoi_luc->timezone('Asia/Ho_Chi_Minh')->format('d/m/Y H:i') }}</time>
-                                    @endif
-                                </div>
-                            @endif
-
-                            <form method="POST" action="{{ route('chu-quan.quan.danh-gia.reply', ['slug' => $quan->slug, 'reviewId' => $danhGia->id]) }}" class="mt-3 space-y-2">
-                                @csrf
-                                @method('PUT')
-                                <label for="phan-hoi-{{ $danhGia->id }}" class="block text-xs font-bold text-gray-700">{{ $danhGia->phan_hoi ? 'Chỉnh sửa phản hồi' : 'Trả lời đánh giá này' }}</label>
-                                <textarea id="phan-hoi-{{ $danhGia->id }}" name="phan_hoi_{{ $danhGia->id }}" rows="3" maxlength="2000" required class="w-full rounded-lg border border-gray-200 p-3 text-sm outline-none focus:border-primary" placeholder="Viết phản hồi cho khách...">{{ old('phan_hoi_'.$danhGia->id, $danhGia->phan_hoi) }}</textarea>
-                                @error('phan_hoi_'.$danhGia->id)
-                                    <p class="text-xs text-red-600">{{ $message }}</p>
-                                @enderror
-                                <button type="submit" class="rounded-lg bg-primary px-4 py-2 text-xs font-bold text-white hover:brightness-110">
-                                    {{ $danhGia->phan_hoi ? 'Cập nhật phản hồi' : 'Gửi phản hồi' }}
-                                </button>
-                            </form>
-                        </article>
-                    @empty
-                        <p class="text-sm text-gray-500">Quán chưa có đánh giá từ khách.</p>
-                    @endforelse
+                <div id="owner-reviews-list-container" class="space-y-3">
+                    @include('chu-quan.partials.reviews-list', ['ownerReviews' => $ownerReviews, 'quan' => $quan])
                 </div>
             </section>
 
@@ -922,25 +1072,59 @@
                 @endif
             </div>
 
-            {{-- ===== QR CODE ===== --}}
+            {{-- ===== QR CODE SHOPEEFOOD ===== --}}
             <div class="bg-white rounded-[24px] p-6 border border-gray-100 shadow-sm">
-                <h3 class="text-lg font-bold text-on-surface border-b border-gray-100 pb-3 mb-4 flex items-center gap-2">
-                    <span class="material-symbols-outlined text-gray-600">qr_code_2</span>
-                    Mã QR quán
-                </h3>
-                <p class="text-xs text-gray-400 mb-4">In mã này và đặt tại bàn để khách quét xem thực đơn & review.</p>
+                <div class="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
+                    <h3 class="text-lg font-bold text-on-surface flex items-center gap-2">
+                        <span class="material-symbols-outlined text-orange-500">qr_code_2</span>
+                        Mã QR ShopeeFood
+                    </h3>
+                    @if($quan->shopeefood_url)
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-orange-100 text-orange-700 flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-orange-500"></span> ShopeeFood
+                        </span>
+                    @else
+                        <button type="button" onclick="openEditModal()" class="text-[11px] font-bold text-orange-600 hover:underline cursor-pointer">
+                            + Thêm link
+                        </button>
+                    @endif
+                </div>
+
+                @if($quan->shopeefood_url)
+                    <p class="text-xs text-gray-500 mb-4 leading-relaxed">
+                        In mã này và đặt tại bàn để khách quét đặt món trực tiếp trên ShopeeFood.
+                    </p>
+                @else
+                    <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-800 mb-4 leading-relaxed flex items-start gap-2">
+                        <span class="material-symbols-outlined text-[16px] text-amber-600 shrink-0 mt-0.5">info</span>
+                        <div>
+                            <span>Quán chưa có link ShopeeFood. Bấm </span>
+                            <button type="button" onclick="openEditModal()" class="font-bold underline text-amber-900 cursor-pointer">Chỉnh sửa</button>
+                            <span> để cập nhật link ShopeeFood tạo mã QR đặt món.</span>
+                        </div>
+                    </div>
+                @endif
 
                 {{-- QR canvas container --}}
                 <div class="flex justify-center mb-4">
-                    <div class="bg-white p-3 rounded-2xl border-2 border-gray-200 shadow-inner inline-block">
+                    <div class="bg-white p-3 rounded-2xl border-2 {{ $quan->shopeefood_url ? 'border-orange-200' : 'border-gray-200' }} shadow-inner inline-block">
                         <div id="qr-code-container"></div>
                     </div>
                 </div>
 
-                <p class="text-center text-[11px] text-gray-400 mb-4 truncate">{{ url('/quan/' . $quan->slug) }}</p>
+                <div class="text-center mb-4 px-2">
+                    @if($quan->shopeefood_url)
+                        <a href="{{ $quan->shopeefood_url }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-[11px] text-orange-600 hover:text-orange-700 font-semibold truncate max-w-full hover:underline" title="{{ $quan->shopeefood_url }}">
+                            <span class="material-symbols-outlined text-[13px] shrink-0">shopping_bag</span>
+                            <span class="truncate">{{ $quan->shopeefood_url }}</span>
+                        </a>
+                    @else
+                        <p class="text-[11px] text-gray-400 truncate" title="{{ url('/quan/' . $quan->slug) }}">{{ url('/quan/' . $quan->slug) }}</p>
+                    @endif
+                </div>
 
                 <button onclick="downloadQR()"
-                        class="w-full h-10 bg-gray-800 hover:bg-gray-900 text-white font-bold text-[13px] rounded-xl flex items-center justify-center gap-2 transition-all">
+                        class="w-full h-10 bg-gray-800 hover:bg-gray-900 text-white font-bold text-[13px] rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer">
                     <span class="material-symbols-outlined text-[18px]">download</span> Tải về PNG
                 </button>
             </div>
@@ -1061,6 +1245,8 @@
                     <input type="url" name="shopeefood_url" id="edit-shopeefood"
                            value="{{ $quan->shopeefood_url }}"
                            placeholder="https://shopeefood.vn/..."
+                           pattern="https?:\/\/(.*shopeefood\.vn|.*shopee\.vn)(\/.*)?"
+                           title="Đường dẫn ShopeeFood phải thuộc tên miền shopeefood.vn hoặc shopee.vn (ví dụ: https://shopeefood.vn/...)"
                            class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm transition">
                 </div>
 
@@ -1102,6 +1288,19 @@
 <script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <script>
+    function showNotify(message, type = 'warning', title = null) {
+        if (typeof window.showToast === 'function') {
+            const defaultTitle = type === 'error' ? 'Có lỗi xảy ra' : (type === 'success' ? 'Thành công' : (type === 'info' ? 'Thông báo' : 'Lưu ý'));
+            window.showToast({
+                title: title || defaultTitle,
+                message: message,
+                type: type
+            });
+        } else {
+            console.warn(message);
+        }
+    }
+
     const ownerVenueTabs = Array.from(document.querySelectorAll('#owner-venue-tabs a[href^="#owner-"]'));
 
     function setOwnerVenueTab(hash) {
@@ -1121,6 +1320,12 @@
             const panel = document.querySelector(tab.hash);
             if (panel) panel.hidden = !active;
         });
+
+        if (activeId === 'owner-reviews-section') {
+            if (typeof window.markOwnerReviewsAsSeen === 'function') {
+                window.markOwnerReviewsAsSeen('{{ $quan->slug }}');
+            }
+        }
     }
 
     ownerVenueTabs.forEach(tab => tab.addEventListener('click', event => {
@@ -1145,15 +1350,19 @@
             },
         });
 
-        // Render QR Code (dùng qrcodejs - tương thích browser)
-        new QRCode(document.getElementById('qr-code-container'), {
-            text: '{{ url('/quan/' . $quan->slug) }}',
-            width: 160,
-            height: 160,
-            colorDark: '#1a1a1a',
-            colorLight: '#ffffff',
-            correctLevel: QRCode.CorrectLevel.H
-        });
+        // Render QR Code (dùng qrcodejs - tương thích browser, ưu tiên link ShopeeFood đã nhập)
+        const qrTargetUrl = @json($quan->shopeefood_url ?: url('/quan/' . $quan->slug));
+        const qrContainer = document.getElementById('qr-code-container');
+        if (qrContainer) {
+            new QRCode(qrContainer, {
+                text: qrTargetUrl,
+                width: 160,
+                height: 160,
+                colorDark: '#1a1a1a',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        }
     });
 
     /* =========================================================
@@ -1162,11 +1371,12 @@
     function downloadQR() {
         // qrcodejs tạo ra một <canvas> hoặc <img> bên trong container
         const container = document.getElementById('qr-code-container');
+        if (!container) return;
         const canvas = container.querySelector('canvas');
         const img    = container.querySelector('img');
 
         const padding = 24;
-        const labelHeight = 36;
+        const labelHeight = 44;
         const qrSize = 160;
         const totalW = qrSize + padding * 2;
         const totalH = qrSize + padding * 2 + labelHeight;
@@ -1180,18 +1390,31 @@
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, totalW, totalH);
 
+        // Viền bo nhẹ
+        ctx.strokeStyle = '#f3f4f6';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(1, 1, totalW - 2, totalH - 2);
+
         // Hàm vẽ QR sau khi có source
         const drawAndDownload = (src) => {
             const image = new Image();
             image.onload = () => {
                 ctx.drawImage(image, padding, padding, qrSize, qrSize);
-                ctx.fillStyle = '#374151';
-                ctx.font = 'bold 13px Arial';
+                
+                // Tên quán
+                ctx.fillStyle = '#111827';
+                ctx.font = 'bold 13px sans-serif';
                 ctx.textAlign = 'center';
-                ctx.fillText('{{ $quan->ten_quan }}', totalW / 2, qrSize + padding + 22);
+                ctx.fillText('{{ addslashes($quan->ten_quan) }}', totalW / 2, qrSize + padding + 18);
+
+                // Dòng phụ chú ShopeeFood
+                const hasShopee = Boolean(@json(!empty($quan->shopeefood_url)));
+                ctx.fillStyle = hasShopee ? '#ea580c' : '#6b7280';
+                ctx.font = '600 11px sans-serif';
+                ctx.fillText(hasShopee ? 'Đặt món trên ShopeeFood' : 'Quét mã xem quán', totalW / 2, qrSize + padding + 34);
 
                 const link = document.createElement('a');
-                link.download = 'qr-{{ $quan->slug }}.png';
+                link.download = hasShopee ? 'shopeefood-qr-{{ $quan->slug }}.png' : 'qr-{{ $quan->slug }}.png';
                 link.href = newCanvas.toDataURL('image/png');
                 link.click();
             };
@@ -1255,10 +1478,10 @@
                 });
                 input.value = '';
             } else {
-                alert(data.message || 'Lỗi tải ảnh lên.');
+                showNotify(data.message || 'Lỗi tải ảnh lên.', 'error', 'Tải ảnh thất bại');
             }
         } catch (e) {
-            alert('Không thể kết nối máy chủ.');
+            showNotify('Không thể kết nối máy chủ. Vui lòng thử lại sau.', 'error', 'Lỗi kết nối');
         } finally {
             uploading.classList.add('hidden');
         }
@@ -1362,13 +1585,14 @@
             });
             const data = await res.json();
             if (res.ok && data.success) {
-                window.location.reload();
+                showNotify('Cập nhật ảnh bìa thành công!', 'success', 'Thành công');
+                setTimeout(() => window.location.reload(), 800);
             } else {
-                alert(data.message || 'Không thể cập nhật ảnh bìa.');
+                showNotify(data.message || 'Không thể cập nhật ảnh bìa.', 'error', 'Lỗi cập nhật');
                 if (label) label.innerHTML = '<span class="material-symbols-outlined text-[18px]">add_photo_alternate</span> Đổi ảnh bìa';
             }
         } catch (e) {
-            alert('Không thể kết nối máy chủ.');
+            showNotify('Không thể kết nối máy chủ. Vui lòng thử lại sau.', 'error', 'Lỗi kết nối');
             if (label) label.innerHTML = '<span class="material-symbols-outlined text-[18px]">add_photo_alternate</span> Đổi ảnh bìa';
         }
     }
@@ -1520,7 +1744,7 @@
         // KIỂM TRA LỖI: Thời hạn áp dụng không được ở trong quá khứ
         const dateCheck = validateOwnerPromoDates();
         if (!dateCheck.valid) {
-            alert('⚠️ ' + dateCheck.message);
+            showNotify(dateCheck.message, 'warning', 'Thời gian không hợp lệ');
             if (dateCheck.input) dateCheck.input.focus();
             return;
         }
@@ -1582,10 +1806,10 @@
                 resultBox?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             } else {
                 const errorMsg = data.message || (data.errors ? Object.values(data.errors).flat().join('\n') : 'Không thể tạo nội dung khuyến mãi');
-                alert('Có lỗi xảy ra: ' + errorMsg);
+                showNotify(errorMsg, 'error', 'Không thể tạo ưu đãi');
             }
         } catch (err) {
-            alert('Lỗi kết nối tới máy chủ AI.');
+            showNotify('Lỗi kết nối tới máy chủ AI. Vui lòng thử lại sau.', 'error', 'Lỗi kết nối AI');
         } finally {
             loading?.classList.add('hidden');
             if (btn) {
@@ -1608,14 +1832,14 @@
         const ngayKetThuc = document.getElementById('owner-ai-ngay-ket-thuc')?.value || '';
 
         if (!tieuDe || !noiDung) {
-            alert('Vui lòng tạo nội dung khuyến mãi trước khi lưu!');
+            showNotify('Vui lòng tạo nội dung khuyến mãi trước khi lưu!', 'warning', 'Chưa có nội dung');
             return;
         }
 
         // KIỂM TRA LỖI: Thời hạn áp dụng không được ở trong quá khứ
         const dateCheck = validateOwnerPromoDates();
         if (!dateCheck.valid) {
-            alert('⚠️ ' + dateCheck.message);
+            showNotify(dateCheck.message, 'warning', 'Thời gian không hợp lệ');
             if (dateCheck.input) dateCheck.input.focus();
             return;
         }
@@ -1651,14 +1875,14 @@
 
             const data = await res.json();
             if (res.ok && data.success) {
-                alert('🎉 Tuyệt vời! ' + data.message);
-                window.location.reload();
+                showNotify(data.message || 'Đã lưu và kích hoạt ưu đãi thành công!', 'success', 'Thành công');
+                setTimeout(() => window.location.reload(), 1000);
             } else {
                 const errorMsg = data.message || (data.errors ? Object.values(data.errors).flat().join('\n') : 'Không thể lưu ưu đãi');
-                alert('Lỗi lưu: ' + errorMsg);
+                showNotify(errorMsg, 'error', 'Lỗi lưu ưu đãi');
             }
         } catch (err) {
-            alert('Lỗi kết nối máy chủ.');
+            showNotify('Lỗi kết nối máy chủ. Vui lòng thử lại sau.', 'error', 'Lỗi kết nối');
         } finally {
             if (btn) {
                 btn.disabled = false;
@@ -1704,22 +1928,32 @@
                     }
                 }
             } else {
-                alert('Không thể thay đổi trạng thái.');
+                showNotify('Không thể thay đổi trạng thái lúc này.', 'error', 'Lỗi thao tác');
             }
         } catch (err) {
-            alert('Lỗi kết nối.');
+            showNotify('Lỗi kết nối máy chủ.', 'error', 'Lỗi kết nối');
         }
     }
 
     function clearOwnerGeneratedPromo() {
-        if (!confirm('Bạn có chắc chắn muốn xóa bản nháp voucher vừa tạo này không?')) return;
-        document.getElementById('owner-res-tieu-de').value = '';
-        document.getElementById('owner-res-voucher').value = '';
-        document.getElementById('owner-res-slogan').value = '';
-        document.getElementById('owner-res-noi-dung').value = '';
-        document.getElementById('owner-res-the-le').value = '';
-        document.getElementById('owner-res-hashtags').innerText = '';
-        document.getElementById('owner-ai-result-box')?.classList.add('hidden');
+        openOwnerConfirmModal({
+            title: 'Hủy Bản Nháp Voucher',
+            message: 'Bạn có chắc chắn muốn xóa bản nháp voucher vừa tạo này không?',
+            icon: 'delete_sweep',
+            iconClass: 'bg-amber-100 text-amber-600',
+            confirmText: 'Xóa bản nháp',
+            confirmIcon: 'delete',
+            confirmClass: 'owner-confirm-btn-danger',
+            onConfirm: () => {
+                document.getElementById('owner-res-tieu-de').value = '';
+                document.getElementById('owner-res-voucher').value = '';
+                document.getElementById('owner-res-slogan').value = '';
+                document.getElementById('owner-res-noi-dung').value = '';
+                document.getElementById('owner-res-the-le').value = '';
+                document.getElementById('owner-res-hashtags').innerText = '';
+                document.getElementById('owner-ai-result-box')?.classList.add('hidden');
+            }
+        });
     }
 
     async function deleteOwnerPromotion(id, title = '') {
@@ -2489,6 +2723,715 @@
             closePreviewVideoModal();
         }
     });
+
+    /* =========================================================
+       KIRA AI REVIEW SUMMARY & REPLY (DÀNH CHO CHỦ QUÁN)
+    ========================================================= */
+    async function refreshAiReviewSummary(slug, isSilent = false) {
+        const btn = document.getElementById('btn-refresh-ai-summary') || document.getElementById('btn-trigger-ai-summary');
+        const icon = document.getElementById('icon-refresh-ai');
+        if (!isSilent) {
+            if (btn) {
+                btn.disabled = true;
+                btn.classList.add('opacity-75', 'cursor-not-allowed');
+            }
+            if (icon) {
+                icon.classList.add('animate-spin');
+            }
+        }
+
+        try {
+            const res = await fetch(`/chu-quan/quan/${slug}/danh-gia/ai-summary`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                },
+                body: JSON.stringify({ refresh: true })
+            });
+
+            const data = await res.json();
+            if (data.success && data.data && data.data.eligible) {
+                renderAiReviewSummaryCard(data.data, slug);
+                if (!isSilent) {
+                    if (typeof showToast === 'function') {
+                        showToast('Đã phân tích lại đánh giá của khách bằng AI thành công!', 'success');
+                    } else if (window.showToast) {
+                        window.showToast({
+                            title: 'Thành công',
+                            message: 'Đã phân tích lại đánh giá của khách bằng AI.',
+                            type: 'success'
+                        });
+                    }
+                }
+            } else if (!isSilent && data.data && !data.data.eligible) {
+                showNotify(data.data.message || 'Quán chưa có đủ đánh giá để AI phân tích.', 'info', 'AI Tóm Tắt Đánh Giá');
+            }
+        } catch (err) {
+            console.error('AI summary error:', err);
+            if (!isSilent) {
+                showNotify('Không thể kết nối đến máy chủ AI lúc này. Vui lòng thử lại sau giây lát.', 'error', 'Lỗi kết nối AI');
+            }
+        } finally {
+            if (!isSilent) {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.classList.remove('opacity-75', 'cursor-not-allowed');
+                }
+                if (icon) {
+                    icon.classList.remove('animate-spin');
+                }
+            }
+        }
+    }
+
+    function renderAiReviewSummaryCard(data, slug) {
+        const card = document.getElementById('ai-review-summary-card');
+        if (!card) return;
+
+        const tiLe = data.ti_le_hai_long || { tich_cuc: 80, trung_tinh: 15, can_cai_thien: 5 };
+        const tichCuc = tiLe.tich_cuc || 0;
+        const trungTinh = tiLe.trung_tinh || 0;
+        const canCaiThien = tiLe.can_cai_thien || 0;
+
+        const diemKhenHtml = (data.diem_khen || []).map(k => `
+            <li class="flex items-start gap-1.5">
+                <span class="text-emerald-600 font-bold mt-0.5">✓</span>
+                <span>${k}</span>
+            </li>
+        `).join('');
+
+        const diemCheHtml = (data.diem_can_khac_phuc || []).map(c => `
+            <li class="flex items-start gap-1.5">
+                <span class="text-amber-600 font-bold mt-0.5">⚠</span>
+                <span>${c}</span>
+            </li>
+        `).join('');
+
+        const topMonHtml = (data.top_mon_an || []).map(m => `
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-semibold bg-orange-50 text-orange-700 border border-orange-100">
+                <span>🍲</span>
+                <span>${m}</span>
+            </span>
+        `).join('');
+
+        const khuyenNghiHtml = (data.khuyen_nghi_chuyen_gia || []).map((action, i) => `
+            <li class="flex items-start gap-1.5">
+                <span class="w-4 h-4 rounded-full bg-purple-200 text-purple-800 text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                    ${i + 1}
+                </span>
+                <span class="font-medium">${action}</span>
+            </li>
+        `).join('');
+
+        card.innerHTML = `
+            <div class="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-gradient-to-br from-purple-400/10 to-indigo-500/10 blur-2xl pointer-events-none"></div>
+            <div id="ai-summary-content" class="space-y-5">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-purple-100/80">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 text-white flex items-center justify-center shadow-sm shrink-0">
+                            <span class="material-symbols-outlined text-xl">smart_toy</span>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h4 class="font-extrabold text-sm sm:text-base text-gray-900">Kira AI • Báo cáo Phân tích Trải nghiệm Khách hàng</h4>
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-700 border border-purple-200">
+                                    Nội bộ Chủ quán
+                                </span>
+                            </div>
+                            <p class="text-[11px] text-gray-500 mt-0.5 flex items-center gap-1.5">
+                                <span>Tổng hợp từ <strong>${data.review_count || ''}</strong> đánh giá</span>
+                                <span>•</span>
+                                <span>Cập nhật: <span id="ai-summary-time">${data.analyzed_at || 'Mới nhất'}</span></span>
+                            </p>
+                        </div>
+                    </div>
+                    <button type="button" onclick="refreshAiReviewSummary('${slug}')"
+                            id="btn-refresh-ai-summary"
+                            title="Quét và phân tích lại với các đánh giá mới nhất"
+                            class="px-3.5 py-1.5 bg-white hover:bg-purple-50 text-purple-700 border border-purple-200 text-xs font-bold rounded-xl shadow-2xs transition flex items-center gap-1.5 self-start sm:self-auto cursor-pointer">
+                        <span class="material-symbols-outlined text-sm" id="icon-refresh-ai">sync</span>
+                        <span>Phân tích lại</span>
+                    </button>
+                </div>
+
+                <div class="p-3.5 rounded-2xl bg-white/80 border border-purple-100 shadow-2xs">
+                    <p class="text-xs font-bold text-purple-900 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-sm text-purple-600">summarize</span>
+                        Tổng kết vận hành:
+                    </p>
+                    <p id="ai-summary-tong-quan" class="text-xs sm:text-sm text-gray-700 leading-relaxed font-medium">
+                        ${data.tong_quan || ''}
+                    </p>
+                </div>
+
+                <div class="space-y-1.5">
+                    <div class="flex items-center justify-between text-xs font-bold">
+                        <span class="text-gray-700 flex items-center gap-1">
+                            <span class="material-symbols-outlined text-sm text-indigo-600">pie_chart</span>
+                            Tỉ lệ cảm xúc khách hàng:
+                        </span>
+                        <div class="flex items-center gap-3 text-[11px]">
+                            <span class="text-emerald-700 font-bold">● ${tichCuc}% Hài lòng</span>
+                            <span class="text-amber-700 font-bold">● ${trungTinh}% Bình thường</span>
+                            <span class="text-rose-700 font-bold">● ${canCaiThien}% Góp ý/Phàn nàn</span>
+                        </div>
+                    </div>
+                    <div class="w-full h-3 rounded-full bg-gray-100 overflow-hidden flex shadow-inner">
+                        <div style="width: ${tichCuc}%;" class="bg-emerald-500 h-full transition-all duration-500" title="${tichCuc}% Hài lòng"></div>
+                        <div style="width: ${trungTinh}%;" class="bg-amber-400 h-full transition-all duration-500" title="${trungTinh}% Bình thường"></div>
+                        <div style="width: ${canCaiThien}%;" class="bg-rose-500 h-full transition-all duration-500" title="${canCaiThien}% Cần cải thiện"></div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-100 space-y-2">
+                        <h5 class="text-xs font-bold text-emerald-900 flex items-center gap-1.5 uppercase tracking-wide">
+                            <span class="material-symbols-outlined text-sm text-emerald-600">thumb_up</span>
+                            Điểm khách khen nhiều nhất:
+                        </h5>
+                        <ul id="ai-summary-diem-khen" class="space-y-1.5 text-xs text-gray-700">
+                            ${diemKhenHtml}
+                        </ul>
+                    </div>
+
+                    <div class="p-4 rounded-2xl bg-amber-50/60 border border-amber-100 space-y-2">
+                        <h5 class="text-xs font-bold text-amber-900 flex items-center gap-1.5 uppercase tracking-wide">
+                            <span class="material-symbols-outlined text-sm text-amber-600">warning</span>
+                            Vấn đề khách góp ý / phàn nàn:
+                        </h5>
+                        <ul id="ai-summary-diem-che" class="space-y-1.5 text-xs text-gray-700">
+                            ${diemCheHtml}
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+                    <div class="p-4 rounded-2xl bg-white border border-gray-100 shadow-2xs space-y-2.5">
+                        <h5 class="text-xs font-bold text-gray-800 flex items-center gap-1.5">
+                            <span class="material-symbols-outlined text-sm text-orange-500">restaurant</span>
+                            Món được khen nhiều (Nên đẩy mạnh):
+                        </h5>
+                        <div id="ai-summary-top-mon" class="flex flex-wrap gap-1.5">
+                            ${topMonHtml || '<span class="text-xs text-gray-400">Chưa đủ dữ liệu tên món</span>'}
+                        </div>
+                    </div>
+
+                    <div class="p-4 rounded-2xl bg-purple-50/70 border border-purple-100 space-y-2.5">
+                        <h5 class="text-xs font-bold text-purple-900 flex items-center gap-1.5">
+                            <span class="material-symbols-outlined text-sm text-purple-600">lightbulb</span>
+                            Đề xuất hành động từ Chuyên gia F&B AI:
+                        </h5>
+                        <ul id="ai-summary-khuyen-nghi" class="space-y-1.5 text-xs text-gray-700">
+                            ${khuyenNghiHtml}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    /* =========================================================
+       AI REVIEW REPLY SUGGESTIONS (ĐA PHONG CÁCH & TRÁNH TRÙNG LẶP)
+    ========================================================= */
+    window.reviewAiSeeds = window.reviewAiSeeds || {};
+
+    window.applyQuickReply = function(reviewId, text, label) {
+        const textarea = document.getElementById(`phan-hoi-${reviewId}`);
+        if (!textarea) return;
+        textarea.value = text;
+        textarea.classList.add('ring-2', 'ring-amber-500', 'bg-amber-50/30');
+        setTimeout(() => {
+            textarea.classList.remove('ring-2', 'ring-amber-500', 'bg-amber-50/30');
+        }, 1200);
+
+        const hint = document.getElementById(`applied-hint-${reviewId}`);
+        if (hint) {
+            hint.querySelector('.hint-text').textContent = `Đã áp dụng mẫu: ${label}`;
+            hint.classList.remove('hidden');
+        }
+
+        textarea.focus();
+    };
+
+    window.closeAiSuggestions = function(reviewId) {
+        const box = document.getElementById(`ai-suggestions-box-${reviewId}`);
+        if (box) {
+            box.classList.add('hidden');
+        }
+    };
+
+    window.filterSuggestionsTone = function(reviewId, tone, btn) {
+        const grid = document.getElementById(`ai-suggestions-grid-${reviewId}`);
+        const box = document.getElementById(`ai-suggestions-box-${reviewId}`);
+        if (!grid || !box) return;
+
+        // Cập nhật tab active
+        box.querySelectorAll('.suggestion-tab-btn').forEach(b => {
+            b.classList.remove('active', 'bg-purple-700', 'text-white');
+            b.classList.add('bg-white', 'text-slate-700');
+        });
+        btn.classList.add('active', 'bg-purple-700', 'text-white');
+        btn.classList.remove('bg-white', 'text-slate-700');
+
+        // Lọc card
+        grid.querySelectorAll('.ai-suggestion-card').forEach(card => {
+            const cardTone = card.getAttribute('data-tone');
+            if (tone === 'all' || cardTone === tone) {
+                card.classList.remove('hidden');
+            } else {
+                card.classList.add('hidden');
+            }
+        });
+    };
+
+    window.copyAiReply = function(e, btn, text) {
+        e.stopPropagation();
+        if (!text) return;
+
+        const doCopy = () => {
+            const original = btn.innerHTML;
+            btn.innerHTML = `<span class="material-symbols-outlined text-[13px] text-emerald-600">check</span><span class="text-emerald-700 font-bold">Đã chép</span>`;
+            setTimeout(() => {
+                btn.innerHTML = original;
+            }, 1800);
+        };
+
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(text).then(doCopy).catch(() => {});
+        } else {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            try {
+                document.execCommand('copy');
+                doCopy();
+            } catch (err) {}
+            document.body.removeChild(ta);
+        }
+    };
+
+    window.applyAiSuggestionItem = function(reviewId, el) {
+        const text = el.getAttribute('data-reply');
+        const label = el.getAttribute('data-label') || 'Gợi ý AI';
+        const textarea = document.getElementById(`phan-hoi-${reviewId}`);
+        if (!textarea || !text) return;
+
+        textarea.value = text;
+        textarea.classList.add('ring-2', 'ring-purple-600', 'bg-purple-50/40');
+        setTimeout(() => {
+            textarea.classList.remove('ring-2', 'ring-purple-600', 'bg-purple-50/40');
+        }, 1200);
+
+        // Đánh dấu card đang được chọn
+        const grid = document.getElementById(`ai-suggestions-grid-${reviewId}`);
+        if (grid) {
+            grid.querySelectorAll('.ai-suggestion-card').forEach(c => {
+                c.classList.remove('ring-2', 'ring-purple-600', 'border-purple-600', 'bg-purple-50/25');
+                const badge = c.querySelector('.selected-check-badge');
+                if (badge) badge.classList.add('hidden');
+            });
+            el.classList.add('ring-2', 'ring-purple-600', 'border-purple-600', 'bg-purple-50/25');
+            const currentBadge = el.querySelector('.selected-check-badge');
+            if (currentBadge) currentBadge.classList.remove('hidden');
+        }
+
+        const hint = document.getElementById(`applied-hint-${reviewId}`);
+        if (hint) {
+            hint.querySelector('.hint-text').textContent = `Đã chọn phương án: ${label}`;
+            hint.classList.remove('hidden');
+        }
+
+        textarea.focus();
+    };
+
+    window.ownerAiReviewData = window.ownerAiReviewData || {};
+    window.ownerAiCurrentIndex = window.ownerAiCurrentIndex || {};
+
+    /**
+     * Tự động áp dụng câu trả lời theo chỉ số phong cách vào textarea
+     */
+    window.applyAiSuggestionToTextarea = function(reviewId, index) {
+        const data = window.ownerAiReviewData[reviewId];
+        if (!data || !data.suggestions || !data.suggestions[index]) return;
+
+        window.ownerAiCurrentIndex[reviewId] = index;
+        const currentItem = data.suggestions[index];
+        const total = data.suggestions.length;
+        const humanIndex = index + 1;
+
+        const textarea = document.getElementById(`phan-hoi-${reviewId}`);
+        if (textarea) {
+            textarea.value = currentItem.reply;
+            textarea.focus();
+
+            // Hiệu ứng highlight viền sáng thông báo đã điền tự động
+            textarea.classList.remove('ring-2', 'ring-purple-500', 'bg-purple-50/20');
+            void textarea.offsetWidth; // Force repaint
+            textarea.classList.add('ring-2', 'ring-purple-500', 'bg-purple-50/20');
+            setTimeout(() => {
+                textarea.classList.remove('ring-2', 'ring-purple-500', 'bg-purple-50/20');
+            }, 1400);
+        }
+
+        // Cập nhật nhãn phong cách đang kích hoạt
+        const activeLabel = document.getElementById(`ai-active-style-label-${reviewId}`);
+        if (activeLabel) {
+            activeLabel.innerHTML = `Kiểu ${humanIndex}/${total}: <span class="text-purple-900 font-extrabold">${currentItem.label}</span>`;
+        }
+
+        // Cập nhật số đếm trên nút Đổi câu khác
+        const cycleCount = document.getElementById(`cycle-count-${reviewId}`);
+        if (cycleCount) {
+            cycleCount.textContent = `Kiểu ${humanIndex}/${total}`;
+        }
+
+        // Cập nhật trạng thái active của các pills
+        const pillsContainer = document.getElementById(`ai-styles-pills-${reviewId}`);
+        if (pillsContainer) {
+            pillsContainer.querySelectorAll('.ai-style-pill').forEach((pill, idx) => {
+                if (idx === index) {
+                    pill.className = 'ai-style-pill px-2.5 py-1 rounded-lg text-[11px] font-bold bg-purple-700 text-white border border-purple-700 shadow-2xs flex items-center gap-1 shrink-0 transition cursor-pointer';
+                } else {
+                    pill.className = 'ai-style-pill px-2.5 py-1 rounded-lg text-[11px] font-medium bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 flex items-center gap-1 shrink-0 transition cursor-pointer';
+                }
+            });
+        }
+
+        // Cập nhật thông báo dưới textarea
+        const hint = document.getElementById(`applied-hint-${reviewId}`);
+        if (hint) {
+            hint.querySelector('.hint-text').textContent = `Đã áp dụng: Kiểu ${humanIndex}/${total} • ${currentItem.label} (Bấm "Đổi câu khác" để thử phong cách khác)`;
+            hint.classList.remove('hidden');
+        }
+    };
+
+    /**
+     * Xoay vòng đổi sang câu trả lời phong cách tiếp theo (Không cần reload hay chờ mạng)
+     */
+    window.cycleNextAiReply = function(reviewId) {
+        const data = window.ownerAiReviewData[reviewId];
+        if (!data || !data.suggestions || data.suggestions.length === 0) return;
+
+        const currentIndex = window.ownerAiCurrentIndex[reviewId] || 0;
+        const nextIndex = (currentIndex + 1) % data.suggestions.length;
+        window.applyAiSuggestionToTextarea(reviewId, nextIndex);
+    };
+
+    /**
+     * Hiển thị thanh trạng thái AI Thông minh (Tự hiểu Khen/Chê, vấn đề thực tế)
+     */
+    window.renderAiSmartStatusBar = function(reviewId) {
+        const data = window.ownerAiReviewData[reviewId];
+        if (!data) return;
+
+        const box = document.getElementById(`ai-smart-status-${reviewId}`);
+        if (!box) return;
+
+        // 1. Phân loại khen / chê / góp ý
+        const sentimentBadge = document.getElementById(`ai-sentiment-badge-${reviewId}`);
+        if (sentimentBadge) {
+            if (data.phanLoai === 'khen') {
+                sentimentBadge.className = 'inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 shadow-2xs';
+                sentimentBadge.innerHTML = '<span class="material-symbols-outlined text-[14px] text-emerald-600">thumb_up</span><span>🌟 Khách khen ngợi</span>';
+            } else if (data.phanLoai === 'che') {
+                sentimentBadge.className = 'inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-100 text-rose-800 border border-rose-200 shadow-2xs';
+                sentimentBadge.innerHTML = '<span class="material-symbols-outlined text-[14px] text-rose-600">warning</span><span>⚠️ Khách phản ánh / chê</span>';
+            } else {
+                sentimentBadge.className = 'inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200 shadow-2xs';
+                sentimentBadge.innerHTML = '<span class="material-symbols-outlined text-[14px] text-amber-600">lightbulb</span><span>💡 Đóng góp ý kiến</span>';
+            }
+        }
+
+        // 2. Tóm tắt vấn đề AI tự hiểu
+        const issueText = document.getElementById(`ai-issue-text-${reviewId}`);
+        if (issueText) {
+            issueText.textContent = data.vanDe;
+        }
+
+        // 3. Render danh sách các viên thuốc phong cách (Pills)
+        const pillsContainer = document.getElementById(`ai-styles-pills-${reviewId}`);
+        if (pillsContainer) {
+            const activeIdx = window.ownerAiCurrentIndex[reviewId] || 0;
+            pillsContainer.innerHTML = data.suggestions.map((item, idx) => `
+                <button type="button"
+                        onclick="window.applyAiSuggestionToTextarea('${reviewId}', ${idx})"
+                        id="ai-pill-${reviewId}-${idx}"
+                        class="ai-style-pill px-2.5 py-1 rounded-lg text-[11px] font-medium transition cursor-pointer border flex items-center gap-1 shrink-0 ${idx === activeIdx ? 'bg-purple-700 text-white border-purple-700 shadow-2xs font-bold' : 'bg-white text-slate-700 hover:bg-slate-100 border-slate-200'}">
+                    <span>${item.label}</span>
+                </button>
+            `).join('');
+        }
+
+        box.classList.remove('hidden');
+    };
+
+    /**
+     * Bấm AI Gợi ý: Tự động phân tích Khen/Chê, tạo ít nhất 4 kiểu không trùng lặp, và điền ngay lập tức vào textarea!
+     */
+    window.suggestAiReply = async function(slug, reviewId, btn, isRefresh = false) {
+        const textarea = document.getElementById(`phan-hoi-${reviewId}`);
+        if (!textarea) return;
+
+        // Quản lý seed để mỗi lần bấm sinh bộ mới là ra các câu hoàn toàn khác biệt, không trùng lặp
+        if (isRefresh) {
+            window.reviewAiSeeds[reviewId] = (window.reviewAiSeeds[reviewId] || 0) + 1;
+        } else if (window.reviewAiSeeds[reviewId] === undefined) {
+            window.reviewAiSeeds[reviewId] = 0;
+        }
+        const currentSeed = window.reviewAiSeeds[reviewId];
+
+        const originalHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = `
+            <span class="material-symbols-outlined text-xs animate-spin">sync</span>
+            <span>${isRefresh ? 'Đang tạo bộ mới...' : 'AI đang phân tích & điền...'}</span>
+        `;
+
+        try {
+            const res = await fetch(`/chu-quan/quan/${slug}/danh-gia/${reviewId}/ai-suggest-reply`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                },
+                body: JSON.stringify({
+                    seed: currentSeed
+                })
+            });
+
+            const data = await res.json();
+            if (data.success && (data.suggestions || data.reply)) {
+                const suggestions = data.suggestions && data.suggestions.length > 0 ? data.suggestions : [
+                    {
+                        tone: 'lich_su',
+                        label: 'Lịch sự & Chuẩn mực',
+                        icon: 'workspace_premium',
+                        reply: data.reply
+                    }
+                ];
+
+                // Lưu dữ liệu vào state client
+                window.ownerAiReviewData[reviewId] = {
+                    phanLoai: data.phan_loai || 'khen',
+                    vanDe: data.van_de_nhan_dien || 'Trải nghiệm của khách',
+                    suggestions: suggestions
+                };
+
+                // BƯỚC QUAN TRỌNG: Tự động điền NGAY câu trả lời vào textarea mà không bắt người dùng phải chọn kiểu!
+                window.applyAiSuggestionToTextarea(reviewId, 0);
+
+                // Cập nhật giao diện thanh trạng thái AI Thông minh
+                window.renderAiSmartStatusBar(reviewId);
+
+                // Kích hoạt nút "Đổi câu khác"
+                const cycleBtn = document.getElementById(`btn-cycle-reply-${reviewId}`);
+                if (cycleBtn) {
+                    cycleBtn.classList.remove('hidden');
+                }
+            } else {
+                showNotify('Không thể tạo phản hồi lúc này. Vui lòng thử lại.', 'error', 'AI Gợi Ý Trả Lời');
+            }
+        } catch (err) {
+            console.error('Suggest reply error:', err);
+            showNotify('Lỗi kết nối. Vui lòng thử lại sau.', 'error', 'Lỗi kết nối');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+        }
+    };
+
+    /* =========================================================
+       REALTIME REVIEW SYNCING (TỰ ĐỘNG CẬP NHẬT ĐÁNH GIÁ MỚI KHÔNG CẦN F5)
+    ========================================================= */
+    window.ownerReviewsState = {
+        slug: '{{ $quan->slug }}',
+        lastId: '{{ $ownerReviews->first()?->id ?? "" }}',
+        lastCount: {{ (int) ($ownerReviewCount ?? 0) }},
+        lastUpdated: '{{ $ownerReviews->first()?->updated_at?->toISOString() ?? "" }}',
+        isSyncing: false
+    };
+
+    async function checkOwnerReviewsUpdates() {
+        if (window.ownerReviewsState.isSyncing) return;
+        if (document.hidden) return; // Tiết kiệm băng thông và CPU khi tab không active
+
+        window.ownerReviewsState.isSyncing = true;
+        const state = window.ownerReviewsState;
+
+        try {
+            const url = new URL(`/chu-quan/quan/${state.slug}/danh-gia/realtime-check`, window.location.origin);
+            url.searchParams.set('last_id', state.lastId || '');
+            url.searchParams.set('last_count', state.lastCount);
+            url.searchParams.set('last_updated', state.lastUpdated || '');
+
+            const res = await fetch(url.toString(), {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            if (!res.ok) return;
+            const data = await res.json();
+
+            if (data.has_updates) {
+                // 1. Cập nhật HTML danh sách đánh giá
+                const listContainer = document.getElementById('owner-reviews-list-container');
+                if (listContainer && data.html) {
+                    listContainer.innerHTML = data.html;
+                }
+
+                // 2. Cập nhật số lượng trên Section Header
+                const headerCount = document.getElementById('owner-reviews-header-count');
+                if (headerCount) {
+                    headerCount.textContent = data.total_count;
+                }
+
+                // 3. Cập nhật số tổng trên Tab
+                const totalCountEl = document.getElementById('owner-reviews-total-count');
+                if (totalCountEl) {
+                    totalCountEl.textContent = data.total_count;
+                }
+
+                // Cập nhật Badge số đánh giá chưa trả lời
+                const tabBadge = document.getElementById('owner-reviews-tab-badge');
+                const unrepliedCountEl = document.getElementById('owner-reviews-unreplied-count');
+                const unreplied = typeof data.unreplied_count !== 'undefined' ? data.unreplied_count : 0;
+                if (tabBadge && unrepliedCountEl) {
+                    unrepliedCountEl.textContent = unreplied;
+                    const isReviewsTabActive = document.querySelector('#owner-venue-tabs a[href="#owner-reviews-section"]')?.classList.contains('tab-active');
+                    tabBadge.classList.toggle('hidden', unreplied === 0 || isReviewsTabActive);
+                }
+
+                // 4. Cập nhật Điểm đánh giá trung bình
+                const avgRatingEl = document.getElementById('owner-reviews-avg-rating');
+                if (avgRatingEl) {
+                    if (data.total_count > 0 && data.average_rating > 0) {
+                        avgRatingEl.textContent = `★ ${parseFloat(data.average_rating).toFixed(1)} / 5`;
+                        avgRatingEl.classList.remove('hidden');
+                    } else {
+                        avgRatingEl.classList.add('hidden');
+                    }
+                }
+
+                // 5. Hiệu ứng highlight thẻ đánh giá mới nhất và Toast thông báo
+                if (data.latest_review && data.latest_review.id) {
+                    const latestCard = document.getElementById(`owner-review-item-${data.latest_review.id}`);
+                    if (latestCard) {
+                        latestCard.classList.add('ring-2', 'ring-emerald-500', 'bg-emerald-50/60', 'shadow-md');
+                        setTimeout(() => {
+                            latestCard.classList.remove('ring-2', 'ring-emerald-500', 'bg-emerald-50/60', 'shadow-md');
+                        }, 5000);
+                    }
+
+                    // Hiển thị thông báo nổi Toast cho chủ quán
+                    showOwnerNewReviewToast(data.latest_review);
+                }
+
+                // 6. Tự động kích hoạt AI phân tích cập nhật lại (ngầm)
+                if (typeof refreshAiReviewSummary === 'function') {
+                    refreshAiReviewSummary(state.slug, true);
+                }
+
+                // Cập nhật state nội bộ
+                state.lastCount = data.total_count;
+                if (data.latest_review) {
+                    state.lastId = data.latest_review.id;
+                    state.lastUpdated = data.latest_review.updated_at || '';
+                }
+            }
+        } catch (err) {
+            console.debug('Error polling owner reviews:', err);
+        } finally {
+            window.ownerReviewsState.isSyncing = false;
+        }
+    }
+
+    // Polling định kỳ mỗi 4 giây (chỉ chạy khi tab đang mở)
+    setInterval(checkOwnerReviewsUpdates, 4000);
+
+    /**
+     * Toast thông báo realtime khi có khách đánh giá mới
+     */
+    function showOwnerNewReviewToast(review) {
+        let toastContainer = document.getElementById('owner-review-toast-container');
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.id = 'owner-review-toast-container';
+            toastContainer.className = 'fixed bottom-5 right-5 z-[9999] flex flex-col gap-3 max-w-sm w-full px-4 sm:px-0 pointer-events-none';
+            document.body.appendChild(toastContainer);
+        }
+
+        const toast = document.createElement('div');
+        toast.className = 'pointer-events-auto bg-white/95 backdrop-blur-md border border-emerald-400 rounded-2xl p-4 shadow-2xl flex items-start gap-3.5 transform transition-all duration-300 translate-y-4 opacity-0';
+        
+        const starsText = '★'.repeat(review.so_sao || 5) + '☆'.repeat(5 - (review.so_sao || 5));
+        
+        toast.innerHTML = `
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-500 text-white flex items-center justify-center shrink-0 shadow-sm mt-0.5">
+                <span class="material-symbols-outlined text-xl">star</span>
+            </div>
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between gap-1">
+                    <span class="text-[11px] font-extrabold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">Đánh giá mới vừa đến</span>
+                    <button type="button" onclick="this.closest('.pointer-events-auto').remove()" class="text-gray-400 hover:text-gray-600 text-sm p-0.5 rounded cursor-pointer leading-none">
+                        ✕
+                    </button>
+                </div>
+                <h5 class="font-bold text-xs text-gray-900 mt-1 truncate">${review.user_name || 'Khách hàng'}</h5>
+                <p class="text-amber-500 text-xs font-bold">${starsText}</p>
+                <p class="text-xs text-gray-600 line-clamp-2 mt-1 italic font-serif">"${review.binh_luan || 'Đã để lại đánh giá sao'}"</p>
+                <div class="mt-2.5 flex items-center gap-2">
+                    <button type="button" onclick="focusOnReview('${review.id}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold rounded-lg shadow-2xs transition flex items-center gap-1 cursor-pointer">
+                        <span>Xem & Trả lời ngay</span>
+                        <span class="material-symbols-outlined text-xs">arrow_forward</span>
+                    </button>
+                </div>
+            </div>
+        `;
+
+        toastContainer.appendChild(toast);
+        requestAnimationFrame(() => {
+            toast.classList.remove('translate-y-4', 'opacity-0');
+        });
+
+        // Tự động đóng sau 9 giây
+        setTimeout(() => {
+            if (toast && toast.parentNode) {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }
+        }, 9000);
+    }
+
+    function focusOnReview(reviewId) {
+        // Chuyển sang tab Đánh giá
+        if (typeof setOwnerVenueTab === 'function') {
+            setOwnerVenueTab('owner-reviews-section');
+        } else {
+            const reviewTab = document.querySelector('a[href="#owner-reviews-section"]');
+            if (reviewTab) reviewTab.click();
+        }
+
+        setTimeout(() => {
+            const card = document.getElementById(`owner-review-item-${reviewId}`);
+            if (card) {
+                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                card.classList.add('ring-4', 'ring-emerald-400', 'bg-emerald-50/70');
+                const textarea = document.getElementById(`phan-hoi-${reviewId}`);
+                if (textarea) textarea.focus();
+                setTimeout(() => {
+                    card.classList.remove('ring-4', 'ring-emerald-400', 'bg-emerald-50/70');
+                }, 4000);
+            }
+        }, 200);
+    }
 </script>
 
 {{-- Modal Đăng Video Review Mới Cho Chủ Quán --}}
@@ -2632,6 +3575,53 @@
         <div id="owner-player-container" class="w-full h-full flex items-center justify-center bg-black"></div>
     </div>
 </div>
+
+<script>
+    window.markOwnerReviewsAsSeen = function(slug) {
+        const badge = document.getElementById('owner-reviews-tab-badge');
+        if (badge) {
+            badge.classList.add('hidden');
+        }
+        try {
+            localStorage.setItem('owner_reviews_seen_' + slug, Date.now().toString());
+        } catch (e) {}
+    };
+
+    // Realtime detection: when admin rejects or deletes this restaurant, alert owner and redirect to /chu-quan
+    window.addEventListener('quanmoi:quan-status-updated', function(e) {
+        const notif = e.detail;
+        if (!notif) return;
+
+        const currentQuanId = '{{ $quan->id }}';
+        const currentQuanSlug = '{{ $quan->slug }}';
+
+        if (String(notif.quan_id) === currentQuanId || notif.slug === currentQuanSlug) {
+            const isRemoved = ['rejected', 'deleted', 'force_deleted', 'khong_duyet'].includes(notif.action) ||
+                              ['bi_khoa', 'tu_choi'].includes(notif.status);
+
+            if (isRemoved) {
+                const noteInfo = notif.note ? `<br><br><span class="text-xs text-rose-600 font-semibold">Ghi chú từ BQT: ${notif.note}</span>` : '';
+                if (typeof window.showAlertDialog === 'function') {
+                    window.showAlertDialog({
+                        title: 'Cơ sở ẩm thực đã bị gỡ',
+                        message: `Cơ sở ẩm thực "${notif.title || '{{ $quan->ten_quan }}'}" vừa bị Ban quản trị từ chối duyệt hoặc xóa khỏi hệ thống.${noteInfo}<br><br>Hệ thống sẽ chuyển bạn về trang quản lý cửa hàng.`,
+                        type: 'error',
+                        onOk: () => {
+                            window.location.href = '{{ route('chu-quan.quan.index') }}';
+                        }
+                    });
+                } else {
+                    alert('Cơ sở ẩm thực đã bị Ban quản trị từ chối duyệt hoặc xóa khỏi hệ thống.');
+                    window.location.href = '{{ route('chu-quan.quan.index') }}';
+                }
+
+                setTimeout(() => {
+                    window.location.href = '{{ route('chu-quan.quan.index') }}';
+                }, 2500);
+            }
+        }
+    });
+</script>
 
 {{-- MODAL XÁC NHẬN CHUNG DÀNH CHO CHỦ QUÁN (THAY THẾ TOÀN BỘ CONFIRM NATIVE) --}}
 <div id="owner-confirm-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">

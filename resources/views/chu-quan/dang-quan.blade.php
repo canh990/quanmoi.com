@@ -161,7 +161,10 @@
 
                         <div>
                             <label for="shopeefood_url" class="text-[12px] font-bold text-gray-500 tracking-wider uppercase mb-2 block">LINK SHOPEEFOOD</label>
-                            <input id="shopeefood_url" name="shopeefood_url" maxlength="500" class="w-full px-4 py-3 rounded-lg border border-gray-200 outline-none input-focus-effect text-[16px] font-normal" placeholder="https://shopeefood.vn/..." type="url"/>
+                            <input id="shopeefood_url" name="shopeefood_url" maxlength="500"
+                                   pattern="https?:\/\/(.*shopeefood\.vn|.*shopee\.vn)(\/.*)?"
+                                   title="Đường dẫn ShopeeFood phải thuộc tên miền shopeefood.vn hoặc shopee.vn (ví dụ: https://shopeefood.vn/...)"
+                                   class="w-full px-4 py-3 rounded-lg border border-gray-200 outline-none input-focus-effect text-[16px] font-normal" placeholder="https://shopeefood.vn/..." type="url"/>
                             <p class="text-xs text-red-600 hidden mt-1" id="err-shopeefood_url"></p>
                         </div>
                     </div>
@@ -302,7 +305,26 @@
 
 @push('scripts')
 <script>
-    
+    function showNotify(message, type = 'warning', title = null) {
+        if (typeof window.showAlertDialog === 'function' && (type === 'warning' || type === 'error')) {
+            const defaultTitle = type === 'error' ? 'Có lỗi xảy ra' : 'Lưu ý';
+            window.showAlertDialog({
+                title: title || defaultTitle,
+                message: message,
+                type: type
+            });
+        } else if (typeof window.showToast === 'function') {
+            const defaultTitle = type === 'error' ? 'Có lỗi xảy ra' : (type === 'success' ? 'Thành công' : (type === 'info' ? 'Thông báo' : 'Lưu ý'));
+            window.showToast({
+                title: title || defaultTitle,
+                message: message,
+                type: type
+            });
+        } else {
+            console.warn(message);
+        }
+    }
+
     function toggleMoreBizTypes() {
         const extraItems = document.querySelectorAll('.extra-biz-type');
         if (!extraItems.length) return;
@@ -551,7 +573,7 @@
         }
         
         if (fileIndex < files.length) {
-            alert(`Đã điền đầy các ô trống. Bỏ qua ${files.length - fileIndex} ảnh thừa.`);
+            showNotify(`Đã điền đầy các ô trống. Bỏ qua ${files.length - fileIndex} ảnh thừa.`, 'info', 'Đã đủ số lượng ảnh');
         }
         
         fileToSlotMap.forEach(mapping => {
@@ -582,7 +604,7 @@
         const anhBiaInput = document.getElementById('anh_bia');
         
         if (!anhBiaInput.files || anhBiaInput.files.length === 0) {
-            alert('Vui lòng thêm ảnh chính cho không gian quán!');
+            showNotify('Vui lòng thêm ảnh chính cho không gian quán!', 'warning', 'Thiếu ảnh bìa quán');
             return;
         }
 
@@ -625,17 +647,21 @@
                     errGen.textContent = data.message || 'Đã có lỗi xảy ra. Vui lòng kiểm tra lại.';
                 }
                 errGen.classList.remove('hidden');
+                showNotify(errGen.textContent, 'error', 'Lỗi gửi hồ sơ');
                 btn.disabled = false;
                 btn.innerHTML = originalBtnText;
                 return;
             }
 
             btn.innerHTML = '<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: \'FILL\' 1;">check_circle</span> Hoàn tất!';
+            showNotify('Hồ sơ quán đã được gửi và đang chờ duyệt!', 'success', 'Thành công');
             setTimeout(() => {
                 window.location.href = data.redirect_to || '/';
             }, 1000);
         } catch (e) {
             errGen.textContent = 'Lỗi kết nối hệ thống.';
+            errGen.classList.remove('hidden');
+            showNotify('Lỗi kết nối hệ thống. Vui lòng thử lại sau.', 'error', 'Lỗi kết nối');
             errGen.classList.remove('hidden');
             btn.disabled = false;
             btn.innerHTML = originalBtnText;

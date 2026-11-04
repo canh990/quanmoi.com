@@ -4,12 +4,13 @@ namespace App\Http\Controllers\NguoiDung;
 
 use App\Http\Controllers\Controller;
 use App\Models\Quan;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class QuanDanhGiaController extends Controller
 {
-    public function store(Request $request, string $slug): RedirectResponse
+    public function store(Request $request, string $slug): JsonResponse|RedirectResponse
     {
         $validated = $request->validate([
             'so_sao' => ['required', 'integer', 'between:1,5'],
@@ -79,6 +80,25 @@ class QuanDanhGiaController extends Controller
             ]);
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::warning('Review audit log error: ' . $e->getMessage());
+        }
+
+        // Xóa cache AI Review Summary của quán để cập nhật ngay dữ liệu mới
+        try {
+            app(\App\Services\ReviewAiSummaryService::class)->clearCache($quan->id);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Clear review AI cache error: ' . $e->getMessage());
+        }
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Đánh giá của bạn đã được lưu.',
+                'review' => [
+                    'id' => $review->id,
+                    'so_sao' => (int) $review->so_sao,
+                    'binh_luan' => $review->binh_luan,
+                ],
+            ]);
         }
 
         return redirect()->route('quan.detail', $quan->slug)
