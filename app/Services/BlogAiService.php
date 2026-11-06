@@ -2245,5 +2245,563 @@ HTML
             'suggestions' => $followUpSuggestions,
         ];
     }
+
+    /**
+     * Trợ lý AI: "Hôm nay ăn gì?" theo Tâm trạng, Thời tiết, Đối tượng & Ngân sách
+     * (AI Culinary Itinerary Planner)
+     *
+     * @param string $mood     happy, healing, dating, hungry, chill
+     * @param string $weather  rainy, sunny, cool_night, pleasant
+     * @param string $companion solo, couple, group
+     * @param string $budget   budget_low (<50k), budget_mid (50k-150k), budget_high (>200k)
+     * @return array
+     */
+    public function planCulinaryItinerary(
+        string $mood = 'happy',
+        string $weather = 'pleasant',
+        string $companion = 'couple',
+        string $budget = 'budget_mid',
+        array $excludeIds = [],
+        string $customPrompt = ''
+    ): array {
+        // 1. Nhãn thân thiện mở rộng cho các lựa chọn
+        $moodLabels = [
+            'happy' => 'Vui vẻ, ăn mừng 🎉',
+            'healing' => 'Xả căng thẳng, chữa lành 🧘',
+            'dating' => 'Hẹn hò lãng mạn 💖',
+            'hungry' => 'Thèm ăn, đói lả 🤤',
+            'gathering' => 'Nhậu nhẹt, lai rai 🍻',
+            'healthy' => 'Thanh đạm, ăn nhẹ 🥗',
+            'chill' => 'Bình yên, thư giãn ☕',
+            'party' => 'Tiệc tùng, sinh nhật 🎂',
+            'comfort' => 'Cần an ủi, ấm lòng 🍲',
+        ];
+        $weatherLabels = [
+            'rainy' => 'Trời mưa se lạnh 🌧️',
+            'sunny' => 'Nắng nóng oi bức ☀️',
+            'cool_night' => 'Tối gió mát 🌙',
+            'pleasant' => 'Thời tiết dễ chịu 🌤️',
+            'ac_cool' => 'Máy lạnh mát rượi ❄️',
+            'sunset_view' => 'View hoàng hôn, sân thượng 🌇',
+            'garden_outdoor' => 'Sân vườn thoáng đãng 🌿',
+            'pet_quiet' => 'Quán thú cưng, yên tĩnh 🐱',
+        ];
+        $companionLabels = [
+            'solo' => 'Đi một mình 👤',
+            'couple' => 'Hẹn hò 2 người 👫',
+            'family' => 'Gia đình 👨‍👩‍👦',
+            'friends' => 'Hội bạn thân 👯',
+            'colleagues' => 'Đồng nghiệp 🏢',
+            'group' => 'Nhóm đông người 👥',
+            'classmates' => 'Họp lớp, họp nhóm 🎓',
+            'business' => 'Gặp gỡ đối tác 🤝',
+        ];
+        $budgetLabels = [
+            'budget_low' => 'Tiết kiệm (Dưới 50k) 🪙',
+            'budget_mid' => 'Hợp túi tiền (50k - 150k) 💵',
+            'budget_high' => 'Trải nghiệm (150k - 300k) 💳',
+            'budget_luxury' => 'Thả ga (Trên 300k) 💎',
+            'budget_any' => 'Mọi mức giá 🎲',
+            'budget_deal' => 'Săn ưu đãi 🏷️',
+            'budget_buffet' => 'Ăn thả ga, bao no 🍱',
+            'budget_student' => 'Học sinh, sinh viên 🎒',
+        ];
+
+        $moodText = $moodLabels[$mood] ?? 'Ngẫu hứng vui vẻ';
+        $weatherText = $weatherLabels[$weather] ?? 'Ngày đẹp trời';
+        $companionText = $companionLabels[$companion] ?? 'Bạn bè';
+        $budgetText = $budgetLabels[$budget] ?? 'Phù hợp';
+
+        // 2. Lấy kho bài viết đã xuất bản (lọc bỏ các bài rác hoặc lorem ipsum)
+        $allBlogs = \App\Models\Blog::with(['category', 'tags', 'user'])
+            ->where('status', 'published')
+            ->get();
+
+        if ($allBlogs->isEmpty()) {
+            return [
+                'success' => false,
+                'message' => 'Hiện chưa có đủ bài viết review để lập lộ trình ẩm thực.',
+            ];
+        }
+
+        // 3. Phân loại chuẩn xác: Chặng 1 (Món chính no nê) vs Chặng 2 (Tráng miệng & Cà phê chill)
+        $mainDishCandidates = [];
+        $dessertCafeCandidates = [];
+
+        foreach ($allBlogs as $blog) {
+            $catSlug = $blog->category?->slug ?? '';
+            $title = $blog->title ?? '';
+            $text = mb_strtolower($title . ' ' . ($blog->category?->name ?? '') . ' ' . strip_tags($blog->content ?? ''));
+
+            // Loại bỏ hoàn toàn bài dummy hoặc lorem ipsum
+            if (preg_match('/(?:lorem|ipsum|dolor|sit amet|consectetur|libero labore|nesciunt quidem|maxime voluptas)/iu', $text)) {
+                continue;
+            }
+
+            // Phân loại nghiêm ngặt:
+            $isDessert = false;
+            $isMain = false;
+
+            // 1. Phân loại theo Category Slug
+            if (in_array($catSlug, ['ca-phe-quan-dep', 'rooftop-hen-ho', 'meo-con'])) {
+                $isDessert = true;
+            } elseif (in_array($catSlug, ['lau-nuong-tu-tap', 'goi-y-an-sang', 'mon-ngon-dia-phuong'])) {
+                $isMain = true;
+            }
+
+            // 2. Phân loại theo từ khóa đặc thù trong Tiêu đề
+            if (preg_match('/(?:trà sữa|cà phê|cafe|bingsu|kem|gelato|chè|cocktail|acoustic|croissant|bánh ngọt|sinh tố|smoothie)/iu', $title)) {
+                $isDessert = true;
+                $isMain = false;
+            } elseif (preg_match('/(?:bún|phở|cơm|lẩu|mì|hủ tiếu|bánh mì chảo|ốc chảo|hải sản|thịt bò|gà nướng|buffet nướng|sườn nướng|bánh mì xíu mại)/iu', $title)) {
+                $isMain = true;
+                $isDessert = false;
+            }
+
+            // 3. Phân loại theo nội dung nếu danh mục là Review Quán, Góc Chủ Quán
+            if (!$isDessert && !$isMain) {
+                if (preg_match('/(?:cà phê|cafe|trà|kem|chè|bánh|chill|rooftop|mèo)/iu', $text)) {
+                    $isDessert = true;
+                } else {
+                    $isMain = true;
+                }
+            }
+
+            $scoreData = $this->calculateItineraryScore($blog, $text, $mood, $weather, $companion, $budget, $customPrompt);
+            $score = $scoreData['score'];
+
+            if ($isMain) {
+                $mainDishCandidates[] = ['blog' => $blog, 'score' => $score, 'prompt_matched' => $scoreData['prompt_matched']];
+            }
+            if ($isDessert) {
+                $dessertCafeCandidates[] = ['blog' => $blog, 'score' => $score, 'prompt_matched' => $scoreData['prompt_matched']];
+            }
+        }
+
+        // 3.1. Tìm kiếm quán ăn thực tế qua Elasticsearch (Quan::search)
+        $matchedQuans = collect();
+        if (!empty($customPrompt)) {
+            $matchedQuans = $this->searchQuansElasticsearch($customPrompt, 3);
+        } else {
+            // Gợi ý quán ăn thực tế phù hợp với tâm trạng / không gian
+            $esKeyword = $this->getSearchKeywordForMood($mood);
+            $matchedQuans = $this->searchQuansElasticsearch($esKeyword, 3);
+            if ($matchedQuans->isEmpty()) {
+                $matchedQuans = \App\Models\Quan::where('trang_thai', 'da_duyet')->latest('is_noi_bat')->take(3)->get();
+            }
+        }
+
+        // 3.2. XỬ LÝ TRƯỜNG HỢP KHÔNG TÌM THẤY QUÁN PHÙ HỢP:
+        // Nếu người dùng chủ động tìm kiếm theo từ khóa/nhu cầu riêng nhưng cả Blog và Quán đều không có kết quả phù hợp,
+        // TUYỆT ĐỐI KHÔNG hiện quán ngẫu nhiên lung tung làm khách hiểu sai!
+        if (!empty($customPrompt)) {
+            $hasMatchingMain = !empty(array_filter($mainDishCandidates, fn($c) => $c['prompt_matched']));
+            $hasMatchingDessert = !empty(array_filter($dessertCafeCandidates, fn($c) => $c['prompt_matched']));
+
+            if (!$hasMatchingMain && !$hasMatchingDessert && $matchedQuans->isEmpty()) {
+                $verifiedBlogSuggestions = [
+                    'Bún bò Huế',
+                    'Lẩu bò',
+                    'Cơm tấm sườn',
+                    'Ốc chảo bơ tỏi',
+                    'Buffet nướng bò Mỹ',
+                    'Bánh mì chảo',
+                    'Gà nướng cơm lam',
+                    'Mì cay Tokbokki',
+                ];
+
+                return [
+                    'success' => false,
+                    'not_found' => true,
+                    'keyword' => $customPrompt,
+                    'message' => "Không tìm thấy bài viết review nào khớp với yêu cầu: \"{$customPrompt}\". Hãy thử chọn các món ăn đang có sẵn bài review trên Blog bên dưới!",
+                    'suggestions' => $verifiedBlogSuggestions,
+                ];
+            }
+        }
+
+        // Sắp xếp điểm giảm dần
+        usort($mainDishCandidates, fn($a, $b) => $b['score'] <=> $a['score']);
+        usort($dessertCafeCandidates, fn($a, $b) => $b['score'] <=> $a['score']);
+
+        // ─── THUẬT TOÁN CHỐNG TRÙNG LẶP & LÀM MỚI VĨNH VIỄN ────────────────
+        // 1. Lọc Món chính chưa từng xuất hiện trong danh sách excludeIds
+        $freshMain = array_values(array_filter($mainDishCandidates, fn($item) => !in_array($item['blog']->id, $excludeIds)));
+        if (count($freshMain) < 1) {
+            // Khi đã duyệt hết kho bài viết, giải phóng bộ nhớ nhưng giữ lại 2 ID gần nhất để tránh lặp ngay lập tức
+            $recentKeep = array_slice($excludeIds, -2);
+            $excludeIds = $recentKeep;
+            $freshMain = array_values(array_filter($mainDishCandidates, fn($item) => !in_array($item['blog']->id, $excludeIds)));
+            if (empty($freshMain)) {
+                $freshMain = $mainDishCandidates;
+            }
+        }
+
+        // Chọn món chính:
+        // Nếu người dùng tự gõ món cụ thể (customPrompt), chọn bài viết điểm cao nhất khớp món đó
+        if (!empty($customPrompt) && !empty($freshMain)) {
+            $selectedMain = $freshMain[0]['blog'];
+        } else {
+            $topMainPool = array_slice($freshMain, 0, min(5, count($freshMain)));
+            $selectedMain = !empty($topMainPool) ? $topMainPool[array_rand($topMainPool)]['blog'] : ($mainDishCandidates[0]['blog'] ?? $allBlogs->first());
+        }
+
+        // 2. Lọc Tráng miệng / Cà phê khác món chính và chưa từng xuất hiện
+        $freshDessert = array_values(array_filter($dessertCafeCandidates, function($item) use ($excludeIds, $selectedMain) {
+            return $item['blog']->id !== $selectedMain->id && !in_array($item['blog']->id, $excludeIds);
+        }));
+
+        if (count($freshDessert) < 1) {
+            $freshDessert = array_values(array_filter($dessertCafeCandidates, fn($item) => $item['blog']->id !== $selectedMain->id));
+        }
+
+        if (!empty($customPrompt) && !empty($freshDessert) && $freshDessert[0]['score'] > 30) {
+            $selectedDessert = $freshDessert[0]['blog'];
+        } else {
+            $topDessertPool = array_slice($freshDessert, 0, min(5, count($freshDessert)));
+            $selectedDessertItem = !empty($topDessertPool) ? $topDessertPool[array_rand($topDessertPool)] : null;
+            $selectedDessert = is_array($selectedDessertItem) && isset($selectedDessertItem['blog']) 
+                ? $selectedDessertItem['blog'] 
+                : ($selectedDessertItem instanceof \App\Models\Blog ? $selectedDessertItem : ($dessertCafeCandidates[0]['blog'] ?? $allBlogs->last()));
+        }
+
+        // Đảm bảo Stop 1 và Stop 2 tuyệt đối không bao giờ là cùng một bài viết
+        if ($selectedMain->id === $selectedDessert->id) {
+            foreach ($dessertCafeCandidates as $candidate) {
+                if ($candidate['blog']->id !== $selectedMain->id) {
+                    $selectedDessert = $candidate['blog'];
+                    break;
+                }
+            }
+        }
+
+        // 4. Ước tính chi phí combo dự kiến phù hợp với ngân sách
+        $costEstimate = match($budget) {
+            'budget_low', 'budget_student' => 'Dưới 50.000đ / người (Bình dân, siêu tiết kiệm & ấm bụng)',
+            'budget_high' => 'Khoảng 150.000đ - 300.000đ / người (Trải nghiệm trọn vẹn món ngon)',
+            'budget_luxury' => 'Trên 300.000đ / người (Thả ga tiệc tùng & không gian cao cấp)',
+            'budget_buffet' => 'Khoảng 199.000đ - 299.000đ / người (Ăn thỏa thích no căng bụng)',
+            'budget_deal' => 'Ưu đãi tiết kiệm đến 30% (Săn voucher & combo độc quyền)',
+            'budget_any' => 'Linh hoạt mọi tầm giá (Tùy theo sở thích gọi món)',
+            default => 'Khoảng 85.000đ - 150.000đ / người (Hợp túi tiền & no nê chuẩn vị)',
+        };
+
+        // 5. Tạo câu chuyện và mẹo chuyển chặng thông minh
+        $aiStory = $this->generateItineraryStory($selectedMain, $selectedDessert, $moodText, $weatherText, $companionText, $budgetText, $budget, $mood, $weather);
+        $transitionTip = $this->generateTransitionTip($weather, $companion, $budget);
+
+        // Format danh sách quán ăn thực tế đề xuất từ Elasticsearch
+        $formattedQuans = $matchedQuans->map(fn($q) => $this->formatQuanForItinerary($q))->values()->all();
+
+        return [
+            'success' => true,
+            'meta' => [
+                'mood' => $mood,
+                'mood_label' => $moodText,
+                'weather' => $weather,
+                'weather_label' => $weatherText,
+                'companion' => $companion,
+                'companion_label' => $companionText,
+                'budget' => $budget,
+                'budget_label' => $budgetText,
+                'custom_prompt' => $customPrompt,
+                'excluded_count' => count($excludeIds),
+            ],
+            'headline' => "Lộ trình ẩm thực: Bữa chính ấm bụng ➔ Tráng miệng ngắm phố thảnh thơi",
+            'ai_story' => $aiStory,
+            'cost_estimate' => $costEstimate,
+            'transition_tip' => $transitionTip,
+            'stop_1' => [
+                'step' => 1,
+                'type' => 'main_dish',
+                'badge' => 'Chặng 1: Bữa chính nạp năng lượng',
+                'icon' => 'restaurant',
+                'tagline' => 'Khởi đầu bữa ăn với hương vị đậm đà, no nê đúng chất',
+                'blog' => $this->formatBlogForItinerary($selectedMain),
+            ],
+            'stop_2' => [
+                'step' => 2,
+                'type' => 'dessert_cafe',
+                'badge' => 'Chặng 2: Tráng miệng & Thảnh thơi',
+                'icon' => 'local_cafe',
+                'tagline' => 'Nhâm nhi đồ uống, tán gẫu và tận hưởng không gian cực chill',
+                'blog' => $this->formatBlogForItinerary($selectedDessert),
+            ],
+            'matched_quans' => $formattedQuans,
+        ];
+    }
+
+    /**
+     * Tìm kiếm Quán ăn thực tế qua Elasticsearch (Scout) hoặc DB fallback
+     */
+    public function searchQuansElasticsearch(string $query, int $limit = 3): \Illuminate\Support\Collection
+    {
+        $query = trim($query);
+        if ($query === '') {
+            return collect();
+        }
+
+        try {
+            if (config('scout.driver') === 'elastic') {
+                $results = \App\Models\Quan::search($query)
+                    ->whereIn('trang_thai', ['da_duyet'])
+                    ->take($limit)
+                    ->get();
+
+                if ($results->isNotEmpty()) {
+                    return $results;
+                }
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Elasticsearch searchQuans fallback: ' . $e->getMessage());
+        }
+
+        return \App\Models\Quan::where('trang_thai', 'da_duyet')
+            ->where(function ($q) use ($query) {
+                $q->where('ten_quan', 'like', "%{$query}%")
+                  ->orWhere('mo_ta', 'like', "%{$query}%")
+                  ->orWhere('dia_chi_chi_tiet', 'like', "%{$query}%")
+                  ->orWhere('loai_hinh_kinh_doanh', 'like', "%{$query}%");
+            })
+            ->latest('is_noi_bat')
+            ->take($limit)
+            ->get();
+    }
+
+    /**
+     * Lấy từ khóa Elasticsearch tương ứng với tâm trạng
+     */
+    protected function getSearchKeywordForMood(string $mood): string
+    {
+        return match ($mood) {
+            'hungry' => 'cơm',
+            'healing', 'chill' => 'cà phê',
+            'dating' => 'rooftop',
+            'gathering', 'party' => 'lẩu',
+            'healthy' => 'chay',
+            default => 'nướng',
+        };
+    }
+
+    /**
+     * Định dạng dữ liệu quán ăn từ Elasticsearch cho giao diện
+     */
+    public function formatQuanForItinerary(\App\Models\Quan $quan): array
+    {
+        $priceText = 'Bình dân';
+        if ($quan->gia_nho_nhat && $quan->gia_lon_nhat) {
+            $priceText = number_format($quan->gia_nho_nhat, 0, ',', '.') . 'đ - ' . number_format($quan->gia_lon_nhat, 0, ',', '.') . 'đ';
+        } elseif ($quan->gia_nho_nhat) {
+            $priceText = 'Từ ' . number_format($quan->gia_nho_nhat, 0, ',', '.') . 'đ';
+        }
+
+        $coverUrl = $quan->anh_bia_url;
+        if (empty($coverUrl)) {
+            $coverUrl = '/storage/blogs/covers/41Cy1EQE15hmAoyR8ZCYzOFRcWMpAcQ2hra9aDa2.png';
+        }
+
+        return [
+            'id' => $quan->id,
+            'name' => $quan->ten_quan,
+            'slug' => $quan->slug,
+            'url' => route('quan.detail', $quan->slug),
+            'address' => $quan->dia_chi_chi_tiet ?: ($quan->ten_quan_huyen ?: 'TP. Hồ Chí Minh'),
+            'cover_url' => $coverUrl,
+            'business_type' => $quan->loai_hinh_kinh_doanh ?: 'Quán ăn',
+            'price_range' => $priceText,
+            'open_hours' => ($quan->gio_mo_cua && $quan->gio_dong_cua) ? ($quan->gio_mo_cua . ' - ' . $quan->gio_dong_cua) : '08:00 - 22:30',
+            'is_verified' => (bool) $quan->is_xac_thuc,
+            'is_featured' => (bool) $quan->is_noi_bat,
+        ];
+    }
+
+    /**
+     * Tính điểm tương quan của bài viết với các điều kiện lộ trình (Độ chính xác cao & Hỗ trợ Custom Prompt)
+     */
+    protected function calculateItineraryScore(
+        \App\Models\Blog $blog,
+        string $text,
+        string $mood,
+        string $weather,
+        string $companion,
+        string $budget,
+        string $customPrompt = ''
+    ): array {
+        $score = rand(1, 4); // Random jitter nhẹ tạo tính đa dạng mỗi lần xoay vòng
+        $hasPromptMatch = false;
+
+        // 0. Điểm ưu tiên cao nhất nếu người dùng tự nhập nhu cầu riêng (Custom Prompt)
+        if (!empty($customPrompt)) {
+            $promptClean = mb_strtolower(trim($customPrompt));
+            $titleLower = mb_strtolower($blog->title ?? '');
+
+            // Nếu khớp cả cụm trong Tiêu đề bài viết -> Khớp tuyệt đối!
+            if (mb_strpos($titleLower, $promptClean) !== false) {
+                $score += 50;
+                $hasPromptMatch = true;
+            } else {
+                $stopWords = ['món', 'quán', 'có', 'và', 'cho', 'với', 'trong', 'trên', 'này', 'được', 'rất', 'là', 'của', 'ở', 'tại', 'về', 'các', 'những', 'một', 'nhiều', 'đang', 'đã', 'sẽ', 'đi', 'đến', 'ăn', 'uống', 'thì', 'mà', 'để', 'không', 'muốn', 'thèm', 'tìm', 'kiếm', 'đồ', 'gia', 'bởi', 'thấy'];
+                $rawKeywords = preg_split('/[\s,;+]+/u', $promptClean, -1, PREG_SPLIT_NO_EMPTY);
+                $significantKeywords = array_values(array_filter($rawKeywords, function($kw) use ($stopWords) {
+                    return mb_strlen($kw) >= 3 && !in_array($kw, $stopWords);
+                }));
+
+                if (empty($significantKeywords)) {
+                    $significantKeywords = array_values(array_filter($rawKeywords, fn($kw) => mb_strlen($kw) >= 2 && !in_array($kw, $stopWords)));
+                }
+
+                $titleMatchCount = 0;
+                $textMatchCount = 0;
+                foreach ($significantKeywords as $kw) {
+                    if (mb_strpos($titleLower, $kw) !== false) {
+                        $score += 30;
+                        $titleMatchCount++;
+                    } elseif (preg_match('/(?:\b|\s|^)' . preg_quote($kw, '/') . '(?:\b|\s|$)/iu', $text)) {
+                        $score += 10;
+                        $textMatchCount++;
+                    }
+                }
+
+                $threshold = max(2, (int) ceil(count($significantKeywords) * 0.6));
+                if (count($significantKeywords) <= 1) {
+                    $threshold = 1;
+                }
+
+                $totalMatched = $titleMatchCount + $textMatchCount;
+                if (!empty($significantKeywords)) {
+                    if ($titleMatchCount >= $threshold || $totalMatched >= count($significantKeywords)) {
+                        $score += 20;
+                        $hasPromptMatch = true;
+                    }
+                }
+            }
+        }
+
+        // 1. Phù hợp theo Thời tiết & Không gian
+        if ($weather === 'rainy' && preg_match('/(?:lẩu|nướng|ấm|nóng|phở|bò|cay|súp|mưa|se lạnh|chua thanh)/iu', $text)) $score += 9;
+        if ($weather === 'sunny' && preg_match('/(?:kem|gelato|trà|cà phê|lạnh|mát|smoothie|máy lạnh|bingsu|giải nhiệt|thanh nhiệt)/iu', $text)) $score += 9;
+        if ($weather === 'cool_night' && preg_match('/(?:rooftop|hoàng hôn|tối|đêm|gió|chill|nướng|ốc|bar|cocktail)/iu', $text)) $score += 9;
+        if ($weather === 'pleasant' && preg_match('/(?:dễ chịu|bình yên|thảnh thơi|ngắm phố|dạo phố|cafe|cơm tấm|bún bò)/iu', $text)) $score += 7;
+        if ($weather === 'ac_cool' && preg_match('/(?:máy lạnh|mát mẻ|tránh nóng|trong nhà|tiện nghi|bingsu|kem)/iu', $text)) $score += 10;
+        if ($weather === 'sunset_view' && preg_match('/(?:rooftop|hoàng hôn|view đẹp|tầng cao|ngắm phố|landmark|lung linh)/iu', $text)) $score += 11;
+        if ($weather === 'garden_outdoor' && preg_match('/(?:sân vườn|thoáng mát|cây xanh|ngoài trời|thiên nhiên|mộc mạc)/iu', $text)) $score += 10;
+        if ($weather === 'pet_quiet' && preg_match('/(?:mèo|thú cưng|yên tĩnh|chạy deadline|học bài|an yên)/iu', $text)) $score += 11;
+
+        // 2. Phù hợp theo Tâm trạng
+        if ($mood === 'happy' && preg_match('/(?:vui|ăn mừng|buffet|thả ga|đầy đặn|rôm rả|hội bạn|check-in|sôi động)/iu', $text)) $score += 9;
+        if ($mood === 'healing' && preg_match('/(?:chill|yên tĩnh|chữa lành|thư giãn|mèo|nhẹ nhàng|acoustic|ngắm mưa|mộc mạc|giải tỏa)/iu', $text)) $score += 9;
+        if ($mood === 'dating' && preg_match('/(?:hẹn hò|lãng mạn|rooftop|view đẹp|tinh tế|ấm cúng|nến|cocktail|speakeasy|2 người)/iu', $text)) $score += 10;
+        if ($mood === 'hungry' && preg_match('/(?:no căng|ăn thả ga|đĩa đầy|buffet|nhiều|ăn sáng|cơm tấm|sườn|ngập tràn|chảo gang)/iu', $text)) $score += 10;
+        if ($mood === 'gathering' && preg_match('/(?:nhậu|lai rai|ốc chảo|hải sản|bàn tiệc|cạn ly|lẩu nướng|hội bạn)/iu', $text)) $score += 11;
+        if ($mood === 'healthy' && preg_match('/(?:thanh đạm|chua thanh|rau rừng|nước dừa|trái cây|bingsu|trà thảo mộc)/iu', $text)) $score += 9;
+        if ($mood === 'chill' && preg_match('/(?:cà phê|học bài|deadline|yên tĩnh|ngắm phố|lofi|cold brew)/iu', $text)) $score += 8;
+        if ($mood === 'party' && preg_match('/(?:sinh nhật|tiệc tùng|buffet|thịt bò mỹ|cocktail|bàn đầy|rôm rả)/iu', $text)) $score += 10;
+        if ($mood === 'comfort' && preg_match('/(?:ấm lòng|ấm cúng|nước lèo|phở bò|bún bò|cơm mẹ nấu|dịu dàng)/iu', $text)) $score += 10;
+
+        // 3. Phù hợp theo Đối tượng
+        if (in_array($companion, ['group', 'friends', 'colleagues']) && preg_match('/(?:nhóm bạn|hội bạn|tụ tập|bàn ăn đầy|lẩu nướng|buffet|đại tiệc|rôm rả|đồng nghiệp)/iu', $text)) $score += 8;
+        if ($companion === 'family' && preg_match('/(?:gia đình|ấm cúng|truyền thống|cơm niêu|lẩu|thân mật)/iu', $text)) $score += 8;
+        if ($companion === 'couple' && preg_match('/(?:hẹn hò|2 người|lãng mạn|view đẹp|rooftop|cặp đôi|ấm cúng)/iu', $text)) $score += 8;
+        if ($companion === 'solo' && preg_match('/(?:yên tĩnh|học bài|1 mình|bàn đơn|cà phê|nhanh gọn|êm ví)/iu', $text)) $score += 8;
+
+        // 4. Phù hợp theo Ngân sách
+        if ($budget === 'budget_low' && preg_match('/(?:dưới 50k|35k|bình dân|êm ví|ăn sáng|giá rẻ|sinh viên|tiết kiệm)/iu', $text)) $score += 10;
+        if ($budget === 'budget_mid' && preg_match('/(?:vừa ví|hợp túi tiền|chuẩn vị|bún bò|lẩu bò|ốc chảo)/iu', $text)) $score += 7;
+        if ($budget === 'budget_high' && preg_match('/(?:đáng tiền|rooftop|buffet|cao cấp|sang trọng|thả ga|bò mỹ|cocktail)/iu', $text)) $score += 9;
+        if ($budget === 'budget_luxury' && preg_match('/(?:cao cấp|sang trọng|bò mỹ tảng|cocktail bar|rooftop|đắt giá)/iu', $text)) $score += 10;
+        if ($budget === 'budget_any') $score += 4;
+
+        return [
+            'score' => $score,
+            'prompt_matched' => $hasPromptMatch,
+        ];
+    }
+
+    /**
+     * Định dạng dữ liệu bài viết rút gọn cho lộ trình ẩm thực
+     */
+    protected function formatBlogForItinerary(\App\Models\Blog $blog): array
+    {
+        $coverUrl = $blog->cover_image_url ?: '/storage/blogs/covers/41Cy1EQE15hmAoyR8ZCYzOFRcWMpAcQ2hra9aDa2.png';
+
+        return [
+            'id' => $blog->id,
+            'title' => $blog->title,
+            'slug' => $blog->slug,
+            'url' => route('blog.show', $blog->slug),
+            'cover_image_url' => $coverUrl,
+            'category_name' => $blog->category?->name ?? 'Ẩm thực',
+            'category_slug' => $blog->category?->slug ?? '',
+            'reading_time' => (int) ($blog->reading_time ?? 4),
+            'view_count' => (int) ($blog->view_count ?? 0),
+            'excerpt' => \Illuminate\Support\Str::limit(strip_tags($blog->excerpt ?: $blog->content), 125),
+            'author_name' => $blog->user?->ho_ten ?? 'Tác giả Quán Mới',
+        ];
+    }
+
+    /**
+     * Tạo lời dẫn chuyện truyền cảm hứng và độc bản cho mỗi combo
+     */
+    protected function generateItineraryStory(\App\Models\Blog $main, \App\Models\Blog $dessert, string $moodText, string $weatherText, string $companionText, string $budgetText, string $budgetKey, string $moodKey = '', string $weatherKey = ''): string
+    {
+        // 1. Thử gọi Gemini AI nếu có API Key
+        $apiKey = config('services.gemini.api_key', env('GEMINI_API_KEY'));
+        if ($apiKey) {
+            try {
+                $prompt = "Bạn là Trợ lý AI ẩm thực của nền tảng Quán Mới (quanmoi.com). Người dùng vừa yêu cầu gợi ý lộ trình 'Hôm nay ăn gì?' với các tiêu chí:\n" .
+                    "- Tâm trạng: {$moodText}\n- Thời tiết: {$weatherText}\n- Đi cùng: {$companionText}\n- Ngân sách: {$budgetText}\n\n" .
+                    "Hệ thống đã chọn ra 2 quán ăn sau:\n" .
+                    "+ Chặng 1 (Món chính): {$main->title}\n" .
+                    "+ Chặng 2 (Tráng miệng/Cafe): {$dessert->title}\n\n" .
+                    "Hãy viết DUY NHẤT một đoạn văn ngắn gọn (2-3 câu, tối đa 55 từ) dí dỏm, ấm áp và truyền cảm hứng giải thích vì sao lộ trình này lại là sự kết hợp chuẩn vị nhất lúc này. Trả về văn bản thuần.";
+
+                $response = \Illuminate\Support\Facades\Http::timeout(3)->post("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={$apiKey}", [
+                    'contents' => [
+                        ['parts' => [['text' => $prompt]]]
+                    ]
+                ]);
+
+                if ($response->successful()) {
+                    $story = trim($response->json('candidates.0.content.parts.0.text') ?? '');
+                    if (!empty($story)) {
+                        return $story;
+                    }
+                }
+            } catch (\Throwable $e) {}
+        }
+
+        // 2. Local Intelligent Dynamic Storyteller phong phú (12+ biến thể mượt mà)
+        $mainTitle = $main->title;
+        $dessertTitle = $dessert->title;
+
+        $templates = [
+            "Chuẩn gu cho ngày {$weatherText}! Bắt đầu nạp năng lượng no nê với bài review '{$mainTitle}', sau đó cùng {$companionText} ghé sang '{$dessertTitle}' để tráng miệng và tán gẫu. Một combo trọn vẹn từ vị giác đến cảm xúc!",
+            "Với tâm trạng {$moodText}, bạn xứng đáng được thưởng thức một bữa ăn trọn vị: Khởi đầu bằng món chính đậm đà tại '{$mainTitle}', rồi kết lại ngày dài bằng không gian êm ái tại '{$dessertTitle}'. Vừa chuẩn ngân sách {$budgetText}, vừa không lo bí ý tưởng!",
+            "Gợi ý hoàn hảo dành riêng cho {$companionText}: Chặng 1 no nê ấm cúng, chặng 2 thảnh thơi nhâm nhi đồ uống ngắm phố. Hai địa điểm kết nối liền mạch giúp trải nghiệm ăn uống thêm phần thăng hoa!",
+            "Đúng món - Đúng gu - Đúng thời điểm! Hãy để hương vị hấp dẫn của '{$mainTitle}' đánh thức vị giác của bạn, trước khi chuyển sang không gian cực chill tại '{$dessertTitle}'. Chắc chắn bạn sẽ có một buổi đi ăn đáng nhớ!",
+            "Một lộ trình thiết kế riêng cho ngày {$weatherText}: Bữa chính ấm bụng chuẩn vị, tiếp nối bằng chặng tráng miệng thư giãn tại '{$dessertTitle}'. Tận hưởng trọn vẹn khoảnh khắc bên {$companionText} nhé!",
+            "Giải pháp xua tan nỗi lo 'hôm nay ăn gì': Thưởng thức trọn vẹn đặc sản tại '{$mainTitle}', rồi sang '{$dessertTitle}' nhâm nhi đồ uống mát lành. Đơn giản, tinh tế mà cực kỳ êm ví!",
+            "Combo vàng đánh thức mọi giác quan: Món chính thơm nức mũi giải tỏa cơn đói, chặng sau ngập tràn đồ uống thanh mát và góc check-in tuyệt đẹp tại '{$dessertTitle}'. Chúc bạn và {$companionText} có một bữa ăn ngon miệng!",
+        ];
+
+        return $templates[array_rand($templates)];
+    }
+
+    /**
+     * Tạo mẹo nhỏ thông minh hỗ trợ khách hàng
+     */
+    protected function generateTransitionTip(string $weather, string $companion, string $budget): string
+    {
+        $tips = [
+            "Hai địa điểm chỉ cách nhau khoảng 5 - 10 phút di chuyển, rất thuận tiện để đi xe máy hoặc bắt xe công nghệ.",
+            "Nên ghé chặng 1 trước 19h00 để có chỗ ngồi đẹp và thức ăn được phục vụ nóng sốt nhất.",
+            "Đừng quên chụp vài tấm ảnh check-in tại chặng 2 để lưu giữ khoảnh khắc cùng bạn bè nhé!",
+            "Quán ở chặng 2 có nhiều góc chụp ảnh sống ảo và wifi mạnh, rất thích hợp để ngồi trò chuyện lâu dài.",
+            "Nếu đi cùng nhóm đông người, bạn có thể gọi trước cho quán để giữ bàn đẹp nhất nha.",
+        ];
+
+        return $tips[array_rand($tips)];
+    }
 }
+
 

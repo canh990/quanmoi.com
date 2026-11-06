@@ -40,6 +40,8 @@ Route::post('/blog/{slug}/ai-tom-tat', [FrontendBlogController::class, 'summariz
 Route::get('/api/blog/ai-search', [FrontendBlogController::class, 'aiSearch'])->middleware('throttle:30,1')->name('blog.ai.search');
 Route::post('/api/blog/ai-chat', [FrontendBlogController::class, 'aiChat'])->middleware('throttle:15,1')->name('blog.ai.chat');
 Route::get('/api/blog/recommendations', [FrontendBlogController::class, 'recommendations'])->middleware('throttle:30,1')->name('blog.ai.recommendations');
+Route::post('/api/blog/ai-culinary-planner', [FrontendBlogController::class, 'planCulinaryItinerary'])->middleware('throttle:30,1')->name('blog.ai.planner');
+
 Route::get('/video-review', [\App\Http\Controllers\NguoiDung\VideoShortController::class, 'index'])->name('video-review.index');
 // ─── Trang thông tin nội dung tĩnh (Giới thiệu, Tuyển dụng, Đối tác, Hỗ trợ & Pháp lý) ───
 Route::view('/gioi-thieu', 'pages.about')->name('about');
