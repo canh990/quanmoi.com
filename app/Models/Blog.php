@@ -202,10 +202,10 @@ class Blog extends Model
     /**
      * Get the full URL for the blog's cover image.
      */
-    public function getCoverImageUrlAttribute(): ?string
+    public function getCoverImageUrlAttribute(): string
     {
         if (empty($this->cover_image)) {
-            return null;
+            return '/storage/blogs/covers/41Cy1EQE15hmAoyR8ZCYzOFRcWMpAcQ2hra9aDa2.png';
         }
 
         if (\Illuminate\Support\Str::startsWith($this->cover_image, ['http://', 'https://'])) {
