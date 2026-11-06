@@ -116,6 +116,22 @@
             backdrop-filter: blur(8px);
             box-shadow: 0 2px 8px rgba(15, 23, 42, 0.12);
         }
+        .qm-venue-badge-open {
+            background: rgba(5, 150, 105, 0.96);
+            color: #ffffff;
+        }
+        .qm-venue-badge-video {
+            background: rgba(147, 51, 234, 0.96);
+            color: #ffffff;
+        }
+        .qm-venue-badge-distance {
+            background: rgba(160, 65, 0, 0.96);
+            color: #ffffff;
+        }
+        .qm-venue-badge-shopee {
+            background: rgba(238, 77, 45, 0.96);
+            color: #ffffff;
+        }
         .qm-venue-badge-hot {
             display: inline-flex;
             align-items: center;
@@ -292,6 +308,22 @@
                 font-weight: 800;
             }
         }
+        #scrollToTopBtn {
+            position: fixed !important;
+            bottom: 138px !important;
+            right: 12px !important;
+            z-index: 9998 !important;
+            width: 42px !important;
+            height: 42px !important;
+        }
+        @media (min-width: 768px) {
+            #scrollToTopBtn {
+                bottom: 80px !important;
+                right: 16px !important;
+                width: 44px !important;
+                height: 44px !important;
+            }
+        }
     </style>
     @stack('styles')
     @stack('seo')
@@ -328,7 +360,7 @@
     <!-- Scroll to Top Button -->
     <button id="scrollToTopBtn" 
         style="display: none;"
-        class="fixed bottom-[76px] md:bottom-24 right-4 md:right-6 z-40 p-2.5 sm:p-3 bg-primary text-white rounded-full shadow-[0_4px_14px_rgba(160,65,0,0.25)] opacity-0 translate-y-10 pointer-events-none transition-all duration-300 hover:bg-primary/90 hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(160,65,0,0.35)] focus:outline-none items-center justify-center group"
+        class="fixed bg-primary text-white rounded-full shadow-[0_4px_14px_rgba(160,65,0,0.28)] opacity-0 translate-y-10 pointer-events-none transition-all duration-300 hover:bg-primary/90 hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(160,65,0,0.38)] focus:outline-none items-center justify-center group cursor-pointer"
         title="Lên đầu trang"
         aria-label="Lên đầu trang">
         <span class="material-symbols-outlined text-[22px] sm:text-[24px] group-hover:-translate-y-0.5 transition-transform">arrow_upward</span>
