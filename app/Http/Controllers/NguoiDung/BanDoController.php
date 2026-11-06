@@ -27,10 +27,10 @@ class BanDoController extends Controller
         }
         $dangMo = $request->boolean('dang_mo', false);
 
-        // Lấy danh mục động thực tế từ database các quán đã duyệt có tọa độ
+        // Lấy danh mục từ DanhMucQuan (chỉ những danh mục đang bật hiển thị) kèm số lượng quán có tọa độ
         $categories = Cache::remember('bando_categories_v2', 1800, function () {
             try {
-                return Quan::query()
+                $countsByType = Quan::query()
                     ->where('trang_thai', 'da_duyet')
                     ->whereNotNull('vi_do')
                     ->whereNotNull('kinh_do')
@@ -38,13 +38,37 @@ class BanDoController extends Controller
                     ->where('loai_hinh_kinh_doanh', '!=', '')
                     ->select('loai_hinh_kinh_doanh', DB::raw('count(*) as total'))
                     ->groupBy('loai_hinh_kinh_doanh')
-                    ->orderByDesc('total')
-                    ->get()
-                    ->map(fn ($item) => [
-                        'name' => $item->loai_hinh_kinh_doanh,
-                        'total' => (int) $item->total,
-                    ])
+                    ->pluck('total', 'loai_hinh_kinh_doanh')
                     ->toArray();
+
+                if (\Illuminate\Support\Facades\Schema::hasTable('danh_muc_quan') && \App\Models\DanhMucQuan::count() > 0) {
+                    return \App\Models\DanhMucQuan::hienThi()
+                        ->sapXep()
+                        ->get()
+                        ->map(function ($cat) use ($countsByType) {
+                            $name = $cat->ten_danh_muc;
+                            $total = (int) ($countsByType[$name] ?? 0);
+                            if ($name === 'Đồ ăn vặt' && isset($countsByType['Ăn vặt'])) {
+                                $total += (int) $countsByType['Ăn vặt'];
+                            } elseif ($name === 'Cà phê & Trà' && isset($countsByType['Cà phê'])) {
+                                $total += (int) $countsByType['Cà phê'];
+                            }
+                            return [
+                                'name'  => $name,
+                                'total' => $total,
+                            ];
+                        })
+                        ->toArray();
+                }
+
+                $result = [];
+                foreach ($countsByType as $typeName => $total) {
+                    $result[] = [
+                        'name'  => $typeName,
+                        'total' => (int) $total,
+                    ];
+                }
+                return $result;
             } catch (\Throwable $e) {
                 return [];
             }

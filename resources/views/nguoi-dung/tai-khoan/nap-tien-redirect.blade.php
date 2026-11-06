@@ -40,11 +40,17 @@
                 <input type="hidden" name="{{ $key }}" value="{{ $val }}">
             @endforeach
 
-            <button type="submit" class="w-full py-3.5 px-6 rounded-2xl bg-primary text-white font-bold text-sm shadow-lg hover:shadow-primary/30 hover:bg-primary/95 transition-all flex items-center justify-center gap-2 cursor-pointer">
-                <span>Tiếp tục đến cổng thanh toán</span>
-                <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
-            </button>
+            
         </form>
+
+        <div class="pt-1">
+            <a href="{{ route('tai-khoan.nap-tien.huy', ['invoice' => $checkoutInfo['invoice_number']]) }}"
+               id="btn-cancel-redirect"
+               class="inline-flex items-center justify-center gap-1.5 text-xs font-semibold text-rose-600 hover:text-rose-700 hover:underline transition-colors">
+                <span class="material-symbols-outlined text-[16px]">cancel</span>
+                <span>Hủy giao dịch và quay lại Ví</span>
+            </a>
+        </div>
 
         <p class="text-[11px] text-text-muted">
             Nếu trang không tự chuyển hướng sau vài giây, vui lòng bấm nút "Tiếp tục" ở trên.
@@ -54,15 +60,74 @@
 
 @push('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const form = document.getElementById('sepay-checkout-form');
-        if (form) {
-            // Chờ 600ms tạo hiệu ứng chuyển tiếp mượt mà cho trải nghiệm người dùng
-            setTimeout(function() {
-                form.submit();
-            }, 600);
+    (function() {
+        const invoiceNumber = @json($checkoutInfo['invoice_number']);
+        const cancelUrl = @json(route('tai-khoan.nap-tien.huy', ['invoice' => $checkoutInfo['invoice_number']]));
+        const redirectedKey = 'qm_sepay_redirected_' + invoiceNumber;
+        let isCancelling = false;
+
+        function handleBackCancel() {
+            if (isCancelling) return;
+            isCancelling = true;
+            try {
+                sessionStorage.removeItem('qm_pending_deposit_invoice');
+                sessionStorage.removeItem(redirectedKey);
+            } catch (e) {}
+            window.location.replace(cancelUrl);
         }
-    });
+
+        // Bắt sự kiện khi người dùng bấm nút Back trình duyệt từ cổng SePay quay lại trang này (bfcache)
+        window.addEventListener('pageshow', function(event) {
+            const navEntries = (window.performance && window.performance.getEntriesByType)
+                ? window.performance.getEntriesByType('navigation')
+                : [];
+            const isBackForward = event.persisted || (navEntries.length > 0 && navEntries[0].type === 'back_forward');
+
+            let alreadyRedirected = false;
+            try {
+                alreadyRedirected = sessionStorage.getItem(redirectedKey) === '1';
+            } catch (e) {}
+
+            if (isBackForward || alreadyRedirected) {
+                handleBackCancel();
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const cancelBtn = document.getElementById('btn-cancel-redirect');
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', function() {
+                    isCancelling = true;
+                    try {
+                        sessionStorage.removeItem('qm_pending_deposit_invoice');
+                        sessionStorage.removeItem(redirectedKey);
+                    } catch (e) {}
+                });
+            }
+
+            let alreadyRedirected = false;
+            try {
+                alreadyRedirected = sessionStorage.getItem(redirectedKey) === '1';
+            } catch (e) {}
+
+            if (alreadyRedirected) {
+                handleBackCancel();
+                return;
+            }
+
+            const form = document.getElementById('sepay-checkout-form');
+            if (form) {
+                setTimeout(function() {
+                    if (isCancelling) return;
+                    try {
+                        sessionStorage.setItem('qm_pending_deposit_invoice', invoiceNumber);
+                        sessionStorage.setItem(redirectedKey, '1');
+                    } catch (e) {}
+                    form.submit();
+                }, 400);
+            }
+        });
+    })();
 </script>
 @endpush
 @endsection

@@ -289,37 +289,62 @@ class NapTienController extends Controller
     public function error(Request $request): RedirectResponse
     {
         $invoiceNumber = $request->query('invoice');
+        $amountFormatted = '';
 
         if ($invoiceNumber) {
             $thanhToan = ThanhToan::where('ma_giao_dich', $invoiceNumber)->first();
-            if ($thanhToan && $thanhToan->trang_thai === 'cho_thanh_toan') {
-                $thanhToan->trang_thai = 'that_bai';
-                $thanhToan->ghi_chu = 'Thanh toán không thành công hoặc lỗi từ cổng SePay';
-                $thanhToan->save();
+            if ($thanhToan) {
+                $amountFormatted = number_format($thanhToan->so_tien, 0, ',', '.') . ' VNĐ';
+                if ($thanhToan->trang_thai === 'cho_thanh_toan') {
+                    $thanhToan->trang_thai = 'that_bai';
+                    $thanhToan->ghi_chu = 'Thanh toán không thành công hoặc lỗi từ cổng SePay';
+                    $thanhToan->save();
+                }
             }
         }
 
+        $msg = ($invoiceNumber && $amountFormatted)
+            ? "Giao dịch nạp tiền #{$invoiceNumber} ({$amountFormatted}) không thành công hoặc gặp lỗi từ cổng thanh toán. Vui lòng thử lại."
+            : 'Quá trình thanh toán nạp tiền đã gặp lỗi hoặc không hoàn tất. Vui lòng thử lại hoặc liên hệ hỗ trợ nếu cần giải đáp.';
+
         return redirect()->route('tai-khoan.vi-tien')
-            ->with('error', 'Quá trình thanh toán nạp tiền đã gặp lỗi hoặc không hoàn tất. Vui lòng thử lại hoặc liên hệ hỗ trợ nếu cần giải đáp.');
+            ->with('error', $msg);
     }
 
     /**
-     * Callback khi người dùng hủy bỏ thanh toán tại cổng SePay Gateway
+     * Callback khi người dùng hủy bỏ thanh toán tại cổng SePay Gateway hoặc bấm Quay lại
      */
     public function cancel(Request $request): RedirectResponse
     {
         $invoiceNumber = $request->query('invoice');
+        $thanhToan = null;
 
         if ($invoiceNumber) {
             $thanhToan = ThanhToan::where('ma_giao_dich', $invoiceNumber)->first();
-            if ($thanhToan && $thanhToan->trang_thai === 'cho_thanh_toan') {
+        } elseif (Auth::check()) {
+            $thanhToan = ThanhToan::where('user_id', Auth::id())
+                ->where('trang_thai', 'cho_thanh_toan')
+                ->latest()
+                ->first();
+            $invoiceNumber = $thanhToan?->ma_giao_dich;
+        }
+
+        $amountFormatted = '';
+        if ($thanhToan) {
+            $amountFormatted = number_format($thanhToan->so_tien, 0, ',', '.') . ' VNĐ';
+            if ($thanhToan->trang_thai === 'cho_thanh_toan') {
                 $thanhToan->trang_thai = 'da_huy';
-                $thanhToan->ghi_chu = 'Khách hàng bấm hủy giao dịch tại cổng SePay';
+                $thanhToan->ghi_chu = 'Khách hàng bấm hủy hoặc quay lại từ cổng thanh toán SePay';
                 $thanhToan->save();
             }
         }
 
+        $msg = ($invoiceNumber && $amountFormatted)
+            ? "Đã hủy giao dịch nạp tiền #{$invoiceNumber} ({$amountFormatted}) do bạn bấm quay lại hoặc hủy thanh toán."
+            : 'Bạn đã hủy bỏ yêu cầu nạp tiền. Giao dịch chưa được thực hiện.';
+
         return redirect()->route('tai-khoan.vi-tien')
-            ->with('info', 'Bạn đã hủy bỏ yêu cầu nạp tiền.');
+            ->with('info', $msg)
+            ->with('warning', $msg);
     }
 }

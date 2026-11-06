@@ -144,8 +144,36 @@
                         <div class="space-y-1">
                             <label class="font-label-md text-label-md text-on-surface-variant block">Địa chỉ hiện tại</label>
                             <div class="relative">
-                                <span class="material-symbols-outlined absolute left-3 top-3.5 text-on-surface-variant">location_on</span>
-                                <input name="dia_chi" class="w-full pl-10 pr-4 py-3 bg-surface-container-low border {{ $errors->has('dia_chi') ? 'border-error' : 'border-outline-variant' }} rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all" type="text" value="{{ old('dia_chi', $user->dia_chi) }}"/>
+                                <span class="material-symbols-outlined absolute left-3 top-3.5 text-on-surface-variant pointer-events-none">location_on</span>
+                                @php
+                                    $currentDiaChi = trim((string) old('dia_chi', $user->dia_chi));
+                                    $matchedTinh = false;
+                                @endphp
+                                <select name="dia_chi"
+                                        id="dia_chi"
+                                        class="w-full pl-10 pr-10 py-3 bg-surface-container-low border {{ $errors->has('dia_chi') ? 'border-error' : 'border-outline-variant' }} rounded-xl focus:ring-2 focus:ring-primary outline-none appearance-none transition-all cursor-pointer">
+                                    <option value="">-- Chọn Tỉnh / Thành phố --</option>
+                                    @if(!empty($tinhThanhs) && is_array($tinhThanhs))
+                                        @foreach($tinhThanhs as $tinh)
+                                            @php
+                                                $tinhName = $tinh['name'] ?? '';
+                                                $isSelected = ($currentDiaChi !== '' && $currentDiaChi === $tinhName);
+                                                if ($isSelected) {
+                                                    $matchedTinh = true;
+                                                }
+                                            @endphp
+                                            @if($tinhName !== '')
+                                                <option value="{{ $tinhName }}" {{ $isSelected ? 'selected' : '' }}>
+                                                    {{ $tinhName }}
+                                                </option>
+                                            @endif
+                                        @endforeach
+                                    @endif
+                                    @if($currentDiaChi !== '' && !$matchedTinh)
+                                        <option value="{{ $currentDiaChi }}" selected>{{ $currentDiaChi }}</option>
+                                    @endif
+                                </select>
+                                <span class="material-symbols-outlined absolute right-3 top-3.5 text-on-surface-variant pointer-events-none">expand_more</span>
                             </div>
                         </div>
                     </div>

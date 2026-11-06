@@ -65,6 +65,48 @@
                     </div>
                 </div>
 
+                {{-- Banner thông báo kết quả giao dịch (Thành công / Lỗi / Đã hủy) --}}
+                @if(session('success'))
+                    <div id="deposit-session-banner" class="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs sm:text-sm flex items-start justify-between gap-3">
+                        <div class="flex items-start gap-2.5">
+                            <span class="material-symbols-outlined text-[20px] shrink-0 text-emerald-600 mt-0.5">check_circle</span>
+                            <div>
+                                <p class="font-bold text-emerald-900">Nạp tiền thành công</p>
+                                <p class="mt-0.5 text-emerald-700">{{ session('success') }}</p>
+                            </div>
+                        </div>
+                        <button type="button" onclick="this.closest('#deposit-session-banner').remove()" class="text-emerald-500 hover:text-emerald-800 cursor-pointer shrink-0">
+                            <span class="material-symbols-outlined text-[18px]">close</span>
+                        </button>
+                    </div>
+                @elseif(session('error'))
+                    <div id="deposit-session-banner" class="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs sm:text-sm flex items-start justify-between gap-3">
+                        <div class="flex items-start gap-2.5">
+                            <span class="material-symbols-outlined text-[20px] shrink-0 text-rose-600 mt-0.5">error</span>
+                            <div>
+                                <p class="font-bold text-rose-900">Giao dịch nạp tiền thất bại</p>
+                                <p class="mt-0.5 text-rose-700">{{ session('error') }}</p>
+                            </div>
+                        </div>
+                        <button type="button" onclick="this.closest('#deposit-session-banner').remove()" class="text-rose-500 hover:text-rose-800 cursor-pointer shrink-0">
+                            <span class="material-symbols-outlined text-[18px]">close</span>
+                        </button>
+                    </div>
+                @elseif(session('warning') || session('info'))
+                    <div id="deposit-session-banner" class="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs sm:text-sm flex items-start justify-between gap-3">
+                        <div class="flex items-start gap-2.5">
+                            <span class="material-symbols-outlined text-[20px] shrink-0 text-amber-600 mt-0.5">warning</span>
+                            <div>
+                                <p class="font-bold text-amber-900">Đã hủy giao dịch nạp tiền</p>
+                                <p class="mt-0.5 text-amber-800">{{ session('warning') ?? session('info') }}</p>
+                            </div>
+                        </div>
+                        <button type="button" onclick="this.closest('#deposit-session-banner').remove()" class="text-amber-500 hover:text-amber-800 cursor-pointer shrink-0">
+                            <span class="material-symbols-outlined text-[18px]">close</span>
+                        </button>
+                    </div>
+                @endif
+
                 {{-- Form Nạp tiền --}}
                 <form id="form-nap-tien" action="{{ route('tai-khoan.nap-tien.checkout') }}" method="POST" novalidate class="space-y-5">
                     @csrf
@@ -255,6 +297,65 @@
         banner.classList.add('hidden');
     }
 
+    function resetDepositSubmitButton() {
+        const btn = document.getElementById('btn-submit-deposit');
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<span class="material-symbols-outlined text-[19px]">qr_code_scanner</span><span id="btn-deposit-label">NẠP TIỀN NGAY</span>';
+        }
+    }
+
+    (function() {
+        const hasServerCallbackFlash = @json((bool) (session('success') || session('error') || session('warning') || session('info')));
+        const baseCancelUrl = @json(route('tai-khoan.nap-tien.huy'));
+
+        if (hasServerCallbackFlash) {
+            try {
+                const oldInv = sessionStorage.getItem('qm_pending_deposit_invoice');
+                if (oldInv) {
+                    sessionStorage.removeItem('qm_sepay_redirected_' + oldInv);
+                }
+                sessionStorage.removeItem('qm_pending_deposit_invoice');
+                sessionStorage.removeItem('qm_deposit_submitting');
+            } catch (e) {}
+        }
+
+        function checkAndHandleBackFromGateway(event) {
+            resetDepositSubmitButton();
+
+            let pendingInvoice = null;
+            let isSubmitting = false;
+            try {
+                pendingInvoice = sessionStorage.getItem('qm_pending_deposit_invoice');
+                isSubmitting = sessionStorage.getItem('qm_deposit_submitting') === '1';
+            } catch (e) {}
+
+            const navEntries = (window.performance && window.performance.getEntriesByType)
+                ? window.performance.getEntriesByType('navigation')
+                : [];
+            const isBackForward = (event && event.persisted) || (navEntries.length > 0 && navEntries[0].type === 'back_forward');
+
+            if (pendingInvoice && (!hasServerCallbackFlash || isBackForward)) {
+                try {
+                    sessionStorage.removeItem('qm_pending_deposit_invoice');
+                    sessionStorage.removeItem('qm_sepay_redirected_' + pendingInvoice);
+                    sessionStorage.removeItem('qm_deposit_submitting');
+                } catch (e) {}
+                window.location.replace(baseCancelUrl + '?invoice=' + encodeURIComponent(pendingInvoice));
+                return;
+            }
+
+            if (isSubmitting && isBackForward) {
+                try {
+                    sessionStorage.removeItem('qm_deposit_submitting');
+                } catch (e) {}
+                window.location.replace(baseCancelUrl);
+            }
+        }
+
+        window.addEventListener('pageshow', checkAndHandleBackFromGateway);
+    })();
+
     document.addEventListener('DOMContentLoaded', function() {
         const inputAmount = document.getElementById('deposit-custom-amount');
         const hiddenAmount = document.getElementById('deposit-real-amount');
@@ -291,6 +392,10 @@
                 inputAmount.focus();
                 return;
             }
+
+            try {
+                sessionStorage.setItem('qm_deposit_submitting', '1');
+            } catch (err) {}
 
             const btn = document.getElementById('btn-submit-deposit');
             btn.disabled = true;

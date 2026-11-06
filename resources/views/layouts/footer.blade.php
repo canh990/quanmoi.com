@@ -38,12 +38,24 @@
             {{-- Column 2: Khám phá --}}
             <div class="space-y-3">
                 <h4 class="font-bold text-[15px] text-on-surface uppercase tracking-wider">Khám phá</h4>
+                @php
+                    $footerCats = collect();
+                    try {
+                        if (\Illuminate\Support\Facades\Schema::hasTable('danh_muc_quan')) {
+                            $footerCats = \App\Models\DanhMucQuan::hienThi()->sapXep()->take(3)->get();
+                        }
+                    } catch (\Throwable $e) {}
+                @endphp
                 <ul class="space-y-2.5 text-[14px]">
                     <li><a href="{{ route('quan-moi') }}" class="text-on-surface-variant hover:text-primary transition-colors">Quán mới mở</a></li>
                     <li><a href="{{ route('kham-pha', ['sap_xep' => 'rating_desc']) }}" class="text-on-surface-variant hover:text-primary transition-colors">Top đánh giá cao</a></li>
-                    <li><a href="{{ route('danh-muc', 'do-an-vat') }}" class="text-on-surface-variant hover:text-primary transition-colors">Món ngon đường phố</a></li>
-                    <li><a href="{{ route('danh-muc', 'lau-nuong') }}" class="text-on-surface-variant hover:text-primary transition-colors">Lẩu & Nướng</a></li>
-                    <li><a href="{{ route('danh-muc', 'ca-phe-tra') }}" class="text-on-surface-variant hover:text-primary transition-colors">Cà phê & Trà sữa</a></li>
+                    @forelse($footerCats as $fCat)
+                        <li><a href="{{ route('danh-muc', $fCat->slug) }}" class="text-on-surface-variant hover:text-primary transition-colors">{{ $fCat->ten_danh_muc }}</a></li>
+                    @empty
+                        <li><a href="{{ route('danh-muc', 'do-an-vat') }}" class="text-on-surface-variant hover:text-primary transition-colors">Đồ ăn vặt</a></li>
+                        <li><a href="{{ route('danh-muc', 'lau-nuong') }}" class="text-on-surface-variant hover:text-primary transition-colors">Lẩu & Nướng</a></li>
+                        <li><a href="{{ route('danh-muc', 'ca-phe-tra') }}" class="text-on-surface-variant hover:text-primary transition-colors">Cà phê & Trà</a></li>
+                    @endforelse
                 </ul>
             </div>
 

@@ -50,30 +50,42 @@
                 @endif
             </div>
 
-            <!-- Tabs Navigation (Đậm nét, phân loại màu sắc rực rỡ ấn tượng) -->
+            <!-- Tabs Navigation (Đậm nét, phân loại màu sắc rực rỡ ấn tượng, tương thích 100%) -->
             <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none text-xs font-bold">
-                <a href="{{ route('nguoi-dung.thong-bao.index', ['tab' => 'tat_ca']) }}" class="px-4 py-2.5 rounded-xl transition-all whitespace-nowrap {{ $tab === 'tat_ca' ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white font-black shadow-sm shadow-amber-500/25' : 'bg-white text-slate-700 hover:bg-slate-100 hover:text-slate-900 border border-slate-200' }}">
+                <a href="{{ route('nguoi-dung.thong-bao.index', ['tab' => 'tat_ca']) }}" 
+                   class="px-4 py-2.5 rounded-xl transition-all whitespace-nowrap {{ $tab === 'tat_ca' ? 'bg-primary text-white font-black shadow-sm' : 'bg-white text-slate-700 hover:bg-slate-100 hover:text-slate-900 border border-slate-200' }}"
+                   {!! $tab === 'tat_ca' ? 'style="background-color: #a04100 !important; color: #ffffff !important;"' : '' !!}>
                     Tất cả
                 </a>
-                <a href="{{ route('nguoi-dung.thong-bao.index', ['tab' => 'chua_doc']) }}" class="px-4 py-2.5 rounded-xl transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'chua_doc' ? 'bg-gradient-to-r from-rose-600 to-red-600 text-white font-black shadow-sm shadow-rose-500/25' : 'bg-white text-slate-700 hover:bg-slate-100 hover:text-slate-900 border border-slate-200' }}">
+                <a href="{{ route('nguoi-dung.thong-bao.index', ['tab' => 'chua_doc']) }}" 
+                   class="px-4 py-2.5 rounded-xl transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'chua_doc' ? 'bg-rose-600 text-white font-black shadow-sm' : 'bg-white text-slate-700 hover:bg-slate-100 hover:text-slate-900 border border-slate-200' }}"
+                   {!! $tab === 'chua_doc' ? 'style="background-color: #e11d48 !important; color: #ffffff !important;"' : '' !!}>
                     <span>Chưa đọc</span>
                     @if($unreadCount > 0)
                         <span class="px-1.5 py-0.2 rounded-full text-[10px] font-black {{ $tab === 'chua_doc' ? 'bg-white/25 text-white' : 'bg-rose-500 text-white' }}">{{ $unreadCount }}</span>
                     @endif
                 </a>
-                <a href="{{ route('nguoi-dung.thong-bao.index', ['tab' => 'quan']) }}" class="px-4 py-2.5 rounded-xl transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'quan' ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white font-black shadow-sm shadow-amber-500/25' : 'bg-white text-slate-700 hover:bg-slate-100 hover:text-slate-900 border border-slate-200' }}">
+                <a href="{{ route('nguoi-dung.thong-bao.index', ['tab' => 'quan']) }}" 
+                   class="px-4 py-2.5 rounded-xl transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'quan' ? 'bg-amber-600 text-white font-black shadow-sm' : 'bg-white text-slate-700 hover:bg-slate-100 hover:text-slate-900 border border-slate-200' }}"
+                   {!! $tab === 'quan' ? 'style="background-color: #d97706 !important; color: #ffffff !important;"' : '' !!}>
                     <span class="material-symbols-outlined text-[16px]">storefront</span>
                     <span>Quán ăn</span>
                 </a>
-                <a href="{{ route('nguoi-dung.thong-bao.index', ['tab' => 'blog']) }}" class="px-4 py-2.5 rounded-xl transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'blog' ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-black shadow-sm shadow-blue-500/25' : 'bg-white text-slate-700 hover:bg-slate-100 hover:text-slate-900 border border-slate-200' }}">
+                <a href="{{ route('nguoi-dung.thong-bao.index', ['tab' => 'blog']) }}" 
+                   class="px-4 py-2.5 rounded-xl transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'blog' ? 'bg-blue-600 text-white font-black shadow-sm' : 'bg-white text-slate-700 hover:bg-slate-100 hover:text-slate-900 border border-slate-200' }}"
+                   {!! $tab === 'blog' ? 'style="background-color: #2563eb !important; color: #ffffff !important;"' : '' !!}>
                     <span class="material-symbols-outlined text-[16px]">article</span>
                     <span>Bài viết</span>
                 </a>
-                <a href="{{ route('nguoi-dung.thong-bao.index', ['tab' => 'danh_gia']) }}" class="px-4 py-2.5 rounded-xl transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'danh_gia' ? 'bg-gradient-to-r from-pink-600 to-rose-600 text-white font-black shadow-sm shadow-pink-500/25' : 'bg-white text-slate-700 hover:bg-slate-100 hover:text-slate-900 border border-slate-200' }}">
+                <a href="{{ route('nguoi-dung.thong-bao.index', ['tab' => 'danh_gia']) }}" 
+                   class="px-4 py-2.5 rounded-xl transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'danh_gia' ? 'bg-pink-600 text-white font-black shadow-sm' : 'bg-white text-slate-700 hover:bg-slate-100 hover:text-slate-900 border border-slate-200' }}"
+                   {!! $tab === 'danh_gia' ? 'style="background-color: #db2777 !important; color: #ffffff !important;"' : '' !!}>
                     <span class="material-symbols-outlined text-[16px]">rate_review</span>
                     <span>Đánh giá</span>
                 </a>
-                <a href="{{ route('nguoi-dung.thong-bao.index', ['tab' => 'he_thong']) }}" class="px-4 py-2.5 rounded-xl transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'he_thong' ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-black shadow-sm shadow-purple-500/25' : 'bg-white text-slate-700 hover:bg-slate-100 hover:text-slate-900 border border-slate-200' }}">
+                <a href="{{ route('nguoi-dung.thong-bao.index', ['tab' => 'he_thong']) }}" 
+                   class="px-4 py-2.5 rounded-xl transition-all whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'he_thong' ? 'bg-purple-600 text-white font-black shadow-sm' : 'bg-white text-slate-700 hover:bg-slate-100 hover:text-slate-900 border border-slate-200' }}"
+                   {!! $tab === 'he_thong' ? 'style="background-color: #9333ea !important; color: #ffffff !important;"' : '' !!}>
                     <span class="material-symbols-outlined text-[16px]">campaign</span>
                     <span>Hệ thống</span>
                 </a>
