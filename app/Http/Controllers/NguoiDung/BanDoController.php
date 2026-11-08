@@ -28,7 +28,7 @@ class BanDoController extends Controller
         $dangMo = $request->boolean('dang_mo', false);
 
         // Lấy danh mục từ DanhMucQuan (chỉ những danh mục đang bật hiển thị) kèm số lượng quán có tọa độ
-        $categories = Cache::remember('bando_categories_v2', 1800, function () {
+        $categoryFetcher = function () {
             try {
                 $countsByType = Quan::query()
                     ->where('trang_thai', 'da_duyet')
@@ -72,7 +72,11 @@ class BanDoController extends Controller
             } catch (\Throwable $e) {
                 return [];
             }
-        });
+        };
+
+        $categories = (app()->isLocal() || $request->boolean('fresh'))
+            ? $categoryFetcher()
+            : Cache::remember('bando_categories_v2', 1800, $categoryFetcher);
 
         return view('nguoi-dung.ban-do.index', compact(
             'danhMuc',

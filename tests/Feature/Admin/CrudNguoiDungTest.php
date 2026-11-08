@@ -173,4 +173,80 @@ class CrudNguoiDungTest extends TestCase
 
         $this->assertTrue($user->fresh()->da_xac_thuc);
     }
+
+    public function test_admin_delete_user_ajax_returns_user_name_not_id_in_message(): void
+    {
+        $adminRole = VaiTro::where('ten', 'admin')->first();
+        $admin = User::factory()->create([
+            'email' => 'admin@quanmoi.com',
+            'vai_tro_id' => $adminRole?->id,
+        ]);
+
+        $user = User::factory()->create(['ho_ten' => 'Người Dùng Kiểm Thử Xóa']);
+
+        $response = $this->actingAs($admin)->deleteJson('/admin/nguoi-dung/' . $user->id);
+        $response->assertOk();
+        $response->assertJson([
+            'success' => true,
+            'user_name' => 'Người Dùng Kiểm Thử Xóa',
+            'message' => "Người dùng 'Người Dùng Kiểm Thử Xóa' đã bị xóa.",
+        ]);
+        $this->assertStringNotContainsString($user->id, $response->json('message'));
+    }
+
+    public function test_admin_restore_user_ajax_returns_user_name_in_message(): void
+    {
+        $adminRole = VaiTro::where('ten', 'admin')->first();
+        $admin = User::factory()->create([
+            'email' => 'admin@quanmoi.com',
+            'vai_tro_id' => $adminRole?->id,
+        ]);
+
+        $user = User::factory()->create(['ho_ten' => 'Khôi Phục User Mẫu']);
+        $user->delete();
+
+        $response = $this->actingAs($admin)->postJson('/admin/nguoi-dung/' . $user->id . '/restore');
+        $response->assertOk();
+        $response->assertJson([
+            'success' => true,
+            'user_name' => 'Khôi Phục User Mẫu',
+            'message' => "Đã khôi phục tài khoản 'Khôi Phục User Mẫu' và các quán liên quan thành công.",
+        ]);
+    }
+
+    public function test_admin_force_delete_user_ajax_returns_user_name_in_message(): void
+    {
+        $adminRole = VaiTro::where('ten', 'admin')->first();
+        $admin = User::factory()->create([
+            'email' => 'admin@quanmoi.com',
+            'vai_tro_id' => $adminRole?->id,
+        ]);
+
+        $user = User::factory()->create(['ho_ten' => 'Xóa Vĩnh Viễn User Mẫu']);
+
+        $response = $this->actingAs($admin)->deleteJson('/admin/nguoi-dung/' . $user->id . '/force');
+        $response->assertOk();
+        $response->assertJson([
+            'success' => true,
+            'user_name' => 'Xóa Vĩnh Viễn User Mẫu',
+            'message' => "Người dùng 'Xóa Vĩnh Viễn User Mẫu' đã bị xóa.",
+        ]);
+    }
+
+    public function test_realtime_check_returns_deleted_user_name(): void
+    {
+        $adminRole = VaiTro::where('ten', 'admin')->first();
+        $admin = User::factory()->create([
+            'email' => 'admin@quanmoi.com',
+            'vai_tro_id' => $adminRole?->id,
+        ]);
+
+        $user = User::factory()->create(['ho_ten' => 'Người Dùng Bị Xóa Kiểm Thử']);
+        $this->actingAs($admin)->deleteJson('/admin/nguoi-dung/' . $user->id);
+
+        $response = $this->actingAs($admin)->getJson('/admin/realtime-check');
+        $response->assertOk();
+        $response->assertJsonPath('latest_user_action.user_name', 'Người Dùng Bị Xóa Kiểm Thử');
+        $response->assertJsonPath('latest_user_action.action', 'user.deleted');
+    }
 }

@@ -45,6 +45,7 @@ Route::middleware(['auth', 'KiemTraQuyenHan:admin'])->group(function () {
 
     // 3. Quản lý Người dùng
     Route::get('/nguoi-dung', [QuanLyNguoiDungController::class, 'index'])->name('nguoi-dung.index');
+    Route::post('/nguoi-dung', [QuanLyNguoiDungController::class, 'store'])->name('nguoi-dung.store');
     Route::get('/nguoi-dung/{id}/edit', [QuanLyNguoiDungController::class, 'edit'])->name('nguoi-dung.edit');
     Route::put('/nguoi-dung/{id}', [QuanLyNguoiDungController::class, 'update'])->name('nguoi-dung.update');
     Route::delete('/nguoi-dung/{id}', [QuanLyNguoiDungController::class, 'destroy'])->name('nguoi-dung.destroy');

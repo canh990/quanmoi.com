@@ -14,10 +14,12 @@ use Illuminate\Support\Facades\Schema;
 
 class AdminDashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // 1. Cards overview stats (cached 30s for lightning speed response)
-        $overviewStats = Cache::remember('admin_dashboard_overview_stats', 30, function () {
+        $shouldBypassCache = app()->isLocal() || $request->boolean('fresh');
+
+        // 1. Cards overview stats (fresh when local/fresh, or cached 30s in production)
+        $fetchOverviewStats = function () {
             $hasThanhToan = Schema::hasTable('thanh_toan');
             return [
                 'total_quan'    => Quan::count(),
@@ -29,7 +31,11 @@ class AdminDashboardController extends Controller
                 'featured_quan' => Quan::where('is_noi_bat', true)->count(),
                 'has_thanh_toan'=> $hasThanhToan,
             ];
-        });
+        };
+
+        $overviewStats = $shouldBypassCache
+            ? $fetchOverviewStats()
+            : Cache::remember('admin_dashboard_overview_stats', 30, $fetchOverviewStats);
 
         $stats = [
             'total_quan'      => $overviewStats['total_quan'],
@@ -45,8 +51,8 @@ class AdminDashboardController extends Controller
             'recent_payments' => $overviewStats['has_thanh_toan'] ? ThanhToan::with(['user', 'quan'])->latest()->take(5)->get() : collect(),
         ];
 
-        // 2. Monthly registration & revenue chart data (cached 60s for ultra-fast response)
-        $chartData = Cache::remember('admin_dashboard_charts_6m', 60, function () {
+        // 2. Monthly registration & revenue chart data (fresh when local/fresh, or cached 60s in production)
+        $fetchChartData = function () {
             $chartLabels = [];
             $quanMonthly = [];
             $usersMonthly = [];
@@ -71,7 +77,11 @@ class AdminDashboardController extends Controller
                 'users' => $usersMonthly,
                 'revenue' => $revenueMonthly,
             ];
-        });
+        };
+
+        $chartData = $shouldBypassCache
+            ? $fetchChartData()
+            : Cache::remember('admin_dashboard_charts_6m', 60, $fetchChartData);
 
         return view('admin.dashboard', compact('stats', 'chartData'));
     }
