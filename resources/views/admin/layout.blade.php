@@ -767,6 +767,12 @@
                     <span class="font-bold whitespace-nowrap">Quay về trang chủ</span>
                 </a>
 
+                {{-- Nút đồng bộ & làm mới dữ liệu realtime từ Database --}}
+                <button type="button" onclick="refreshAdminData(event)" class="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 hover:bg-emerald-100 hover:text-emerald-800 transition-colors shadow-2xs whitespace-nowrap shrink-0 cursor-pointer" title="Làm mới dữ liệu từ Database ngay lập tức (Xóa toàn bộ cache)">
+                    <span id="refresh-db-icon" class="material-symbols-outlined text-[16px] text-emerald-600 shrink-0 transition-transform">sync</span>
+                    <span class="whitespace-nowrap hidden md:inline">Đồng bộ CSDL</span>
+                </button>
+
                 {{-- Real-time Admin Notification Bell --}}
                 <div class="relative shrink-0" id="admin-notif-container">
                     <button id="admin-notif-bell" onclick="toggleNotifDropdown()" class="relative p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors flex items-center justify-center shrink-0">
@@ -859,7 +865,7 @@
         </header>
 
         {{-- Page Content --}}
-        <main id="admin-main-content" class="p-2 sm:p-3 flex-grow transition-opacity duration-150 min-w-0 w-full overflow-x-hidden">
+        <main id="admin-main-content" class="p-2 sm:p-3 pb-28 sm:pb-32 flex-grow transition-opacity duration-150 min-w-0 w-full overflow-x-hidden">
             {{-- Flash Alerts Container (chỉ hiển thị tại chức năng phát sinh thông báo) --}}
             <div id="admin-flash-container" class="space-y-3 mb-4 empty:hidden">
                 @if(session('success'))
@@ -922,8 +928,8 @@
         </main>
     </div>
 
-    {{-- Floating Back to Top Button --}}
-    <button id="admin-back-to-top" type="button" onclick="scrollAdminToTop(true)" class="fixed bottom-6 right-6 z-40 bg-slate-900/90 hover:bg-slate-950 text-white px-3.5 py-2.5 rounded-2xl shadow-xl border border-slate-700/60 backdrop-blur-md transition-all duration-300 opacity-0 pointer-events-none translate-y-3 flex items-center justify-center gap-1.5 text-xs font-bold cursor-pointer hover:shadow-2xl hover:scale-105" title="Cuộn lên đầu trang">
+    {{-- Floating Back to Top Button (đặt cao hơn đáy màn hình để không che thanh phân trang) --}}
+    <button id="admin-back-to-top" type="button" onclick="scrollAdminToTop(true)" class="fixed bottom-20 md:bottom-24 right-4 sm:right-6 z-30 bg-slate-900/90 hover:bg-slate-950 text-white px-3.5 py-2.5 rounded-2xl shadow-xl border border-slate-700/60 backdrop-blur-md transition-all duration-300 opacity-0 pointer-events-none translate-y-3 flex items-center justify-center gap-1.5 text-xs font-bold cursor-pointer hover:shadow-2xl hover:scale-105" title="Cuộn lên đầu trang">
         <span class="material-symbols-outlined text-[18px] text-amber-400">arrow_upward</span>
         <span class="text-[11px]">Lên đầu trang</span>
     </button>
@@ -1315,6 +1321,54 @@
     {{-- Floating Toast Notification Container (Góc trên bên phải) --}}
     <div id="realtime-toast-container" class="fixed top-5 right-5 z-[99999] flex flex-col gap-3 max-w-sm pointer-events-auto"></div>
 
+    {{-- Center Screen Realtime Notification Modal (Thông Báo Giữa Màn Hình Khi CSDL Thay Đổi) --}}
+    <div id="realtime-center-modal" onclick="if(event.target === this) dismissCenterModal()" class="fixed inset-0 z-[999999] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs opacity-0 pointer-events-none transition-all duration-300 ease-out" role="alertdialog" aria-modal="true">
+        <div id="realtime-center-card" class="bg-white rounded-3xl shadow-2xl border border-slate-200/90 max-w-md w-full p-6 text-center transform scale-90 translate-y-4 opacity-0 transition-all duration-300 ease-out pointer-events-auto relative overflow-hidden">
+            <!-- Top decorative ambient glow -->
+            <div id="realtime-center-glow" class="absolute -top-12 left-1/2 -translate-x-1/2 w-48 h-24 bg-gradient-to-r from-emerald-400/30 via-teal-400/30 to-blue-400/30 blur-2xl rounded-full pointer-events-none"></div>
+            
+            <!-- Close icon button top right -->
+            <button type="button" onclick="dismissCenterModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-400 hover:text-slate-700 flex items-center justify-center transition-colors" title="Đóng">
+                <span class="material-symbols-outlined text-[18px]">close</span>
+            </button>
+
+            <!-- Center Icon with ping pulse ring -->
+            <div class="relative mx-auto w-16 h-16 mb-4 flex items-center justify-center">
+                <div id="realtime-center-ping" class="absolute inset-0 rounded-2xl bg-emerald-400/30 animate-ping"></div>
+                <div id="realtime-center-icon-bg" class="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-lg shadow-emerald-500/25">
+                    <span id="realtime-center-icon" class="material-symbols-outlined text-[32px]">sync</span>
+                </div>
+            </div>
+
+            <!-- Title & Tag -->
+            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider mb-2.5 bg-emerald-50 text-emerald-700 border border-emerald-200" id="realtime-center-badge">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span id="realtime-center-tag">ĐỒNG BỘ CSDL REALTIME</span>
+            </div>
+
+            <h3 id="realtime-center-title" class="text-xl font-extrabold text-slate-900 tracking-tight mb-2">
+                Dữ Liệu Đã Được Cập Nhật
+            </h3>
+
+            <p id="realtime-center-message" class="text-sm text-slate-600 leading-relaxed mb-6 font-medium">
+                Hệ thống vừa phát hiện thay đổi trong cơ sở dữ liệu. Toàn bộ trang đã tự động cập nhật dữ liệu mới nhất mà không cần tải lại trang.
+            </p>
+
+            <!-- Actions -->
+            <div class="flex items-center gap-3">
+                <button type="button" onclick="dismissCenterModal()" class="flex-1 py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined text-[18px]">check_circle</span>
+                    <span>Đã hiểu</span>
+                </button>
+            </div>
+
+            <!-- Bottom Progress Countdown Bar -->
+            <div class="absolute bottom-0 left-0 right-0 h-1 bg-slate-100 overflow-hidden">
+                <div id="realtime-center-progress" class="h-full bg-gradient-to-r from-emerald-500 to-teal-500 w-full"></div>
+            </div>
+        </div>
+    </div>
+
     <script>
         function escapeHtml(text) {
             if (!text) return '';
@@ -1327,6 +1381,122 @@
             };
             return String(text).replace(/[&<>"']/g, m => map[m]);
         }
+
+        // Realtime Sound Chime Synthesizer (Web Audio API - không phụ thuộc file mp3)
+        function playRealtimeChime() {
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContext) return;
+                const ctx = new AudioContext();
+                if (ctx.state === 'suspended') {
+                    ctx.resume();
+                }
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.15);
+                gain.gain.setValueAtTime(0.12, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.5);
+            } catch (e) {}
+        }
+
+        // Center Screen Realtime Notification Engine
+        let centerModalTimer = null;
+
+        function showCenterRealtimeAlert(title, message, icon = 'sync', type = 'success', duration = 3800) {
+            const modal = document.getElementById('realtime-center-modal');
+            const card = document.getElementById('realtime-center-card');
+            const titleEl = document.getElementById('realtime-center-title');
+            const msgEl = document.getElementById('realtime-center-message');
+            const iconEl = document.getElementById('realtime-center-icon');
+            const iconBg = document.getElementById('realtime-center-icon-bg');
+            const tagEl = document.getElementById('realtime-center-tag');
+            const badgeEl = document.getElementById('realtime-center-badge');
+            const pingEl = document.getElementById('realtime-center-ping');
+            const progressEl = document.getElementById('realtime-center-progress');
+            const glowEl = document.getElementById('realtime-center-glow');
+
+            if (!modal || !card) return;
+
+            if (centerModalTimer) clearTimeout(centerModalTimer);
+
+            if (titleEl) titleEl.textContent = title || 'Dữ Liệu CSDL Đã Cập Nhật';
+            if (msgEl) msgEl.innerHTML = message || 'Hệ thống đã tự động cập nhật dữ liệu mới nhất mà không cần tải lại trang.';
+            if (iconEl) iconEl.textContent = icon || 'sync';
+
+            if (type === 'danger' || type === 'delete') {
+                if (iconBg) iconBg.className = 'relative w-16 h-16 rounded-2xl bg-gradient-to-br from-rose-500 to-red-600 text-white flex items-center justify-center shadow-lg shadow-rose-500/25';
+                if (badgeEl) badgeEl.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider mb-2.5 bg-rose-50 text-rose-700 border border-rose-200';
+                if (tagEl) tagEl.textContent = 'ĐÃ XÓA DỮ LIỆU CSDL';
+                if (pingEl) pingEl.className = 'absolute inset-0 rounded-2xl bg-rose-400/30 animate-ping';
+                if (progressEl) progressEl.className = 'h-full bg-gradient-to-r from-rose-500 to-red-500 w-full';
+                if (glowEl) glowEl.className = 'absolute -top-12 left-1/2 -translate-x-1/2 w-48 h-24 bg-gradient-to-r from-rose-400/30 via-red-400/30 to-amber-400/30 blur-2xl rounded-full pointer-events-none';
+            } else if (type === 'warning' || type === 'edit') {
+                if (iconBg) iconBg.className = 'relative w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center shadow-lg shadow-amber-500/25';
+                if (badgeEl) badgeEl.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider mb-2.5 bg-amber-50 text-amber-700 border border-amber-200';
+                if (tagEl) tagEl.textContent = 'ĐÃ CHỈNH SỬA DỮ LIỆU CSDL';
+                if (pingEl) pingEl.className = 'absolute inset-0 rounded-2xl bg-amber-400/30 animate-ping';
+                if (progressEl) progressEl.className = 'h-full bg-gradient-to-r from-amber-500 to-orange-500 w-full';
+                if (glowEl) glowEl.className = 'absolute -top-12 left-1/2 -translate-x-1/2 w-48 h-24 bg-gradient-to-r from-amber-400/30 via-orange-400/30 to-yellow-400/30 blur-2xl rounded-full pointer-events-none';
+            } else if (type === 'info' || type === 'primary') {
+                if (iconBg) iconBg.className = 'relative w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center shadow-lg shadow-blue-500/25';
+                if (badgeEl) badgeEl.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider mb-2.5 bg-blue-50 text-blue-700 border border-blue-200';
+                if (tagEl) tagEl.textContent = 'ĐỒNG BỘ CSDL REALTIME';
+                if (pingEl) pingEl.className = 'absolute inset-0 rounded-2xl bg-blue-400/30 animate-ping';
+                if (progressEl) progressEl.className = 'h-full bg-gradient-to-r from-blue-500 to-indigo-500 w-full';
+                if (glowEl) glowEl.className = 'absolute -top-12 left-1/2 -translate-x-1/2 w-48 h-24 bg-gradient-to-r from-blue-400/30 via-indigo-400/30 to-cyan-400/30 blur-2xl rounded-full pointer-events-none';
+            } else {
+                if (iconBg) iconBg.className = 'relative w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-lg shadow-emerald-500/25';
+                if (badgeEl) badgeEl.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider mb-2.5 bg-emerald-50 text-emerald-700 border border-emerald-200';
+                if (tagEl) tagEl.textContent = 'ĐỒNG BỘ CSDL REALTIME';
+                if (pingEl) pingEl.className = 'absolute inset-0 rounded-2xl bg-emerald-400/30 animate-ping';
+                if (progressEl) progressEl.className = 'h-full bg-gradient-to-r from-emerald-500 to-teal-500 w-full';
+                if (glowEl) glowEl.className = 'absolute -top-12 left-1/2 -translate-x-1/2 w-48 h-24 bg-gradient-to-r from-emerald-400/30 via-teal-400/30 to-blue-400/30 blur-2xl rounded-full pointer-events-none';
+            }
+
+            modal.classList.remove('pointer-events-none', 'opacity-0');
+            modal.classList.add('opacity-100');
+            card.classList.remove('scale-90', 'translate-y-4', 'opacity-0');
+            card.classList.add('scale-100', 'translate-y-0', 'opacity-100');
+
+            playRealtimeChime();
+
+            if (progressEl) {
+                progressEl.style.transition = 'none';
+                progressEl.style.width = '100%';
+                setTimeout(() => {
+                    progressEl.style.transition = `width ${duration}ms linear`;
+                    progressEl.style.width = '0%';
+                }, 40);
+            }
+
+            if (duration > 0) {
+                centerModalTimer = setTimeout(() => {
+                    dismissCenterModal();
+                }, duration);
+            }
+        }
+
+        function dismissCenterModal() {
+            const modal = document.getElementById('realtime-center-modal');
+            const card = document.getElementById('realtime-center-card');
+            if (centerModalTimer) clearTimeout(centerModalTimer);
+            if (modal && card) {
+                modal.classList.add('opacity-0', 'pointer-events-none');
+                modal.classList.remove('opacity-100');
+                card.classList.add('scale-90', 'translate-y-4', 'opacity-0');
+                card.classList.remove('scale-100', 'translate-y-0', 'opacity-100');
+            }
+        }
+
+        window.showCenterRealtimeAlert = showCenterRealtimeAlert;
+        window.dismissCenterModal = dismissCenterModal;
+        window.playRealtimeChime = playRealtimeChime;
 
         // Enterprise Confirmation Modal Engine
         let confirmModalCallback = null;
@@ -2319,6 +2489,15 @@
                     if (typeof showRealtimeToast === 'function') {
                         showRealtimeToast('Hoàn Tất', data.message || 'Thao tác thành công', '', 'check_circle', 'bg-emerald-500');
                     }
+                    if (typeof showCenterRealtimeAlert === 'function') {
+                        let actionType = 'success';
+                        let actionIcon = 'check_circle';
+                        if (url.includes('/reject') || method === 'DELETE') {
+                            actionType = 'danger';
+                            actionIcon = method === 'DELETE' ? 'delete' : 'cancel';
+                        }
+                        showCenterRealtimeAlert('Đã Cập Nhật Trạng Thái CSDL', data.message || 'Thao tác phê duyệt đã được đồng bộ vào CSDL thành công.', actionIcon, actionType);
+                    }
                     clearAdminPageCache();
 
                     if (data.stats) {
@@ -3150,6 +3329,50 @@
                     });
                 }
 
+                // Phát hiện thay đổi trong CSDL (Thêm / Sửa / Xóa) realtime từ DB hoặc thao tác bên ngoài
+                if (data.db_version) {
+                    if (window.__lastDbVersion && window.__lastDbVersion !== data.db_version) {
+                        const oldSnap = window.__lastDbSnapshot || {};
+                        const newSnap = data.db_snapshot || {};
+                        const oldCheck = oldSnap.checksums || {};
+                        const newCheck = newSnap.checksums || {};
+                        
+                        const latestAct = data.latest_user_action || (newSnap.latest_user_action || null);
+                        const isUserDeleted = (latestAct && (latestAct.action === 'user.deleted' || latestAct.action === 'user.force_deleted')) ||
+                            (newSnap.users && oldSnap.users && (newSnap.users.count < oldSnap.users.count || newSnap.users.active_count < oldSnap.users.active_count));
+
+                        // CHỈ hiển thị thông báo giữa màn hình khi người dùng đã bị xóa
+                        if (isUserDeleted) {
+                            const rawName = (latestAct && latestAct.user_name) ? latestAct.user_name : '';
+                            const targetUserName = rawName ? `"${rawName}"` : '';
+                            const isForce = latestAct && latestAct.action === 'user.force_deleted';
+                            const changeTitle = 'Đã Xóa Người Dùng';
+                            const changeMsg = targetUserName
+                                ? `Người dùng ${targetUserName} đã bị xóa.`
+                                : 'Người dùng đã bị xóa.';
+                            const changeIcon = isForce ? 'delete_forever' : 'person_remove';
+
+                            if (!window.__adminLastActionAt || (Date.now() - window.__adminLastActionAt >= 4000)) {
+                                showCenterRealtimeAlert(changeTitle, changeMsg, changeIcon, 'danger', 4000);
+                            }
+                        }
+
+                        // Tự động làm mới trang hiện tại không cần reload nếu người dùng không đang gõ phím
+                        const isTyping = document.activeElement && (
+                            document.activeElement.tagName === 'INPUT' || 
+                            document.activeElement.tagName === 'TEXTAREA' || 
+                            document.activeElement.isContentEditable
+                        );
+                        if (!isTyping && typeof instantNavigate === 'function') {
+                            const currentUrl = new URL(window.location.href);
+                            currentUrl.searchParams.set('fresh', '1');
+                            instantNavigate(currentUrl.toString(), false, true);
+                        }
+                    }
+                    window.__lastDbVersion = data.db_version;
+                    window.__lastDbSnapshot = data.db_snapshot;
+                }
+
                 isNotifInit = true;
             })
             .catch(() => {});
@@ -3332,41 +3555,48 @@
         initAdminFlashAlerts();
 
         function prefetchUrl(url) {
-            if (!url || adminPageCache.has(url)) return;
-            try {
-                const parsed = new URL(url, window.location.origin);
-                if (parsed.origin !== window.location.origin || !parsed.pathname.startsWith('/admin')) return;
-
-                fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-                    .then(res => {
-                        if (res.ok) return res.text();
-                        return null;
-                    })
-                    .then(html => {
-                        if (html) {
-                            adminPageCache.set(url, stripFlashFromHtml(html));
-                            if (adminPageCache.size > 25) {
-                                const firstKey = adminPageCache.keys().next().value;
-                                adminPageCache.delete(firstKey);
-                            }
-                        }
-                    })
-                    .catch(() => {});
-            } catch (e) {}
+            // Không lưu đệm HTML vĩnh viễn trong RAM để đảm bảo mọi click đều truy vấn dữ liệu thực từ CSDL
+            return;
         }
 
-        function instantNavigate(url, pushState = true) {
+        function refreshAdminData(e) {
+            if (e) e.preventDefault();
+            const icon = document.getElementById('refresh-db-icon');
+            if (icon) icon.classList.add('animate-spin');
+
+            clearAdminPageCache();
+
+            const currentUrl = new URL(window.location.href);
+            currentUrl.searchParams.set('fresh', '1');
+
+            instantNavigate(currentUrl.toString(), false);
+
+            if (typeof checkRealtimeAdminNotifications === 'function') {
+                checkRealtimeAdminNotifications();
+            }
+
+            setTimeout(() => {
+                if (icon) icon.classList.remove('animate-spin');
+                if (typeof showRealtimeToast === 'function') {
+                    showRealtimeToast('Đã Đồng Bộ CSDL', 'Dữ liệu mới nhất từ database đã được tải lại thành công!', '', 'sync', 'bg-emerald-600');
+                }
+            }, 350);
+        }
+
+        function instantNavigate(url, pushState = true, preserveScroll = false) {
             // Ngay lập tức ẩn thông báo flash của trang trước, đảm bảo không bao giờ lan sang chức năng mới
             const activeFlash = document.getElementById('admin-flash-container');
             if (activeFlash) {
                 activeFlash.innerHTML = '';
             }
 
-            // Luôn luôn cuộn lên đỉnh đầu trang khi bấm chuyển chức năng / liên kết
-            scrollAdminToTop(false);
+            const savedScrollY = window.scrollY;
+            if (!preserveScroll) {
+                scrollAdminToTop(false);
+            }
 
             const bar = document.getElementById('admin-top-progress-bar');
-            if (bar) {
+            if (bar && !preserveScroll) {
                 bar.style.opacity = '1';
                 bar.style.width = '35%';
             }
@@ -3377,20 +3607,21 @@
             const controller = new AbortController();
             currentNavAbort = controller;
 
-            const cachedHtml = adminPageCache.get(url);
-            const fetchPromise = cachedHtml
-                ? Promise.resolve(cachedHtml)
-                : fetch(url, { signal: controller.signal, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-                    .then(res => {
-                        if (!res.ok) throw new Error('Network error');
-                        return res.text();
-                    })
-                    .then(html => {
-                        adminPageCache.set(url, stripFlashFromHtml(html));
-                        return html;
-                    });
+            // Luôn luôn fetch dữ liệu mới nhất từ server để đảm bảo dữ liệu hiển thị trong Admin luôn 100% đồng bộ với Database realtime
+            const fetchPromise = fetch(url, {
+                signal: controller.signal,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Cache-Control': 'no-cache, no-store, must-revalidate',
+                    'Pragma': 'no-cache'
+                }
+            })
+            .then(res => {
+                if (!res.ok) throw new Error('Network error');
+                return res.text();
+            });
 
-            if (bar) bar.style.width = '70%';
+            if (bar && !preserveScroll) bar.style.width = '70%';
 
             fetchPromise.then(html => {
                 const parser = new DOMParser();
@@ -3437,8 +3668,12 @@
                         });
 
                         currentMain.style.opacity = '1';
-                        scrollAdminToTop(false);
-                        requestAnimationFrame(() => scrollAdminToTop(false));
+                        if (!preserveScroll) {
+                            scrollAdminToTop(false);
+                            requestAnimationFrame(() => scrollAdminToTop(false));
+                        } else {
+                            window.scrollTo({ top: savedScrollY, behavior: 'instant' });
+                        }
 
                         initAdminFlashAlerts();
                         updateSidebarActiveLinks(url);
@@ -3600,29 +3835,8 @@
             }
         }, { passive: true });
 
-        // Intelligent Idle Prefetch: nạp ngầm các trang quản trị chính khi CPU/mạng rảnh (0ms click latency)
-        const idlePrefetchSidebar = () => {
-            try {
-                const links = Array.from(document.querySelectorAll('.sidebar-item, #admin-sidebar a[href^="/admin"]'))
-                    .map(a => a.href)
-                    .filter(h => h && !h.includes('#') && !h.includes('logout') && !adminPageCache.has(h));
-                let i = 0;
-                const prefetchNext = () => {
-                    if (i >= links.length) return;
-                    prefetchUrl(links[i++]);
-                    if ('requestIdleCallback' in window) {
-                        window.requestIdleCallback(prefetchNext, { timeout: 2000 });
-                    } else {
-                        setTimeout(prefetchNext, 350);
-                    }
-                };
-                if ('requestIdleCallback' in window) {
-                    window.requestIdleCallback(prefetchNext, { timeout: 1500 });
-                } else {
-                    setTimeout(prefetchNext, 600);
-                }
-            } catch (e) {}
-        };
+        // Intelligent Idle Prefetch: Đã vô hiệu hóa nạp ngầm để bảo đảm mỗi click luôn lấy dữ liệu mới nhất từ CSDL
+        const idlePrefetchSidebar = () => {};
         if (document.readyState === 'complete') {
             setTimeout(idlePrefetchSidebar, 600);
         } else {

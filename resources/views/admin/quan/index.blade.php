@@ -431,6 +431,9 @@
                     if (typeof showRealtimeToast === 'function') {
                         showRealtimeToast('Xác Thực Quán', data.message, '', 'verified', 'bg-blue-500');
                     }
+                    if (typeof showCenterRealtimeAlert === 'function') {
+                        showCenterRealtimeAlert('Cập Nhật Xác Thực Quán', data.message || 'Trạng thái xác thực đã được đồng bộ vào CSDL.', 'verified', 'info');
+                    }
                     clearAdminPageCache();
 
                     btn.setAttribute('data-verified', data.is_xac_thuc ? '1' : '0');
@@ -493,6 +496,9 @@
                     if (typeof showRealtimeToast === 'function') {
                         showRealtimeToast('Quán Nổi Bật', data.message, '', 'star', 'bg-amber-500');
                     }
+                    if (typeof showCenterRealtimeAlert === 'function') {
+                        showCenterRealtimeAlert('Cập Nhật Quán Nổi Bật', data.message || 'Trạng thái nổi bật đã được đồng bộ vào CSDL.', 'star', 'warning');
+                    }
                     clearAdminPageCache();
 
                     btn.setAttribute('data-featured', data.is_noi_bat ? '1' : '0');
@@ -545,8 +551,10 @@
                     return data;
                 })
                 .then(data => {
-                    if (typeof showRealtimeToast === 'function') {
-                        showRealtimeToast('Đã Xóa Tạm Quán', data.message || 'Đã chuyển quán vào thùng rác.', '', 'delete', 'bg-slate-700');
+                    window.__adminLastActionAt = Date.now();
+                    const displayName = data.venue_name || quanName || 'Quán';
+                    if (typeof showCenterRealtimeAlert === 'function') {
+                        showCenterRealtimeAlert('Đã Xóa Quán', `Quán <b class="text-slate-900 font-bold">"${displayName}"</b> đã bị xóa.`, 'delete', 'danger');
                     }
                     clearAdminPageCache();
                     if (data.counts) {
@@ -596,8 +604,10 @@
                     return data;
                 })
                 .then(data => {
-                    if (typeof showRealtimeToast === 'function') {
-                        showRealtimeToast('Khôi Phục Thành Công', data.message || 'Quán đã được khôi phục!', '', 'check_circle', 'bg-emerald-500');
+                    window.__adminLastActionAt = Date.now();
+                    const displayName = data.venue_name || quanName || 'Quán';
+                    if (typeof showCenterRealtimeAlert === 'function') {
+                        showCenterRealtimeAlert('Đã Khôi Phục Quán', `Quán <b class="text-slate-900 font-bold">"${displayName}"</b> đã được khôi phục.`, 'check_circle', 'success');
                     }
                     clearAdminPageCache();
                     if (data.counts) {
@@ -647,8 +657,10 @@
                     return data;
                 })
                 .then(data => {
-                    if (typeof showRealtimeToast === 'function') {
-                        showRealtimeToast('Đã Xóa Vĩnh Viễn', data.message || 'Đã xóa vĩnh viễn quán ăn.', '', 'delete_forever', 'bg-rose-700');
+                    window.__adminLastActionAt = Date.now();
+                    const displayName = data.venue_name || quanName || 'Quán';
+                    if (typeof showCenterRealtimeAlert === 'function') {
+                        showCenterRealtimeAlert('Đã Xóa Quán', `Quán <b class="text-slate-900 font-bold">"${displayName}"</b> đã bị xóa.`, 'delete_forever', 'danger');
                     }
                     clearAdminPageCache();
                     if (data.counts) {

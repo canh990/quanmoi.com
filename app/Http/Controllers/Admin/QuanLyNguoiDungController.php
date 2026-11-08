@@ -51,6 +51,65 @@ class QuanLyNguoiDungController extends Controller
         return view('admin.nguoi-dung.index', compact('users', 'roles'));
     }
 
+    public function store(Request $request)
+    {
+        $this->authorize('create', User::class);
+
+        $validated = $request->validate([
+            'ho_ten' => 'required|string|max:191',
+            'email' => 'required|email|max:191|unique:nguoi_dung,email',
+            'mat_khau' => 'required|string|min:6|max:191',
+            'so_dien_thoai' => 'nullable|string|max:20',
+            'vai_tro_id' => 'nullable|exists:vai_tro,id',
+            'trang_thai' => 'required|in:hoat_dong,bi_khoa',
+            'da_xac_thuc' => 'nullable|boolean',
+        ], [
+            'ho_ten.required' => 'Họ tên người dùng không được để trống.',
+            'email.required' => 'Email không được để trống.',
+            'email.email' => 'Email không đúng định dạng.',
+            'email.unique' => 'Email này đã tồn tại trong hệ thống.',
+            'mat_khau.required' => 'Mật khẩu không được để trống.',
+            'mat_khau.min' => 'Mật khẩu phải có ít nhất 6 ký tự.',
+            'trang_thai.required' => 'Vui lòng chọn trạng thái.',
+        ]);
+
+        $actor = $request->user();
+
+        $user = DB::transaction(function () use ($validated, $actor, $request) {
+            $userData = [
+                'ho_ten' => $validated['ho_ten'],
+                'email' => $validated['email'],
+                'mat_khau' => Hash::make($validated['mat_khau']),
+                'so_dien_thoai' => $validated['so_dien_thoai'] ?? null,
+                'vai_tro_id' => $validated['vai_tro_id'] ?? null,
+                'trang_thai' => $validated['trang_thai'],
+                'da_xac_thuc' => !empty($validated['da_xac_thuc']),
+                'ngay_xac_thuc' => !empty($validated['da_xac_thuc']) ? now() : null,
+                'so_du' => 0,
+            ];
+
+            $user = User::create($userData);
+
+            $this->adminAudit->record($actor, 'user.created', $user, $request, [
+                'ho_ten' => $user->ho_ten,
+                'email' => $user->email,
+                'vai_tro_id' => $user->vai_tro_id,
+            ]);
+
+            return $user;
+        });
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Đã tạo tài khoản \"{$user->ho_ten}\" thành công và đồng bộ vào CSDL!",
+                'user' => $user->load('vaiTro'),
+            ]);
+        }
+
+        return redirect()->route('admin.nguoi-dung.index')->with('success', "Đã tạo người dùng \"{$user->ho_ten}\" thành công!");
+    }
+
     public function edit(string $id)
     {
         $user = User::withTrashed()->findOrFail($id);
@@ -165,8 +224,9 @@ class QuanLyNguoiDungController extends Controller
     public function destroy(Request $request, string $id)
     {
         $actor = $request->user();
-        DB::transaction(function () use ($id, $actor, $request) {
+        $deletedUserName = DB::transaction(function () use ($id, $actor, $request) {
             $user = User::whereKey($id)->lockForUpdate()->firstOrFail();
+            $userName = $user->ho_ten;
             $user->load('vaiTro');
             $this->authorize('delete', $user);
             $this->ensureAdministrativeAccessRemains($actor, $user, $user->isAdmin());
@@ -179,7 +239,10 @@ class QuanLyNguoiDungController extends Controller
             }
 
             $user->delete();
-            $this->adminAudit->record($actor, 'user.deleted', $user, $request, ['soft_deleted_venues' => $venueCount]);
+            $this->adminAudit->record($actor, 'user.deleted', $user, $request, [
+                'user_name' => $userName,
+                'soft_deleted_venues' => $venueCount,
+            ]);
 
             try {
                 $user->notify(new \App\Notifications\UserRoleStatusUpdatedNotification(
@@ -189,20 +252,29 @@ class QuanLyNguoiDungController extends Controller
             } catch (\Throwable $e) {
                 \Illuminate\Support\Facades\Log::warning('User deleted notification error: ' . $e->getMessage());
             }
+
+            return $userName;
         });
 
+        $message = "Người dùng '{$deletedUserName}' đã bị xóa.";
+
         if ($request->wantsJson()) {
-            return response()->json(['success' => true, 'message' => 'Đã xóa tạm thời người dùng và khóa các quán liên quan.']);
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'user_name' => $deletedUserName,
+            ]);
         }
 
-        return redirect()->route('admin.nguoi-dung.index')->with('success', 'Đã xóa tạm thời người dùng và khóa các quán liên quan.');
+        return redirect()->route('admin.nguoi-dung.index')->with('success', $message);
     }
 
     public function restore(Request $request, string $id)
     {
         $actor = $request->user();
-        DB::transaction(function () use ($id, $actor, $request) {
+        $restoredUserName = DB::transaction(function () use ($id, $actor, $request) {
             $user = User::onlyTrashed()->whereKey($id)->lockForUpdate()->firstOrFail();
+            $userName = $user->ho_ten;
             $this->authorize('restore', $user);
             $user->restore();
 
@@ -213,7 +285,10 @@ class QuanLyNguoiDungController extends Controller
                 $venueCount++;
             }
 
-            $this->adminAudit->record($actor, 'user.restored', $user, $request, ['restored_venues' => $venueCount]);
+            $this->adminAudit->record($actor, 'user.restored', $user, $request, [
+                'user_name' => $userName,
+                'restored_venues' => $venueCount,
+            ]);
 
             try {
                 $user->notify(new \App\Notifications\UserRoleStatusUpdatedNotification(
@@ -223,20 +298,29 @@ class QuanLyNguoiDungController extends Controller
             } catch (\Throwable $e) {
                 \Illuminate\Support\Facades\Log::warning('User restored notification error: ' . $e->getMessage());
             }
+
+            return $userName;
         });
 
+        $message = "Đã khôi phục tài khoản '{$restoredUserName}' và các quán liên quan thành công.";
+
         if ($request->wantsJson()) {
-            return response()->json(['success' => true, 'message' => 'Khôi phục tài khoản và các quán liên quan thành công.']);
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'user_name' => $restoredUserName,
+            ]);
         }
 
-        return redirect()->route('admin.nguoi-dung.index')->with('success', 'Khôi phục tài khoản và các quán liên quan thành công.');
+        return redirect()->route('admin.nguoi-dung.index')->with('success', $message);
     }
 
     public function forceDestroy(Request $request, string $id)
     {
         $actor = $request->user();
-        DB::transaction(function () use ($id, $actor, $request) {
+        $deletedUserName = DB::transaction(function () use ($id, $actor, $request) {
             $user = User::withTrashed()->whereKey($id)->lockForUpdate()->firstOrFail();
+            $userName = $user->ho_ten;
             $user->load('vaiTro');
             $this->authorize('forceDelete', $user);
             $this->ensureAdministrativeAccessRemains($actor, $user, $user->isAdmin() && ! $user->trashed());
@@ -247,28 +331,42 @@ class QuanLyNguoiDungController extends Controller
                 $venueCount++;
             }
 
-            $this->adminAudit->record($actor, 'user.force_deleted', $user, $request, ['force_deleted_venues' => $venueCount]);
+            $this->adminAudit->record($actor, 'user.force_deleted', $user, $request, [
+                'user_name' => $userName,
+                'force_deleted_venues' => $venueCount,
+            ]);
             $user->forceDelete();
+
+            return $userName;
         });
 
+        $message = "Người dùng '{$deletedUserName}' đã bị xóa.";
+
         if ($request->wantsJson()) {
-            return response()->json(['success' => true, 'message' => 'Đã xóa vĩnh viễn người dùng và các quán liên quan.']);
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'user_name' => $deletedUserName,
+            ]);
         }
 
-        return redirect()->route('admin.nguoi-dung.index')->with('success', 'Đã xóa vĩnh viễn người dùng và các quán liên quan.');
+        return redirect()->route('admin.nguoi-dung.index')->with('success', $message);
     }
 
     public function toggleXacThuc(Request $request, string $id)
     {
         $actor = $request->user();
-        $verified = DB::transaction(function () use ($id, $actor, $request) {
+        [$verified, $userName] = DB::transaction(function () use ($id, $actor, $request) {
             $user = User::withTrashed()->whereKey($id)->lockForUpdate()->firstOrFail();
             $this->authorize('update', $user);
             $user->da_xac_thuc = ! $user->da_xac_thuc;
             $user->ngay_xac_thuc = $user->da_xac_thuc ? now() : null;
             $user->save();
 
-            $this->adminAudit->record($actor, 'user.verification_toggled', $user, $request, ['verified' => $user->da_xac_thuc]);
+            $this->adminAudit->record($actor, 'user.verification_toggled', $user, $request, [
+                'user_name' => $user->ho_ten,
+                'verified' => $user->da_xac_thuc,
+            ]);
 
             $user->clearPermissionCache();
             try {
@@ -281,18 +379,23 @@ class QuanLyNguoiDungController extends Controller
                 \Illuminate\Support\Facades\Log::warning('User verification toggle notification error: ' . $e->getMessage());
             }
 
-            return $user->da_xac_thuc;
+            return [$user->da_xac_thuc, $user->ho_ten];
         });
+
+        $message = $verified 
+            ? "Đã cấp Tick Xanh xác thực cho '{$userName}'." 
+            : "Đã gỡ Tick Xanh xác thực của '{$userName}'.";
 
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'verified' => $verified,
-                'message' => $verified ? 'Đã cấp Tick Xanh cho người dùng.' : 'Đã gỡ Tick Xanh của người dùng.',
+                'user_name' => $userName,
+                'message' => $message,
             ]);
         }
 
-        return back()->with('success', $verified ? 'Đã cấp Tick Xanh cho người dùng.' : 'Đã gỡ Tick Xanh của người dùng.');
+        return back()->with('success', $message);
     }
 
     public function toggleKhoa(Request $request, string $id)
@@ -321,7 +424,10 @@ class QuanLyNguoiDungController extends Controller
             }
 
             $action = $newStatus === 'bi_khoa' ? 'user.locked' : 'user.unlocked';
-            $this->adminAudit->record($actor, $action, $user, $request, ['trang_thai' => $newStatus]);
+            $this->adminAudit->record($actor, $action, $user, $request, [
+                'user_name' => $user->ho_ten,
+                'trang_thai' => $newStatus,
+            ]);
             $user->clearPermissionCache();
 
             try {
@@ -347,6 +453,7 @@ class QuanLyNguoiDungController extends Controller
                 'success' => true,
                 'is_locked' => $isLocked,
                 'trang_thai' => $user->trang_thai,
+                'user_name' => $user->ho_ten,
                 'message' => $message,
             ]);
         }

@@ -625,9 +625,17 @@
                     badge.innerText = `${newCount} ưu đãi`;
                     if (headerCount) headerCount.innerText = newCount;
                 }
-                alert('✅ Đã xóa voucher thành công!');
+                if (typeof showCenterRealtimeAlert === 'function') {
+                    showCenterRealtimeAlert('Đã Xóa Mã Khuyến Mãi Khỏi CSDL', `Voucher "${title || ''}" đã được xóa khỏi CSDL.`, 'delete', 'danger');
+                } else if (typeof showRealtimeToast === 'function') {
+                    showRealtimeToast('Đã Xóa Voucher', 'Voucher đã được xóa thành công', '', 'delete', 'bg-slate-700');
+                }
             } else {
-                alert('Lỗi: ' + (data.message || 'Không thể xóa voucher'));
+                if (typeof showRealtimeToast === 'function') {
+                    showRealtimeToast('Lỗi Xóa Voucher', data.message || 'Không thể xóa voucher', '', 'error', 'bg-rose-500');
+                } else {
+                    alert('Lỗi: ' + (data.message || 'Không thể xóa voucher'));
+                }
             }
         } catch (err) {
             alert('Lỗi kết nối khi xóa voucher.');
@@ -668,11 +676,24 @@
                         badge.innerText = 'Tạm dừng';
                     }
                 }
+                if (typeof showCenterRealtimeAlert === 'function') {
+                    showCenterRealtimeAlert('Cập Nhật Trạng Thái Ưu Đãi', 'Trạng thái ưu đãi đã được đồng bộ vào CSDL.', 'local_activity', 'info');
+                } else if (typeof showRealtimeToast === 'function') {
+                    showRealtimeToast('Trạng Thái Voucher', data.message || 'Đã cập nhật trạng thái', '', 'local_activity', 'bg-emerald-600');
+                }
             } else {
-                alert('Không thể thay đổi trạng thái.');
+                if (typeof showRealtimeToast === 'function') {
+                    showRealtimeToast('Lỗi Cập Nhật', 'Không thể thay đổi trạng thái.', '', 'error', 'bg-rose-500');
+                } else {
+                    alert('Không thể thay đổi trạng thái.');
+                }
             }
         } catch (err) {
-            alert('Lỗi kết nối.');
+            if (typeof showRealtimeToast === 'function') {
+                showRealtimeToast('Lỗi Kết Nối', 'Không thể kết nối máy chủ.', '', 'error', 'bg-rose-500');
+            } else {
+                alert('Lỗi kết nối.');
+            }
         }
     }
 
@@ -734,14 +755,33 @@
         .then(async res => {
             const resData = await res.json();
             if (res.ok && resData.success) {
-                alert('Thành công: ' + resData.message);
-                setTimeout(() => window.location.reload(), 800);
+                if (typeof showCenterRealtimeAlert === 'function') {
+                    showCenterRealtimeAlert('Đã Thêm Mã Khuyến Mãi Vào CSDL', resData.message || 'Mã ưu đãi đã được lưu và kích hoạt thành công!', 'local_activity', 'success');
+                } else if (typeof showRealtimeToast === 'function') {
+                    showRealtimeToast('Tạo Voucher Thành Công', resData.message || 'Khuyến mãi đã được tạo thành công!', '', 'check_circle', 'bg-emerald-600');
+                }
+                clearAdminPageCache();
+                if (typeof instantNavigate === 'function') {
+                    instantNavigate(window.location.href, false, true);
+                } else {
+                    setTimeout(() => window.location.reload(), 1000);
+                }
             } else {
                 const errorMsg = resData.message || (resData.errors ? Object.values(resData.errors).flat().join('\n') : 'Không thể lưu ưu đãi');
-                alert('Lỗi: ' + errorMsg);
+                if (typeof showRealtimeToast === 'function') {
+                    showRealtimeToast('Lỗi Lưu Voucher', errorMsg, '', 'error', 'bg-rose-500');
+                } else {
+                    alert('Lỗi: ' + errorMsg);
+                }
             }
         })
-        .catch(() => alert('Lỗi máy chủ khi lưu ưu đãi.'))
+        .catch(() => {
+            if (typeof showRealtimeToast === 'function') {
+                showRealtimeToast('Lỗi Máy Chủ', 'Không thể lưu ưu đãi vào CSDL.', '', 'error', 'bg-rose-500');
+            } else {
+                alert('Lỗi máy chủ khi lưu ưu đãi.');
+            }
+        })
         .finally(() => {
             btn.disabled = false;
             btn.innerHTML = '<span class="material-symbols-outlined text-[16px]">check_circle</span> Lưu & Kích Hoạt Khuyến Mãi Cho Quán';
