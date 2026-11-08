@@ -29,9 +29,9 @@
                 <span>Xuất CSV / Excel</span>
             </a>
 
-            <a href="{{ route('admin.thong-ke.index') }}" class="btn-enterprise btn-enterprise-secondary" title="Xem biểu đồ thống kê tổng hợp">
-                <span class="material-symbols-outlined">query_stats</span>
-                <span>Biểu đồ thống kê</span>
+            <a href="{{ route('admin.thong-ke.index') }}#admin-ai-revenue-section" class="btn-enterprise btn-enterprise-primary" title="Xem AI CFO phân tích doanh thu toàn sàn & biểu đồ thống kê">
+                <span class="material-symbols-outlined">auto_awesome</span>
+                <span>AI Phân tích doanh thu</span>
             </a>
         </div>
     </div>

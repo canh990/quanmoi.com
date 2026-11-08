@@ -190,7 +190,7 @@
         </section>
 
         {{-- SECTION 1.5: Quán Ăn Gần Bạn (Tách riêng nằm ở dưới Quán Nổi Bật) --}}
-        <section class="bg-white py-16 border-t border-gray-100" id="home-nearby-section">
+        <section class="bg-white py-16" id="home-nearby-section">
             <div class="max-w-[1240px] mx-auto px-container-margin">
                 <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
                     <div>
@@ -250,7 +250,7 @@
 
                 
         {{-- SECTION: Mới từ cộng đồng (Giao diện cũ) --}}
-        <section class="bg-surface-container-low py-10 border-t border-gray-100/60" id="home-community-section">
+        <section class="bg-surface-container-low py-10" id="home-community-section">
             <div class="max-w-[1240px] mx-auto px-container-margin">
                 <div class="rounded-[24px] sm:rounded-[28px] bg-white border border-gray-100 shadow-sm p-4 sm:p-6 md:p-7">
                     <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-3 sm:gap-4 mb-5 sm:mb-6">
@@ -697,7 +697,7 @@
 
                 <div class="absolute top-2 right-2 sm:top-3 sm:right-3 flex items-center gap-1 sm:gap-1.5 z-10">
                     ${(quan.shopeefood_url || quan.co_shopeefood) ? `
-                        <span class="qm-venue-badge-status bg-[#EE4D2D]/95 text-white shadow-sm" title="Có giao hàng qua ShopeeFood">
+                        <span class="qm-venue-badge-status qm-venue-badge-shopee shadow-sm" title="Có giao hàng qua ShopeeFood">
                             <svg class="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-current shrink-0" viewBox="0 0 24 24" aria-hidden="true">
                                 <path d="M19 7c0-1.1-.9-2-2-2h-3v2h3v2.65L13.52 14H10V9H6c-2.21 0-4 1.79-4 4v3h2c0 1.66 1.34 3 3 3s3-1.34 3-3h4.18c.41 1.16 1.51 2 2.82 2 1.66 0 3-1.34 3-3h2v-5l-3-3zm-12 10c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm11 0c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zM5 11h3v3H4.2c.4-1.2 1.5-2 2.8-2z"/>
                             </svg>
@@ -705,7 +705,7 @@
                         </span>
                     ` : ''}
                     ${quan.dang_mo_cua ? `
-                        <span class="qm-venue-badge-status bg-emerald-600/95 text-white">
+                        <span class="qm-venue-badge-status qm-venue-badge-open">
                             <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
                             <span>Mở cửa</span>
                         </span>
@@ -723,7 +723,7 @@
                         <span class="truncate">${loaiHinh}</span>
                     </span>
                     ${distanceKm !== null ? `
-                        <span class="qm-venue-badge-status bg-primary/95 text-white whitespace-nowrap" title="Cách vị trí của bạn ${distanceKm} km">
+                        <span class="qm-venue-badge-status qm-venue-badge-distance whitespace-nowrap" title="Cách vị trí của bạn ${distanceKm} km">
                             <span class="material-symbols-outlined text-[11px] sm:text-[12px]" style="font-variation-settings: 'FILL' 1;">near_me</span>
                             <span>${distanceKm} km</span>
                         </span>

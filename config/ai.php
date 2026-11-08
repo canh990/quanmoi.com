@@ -21,8 +21,8 @@ return [
         'api_keys' => env('GEMINI_API_KEYS')
             ? array_filter(array_map('trim', explode(',', (string) env('GEMINI_API_KEYS'))))
             : (env('GEMINI_API_KEY') ? [trim((string) env('GEMINI_API_KEY'))] : []),
-        'model' => env('GEMINI_MODEL', 'gemini-1.5-flash'),
-        'fallback_models' => ['gemini-1.5-flash-8b', 'gemini-2.0-flash-exp', 'gemini-1.5-pro'],
+        'model' => env('GEMINI_MODEL', 'gemini-2.0-flash'),
+        'fallback_models' => ['gemini-2.0-flash', 'gemini-2.5-flash', 'gemini-1.5-flash'],
         'timeout' => (int) env('GEMINI_TIMEOUT', 10),
     ],
 
