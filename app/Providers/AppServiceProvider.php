@@ -147,6 +147,56 @@ class AppServiceProvider extends ServiceProvider
                 }
             }
         });
+
+        // Tự động xóa sạch mọi cache liên quan khi có bất kỳ thao tác Thêm / Sửa / Xóa nào trên Models
+        $clearAdminStatsCache = function () {
+            \Illuminate\Support\Facades\Cache::forget('admin_dashboard_overview_stats');
+            \Illuminate\Support\Facades\Cache::forget('admin_dashboard_charts_6m');
+            \Illuminate\Support\Facades\Cache::forget('bando_categories_v2');
+            \Illuminate\Support\Facades\Cache::forever('db_last_mutated_at', (string) microtime(true));
+        };
+
+        \App\Models\Quan::saved($clearAdminStatsCache);
+        \App\Models\Quan::deleted(function ($quan) use ($clearAdminStatsCache) {
+            $clearAdminStatsCache();
+            \Illuminate\Support\Facades\Cache::forever('last_deleted_quan_info', [
+                'id' => (string) $quan->getKey(),
+                'name' => $quan->ten_quan,
+                'deleted_at' => (string) microtime(true),
+            ]);
+        });
+        \App\Models\Quan::restored($clearAdminStatsCache);
+
+        \App\Models\User::saved($clearAdminStatsCache);
+        \App\Models\User::deleted(function ($user) use ($clearAdminStatsCache) {
+            $clearAdminStatsCache();
+            \Illuminate\Support\Facades\Cache::forever('last_deleted_user_info', [
+                'id' => (string) $user->getKey(),
+                'name' => $user->ho_ten,
+                'email' => $user->email,
+                'deleted_at' => (string) microtime(true),
+            ]);
+        });
+        \App\Models\User::restored($clearAdminStatsCache);
+
+        \App\Models\DanhMucQuan::saved($clearAdminStatsCache);
+        \App\Models\DanhMucQuan::deleted($clearAdminStatsCache);
+
+        \App\Models\Blog::saved($clearAdminStatsCache);
+        \App\Models\Blog::deleted($clearAdminStatsCache);
+
+        \App\Models\ThanhToan::saved($clearAdminStatsCache);
+        \App\Models\ThanhToan::deleted($clearAdminStatsCache);
+
+        if (class_exists(\App\Models\KhuyenMai::class)) {
+            \App\Models\KhuyenMai::saved($clearAdminStatsCache);
+            \App\Models\KhuyenMai::deleted($clearAdminStatsCache);
+        }
+
+        if (class_exists(\App\Models\VideoShort::class)) {
+            \App\Models\VideoShort::saved($clearAdminStatsCache);
+            \App\Models\VideoShort::deleted($clearAdminStatsCache);
+        }
     }
 
     private function rateLimitKey(Request $request): string

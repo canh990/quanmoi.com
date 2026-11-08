@@ -425,7 +425,9 @@
                     }
                 }
 
-                if (window.showToast) {
+                if (typeof showCenterRealtimeAlert === 'function') {
+                    showCenterRealtimeAlert('Cập Nhật Danh Mục Ẩm Thực', data.message || 'Trạng thái danh mục đã được đồng bộ vào CSDL.', 'category', 'info');
+                } else if (window.showToast) {
                     window.showToast(data.message, 'success');
                 }
             }

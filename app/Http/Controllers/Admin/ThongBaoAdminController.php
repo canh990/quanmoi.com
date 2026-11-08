@@ -429,8 +429,48 @@ class ThongBaoAdminController extends Controller
         // 5. Lấy tất cả Audit Logs gần đây (tất cả các thao tác thêm, sửa, xóa, duyệt, từ chối, phân quyền, v.v.)
         $recentAuditLogs = AdminAuditLog::with('actor:id,ho_ten')
             ->latest()
-            ->take(40)
+            ->take(50)
             ->get();
+
+        // Tiền xử lý truy vấn tên thực thể từ CSDL để thông báo luôn hiển thị chính xác tên quán, tên user, tên bài viết
+        $userTargetIds = [];
+        $quanTargetIds = [];
+        $blogTargetIds = [];
+        $videoTargetIds = [];
+
+        foreach ($recentAuditLogs as $log) {
+            $tType = (string) $log->target_type;
+            $tId = (string) $log->target_id;
+            if ($tId) {
+                if ($tType === User::class || str_ends_with($tType, 'User')) {
+                    $userTargetIds[] = $tId;
+                } elseif ($tType === Quan::class || str_ends_with($tType, 'Quan')) {
+                    $quanTargetIds[] = $tId;
+                } elseif ($tType === Blog::class || str_ends_with($tType, 'Blog')) {
+                    $blogTargetIds[] = $tId;
+                } elseif ($tType === VideoShort::class || str_ends_with($tType, 'VideoShort')) {
+                    $videoTargetIds[] = $tId;
+                }
+            }
+            if (!empty($log->metadata['user_id'])) {
+                $userTargetIds[] = (string) $log->metadata['user_id'];
+            }
+            if (!empty($log->metadata['quan_id'])) {
+                $quanTargetIds[] = (string) $log->metadata['quan_id'];
+            }
+        }
+
+        $cachedDeletedUsers = \Illuminate\Support\Facades\Cache::get('deleted_users_names', []);
+        $lastDeletedInfo = \Illuminate\Support\Facades\Cache::get('last_deleted_user_info');
+        if ($lastDeletedInfo && !empty($lastDeletedInfo['id']) && !empty($lastDeletedInfo['name'])) {
+            $cachedDeletedUsers[$lastDeletedInfo['id']] = $lastDeletedInfo['name'];
+        }
+
+        $userMap = !empty($userTargetIds) ? User::withTrashed()->whereIn('id', array_unique($userTargetIds))->pluck('ho_ten', 'id')->all() : [];
+        $userMap = array_merge($cachedDeletedUsers, $userMap);
+        $quanMap = !empty($quanTargetIds) ? Quan::withTrashed()->whereIn('id', array_unique($quanTargetIds))->pluck('ten_quan', 'id')->all() : [];
+        $blogMap = !empty($blogTargetIds) ? Blog::withTrashed()->whereIn('id', array_unique($blogTargetIds))->pluck('title', 'id')->all() : [];
+        $videoMap = !empty($videoTargetIds) ? VideoShort::whereIn('id', array_unique($videoTargetIds))->pluck('tieu_de', 'id')->all() : [];
 
         // 6. Tổng hợp toàn bộ danh sách thông báo đa chiều
         $allNotifications = [];
@@ -521,6 +561,12 @@ class ThongBaoAdminController extends Controller
             $action = $log->action;
             $item = null;
 
+            $targetId = (string) ($log->target_id ?? '');
+            $resolvedVenueName = $meta['ten_quan'] ?? ($meta['name'] ?? ($quanMap[$targetId] ?? ($quanMap[$meta['quan_id'] ?? ''] ?? 'quán ăn')));
+            $resolvedUserName = $meta['user_name'] ?? ($meta['ho_ten'] ?? ($userMap[$targetId] ?? ($cachedDeletedUsers[$targetId] ?? ($userMap[$meta['user_id'] ?? ''] ?? ($lastDeletedInfo['name'] ?? 'tài khoản')))));
+            $resolvedBlogTitle = $meta['title'] ?? ($meta['blog_title'] ?? ($blogMap[$targetId] ?? 'Bài viết'));
+            $resolvedVideoTitle = $meta['tieu_de'] ?? ($videoMap[$targetId] ?? 'Video review');
+
             switch ($action) {
                 case 'system.broadcast':
                     $item = [
@@ -545,7 +591,7 @@ class ThongBaoAdminController extends Controller
                         'item_id' => $log->id,
                         'type' => 'quan',
                         'category_label' => 'Thêm quán mới',
-                        'title' => 'Đã tạo cơ sở: ' . ($meta['name'] ?? 'Quán mới'),
+                        'title' => 'Đã tạo cơ sở: "' . $resolvedVenueName . '"',
                         'description' => 'Khởi tạo bởi: ' . $actorName,
                         'time_ago' => $timeAgo,
                         'created_at' => $createdAtStr,
@@ -562,7 +608,7 @@ class ThongBaoAdminController extends Controller
                         'item_id' => $log->id,
                         'type' => 'quan',
                         'category_label' => 'Hồ sơ quán mới',
-                        'title' => 'Quán mới gửi duyệt: ' . ($meta['ten_quan'] ?? ($meta['name'] ?? 'Quán mới')),
+                        'title' => 'Quán mới gửi duyệt: "' . $resolvedVenueName . '"',
                         'description' => 'Chủ quán: ' . ($meta['chu_quan'] ?? $actorName),
                         'time_ago' => $timeAgo,
                         'created_at' => $createdAtStr,
@@ -579,8 +625,8 @@ class ThongBaoAdminController extends Controller
                         'item_id' => $log->id,
                         'type' => 'video',
                         'category_label' => 'Yêu cầu duyệt video',
-                        'title' => 'Quán ' . ($meta['ten_quan'] ?? '') . ' gửi video review',
-                        'description' => ($meta['tieu_de'] ?? 'Video review TikTok mới') . ' • Gửi bởi: ' . $actorName,
+                        'title' => ($resolvedVenueName !== 'quán ăn' ? 'Quán "' . $resolvedVenueName . '"' : 'Người dùng') . ' gửi video review',
+                        'description' => ($resolvedVideoTitle ? '"' . $resolvedVideoTitle . '" • ' : '') . 'Gửi bởi: ' . $actorName,
                         'time_ago' => $timeAgo,
                         'created_at' => $createdAtStr,
                         'created_at_formatted' => $createdAtFmt,
@@ -596,8 +642,8 @@ class ThongBaoAdminController extends Controller
                         'item_id' => $log->id,
                         'type' => 'video',
                         'category_label' => 'Duyệt video review',
-                        'title' => 'Đã phê duyệt video review',
-                        'description' => ($meta['tieu_de'] ?? '') . ' • Thực hiện bởi: ' . $actorName,
+                        'title' => 'Đã phê duyệt video review: "' . $resolvedVideoTitle . '"',
+                        'description' => ($resolvedVenueName !== 'quán ăn' ? 'Quán: ' . $resolvedVenueName . ' • ' : '') . 'Thực hiện bởi: ' . $actorName,
                         'time_ago' => $timeAgo,
                         'created_at' => $createdAtStr,
                         'created_at_formatted' => $createdAtFmt,
@@ -613,7 +659,7 @@ class ThongBaoAdminController extends Controller
                         'item_id' => $log->id,
                         'type' => 'quan',
                         'category_label' => 'Cập nhật thực đơn',
-                        'title' => 'Đã cập nhật thực đơn: ' . ($meta['ten_quan'] ?? 'Quán ăn'),
+                        'title' => 'Đã cập nhật thực đơn: "' . $resolvedVenueName . '"',
                         'description' => 'Thực hiện bởi: ' . $actorName,
                         'time_ago' => $timeAgo,
                         'created_at' => $createdAtStr,
@@ -630,7 +676,7 @@ class ThongBaoAdminController extends Controller
                         'item_id' => $log->id,
                         'type' => 'review',
                         'category_label' => 'Phản hồi đánh giá',
-                        'title' => 'Chủ quán phản hồi đánh giá tại "' . ($meta['quan_name'] ?? '') . '"',
+                        'title' => 'Chủ quán phản hồi đánh giá tại "' . $resolvedVenueName . '"',
                         'description' => ($meta['phan_hoi'] ?? 'Chủ quán đã phản hồi khách hàng') . ' • Bởi: ' . $actorName,
                         'time_ago' => $timeAgo,
                         'created_at' => $createdAtStr,
@@ -647,7 +693,7 @@ class ThongBaoAdminController extends Controller
                         'item_id' => $log->id,
                         'type' => 'quan',
                         'category_label' => 'Cập nhật quán',
-                        'title' => 'Cập nhật thông tin cơ sở ẩm thực',
+                        'title' => 'Cập nhật thông tin quán "' . $resolvedVenueName . '"',
                         'description' => 'Thực hiện bởi: ' . $actorName,
                         'time_ago' => $timeAgo,
                         'created_at' => $createdAtStr,
@@ -664,8 +710,8 @@ class ThongBaoAdminController extends Controller
                         'item_id' => $log->id,
                         'type' => 'quan',
                         'category_label' => 'Duyệt quán',
-                        'title' => 'Đã phê duyệt cơ sở ẩm thực',
-                        'description' => 'Thực hiện bởi: ' . $actorName,
+                        'title' => 'Đã phê duyệt quán "' . $resolvedVenueName . '"',
+                        'description' => 'Cơ sở "' . $resolvedVenueName . '" đã sẵn sàng hoạt động • Bởi: ' . $actorName,
                         'time_ago' => $timeAgo,
                         'created_at' => $createdAtStr,
                         'created_at_formatted' => $createdAtFmt,
@@ -681,7 +727,7 @@ class ThongBaoAdminController extends Controller
                         'item_id' => $log->id,
                         'type' => 'quan',
                         'category_label' => 'Từ chối quán',
-                        'title' => 'Đã từ chối duyệt cơ sở ẩm thực',
+                        'title' => 'Đã từ chối duyệt quán "' . $resolvedVenueName . '"',
                         'description' => 'Thực hiện bởi: ' . $actorName,
                         'time_ago' => $timeAgo,
                         'created_at' => $createdAtStr,
@@ -698,8 +744,8 @@ class ThongBaoAdminController extends Controller
                         'item_id' => $log->id,
                         'type' => 'quan',
                         'category_label' => 'Tạm ẩn quán',
-                        'title' => 'Đã tạm ẩn/khóa cơ sở ẩm thực',
-                        'description' => 'Thực hiện bởi: ' . $actorName,
+                        'title' => 'Đã tạm ẩn quán "' . $resolvedVenueName . '"',
+                        'description' => 'Quán "' . $resolvedVenueName . '" đã được chuyển vào thùng rác • Bởi: ' . $actorName,
                         'time_ago' => $timeAgo,
                         'created_at' => $createdAtStr,
                         'created_at_formatted' => $createdAtFmt,
@@ -715,8 +761,8 @@ class ThongBaoAdminController extends Controller
                         'item_id' => $log->id,
                         'type' => 'quan',
                         'category_label' => 'Khôi phục quán',
-                        'title' => 'Đã khôi phục cơ sở ẩm thực',
-                        'description' => 'Thực hiện bởi: ' . $actorName,
+                        'title' => 'Đã khôi phục quán "' . $resolvedVenueName . '"',
+                        'description' => 'Quán "' . $resolvedVenueName . '" đã được khôi phục hoạt động • Bởi: ' . $actorName,
                         'time_ago' => $timeAgo,
                         'created_at' => $createdAtStr,
                         'created_at_formatted' => $createdAtFmt,
@@ -727,13 +773,18 @@ class ThongBaoAdminController extends Controller
                     break;
 
                 case 'venue.featured_toggled':
+                case 'venue.featured_added':
+                case 'venue.featured_removed':
+                case 'venue.featured_updated':
                     $isFeat = !empty($meta['featured']);
                     $item = [
                         'id' => 'audit_' . $log->id,
                         'item_id' => $log->id,
                         'type' => 'quan',
                         'category_label' => 'Quán nổi bật',
-                        'title' => ($isFeat ? 'Đã bật' : 'Đã gỡ') . ' trạng thái Quán Nổi Bật',
+                        'title' => ($action === 'venue.featured_updated')
+                            ? ('Cập nhật Quán Nổi Bật: "' . $resolvedVenueName . '"')
+                            : (($isFeat || $action === 'venue.featured_added') ? 'Bật Quán Nổi Bật: "' : 'Gỡ Quán Nổi Bật: "') . $resolvedVenueName . '"',
                         'description' => 'Thực hiện bởi: ' . $actorName,
                         'time_ago' => $timeAgo,
                         'created_at' => $createdAtStr,
@@ -751,7 +802,7 @@ class ThongBaoAdminController extends Controller
                         'item_id' => $log->id,
                         'type' => 'quan',
                         'category_label' => 'Tick Xanh quán',
-                        'title' => ($isVer ? 'Cấp' : 'Gỡ') . ' Tick Xanh xác thực cơ sở',
+                        'title' => ($isVer ? 'Cấp' : 'Gỡ') . ' Tick Xanh cho quán "' . $resolvedVenueName . '"',
                         'description' => 'Thực hiện bởi: ' . $actorName,
                         'time_ago' => $timeAgo,
                         'created_at' => $createdAtStr,
@@ -768,7 +819,7 @@ class ThongBaoAdminController extends Controller
                         'item_id' => $log->id,
                         'type' => 'review',
                         'category_label' => 'Đánh giá mới',
-                        'title' => ($meta['user_name'] ?? 'Khách') . ' đánh giá ' . ($meta['so_sao'] ?? 5) . '⭐ cho quán "' . ($meta['quan_name'] ?? '') . '"',
+                        'title' => ($meta['user_name'] ?? 'Khách') . ' đánh giá ' . ($meta['so_sao'] ?? 5) . '⭐ cho quán "' . $resolvedVenueName . '"',
                         'description' => $meta['binh_luan'] ?? 'Đánh giá ẩm thực mới từ khách hàng',
                         'time_ago' => $timeAgo,
                         'created_at' => $createdAtStr,
@@ -779,14 +830,50 @@ class ThongBaoAdminController extends Controller
                     ];
                     break;
 
+                case 'admin.payment.approve':
+                    $amountFmt = isset($meta['so_tien']) ? number_format((float)$meta['so_tien'], 0, ',', '.') . 'đ' : 'giao dịch';
+                    $userTarget = $meta['user_email'] ?? ($userMap[$meta['user_id'] ?? ''] ?? $resolvedUserName);
+                    $item = [
+                        'id' => 'payment_' . $log->id,
+                        'item_id' => $log->id,
+                        'type' => 'payment',
+                        'category_label' => 'Thanh toán & Nạp tiền',
+                        'title' => 'Xác nhận nạp tiền: ' . $amountFmt,
+                        'description' => 'Cộng ' . $amountFmt . ' cho ' . $userTarget . ' (Mã: ' . ($meta['ma_giao_dich'] ?? '') . ') • Bởi: ' . $actorName,
+                        'time_ago' => $timeAgo,
+                        'created_at' => $createdAtStr,
+                        'created_at_formatted' => $createdAtFmt,
+                        'url' => route('admin.thanh-toan.index'),
+                        'icon' => 'payments',
+                        'badge_class' => 'bg-emerald-100 text-emerald-800',
+                    ];
+                    break;
+
+                case 'user.created':
+                    $item = [
+                        'id' => 'audit_' . $log->id,
+                        'item_id' => $log->id,
+                        'type' => 'user',
+                        'category_label' => 'Tài khoản mới',
+                        'title' => 'Đã tạo tài khoản "' . $resolvedUserName . '"',
+                        'description' => 'Khởi tạo bởi: ' . $actorName,
+                        'time_ago' => $timeAgo,
+                        'created_at' => $createdAtStr,
+                        'created_at_formatted' => $createdAtFmt,
+                        'url' => route('admin.nguoi-dung.index'),
+                        'icon' => 'person_add',
+                        'badge_class' => 'bg-emerald-100 text-emerald-700',
+                    ];
+                    break;
+
                 case 'user.updated':
                     $item = [
                         'id' => 'audit_' . $log->id,
                         'item_id' => $log->id,
                         'type' => 'user',
                         'category_label' => 'Cập nhật tài khoản',
-                        'title' => 'Cập nhật thông tin tài khoản người dùng',
-                        'description' => 'Thực hiện bởi: ' . $actorName,
+                        'title' => 'Cập nhật tài khoản "' . $resolvedUserName . '"',
+                        'description' => 'Thông tin tài khoản "' . $resolvedUserName . '" đã được cập nhật • Bởi: ' . $actorName,
                         'time_ago' => $timeAgo,
                         'created_at' => $createdAtStr,
                         'created_at_formatted' => $createdAtFmt,
@@ -797,13 +884,14 @@ class ThongBaoAdminController extends Controller
                     break;
 
                 case 'user.deleted':
+                    $displayDeletedName = ($resolvedUserName !== 'tài khoản') ? $resolvedUserName : ($lastDeletedInfo['name'] ?? 'Tài khoản');
                     $item = [
                         'id' => 'audit_' . $log->id,
                         'item_id' => $log->id,
                         'type' => 'user',
-                        'category_label' => 'Khóa tài khoản',
-                        'title' => 'Đã khóa/xóa tạm tài khoản người dùng',
-                        'description' => 'Thực hiện bởi: ' . $actorName,
+                        'category_label' => 'Xóa người dùng',
+                        'title' => 'Người dùng "' . $displayDeletedName . '" đã bị xóa',
+                        'description' => 'Người dùng "' . $displayDeletedName . '" đã bị xóa khỏi hệ thống • Bởi: ' . $actorName,
                         'time_ago' => $timeAgo,
                         'created_at' => $createdAtStr,
                         'created_at_formatted' => $createdAtFmt,
@@ -813,14 +901,66 @@ class ThongBaoAdminController extends Controller
                     ];
                     break;
 
+                case 'user.force_deleted':
+                    $displayForceDeletedName = ($resolvedUserName !== 'tài khoản') ? $resolvedUserName : ($lastDeletedInfo['name'] ?? 'Tài khoản');
+                    $item = [
+                        'id' => 'audit_' . $log->id,
+                        'item_id' => $log->id,
+                        'type' => 'user',
+                        'category_label' => 'Xóa người dùng',
+                        'title' => 'Người dùng "' . $displayForceDeletedName . '" đã bị xóa',
+                        'description' => 'Người dùng "' . $displayForceDeletedName . '" đã bị xóa vĩnh viễn khỏi hệ thống • Bởi: ' . $actorName,
+                        'time_ago' => $timeAgo,
+                        'created_at' => $createdAtStr,
+                        'created_at_formatted' => $createdAtFmt,
+                        'url' => route('admin.nguoi-dung.index'),
+                        'icon' => 'delete_forever',
+                        'badge_class' => 'bg-rose-100 text-rose-700',
+                    ];
+                    break;
+
+                case 'user.locked':
+                    $item = [
+                        'id' => 'audit_' . $log->id,
+                        'item_id' => $log->id,
+                        'type' => 'user',
+                        'category_label' => 'Khóa tài khoản',
+                        'title' => 'Đã khóa tài khoản "' . $resolvedUserName . '"',
+                        'description' => 'Tài khoản "' . $resolvedUserName . '" đã bị ngắt phiên đăng nhập và khóa • Bởi: ' . $actorName,
+                        'time_ago' => $timeAgo,
+                        'created_at' => $createdAtStr,
+                        'created_at_formatted' => $createdAtFmt,
+                        'url' => route('admin.nguoi-dung.index'),
+                        'icon' => 'lock',
+                        'badge_class' => 'bg-amber-100 text-amber-700',
+                    ];
+                    break;
+
+                case 'user.unlocked':
+                    $item = [
+                        'id' => 'audit_' . $log->id,
+                        'item_id' => $log->id,
+                        'type' => 'user',
+                        'category_label' => 'Mở khóa tài khoản',
+                        'title' => 'Đã mở khóa tài khoản "' . $resolvedUserName . '"',
+                        'description' => 'Tài khoản "' . $resolvedUserName . '" đã được mở khóa hoạt động lại • Bởi: ' . $actorName,
+                        'time_ago' => $timeAgo,
+                        'created_at' => $createdAtStr,
+                        'created_at_formatted' => $createdAtFmt,
+                        'url' => route('admin.nguoi-dung.index'),
+                        'icon' => 'lock_open',
+                        'badge_class' => 'bg-emerald-100 text-emerald-700',
+                    ];
+                    break;
+
                 case 'user.restored':
                     $item = [
                         'id' => 'audit_' . $log->id,
                         'item_id' => $log->id,
                         'type' => 'user',
                         'category_label' => 'Khôi phục tài khoản',
-                        'title' => 'Đã khôi phục tài khoản người dùng',
-                        'description' => 'Thực hiện bởi: ' . $actorName,
+                        'title' => 'Đã khôi phục tài khoản "' . $resolvedUserName . '"',
+                        'description' => 'Tài khoản "' . $resolvedUserName . '" và các quán đã được khôi phục • Bởi: ' . $actorName,
                         'time_ago' => $timeAgo,
                         'created_at' => $createdAtStr,
                         'created_at_formatted' => $createdAtFmt,
@@ -836,7 +976,7 @@ class ThongBaoAdminController extends Controller
                         'item_id' => $log->id,
                         'type' => 'user',
                         'category_label' => 'Xác thực tài khoản',
-                        'title' => 'Đã duyệt xác thực danh tính người dùng',
+                        'title' => 'Đã duyệt xác thực danh tính "' . $resolvedUserName . '"',
                         'description' => 'Thực hiện bởi: ' . $actorName,
                         'time_ago' => $timeAgo,
                         'created_at' => $createdAtStr,
@@ -853,7 +993,7 @@ class ThongBaoAdminController extends Controller
                         'item_id' => $log->id,
                         'type' => 'user',
                         'category_label' => 'Từ chối xác thực',
-                        'title' => 'Đã từ chối xác thực danh tính người dùng',
+                        'title' => 'Đã từ chối xác thực "' . $resolvedUserName . '"',
                         'description' => 'Thực hiện bởi: ' . $actorName,
                         'time_ago' => $timeAgo,
                         'created_at' => $createdAtStr,
@@ -870,7 +1010,7 @@ class ThongBaoAdminController extends Controller
                         'item_id' => $log->id,
                         'type' => 'user',
                         'category_label' => 'Yêu cầu xác thực',
-                        'title' => ($meta['ho_ten'] ?? $actorName) . ' gửi yêu cầu xác thực tài khoản',
+                        'title' => '"' . $resolvedUserName . '" gửi yêu cầu xác thực tài khoản',
                         'description' => 'Lý do: ' . ($meta['ly_do'] ?? 'Cấp huy hiệu xác thực'),
                         'time_ago' => $timeAgo,
                         'created_at' => $createdAtStr,
@@ -888,7 +1028,7 @@ class ThongBaoAdminController extends Controller
                         'item_id' => $log->id,
                         'type' => 'user',
                         'category_label' => 'Tick Xanh User',
-                        'title' => ($isVer ? 'Cấp' : 'Gỡ') . ' Tick Xanh xác thực người dùng',
+                        'title' => ($isVer ? 'Cấp' : 'Gỡ') . ' Tick Xanh cho "' . $resolvedUserName . '"',
                         'description' => 'Thực hiện bởi: ' . $actorName,
                         'time_ago' => $timeAgo,
                         'created_at' => $createdAtStr,
@@ -935,7 +1075,7 @@ class ThongBaoAdminController extends Controller
                             ? ('Tạo mã quyền: ' . ($meta['ten'] ?? ''))
                             : (($action === 'permission.deleted')
                                 ? ('Xóa mã quyền: ' . ($meta['ten'] ?? ''))
-                                : ('Override quyền "' . ($meta['permission'] ?? '') . '" cho ' . ($meta['user_name'] ?? ''))),
+                                : ('Override quyền "' . ($meta['permission'] ?? '') . '" cho ' . ($meta['user_name'] ?? $resolvedUserName))),
                         'description' => 'Thực hiện bởi: ' . $actorName,
                         'time_ago' => $timeAgo,
                         'created_at' => $createdAtStr,
@@ -952,7 +1092,7 @@ class ThongBaoAdminController extends Controller
                         'item_id' => $log->id,
                         'type' => 'blog',
                         'category_label' => 'Bài viết chờ duyệt',
-                        'title' => 'Bài viết mới gửi duyệt: "' . ($meta['title'] ?? '') . '"',
+                        'title' => 'Bài viết mới gửi duyệt: "' . $resolvedBlogTitle . '"',
                         'description' => 'Tác giả: ' . ($meta['author'] ?? $actorName),
                         'time_ago' => $timeAgo,
                         'created_at' => $createdAtStr,
@@ -963,13 +1103,65 @@ class ThongBaoAdminController extends Controller
                     ];
                     break;
 
+                case 'blog.approved':
+                    $item = [
+                        'id' => 'audit_' . $log->id,
+                        'item_id' => $log->id,
+                        'type' => 'blog',
+                        'category_label' => 'Duyệt bài viết',
+                        'title' => 'Đã phê duyệt bài viết: "' . $resolvedBlogTitle . '"',
+                        'description' => 'Thực hiện bởi: ' . $actorName,
+                        'time_ago' => $timeAgo,
+                        'created_at' => $createdAtStr,
+                        'created_at_formatted' => $createdAtFmt,
+                        'url' => route('admin.blog.posts.index'),
+                        'icon' => 'check_circle',
+                        'badge_class' => 'bg-emerald-100 text-emerald-700',
+                    ];
+                    break;
+
+                case 'blog.rejected':
+                    $item = [
+                        'id' => 'audit_' . $log->id,
+                        'item_id' => $log->id,
+                        'type' => 'blog',
+                        'category_label' => 'Từ chối bài viết',
+                        'title' => 'Đã từ chối bài viết: "' . $resolvedBlogTitle . '"',
+                        'description' => 'Thực hiện bởi: ' . $actorName,
+                        'time_ago' => $timeAgo,
+                        'created_at' => $createdAtStr,
+                        'created_at_formatted' => $createdAtFmt,
+                        'url' => route('admin.blog.posts.index'),
+                        'icon' => 'gpp_bad',
+                        'badge_class' => 'bg-rose-100 text-rose-700',
+                    ];
+                    break;
+
+                case 'blog.created':
+                case 'blog.updated':
+                    $item = [
+                        'id' => 'audit_' . $log->id,
+                        'item_id' => $log->id,
+                        'type' => 'blog',
+                        'category_label' => 'Bài viết Blog',
+                        'title' => ($action === 'blog.created' ? 'Đã tạo bài viết: "' : 'Cập nhật bài viết: "') . $resolvedBlogTitle . '"',
+                        'description' => 'Thực hiện bởi: ' . $actorName,
+                        'time_ago' => $timeAgo,
+                        'created_at' => $createdAtStr,
+                        'created_at_formatted' => $createdAtFmt,
+                        'url' => route('admin.blog.posts.index'),
+                        'icon' => 'article',
+                        'badge_class' => 'bg-blue-100 text-blue-700',
+                    ];
+                    break;
+
                 case 'blog.commented':
                     $item = [
                         'id' => 'audit_' . $log->id,
                         'item_id' => $log->id,
                         'type' => 'blog',
                         'category_label' => 'Bình luận bài viết',
-                        'title' => ($meta['user_name'] ?? $actorName) . ' bình luận về bài viết "' . ($meta['blog_title'] ?? '') . '"',
+                        'title' => ($meta['user_name'] ?? $actorName) . ' bình luận về bài viết "' . $resolvedBlogTitle . '"',
                         'description' => $meta['content'] ?? 'Bình luận mới từ người dùng',
                         'time_ago' => $timeAgo,
                         'created_at' => $createdAtStr,
@@ -988,8 +1180,8 @@ class ThongBaoAdminController extends Controller
                         'type' => 'blog',
                         'category_label' => ($action === 'blog.hero_toggled') ? 'Tiêu điểm Blog' : 'Xóa bài viết',
                         'title' => ($action === 'blog.hero_toggled')
-                            ? ('Chọn làm bài viết Tiêu Điểm: "' . ($meta['title'] ?? '') . '"')
-                            : ('Đã xóa bài viết: "' . ($meta['title'] ?? '') . '"'),
+                            ? ('Chọn làm bài viết Tiêu Điểm: "' . $resolvedBlogTitle . '"')
+                            : ('Đã xóa bài viết: "' . $resolvedBlogTitle . '"'),
                         'description' => 'Thực hiện bởi: ' . $actorName,
                         'time_ago' => $timeAgo,
                         'created_at' => $createdAtStr,
@@ -997,6 +1189,31 @@ class ThongBaoAdminController extends Controller
                         'url' => route('admin.blog.posts.index'),
                         'icon' => ($action === 'blog.hero_toggled') ? 'featured_play_list' : 'delete',
                         'badge_class' => ($action === 'blog.hero_toggled') ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700',
+                    ];
+                    break;
+
+                case 'category.created':
+                case 'category.updated':
+                case 'category.deleted':
+                    $catName = $meta['ten_danh_muc'] ?? ($meta['name'] ?? 'Danh mục');
+                    $labelsCat = [
+                        'category.created' => 'Tạo danh mục mới: "' . $catName . '"',
+                        'category.updated' => 'Cập nhật danh mục: "' . $catName . '"',
+                        'category.deleted' => 'Đã xóa danh mục: "' . $catName . '"',
+                    ];
+                    $item = [
+                        'id' => 'cat_' . $log->id,
+                        'item_id' => $log->id,
+                        'type' => 'category',
+                        'category_label' => 'Danh mục quán',
+                        'title' => $labelsCat[$action] ?? 'Danh mục quán',
+                        'description' => 'Thực hiện bởi: ' . $actorName,
+                        'time_ago' => $timeAgo,
+                        'created_at' => $createdAtStr,
+                        'created_at_formatted' => $createdAtFmt,
+                        'url' => route('admin.danh-muc.index'),
+                        'icon' => 'category',
+                        'badge_class' => 'bg-purple-100 text-purple-700',
                     ];
                     break;
 
@@ -1088,8 +1305,131 @@ class ThongBaoAdminController extends Controller
         $unreadAdminCount = count($activeNotifications);
         $totalPending = $pendingQuanCount + $pendingBlogCount + $unverifiedUserCount + $pendingVideoCount;
 
+        // Snapshot dấu vết toàn bộ CSDL để nhận diện Thêm / Sửa / Xóa realtime
+        $hasThanhToan = \Illuminate\Support\Facades\Schema::hasTable('thanh_toan');
+        $hasKhuyenMai = \Illuminate\Support\Facades\Schema::hasTable('khuyen_mai');
+        $hasDanhMuc = \Illuminate\Support\Facades\Schema::hasTable('danh_muc_quan');
+
+        // Tính toán Checksum thực tế của MySQL trên toàn bộ dữ liệu bảng
+        $checksumMap = [];
+        try {
+            $checksumRows = \Illuminate\Support\Facades\DB::select('CHECKSUM TABLE nguoi_dung, quan, khuyen_mai, danh_muc_quan, blogs, thanh_toan, video_shorts');
+            foreach ($checksumRows as $cRow) {
+                $rawTable = (array) $cRow;
+                $tName = str_replace(['quanmoi.', '`'], '', (string) (array_values($rawTable)[0] ?? ''));
+                $cSum = (string) (array_values($rawTable)[1] ?? '');
+                $checksumMap[$tName] = $cSum;
+            }
+        } catch (\Throwable $e) {}
+
+        $cachedDeleted = \Illuminate\Support\Facades\Cache::get('deleted_users_names', []);
+        $knownUsersMap = \Illuminate\Support\Facades\Cache::get('admin_known_users_map', null);
+        
+        $currentAllUsers = User::withTrashed()->pluck('ho_ten', 'id')->all();
+        $currentActiveUsers = User::whereNull('deleted_at')->pluck('ho_ten', 'id')->all();
+
+        $missingPermanently = [];
+        $missingActive = [];
+
+        if ($knownUsersMap !== null) {
+            $missingPermanently = array_diff_key($knownUsersMap['all'] ?? [], $currentAllUsers);
+            $missingActive = array_diff_key($knownUsersMap['active'] ?? [], $currentActiveUsers);
+
+            foreach ($missingPermanently as $mId => $mName) {
+                $cachedDeleted[$mId] = $mName;
+            }
+            foreach ($missingActive as $mId => $mName) {
+                $cachedDeleted[$mId] = $mName;
+            }
+            if (!empty($missingPermanently) || !empty($missingActive)) {
+                \Illuminate\Support\Facades\Cache::forever('deleted_users_names', $cachedDeleted);
+            }
+        }
+        \Illuminate\Support\Facades\Cache::forever('admin_known_users_map', [
+            'all' => $currentAllUsers,
+            'active' => $currentActiveUsers,
+        ]);
+
+        $latestUserActionLog = AdminAuditLog::whereIn('action', [
+            'user.deleted', 'user.force_deleted', 'user.locked', 'user.unlocked', 'user.restored', 'user.created'
+        ])->latest()->first();
+
+        $lastDeletedInfo = \Illuminate\Support\Facades\Cache::get('last_deleted_user_info');
+
+        $latestUserActionData = null;
+        if (!empty($missingPermanently)) {
+            $latestUserActionData = [
+                'action' => 'user.force_deleted',
+                'user_name' => reset($missingPermanently),
+                'created_at' => now()->toIso8601String(),
+            ];
+        } elseif (!empty($missingActive)) {
+            $latestUserActionData = [
+                'action' => 'user.deleted',
+                'user_name' => reset($missingActive),
+                'created_at' => now()->toIso8601String(),
+            ];
+        } elseif ($latestUserActionLog) {
+            $metaUserName = $latestUserActionLog->metadata['user_name'] 
+                ?? ($latestUserActionLog->metadata['ho_ten'] 
+                ?? ($currentAllUsers[$latestUserActionLog->target_id] 
+                ?? ($cachedDeleted[$latestUserActionLog->target_id] 
+                ?? ($lastDeletedInfo['name'] ?? null))));
+            $latestUserActionData = [
+                'action' => $latestUserActionLog->action,
+                'user_name' => $metaUserName,
+                'target_id' => (string) $latestUserActionLog->target_id,
+                'created_at' => $latestUserActionLog->created_at?->toIso8601String(),
+            ];
+        } elseif ($lastDeletedInfo) {
+            $latestUserActionData = [
+                'action' => !empty($lastDeletedInfo['is_force']) ? 'user.force_deleted' : 'user.deleted',
+                'user_name' => $lastDeletedInfo['name'],
+                'created_at' => now()->toIso8601String(),
+            ];
+        }
+
+        $dbSnapshot = [
+            'mutated_at' => (string) \Illuminate\Support\Facades\Cache::get('db_last_mutated_at', ''),
+            'checksums' => $checksumMap,
+            'latest_user_action' => $latestUserActionData,
+            'quans' => [
+                'count' => Quan::withTrashed()->count(),
+                'active_count' => Quan::where('trang_thai', 'da_duyet')->count(),
+                'pending_count' => $pendingQuanCount,
+                'featured_count' => Quan::where('is_noi_bat', true)->count(),
+                'last_mod' => (string) (Quan::withTrashed()->max('updated_at') ?? ''),
+            ],
+            'users' => [
+                'count' => User::withTrashed()->count(),
+                'active_count' => $activeUserCount,
+                'unverified_count' => $unverifiedUserCount,
+                'last_mod' => (string) (User::withTrashed()->max('updated_at') ?? ''),
+            ],
+            'danh_muc_count' => $hasDanhMuc ? \App\Models\DanhMucQuan::count() : 0,
+            'danh_muc_last_mod' => $hasDanhMuc ? (string) (\App\Models\DanhMucQuan::max('updated_at') ?? '') : '',
+            'blogs' => [
+                'count' => $totalBlogCount,
+                'pending_count' => $pendingBlogCount,
+                'last_mod' => (string) (Blog::max('updated_at') ?? ''),
+            ],
+            'thanh_toan_count' => $hasThanhToan ? \App\Models\ThanhToan::count() : 0,
+            'thanh_toan_last_mod' => $hasThanhToan ? (string) (\App\Models\ThanhToan::max('updated_at') ?? '') : '',
+            'khuyen_mai_count' => $hasKhuyenMai ? \App\Models\KhuyenMai::count() : 0,
+            'khuyen_mai_last_mod' => $hasKhuyenMai ? (string) (\App\Models\KhuyenMai::max('updated_at') ?? '') : '',
+            'videos' => [
+                'count' => $totalVideoCount,
+                'pending_count' => $pendingVideoCount,
+                'last_mod' => (string) (VideoShort::max('updated_at') ?? ''),
+            ],
+        ];
+
+        $dbVersion = md5(json_encode($dbSnapshot));
+
         return [
             'success' => true,
+            'db_version' => $dbVersion,
+            'db_snapshot' => $dbSnapshot,
             'unread_count' => $unreadAdminCount,
             'total_quan' => $totalQuanCount,
             'total_users' => $totalUserCount,
@@ -1112,6 +1452,7 @@ class ThongBaoAdminController extends Controller
             'latest_blog' => $pendingBlogs->first() ?? null,
             'latest_video' => $pendingVideos->first() ?? null,
             'latest_user' => $unverifiedUsers->first() ?? null,
+            'latest_user_action' => $latestUserActionData,
             'latest_broadcast' => $recentAuditLogs->firstWhere('action', 'system.broadcast'),
         ];
     }

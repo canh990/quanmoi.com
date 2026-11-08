@@ -33,10 +33,17 @@
                 <option value="0" {{ request('da_xac_thuc') == '0' ? 'selected' : '' }}>Chưa có Tick Xanh</option>
             </select>
 
-            <button type="submit" class="bg-primary text-white px-5 py-2 rounded-xl font-bold text-sm hover:bg-primary/90 transition-all flex items-center gap-1">
+            <button type="submit" class="bg-primary text-white px-5 py-2 rounded-xl font-bold text-sm hover:bg-primary/90 transition-all flex items-center gap-1 cursor-pointer">
                 <span class="material-symbols-outlined text-lg">filter_alt</span> Lọc
             </button>
         </form>
+
+        <div class="flex items-center gap-2 shrink-0 w-full md:w-auto justify-end">
+            <button type="button" onclick="openCreateUserModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer">
+                <span class="material-symbols-outlined text-[18px]">person_add</span>
+                <span>Thêm Người Dùng</span>
+            </button>
+        </div>
     </div>
 
     {{-- Users Table --}}
@@ -174,6 +181,9 @@
             if (typeof showRealtimeToast === 'function') {
                 showRealtimeToast('Xác Thực Người Dùng', data.message, '', 'verified', 'bg-blue-500');
             }
+            if (typeof showCenterRealtimeAlert === 'function') {
+                showCenterRealtimeAlert('Cập Nhật Xác Thực Người Dùng', data.message || 'Trạng thái xác thực đã được đồng bộ vào CSDL.', 'verified', 'info');
+            }
             clearAdminPageCache();
 
             const isVerified = data.verified;
@@ -221,8 +231,10 @@
                     return data;
                 })
                 .then(data => {
-                    if (typeof showRealtimeToast === 'function') {
-                        showRealtimeToast('Đã Xóa Người Dùng', data.message || 'Đã xóa người dùng thành công.', '', 'delete', 'bg-slate-700');
+                    window.__adminLastActionAt = Date.now();
+                    const displayName = data.user_name || userName || 'Người dùng';
+                    if (typeof showCenterRealtimeAlert === 'function') {
+                        showCenterRealtimeAlert('Đã Xóa Người Dùng', `Người dùng <b class="text-slate-900 font-bold">"${displayName}"</b> đã bị xóa.`, 'person_remove', 'danger');
                     }
                     clearAdminPageCache();
                     if (row) {
@@ -266,11 +278,16 @@
                     return data;
                 })
                 .then(data => {
+                    window.__adminLastActionAt = Date.now();
+                    const displayName = data.user_name || userName || 'Người dùng';
                     if (typeof showRealtimeToast === 'function') {
-                        showRealtimeToast('Khôi Phục Thành Công', data.message || 'Khôi phục thành công!', '', 'check_circle', 'bg-emerald-500');
+                        showRealtimeToast('Khôi Phục Thành Công', data.message || `Đã khôi phục tài khoản "${displayName}" thành công!`, '', 'check_circle', 'bg-emerald-500');
+                    }
+                    if (typeof showCenterRealtimeAlert === 'function') {
+                        showCenterRealtimeAlert('Đã Khôi Phục Tài Khoản Vào CSDL', data.message || `Tài khoản <b class="text-slate-900 font-bold">"${displayName}"</b> đã được khôi phục thành công.`, 'how_to_reg', 'success');
                     }
                     clearAdminPageCache();
-                    instantNavigate(window.location.href, false);
+                    instantNavigate(window.location.href, false, true);
                 })
                 .catch(err => {
                     if (typeof showRealtimeToast === 'function') {
@@ -308,8 +325,10 @@
                     return data;
                 })
                 .then(data => {
-                    if (typeof showRealtimeToast === 'function') {
-                        showRealtimeToast('Đã Xóa Vĩnh Viễn', data.message || 'Đã xóa vĩnh viễn người dùng.', '', 'delete_forever', 'bg-rose-700');
+                    window.__adminLastActionAt = Date.now();
+                    const displayName = data.user_name || userName || 'Người dùng';
+                    if (typeof showCenterRealtimeAlert === 'function') {
+                        showCenterRealtimeAlert('Đã Xóa Người Dùng', `Người dùng <b class="text-slate-900 font-bold">"${displayName}"</b> đã bị xóa.`, 'delete_forever', 'danger');
                     }
                     clearAdminPageCache();
                     if (row) {
@@ -365,6 +384,9 @@
                     if (typeof showRealtimeToast === 'function') {
                         showRealtimeToast('Trạng Thái Tài Khoản', data.message, '', data.is_locked ? 'lock' : 'lock_open', data.is_locked ? 'bg-amber-600' : 'bg-emerald-600');
                     }
+                    if (typeof showCenterRealtimeAlert === 'function') {
+                        showCenterRealtimeAlert(data.is_locked ? 'Đã Khóa Tài Khoản Trong CSDL' : 'Đã Mở Khóa Tài Khoản Trong CSDL', data.message, data.is_locked ? 'lock' : 'lock_open', data.is_locked ? 'warning' : 'success');
+                    }
                     clearAdminPageCache();
 
                     const statusCell = document.getElementById(`user-status-cell-${userId}`);
@@ -397,5 +419,160 @@
             }
         });
     }
+
+    // Engine Tạo Người Dùng Mới & Đồng Bộ CSDL Realtime
+    function openCreateUserModal() {
+        document.getElementById('admin-create-user-modal')?.classList.remove('hidden');
+        setTimeout(() => document.getElementById('new-user-hoten')?.focus(), 50);
+    }
+
+    function closeCreateUserModal() {
+        document.getElementById('admin-create-user-modal')?.classList.add('hidden');
+        document.getElementById('create-user-error')?.classList.add('hidden');
+        document.getElementById('create-user-form')?.reset();
+    }
+
+    function adminSubmitCreateUser(e) {
+        e.preventDefault();
+        const btn = document.getElementById('btn-submit-create-user');
+        const errBox = document.getElementById('create-user-error');
+        const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+
+        const payload = {
+            ho_ten: document.getElementById('new-user-hoten').value.trim(),
+            email: document.getElementById('new-user-email').value.trim(),
+            mat_khau: document.getElementById('new-user-password').value,
+            so_dien_thoai: document.getElementById('new-user-sdt').value.trim(),
+            vai_tro_id: document.getElementById('new-user-role').value || null,
+            trang_thai: document.getElementById('new-user-status').value,
+            da_xac_thuc: document.getElementById('new-user-verified').checked ? 1 : 0
+        };
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="material-symbols-outlined text-[16px] animate-spin">refresh</span> Đang lưu CSDL...';
+        if (errBox) errBox.classList.add('hidden');
+
+        fetch('{{ route("admin.nguoi-dung.store") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': csrf
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(async res => {
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                const errorMsg = data.message || (data.errors ? Object.values(data.errors).flat().join('\n') : `Lỗi HTTP ${res.status}`);
+                throw new Error(errorMsg);
+            }
+            return data;
+        })
+        .then(data => {
+            closeCreateUserModal();
+            if (typeof showCenterRealtimeAlert === 'function') {
+                showCenterRealtimeAlert('Đã Thêm Người Dùng Vào CSDL', data.message || `Tài khoản "${payload.ho_ten}" đã được lưu vào database!`, 'person_add', 'success');
+            } else if (typeof showRealtimeToast === 'function') {
+                showRealtimeToast('Tạo Thành Công', data.message, '', 'check_circle', 'bg-emerald-600');
+            }
+            clearAdminPageCache();
+            if (typeof instantNavigate === 'function') {
+                instantNavigate(window.location.href, false, true);
+            }
+        })
+        .catch(err => {
+            if (errBox) {
+                errBox.textContent = err.message || 'Có lỗi xảy ra khi tạo người dùng.';
+                errBox.classList.remove('hidden');
+            } else {
+                alert(err.message || 'Lỗi khi tạo người dùng.');
+            }
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.innerHTML = '<span class="material-symbols-outlined text-[16px]">check_circle</span><span>Tạo & Lưu CSDL</span>';
+        });
+    }
 </script>
+
+{{-- Modal Thêm Người Dùng Mới --}}
+<div id="admin-create-user-modal" class="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs hidden" role="dialog" aria-modal="true">
+    <div class="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-lg w-full p-6 text-left relative overflow-hidden transform transition-all">
+        <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-5">
+            <div class="flex items-center gap-2.5">
+                <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
+                    <span class="material-symbols-outlined text-[22px]">person_add</span>
+                </div>
+                <div>
+                    <h3 class="text-base font-extrabold text-slate-900">Thêm Người Dùng Mới</h3>
+                    <p class="text-xs text-slate-500">Tạo tài khoản và đồng bộ ngay lập tức vào cơ sở dữ liệu</p>
+                </div>
+            </div>
+            <button type="button" onclick="closeCreateUserModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-400 hover:text-slate-700 flex items-center justify-center transition-colors">
+                <span class="material-symbols-outlined text-[18px]">close</span>
+            </button>
+        </div>
+
+        <form id="create-user-form" onsubmit="adminSubmitCreateUser(event)" class="space-y-4">
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Họ và Tên <span class="text-rose-500">*</span></label>
+                <input type="text" id="new-user-hoten" required placeholder="Ví dụ: Nguyễn Văn A" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-medium focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none">
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Địa Chỉ Email <span class="text-rose-500">*</span></label>
+                <input type="email" id="new-user-email" required placeholder="user@quanmoi.com" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-medium focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none">
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Mật Khẩu <span class="text-rose-500">*</span></label>
+                    <input type="password" id="new-user-password" required minlength="6" placeholder="Tối thiểu 6 ký tự" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-medium focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Số Điện Thoại</label>
+                    <input type="text" id="new-user-sdt" placeholder="0901234567" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-medium focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Vai Trò Hệ Thống</label>
+                    <select id="new-user-role" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-medium focus:border-indigo-500 outline-none bg-white">
+                        <option value="">Thành viên</option>
+                        @foreach($roles as $role)
+                            <option value="{{ $role->id }}">{{ $role->ten }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Trạng Thái</label>
+                    <select id="new-user-status" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-medium focus:border-indigo-500 outline-none bg-white">
+                        <option value="hoat_dong">Hoạt động</option>
+                        <option value="bi_khoa">Bị khóa</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 pt-1">
+                <input type="checkbox" id="new-user-verified" value="1" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300">
+                <label for="new-user-verified" class="text-xs font-semibold text-slate-700 cursor-pointer">Cấp Tick Xanh xác thực ngay</label>
+            </div>
+
+            <div id="create-user-error" class="hidden text-xs text-rose-600 bg-rose-50 border border-rose-200 p-2.5 rounded-xl"></div>
+
+            <div class="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100">
+                <button type="button" onclick="closeCreateUserModal()" class="px-4 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-bold transition-colors">
+                    Hủy bỏ
+                </button>
+                <button type="submit" id="btn-submit-create-user" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md transition-all flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-[16px]">check_circle</span>
+                    <span>Tạo & Lưu CSDL</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 @endsection
