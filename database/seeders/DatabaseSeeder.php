@@ -25,6 +25,8 @@ class DatabaseSeeder extends Seeder
             VideoShortSeeder::class,
             BlogSeeder::class,
             QuanDanhGiaSeeder::class,
+            ThanhToanSeeder::class,
+            KhuyenMaiSeeder::class,
         ]);
     }
 }

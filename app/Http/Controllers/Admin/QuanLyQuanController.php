@@ -327,15 +327,18 @@ class QuanLyQuanController extends Controller
             }
         }
 
+        $message = "Quán '{$quan->ten_quan}' đã bị xóa.";
+
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Đã ẩn (xóa tạm) địa điểm quán thành công!',
+                'message' => $message,
+                'venue_name' => $quan->ten_quan,
                 'counts' => $this->getVenueCounts(),
             ]);
         }
 
-        return redirect()->route('admin.quan.index')->with('success', 'Đã xóa tạm quán!');
+        return redirect()->route('admin.quan.index')->with('success', $message);
     }
 
     public function restore(Request $request, string $id)
@@ -354,26 +357,32 @@ class QuanLyQuanController extends Controller
             }
         }
 
+        $message = "Quán '{$quan->ten_quan}' đã được khôi phục.";
+
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Đã khôi phục địa điểm quán thành công!',
+                'message' => $message,
+                'venue_name' => $quan->ten_quan,
                 'counts' => $this->getVenueCounts(),
             ]);
         }
 
-        return redirect()->route('admin.quan.index')->with('success', 'Đã khôi phục quán!');
+        return redirect()->route('admin.quan.index')->with('success', $message);
     }
 
     public function forceDestroy(Request $request, string $id)
     {
         $quan = Quan::withTrashed()->findOrFail($id);
         $this->authorize('forceDelete', $quan);
+        $quanName = $quan->ten_quan;
 
         // Delete cover image on storage if stored
         $this->deleteVenueImage($quan->anh_bia_key);
 
-        $this->adminAudit->record($request->user(), 'venue.force_deleted', $quan, $request);
+        $this->adminAudit->record($request->user(), 'venue.force_deleted', $quan, $request, [
+            'ten_quan' => $quanName,
+        ]);
 
         if ($quan->chuQuan) {
             try {
@@ -384,15 +393,18 @@ class QuanLyQuanController extends Controller
         }
         $quan->forceDelete();
 
+        $message = "Quán '{$quanName}' đã bị xóa.";
+
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Đã xóa vĩnh viễn địa điểm quán thành công!',
+                'message' => $message,
+                'venue_name' => $quanName,
                 'counts' => $this->getVenueCounts(),
             ]);
         }
 
-        return redirect()->route('admin.quan.index')->with('success', 'Đã xóa vĩnh viễn quán!');
+        return redirect()->route('admin.quan.index')->with('success', $message);
     }
 
     public function toggleNoiBat(Request $request, string $id)
