@@ -63,8 +63,9 @@ class ImageUploadFallbackTest extends TestCase
         $quan = Quan::where('ten_quan', 'Quan An Thu Nghiem')->first();
         $this->assertNotNull($quan);
         $this->assertNotNull($quan->anh_bia);
-        $this->assertStringStartsWith('/uploads/quan/anh-bia/', $quan->anh_bia);
+        $this->assertStringContainsString('quan/anh-bia/', $quan->anh_bia);
         $this->assertStringStartsWith('local:quan/anh-bia/', $quan->anh_bia_key);
+        Storage::disk('uploads')->assertExists(substr($quan->anh_bia_key, strlen('local:')));
 
         $hinhAnh = HinhAnhQuan::where('quan_id', $quan->id)->first();
         $this->assertNotNull($hinhAnh);
@@ -115,7 +116,8 @@ class ImageUploadFallbackTest extends TestCase
 
         $mon = MonTrongMenu::where('ten_mon', 'Cha gio')->first();
         $this->assertNotNull($mon->hinh_anh);
-        $this->assertStringStartsWith('/uploads/quan/menu/', $mon->hinh_anh);
+        $this->assertStringContainsString('quan/menu/', $mon->hinh_anh);
+        Storage::disk('uploads')->assertExists('quan/menu/'.basename($mon->hinh_anh));
     }
 
     public function test_gallery_upload_succeeds_without_cloud_storage(): void

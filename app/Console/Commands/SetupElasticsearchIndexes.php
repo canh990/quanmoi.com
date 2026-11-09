@@ -41,8 +41,21 @@ class SetupElasticsearchIndexes extends Command
                                 'type' => 'asciifolding',
                                 'preserve_original' => true,
                             ],
+                            'ten_quan_edge_ngram' => [
+                                'type' => 'edge_ngram',
+                                'min_gram' => 2,
+                                'max_gram' => 20,
+                            ],
                         ],
                         'analyzer' => [
+                            'ten_quan_prefix_analyzer' => [
+                                'tokenizer' => 'standard',
+                                'filter' => [
+                                    'lowercase',
+                                    'vietnamese_folding',
+                                    'ten_quan_edge_ngram',
+                                ],
+                            ],
                             'vietnamese_analyzer' => [
                                 'tokenizer' => 'standard',
                                 'filter' => [
@@ -59,7 +72,14 @@ class SetupElasticsearchIndexes extends Command
                         'ten_quan' => [
                             'type' => 'text',
                             'analyzer' => 'vietnamese_analyzer',
-                            'fields' => ['keyword' => ['type' => 'keyword', 'ignore_above' => 256]],
+                            'fields' => [
+                                'keyword' => ['type' => 'keyword', 'ignore_above' => 256],
+                                'prefix' => [
+                                    'type' => 'text',
+                                    'analyzer' => 'ten_quan_prefix_analyzer',
+                                    'search_analyzer' => 'vietnamese_analyzer',
+                                ],
+                            ],
                         ],
                         'mon_an' => [
                             'type' => 'text',
