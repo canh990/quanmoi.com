@@ -21,9 +21,11 @@ return [
         'api_keys' => env('GEMINI_API_KEYS')
             ? array_filter(array_map('trim', explode(',', (string) env('GEMINI_API_KEYS'))))
             : (env('GEMINI_API_KEY') ? [trim((string) env('GEMINI_API_KEY'))] : []),
-        'model' => env('GEMINI_MODEL', 'gemini-2.0-flash'),
-        'fallback_models' => ['gemini-2.0-flash', 'gemini-2.5-flash', 'gemini-1.5-flash'],
-        'timeout' => (int) env('GEMINI_TIMEOUT', 10),
+        'model' => in_array(env('GEMINI_MODEL'), ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-2.5-flash', null, ''], true)
+            ? 'gemini-3.1-flash-lite'
+            : env('GEMINI_MODEL', 'gemini-3.1-flash-lite'),
+        'fallback_models' => ['gemini-3.1-flash-lite', 'gemini-3-flash-preview', 'gemini-3.5-flash-lite', 'gemini-3.8-flash', 'gemini-flash-latest'],
+        'timeout' => (int) env('GEMINI_TIMEOUT', 30),
     ],
 
     // 2. Groq Cloud Pool (Cực nhanh, miễn phí Llama 3.3 70B & Llama 3.1 8B)

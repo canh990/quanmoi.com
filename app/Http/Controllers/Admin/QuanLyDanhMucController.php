@@ -32,20 +32,22 @@ class QuanLyDanhMucController extends Controller
     ];
 
     private array $presetColors = [
-        'rose'    => ['name' => 'Hồng Ruby', 'badge' => 'bg-rose-50 text-rose-700 border-rose-200', 'bg' => 'bg-rose-500'],
-        'amber'   => ['name' => 'Vàng Hổ Phách', 'badge' => 'bg-amber-50 text-amber-700 border-amber-200', 'bg' => 'bg-amber-500'],
-        'indigo'  => ['name' => 'Chàm Tinh Tế', 'badge' => 'bg-indigo-50 text-indigo-700 border-indigo-200', 'bg' => 'bg-indigo-500'],
-        'emerald' => ['name' => 'Xanh Lục Bảo', 'badge' => 'bg-emerald-50 text-emerald-700 border-emerald-200', 'bg' => 'bg-emerald-500'],
-        'orange'  => ['name' => 'Cam Nhiệt Đới', 'badge' => 'bg-orange-50 text-orange-700 border-orange-200', 'bg' => 'bg-orange-500'],
-        'violet'  => ['name' => 'Tím Huyền Bí', 'badge' => 'bg-violet-50 text-violet-700 border-violet-200', 'bg' => 'bg-violet-500'],
-        'pink'    => ['name' => 'Hồng Pastel', 'badge' => 'bg-pink-50 text-pink-700 border-pink-200', 'bg' => 'bg-pink-500'],
-        'yellow'  => ['name' => 'Vàng Nắng', 'badge' => 'bg-yellow-50 text-yellow-800 border-yellow-200', 'bg' => 'bg-yellow-400'],
-        'teal'    => ['name' => 'Xanh Mòng Két', 'badge' => 'bg-teal-50 text-teal-700 border-teal-200', 'bg' => 'bg-teal-500'],
-        'sky'     => ['name' => 'Xanh Lam Nhạt', 'badge' => 'bg-sky-50 text-sky-700 border-sky-200', 'bg' => 'bg-sky-500'],
+        'rose'    => ['name' => 'Hồng Ruby', 'badge' => 'bg-rose-50 text-rose-700 border-rose-200', 'bg' => 'bg-rose-500', 'hex' => '#f43f5e', 'light' => '#fff1f2', 'border' => '#fecdd3', 'text' => '#be123c'],
+        'amber'   => ['name' => 'Vàng Hổ Phách', 'badge' => 'bg-amber-50 text-amber-700 border-amber-200', 'bg' => 'bg-amber-500', 'hex' => '#f59e0b', 'light' => '#fffbeb', 'border' => '#fde68a', 'text' => '#b45309'],
+        'indigo'  => ['name' => 'Chàm Tinh Tế', 'badge' => 'bg-indigo-50 text-indigo-700 border-indigo-200', 'bg' => 'bg-indigo-500', 'hex' => '#6366f1', 'light' => '#eef2ff', 'border' => '#c7d2fe', 'text' => '#4338ca'],
+        'emerald' => ['name' => 'Xanh Lục Bảo', 'badge' => 'bg-emerald-50 text-emerald-700 border-emerald-200', 'bg' => 'bg-emerald-500', 'hex' => '#10b981', 'light' => '#ecfdf5', 'border' => '#a7f3d0', 'text' => '#047857'],
+        'orange'  => ['name' => 'Cam Nhiệt Đới', 'badge' => 'bg-orange-50 text-orange-700 border-orange-200', 'bg' => 'bg-orange-500', 'hex' => '#f97316', 'light' => '#fff7ed', 'border' => '#fed7aa', 'text' => '#c2410c'],
+        'violet'  => ['name' => 'Tím Huyền Bí', 'badge' => 'bg-violet-50 text-violet-700 border-violet-200', 'bg' => 'bg-violet-500', 'hex' => '#8b5cf6', 'light' => '#f5f3ff', 'border' => '#ddd6fe', 'text' => '#6d28d9'],
+        'pink'    => ['name' => 'Hồng Pastel', 'badge' => 'bg-pink-50 text-pink-700 border-pink-200', 'bg' => 'bg-pink-500', 'hex' => '#ec4899', 'light' => '#fdf2f8', 'border' => '#fbcfe8', 'text' => '#be185d'],
+        'yellow'  => ['name' => 'Vàng Nắng', 'badge' => 'bg-yellow-50 text-yellow-800 border-yellow-200', 'bg' => 'bg-yellow-400', 'hex' => '#eab308', 'light' => '#fefce8', 'border' => '#fef08a', 'text' => '#854d0e'],
+        'teal'    => ['name' => 'Xanh Mòng Két', 'badge' => 'bg-teal-50 text-teal-700 border-teal-200', 'bg' => 'bg-teal-500', 'hex' => '#14b8a6', 'light' => '#f0fdfa', 'border' => '#99f6e4', 'text' => '#0f766e'],
+        'sky'     => ['name' => 'Xanh Lam Nhạt', 'badge' => 'bg-sky-50 text-sky-700 border-sky-200', 'bg' => 'bg-sky-500', 'hex' => '#0ea5e9', 'light' => '#f0f9ff', 'border' => '#bae6fd', 'text' => '#0369a1'],
     ];
 
     public function index(Request $request)
     {
+        $this->syncUnmappedQuans();
+
         $q = trim(strip_tags((string) $request->input('q', '')));
 
         $query = DanhMucQuan::withCount('quans');
@@ -72,7 +74,7 @@ class QuanLyDanhMucController extends Controller
             'categories'   => $categories,
             'stats'        => $stats,
             'presetIcons'  => $this->presetIcons,
-            'presetColors' => $this->presetColors,
+            'presetColors' => DanhMucQuan::$presetColors,
             'searchQuery'  => $q,
         ]);
     }
@@ -257,5 +259,43 @@ class QuanLyDanhMucController extends Controller
             'is_noi_bat' => $category->is_noi_bat,
             'message' => ($category->is_noi_bat ? 'Đã ghim nổi bật Trang chủ: ' : 'Đã bỏ ghim Trang chủ: ') . $category->ten_danh_muc,
         ]);
+    }
+
+    /**
+     * Tự động đồng bộ các quán chưa gán danh_muc_id nếu có
+     */
+    protected function syncUnmappedQuans(): void
+    {
+        if (!Quan::whereNull('danh_muc_id')->exists()) {
+            return;
+        }
+
+        $categories = DanhMucQuan::all()->keyBy('slug');
+
+        $mapping = [
+            'nha-hang'           => ['Nhà hàng'],
+            'ca-phe-tra'         => ['Cà phê & Trà', 'Cà phê'],
+            'billiards-giai-tri' => ['Billiards & Giải trí', 'Billiards', 'Bida'],
+            'do-an-vat'          => ['Đồ ăn vặt', 'Ăn vặt', 'Món ăn vặt'],
+            'lau-nuong'          => ['Lẩu & Nướng', 'Lẩu', 'Nướng'],
+            'quan-nhau'          => ['Quán nhậu & Bar', 'Quán nhậu', 'Quán Đêm 24/7', 'Bar', 'Pub'],
+            'tra-sua-nuoc-ep'    => ['Trà sữa & Nước ép', 'Trà sữa', 'Nước ép'],
+            'tiem-banh'          => ['Tiệm bánh', 'Bánh ngọt'],
+            'quan-an-binh-dan'   => ['Quán ăn bình dân', 'Cơm bình dân', 'Bình dân'],
+        ];
+
+        foreach ($mapping as $slug => $types) {
+            if (isset($categories[$slug])) {
+                Quan::whereNull('danh_muc_id')
+                    ->whereIn('loai_hinh_kinh_doanh', $types)
+                    ->update(['danh_muc_id' => $categories[$slug]->id]);
+            }
+        }
+
+        foreach ($categories as $cat) {
+            Quan::whereNull('danh_muc_id')
+                ->where('loai_hinh_kinh_doanh', $cat->ten_danh_muc)
+                ->update(['danh_muc_id' => $cat->id]);
+        }
     }
 }

@@ -1,5 +1,5 @@
 <!-- Logout Confirmation Modal -->
-<div id="logoutModal" class="fixed inset-0 z-[9999] hidden items-center justify-center">
+<div id="logoutModal" class="fixed inset-0 hidden items-center justify-center" style="z-index: 999999 !important;">
     <!-- Backdrop -->
     <div class="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300 opacity-0" id="logoutModalBackdrop" onclick="closeLogoutModal()"></div>
     

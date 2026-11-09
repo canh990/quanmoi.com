@@ -13,8 +13,8 @@
         {{-- Hidden location filter inputs --}}
         <input type="hidden" name="tinh_thanh_id" id="{{ $prefix }}-tinh-thanh-id" value="{{ request('tinh_thanh_id') }}">
         <input type="hidden" name="quan_huyen_id" id="{{ $prefix }}-quan-huyen-id" value="{{ request('quan_huyen_id') }}">
-        <input type="hidden" name="lat" id="{{ $prefix }}-lat" value="{{ request('lat') }}">
-        <input type="hidden" name="lng" id="{{ $prefix }}-lng" value="{{ request('lng', request('lon')) }}">
+        <input type="hidden" name="lat" id="{{ $prefix }}-lat" value="{{ request('lat') ?? request()->cookie('user_lat') ?? '' }}">
+        <input type="hidden" name="lng" id="{{ $prefix }}-lng" value="{{ request('lng', request('lon')) ?? request()->cookie('user_lng') ?? '' }}">
         <input type="hidden" name="ban_kinh" id="{{ $prefix }}-ban-kinh" value="{{ request('ban_kinh') }}">
         <input type="hidden" name="sap_xep" id="{{ $prefix }}-sap-xep" value="{{ request('sap_xep') }}">
 
@@ -386,6 +386,35 @@
         let currentLat = null;
         let currentLng = null;
 
+        function getCookie(name) {
+            const match = document.cookie.match(new RegExp('(^|;\\s*)' + name + '=([^;]*)'));
+            return match ? decodeURIComponent(match[2]) : null;
+        }
+
+        function initExistingGps() {
+            const latVal = (hiddenLat && hiddenLat.value) || getCookie('user_lat');
+            const lngVal = (hiddenLng && hiddenLng.value) || getCookie('user_lng');
+            if (latVal && lngVal && !isNaN(parseFloat(latVal)) && !isNaN(parseFloat(lngVal))) {
+                currentLat = parseFloat(latVal);
+                currentLng = parseFloat(lngVal);
+                if (hiddenLat) hiddenLat.value = latVal;
+                if (hiddenLng) hiddenLng.value = lngVal;
+                if (gpsStatus) {
+                    gpsStatus.className = 'flex items-center gap-2.5 p-3 rounded-xl border border-emerald-200 bg-emerald-50 text-[12.5px] text-emerald-800 font-medium';
+                }
+                if (gpsStatusIcon) {
+                    gpsStatusIcon.className = 'material-symbols-outlined text-[20px] text-emerald-600';
+                    gpsStatusIcon.textContent = 'my_location';
+                }
+                if (gpsStatusText) {
+                    const r = (radiusInput && radiusInput.value) || '3';
+                    gpsStatusText.textContent = `Đã có tọa độ vị trí (${r} km)`;
+                }
+                if (gpsBtnText) gpsBtnText.textContent = 'Lấy lại vị trí';
+            }
+        }
+        initExistingGps();
+
         function switchTab(mode) {
             activeTab = mode;
             if (mode === 'area') {
@@ -410,6 +439,10 @@
                 }
                 if (paneGps) paneGps.classList.remove('hidden');
                 if (paneArea) paneArea.classList.add('hidden');
+
+                if (!currentLat || !currentLng) {
+                    initExistingGps();
+                }
             }
         }
 
@@ -628,19 +661,6 @@
                     </div>` : ''}
                 </div>
             `;
-
-            el.addEventListener('click', function () {
-                const searchTerm = this.getAttribute('data-search');
-                if (searchTerm) {
-                    searchInput.value = searchTerm;
-                    saveSearchToHistory(searchTerm);
-                    closeSuggestions();
-                    submitSearchForm();
-                }
-            });
-
-            return el;
-        }
 
             el.addEventListener('click', function () {
                 const searchTerm = this.getAttribute('data-search');
@@ -1095,6 +1115,10 @@
                     (pos) => {
                         currentLat = pos.coords.latitude;
                         currentLng = pos.coords.longitude;
+                        document.cookie = `user_lat=${currentLat}; path=/; max-age=2592000; SameSite=Lax`;
+                        document.cookie = `user_lng=${currentLng}; path=/; max-age=2592000; SameSite=Lax`;
+                        if (hiddenLat) hiddenLat.value = currentLat;
+                        if (hiddenLng) hiddenLng.value = currentLng;
                         if (gpsStatus) gpsStatus.className = 'flex items-center gap-2.5 p-3 rounded-xl border border-emerald-200 bg-emerald-50 text-[12.5px] text-emerald-800 font-medium';
                         if (gpsStatusIcon) {
                             gpsStatusIcon.className = 'material-symbols-outlined text-[20px] text-emerald-600';
@@ -1173,16 +1197,90 @@
                         hiddenQuanHuyen.value = '';
                         locationLabel.textContent = 'Chọn khu vực';
                     }
+                    closeLocation();
+                    if (prefix === 'kp') {
+                        submitSearchForm();
+                    }
                 } else {
                     // ÁP DỤNG GPS GẦN BẠN -> XÓA SẠCH TỈNH / HUYỆN ĐỂ TÁCH BIỆT HOÀN TOÀN
-                    const lat = currentLat || hiddenLat.value;
-                    const lng = currentLng || hiddenLng.value;
+                    let lat = currentLat || (hiddenLat && hiddenLat.value);
+                    let lng = currentLng || (hiddenLng && hiddenLng.value);
 
                     if (!lat || !lng) {
-                        alert('Vui lòng bấm "Lấy vị trí GPS hiện tại" trước khi áp dụng');
+                        const cLat = getCookie('user_lat');
+                        const cLng = getCookie('user_lng');
+                        if (cLat && cLng && !isNaN(parseFloat(cLat)) && !isNaN(parseFloat(cLng))) {
+                            lat = cLat;
+                            lng = cLng;
+                            currentLat = parseFloat(cLat);
+                            currentLng = parseFloat(cLng);
+                        }
+                    }
+
+                    if (!lat || !lng) {
+                        if (!navigator.geolocation) {
+                            alert('Trình duyệt không hỗ trợ định vị GPS');
+                            return;
+                        }
+
+                        if (gpsBtnText) gpsBtnText.textContent = 'Đang lấy vị trí GPS...';
+                        if (applyLocationBtn) {
+                            applyLocationBtn.disabled = true;
+                            applyLocationBtn.innerHTML = '<span class="inline-block animate-spin mr-1">⏳</span> Đang định vị...';
+                        }
+
+                        navigator.geolocation.getCurrentPosition(
+                            (pos) => {
+                                currentLat = pos.coords.latitude;
+                                currentLng = pos.coords.longitude;
+                                document.cookie = `user_lat=${currentLat}; path=/; max-age=2592000; SameSite=Lax`;
+                                document.cookie = `user_lng=${currentLng}; path=/; max-age=2592000; SameSite=Lax`;
+
+                                hiddenTinhThanh.value = '';
+                                hiddenQuanHuyen.value = '';
+                                provinceSelect.value = '';
+                                districtSelect.innerHTML = '<option value="">Tất cả quận/huyện</option>';
+
+                                hiddenLat.value = currentLat;
+                                hiddenLng.value = currentLng;
+                                const radius = radiusInput?.value || '3';
+                                if (hiddenBanKinh) hiddenBanKinh.value = radius;
+                                hiddenSapXep.value = 'near_me';
+
+                                locationLabel.textContent = `Gần bạn (< ${radius}km)`;
+
+                                if (gpsStatus) gpsStatus.className = 'flex items-center gap-2.5 p-3 rounded-xl border border-emerald-200 bg-emerald-50 text-[12.5px] text-emerald-800 font-medium';
+                                if (gpsStatusIcon) {
+                                    gpsStatusIcon.className = 'material-symbols-outlined text-[20px] text-emerald-600';
+                                    gpsStatusIcon.textContent = 'my_location';
+                                }
+                                if (gpsStatusText) gpsStatusText.textContent = `Đã có tọa độ vị trí (${radius} km)`;
+                                if (gpsBtnText) gpsBtnText.textContent = 'Lấy lại vị trí';
+
+                                if (applyLocationBtn) {
+                                    applyLocationBtn.disabled = false;
+                                    applyLocationBtn.textContent = 'Áp dụng';
+                                }
+                                closeLocation();
+                                if (prefix === 'kp') {
+                                    submitSearchForm();
+                                }
+                            },
+                            (err) => {
+                                if (applyLocationBtn) {
+                                    applyLocationBtn.disabled = false;
+                                    applyLocationBtn.textContent = 'Áp dụng';
+                                }
+                                if (gpsBtnText) gpsBtnText.textContent = 'Lấy vị trí GPS hiện tại';
+                                alert('Vui lòng bật quyền truy cập vị trí trên thiết bị của bạn');
+                            },
+                            { enableHighAccuracy: true, timeout: 10000 }
+                        );
                         return;
                     }
 
+                    document.cookie = `user_lat=${lat}; path=/; max-age=2592000; SameSite=Lax`;
+                    document.cookie = `user_lng=${lng}; path=/; max-age=2592000; SameSite=Lax`;
                     hiddenTinhThanh.value = '';
                     hiddenQuanHuyen.value = '';
                     provinceSelect.value = '';
@@ -1195,12 +1293,11 @@
                     hiddenSapXep.value = 'near_me';
 
                     locationLabel.textContent = `Gần bạn (< ${radius}km)`;
-                }
+                    closeLocation();
 
-                closeLocation();
-
-                if (prefix === 'kp') {
-                    submitSearchForm();
+                    if (prefix === 'kp') {
+                        submitSearchForm();
+                    }
                 }
             });
         }

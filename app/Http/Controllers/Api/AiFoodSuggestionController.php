@@ -153,7 +153,7 @@ class AiFoodSuggestionController extends Controller
 
         // 2. Lấy dữ liệu gợi ý từ DB (cache tự động xoay mới mỗi 2 phút)
         $cacheWindow = floor(time() / 120);
-        $cacheKey = 'ai_food_suggest_v4_' . $context['key'] . '_' . md5($tinhThanhId) . '_' . $cacheWindow;
+        $cacheKey = 'ai_food_suggest_v3_' . $context['key'] . '_' . md5($tinhThanhId) . '_' . $cacheWindow;
 
         $dbSuggestions = Cache::remember($cacheKey, 120, function () use ($context, $tinhThanhId, $limit) {
             return $this->fetchSmartSuggestions($context, $tinhThanhId, $limit);
@@ -452,14 +452,14 @@ class AiFoodSuggestionController extends Controller
         foreach ($suggestions as $index => &$item) {
             // Lý do
             if (!empty($item['matched_history'])) {
-                $item['reason'] = '🎯 Phù hợp gu tìm kiếm của bạn';
-                $item['badge']  = 'Đúng Gu';
+                $item['reason'] = '🎯 Phù hợp gu tìm kiếm quen thuộc của bạn';
+                $item['badge']  = 'Đúng Gu Bạn';
             } elseif ($item['source'] === 'database' && !empty($item['subtitle'])) {
-                $item['reason'] = '⭐ Best-seller được yêu thích tại quán';
-                $item['badge']  = 'Món Ngon';
+                $item['reason'] = '⭐ Có tại quán ' . $item['subtitle'];
+                $item['badge']  = 'Quán Đã Duyệt';
             } elseif ($index === 0) {
                 $item['reason'] = '✨ Món AI gợi ý hàng đầu cho ' . mb_strtolower($context['label']);
-                $item['badge']  = 'AI Chọn';
+                $item['badge']  = 'AI Đề Xuất';
             } elseif (!empty($context['reason'])) {
                 $item['reason'] = '💡 ' . $context['reason'];
                 $item['badge']  = $context['label'];
