@@ -441,7 +441,7 @@
     </div>
 
     {{-- MỤC 1 (ACCORDION): 4 KPI SUMMARY CARDS --}}
-    <div class="tk-accordion-card is-open" id="accordion-section-kpi">
+    <div class="tk-accordion-card" id="accordion-section-kpi">
         <button type="button" class="tk-accordion-header" onclick="toggleTkAccordion('accordion-section-kpi')">
             <div class="flex items-center gap-3 min-w-0">
                 <span class="tk-accordion-icon bg-amber-50 text-amber-600 border border-amber-200">
@@ -574,7 +574,7 @@
         $activeCustomPrompt = $aiData['custom_prompt'] ?? '';
         $activeAnswer = $aiData['cau_tra_loi_cau_hoi'] ?? ($aiData['nhan_dinh_cfo'] ?? '');
     @endphp
-    <div class="tk-accordion-card is-open" id="accordion-section-ai">
+    <div class="tk-accordion-card" id="accordion-section-ai">
         <button type="button" class="tk-accordion-header" onclick="toggleTkAccordion('accordion-section-ai')">
             <div class="flex items-center gap-3 min-w-0">
                 <span class="tk-accordion-icon bg-indigo-50 text-indigo-600 border border-indigo-200">
@@ -901,13 +901,14 @@
                     @endforeach
                 </div>
             </div>
+            </div>
         </div>
-    </div>
+            </div>
         </div>
     </div>
 
     {{-- MỤC 3 (ACCORDION): BIỂU ĐỒ XU HƯỚNG DOANH THU & TĂNG TRƯỞNG --}}
-    <div class="tk-accordion-card is-open" id="accordion-section-charts">
+    <div class="tk-accordion-card" id="accordion-section-charts">
         <button type="button" class="tk-accordion-header" onclick="toggleTkAccordion('accordion-section-charts')">
             <div class="flex items-center gap-3 min-w-0">
                 <span class="tk-accordion-icon bg-emerald-50 text-emerald-600 border border-emerald-200">
@@ -975,10 +976,12 @@
                 </span>
             </div>
         </div>
+            </div>
+        </div>
     </div>
 
     {{-- MỤC 4 (ACCORDION): TOP QUÁN, PHÂN BỐ KHU VỰC & DOANH THU THEO GÓI --}}
-    <div class="tk-accordion-card is-open" id="accordion-section-top-venues">
+    <div class="tk-accordion-card" id="accordion-section-top-venues">
         <button type="button" class="tk-accordion-header" onclick="toggleTkAccordion('accordion-section-top-venues')">
             <div class="flex items-center gap-3 min-w-0">
                 <span class="tk-accordion-icon bg-amber-50 text-amber-600 border border-amber-200">
@@ -1124,10 +1127,12 @@
                 </div>
             </div>
         </div>
+            </div>
+        </div>
     </div>
 
     {{-- MỤC 5 (ACCORDION): DANH SÁCH CHI TIẾT GIAO DỊCH TRONG KỲ --}}
-    <div class="tk-accordion-card is-open" id="accordion-section-transactions">
+    <div class="tk-accordion-card {{ (request()->filled('search') || request()->filled('trang_thai_tt') || request()->filled('page')) ? 'is-open' : '' }}" id="accordion-section-transactions">
         <button type="button" class="tk-accordion-header" onclick="toggleTkAccordion('accordion-section-transactions')">
             <div class="flex items-center gap-3 min-w-0">
                 <span class="tk-accordion-icon bg-emerald-50 text-emerald-600 border border-emerald-200">
@@ -1310,9 +1315,12 @@
         const isOpen = card.classList.toggle('is-open');
         if (isOpen && id === 'accordion-section-charts') {
             setTimeout(() => {
+                if (typeof renderAdminStatisticsCharts === 'function') {
+                    renderAdminStatisticsCharts();
+                }
                 if (window.adminRevChartInstance) window.adminRevChartInstance.resize();
                 if (window.adminGrowthChartInstance) window.adminGrowthChartInstance.resize();
-            }, 80);
+            }, 60);
         }
     };
 
@@ -1326,9 +1334,12 @@
         });
         if (open) {
             setTimeout(() => {
+                if (typeof renderAdminStatisticsCharts === 'function') {
+                    renderAdminStatisticsCharts();
+                }
                 if (window.adminRevChartInstance) window.adminRevChartInstance.resize();
                 if (window.adminGrowthChartInstance) window.adminGrowthChartInstance.resize();
-            }, 80);
+            }, 60);
         }
     };
 
