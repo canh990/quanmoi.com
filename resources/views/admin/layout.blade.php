@@ -8,7 +8,6 @@
     <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="dns-prefetch" href="//fonts.googleapis.com">
     <link rel="dns-prefetch" href="//fonts.gstatic.com">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -66,16 +65,20 @@
             background: transparent !important;
             border: 0 !important;
             padding: 0 !important;
+            padding-left: 0 !important;
+            margin-left: 0 !important;
             font-size: 0.75rem !important;
             font-weight: 500 !important;
             line-height: 1.25rem !important;
             color: #0f172a !important;
             outline: none !important;
             box-shadow: none !important;
+            text-align: left !important;
         }
         .admin-search-wrapper input::placeholder {
             color: #94a3b8 !important;
             opacity: 1 !important;
+            text-align: left !important;
         }
 
         /* Fix triệt để mọi icon tìm kiếm có class search-icon-centered */
@@ -89,6 +92,32 @@
             justify-content: center !important;
             line-height: 1 !important;
             pointer-events: none !important;
+        }
+
+        /* Bảo vệ chống text đè lên icon trong các ô tìm kiếm có icon absolute nằm NGOÀI .admin-search-wrapper */
+        :not(.admin-search-wrapper).relative > .material-symbols-outlined.absolute + input,
+        :not(.admin-search-wrapper).relative > .material-symbols-outlined.search-icon-centered + input,
+        :not(.admin-search-wrapper).relative > span.absolute + input,
+        :not(.admin-search-wrapper).relative > i.absolute + input {
+            padding-left: 2.5rem !important;
+        }
+
+        /* Đảm bảo 100% chữ và placeholder trong .admin-search-wrapper luôn nằm sát icon tìm kiếm, không bị thụt lề */
+        .admin-search-wrapper input,
+        .admin-search-wrapper input[type="text"],
+        .admin-search-wrapper.relative input,
+        .admin-search-wrapper > .material-symbols-outlined + input,
+        .admin-search-wrapper > .material-symbols-outlined:first-child + input,
+        .admin-search-wrapper.relative > .material-symbols-outlined:first-child + input {
+            padding-left: 0 !important;
+            margin-left: 0 !important;
+            text-align: left !important;
+        }
+        .admin-search-wrapper input::placeholder,
+        .admin-search-wrapper input[type="text"]::placeholder {
+            padding-left: 0 !important;
+            margin-left: 0 !important;
+            text-align: left !important;
         }
 
 
@@ -940,10 +969,15 @@
         <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-lg overflow-hidden transform transition-all">
             <div class="flex items-center px-4 border-b border-slate-100 bg-slate-50/50">
                 <span class="material-symbols-outlined text-slate-400">search</span>
-                <input id="command-palette-input" onkeyup="filterCommandPalette()" type="text" placeholder="Gõ từ khóa để chuyển nhanh trang quản trị..." class="w-full px-3 py-3.5 text-xs text-slate-800 placeholder-slate-400 bg-transparent focus:outline-none font-medium">
+                <input id="command-palette-input" onkeyup="filterCommandPalette()" type="text" placeholder="Gõ tìm kiếm quán, người dùng, blog, danh mục bằng Elasticsearch..." class="w-full px-3 py-3.5 text-xs text-slate-800 placeholder-slate-400 bg-transparent focus:outline-none font-medium">
+                <span class="px-2 py-0.5 text-[9px] font-bold bg-amber-100 text-amber-800 rounded-md shrink-0 mr-1.5 flex items-center gap-1" title="Hệ thống tìm kiếm Elasticsearch 8.13 tích hợp">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span>Elasticsearch</span>
+                </span>
                 <button onclick="closeCommandPalette()" class="px-1.5 py-0.5 text-[10px] font-bold bg-slate-200/80 hover:bg-slate-200 text-slate-600 rounded">ESC</button>
             </div>
-            <div id="command-palette-list" class="p-2 max-h-80 overflow-y-auto space-y-1 text-xs">
+            <div id="command-palette-list" class="p-2 max-h-96 overflow-y-auto space-y-1 text-xs">
+                <div id="command-palette-es-results" class="space-y-1 mb-2 hidden"></div>
                 <div class="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Lối Tắt Truy Cập Nhanh</div>
                 <a href="{{ route('home') }}" class="cmd-item flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-amber-50 hover:text-amber-700 text-slate-700 font-medium transition-colors">
                     <span class="material-symbols-outlined text-[18px] text-amber-500">home</span>
@@ -3425,13 +3459,173 @@
             }
         });
 
+        let cmdPaletteAbortController = null;
         function filterCommandPalette() {
-            const query = (document.getElementById('command-palette-input')?.value || '').toLowerCase();
+            const rawQuery = document.getElementById('command-palette-input')?.value || '';
+            const query = rawQuery.toLowerCase().trim();
             const items = document.querySelectorAll('#command-palette-list .cmd-item');
             items.forEach(item => {
                 const text = item.textContent.toLowerCase();
                 item.style.display = text.includes(query) ? 'flex' : 'none';
             });
+
+            const resultsContainer = document.getElementById('command-palette-es-results');
+            if (!resultsContainer) return;
+
+            if (cmdPaletteAbortController) {
+                cmdPaletteAbortController.abort();
+            }
+
+            if (query.length < 1) {
+                resultsContainer.innerHTML = '';
+                resultsContainer.classList.add('hidden');
+                return;
+            }
+
+            cmdPaletteAbortController = new AbortController();
+
+            fetch(`/admin/api/global-search?q=${encodeURIComponent(rawQuery)}`, {
+                signal: cmdPaletteAbortController.signal,
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+            })
+                .then(res => res.json())
+                .then(res => {
+                    if (!res.success || !res.data) return;
+                    const d = res.data;
+                    let html = '';
+                    let hasResults = false;
+
+                    // Quán
+                    if (d.quans && d.quans.length > 0) {
+                        hasResults = true;
+                        html += `<div class="px-3 pt-2 pb-1 text-[10px] font-bold text-amber-600 uppercase tracking-wider flex items-center gap-1.5"><span class="material-symbols-outlined text-[14px]">storefront</span> Quán ăn (${d.quans.length})</div>`;
+                        d.quans.forEach(q => {
+                            html += `
+                                <a href="/admin/quan?q=${encodeURIComponent(q.ten_quan)}" class="cmd-item flex items-center justify-between px-3 py-2 rounded-xl hover:bg-amber-50/80 text-slate-800 transition-colors">
+                                    <div class="flex items-center gap-2.5 min-w-0">
+                                        <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                                        <div class="min-w-0">
+                                            <div class="font-bold text-xs truncate">${escapeHtml(q.ten_quan)}</div>
+                                            <div class="text-[10px] text-slate-400 truncate">${escapeHtml(q.dia_chi_chi_tiet || q.loai_hinh_kinh_doanh || '')}</div>
+                                        </div>
+                                    </div>
+                                    <span class="text-[10px] font-semibold text-slate-400 shrink-0">Xem quán &rarr;</span>
+                                </a>
+                            `;
+                        });
+                    }
+
+                    // Người dùng
+                    if (d.users && d.users.length > 0) {
+                        hasResults = true;
+                        html += `<div class="px-3 pt-2 pb-1 text-[10px] font-bold text-indigo-600 uppercase tracking-wider flex items-center gap-1.5"><span class="material-symbols-outlined text-[14px]">person</span> Người dùng (${d.users.length})</div>`;
+                        d.users.forEach(u => {
+                            html += `
+                                <a href="/admin/nguoi-dung?q=${encodeURIComponent(u.ho_ten || u.email)}" class="cmd-item flex items-center justify-between px-3 py-2 rounded-xl hover:bg-indigo-50/80 text-slate-800 transition-colors">
+                                    <div class="flex items-center gap-2.5 min-w-0">
+                                        <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+                                        <div class="min-w-0">
+                                            <div class="font-bold text-xs truncate">${escapeHtml(u.ho_ten || 'Người dùng')}</div>
+                                            <div class="text-[10px] text-slate-400 truncate">${escapeHtml(u.email || u.so_dien_thoai || '')}</div>
+                                        </div>
+                                    </div>
+                                    <span class="text-[10px] font-semibold text-slate-400 shrink-0">Xem user &rarr;</span>
+                                </a>
+                            `;
+                        });
+                    }
+
+                    // Blogs
+                    if (d.blogs && d.blogs.length > 0) {
+                        hasResults = true;
+                        html += `<div class="px-3 pt-2 pb-1 text-[10px] font-bold text-blue-600 uppercase tracking-wider flex items-center gap-1.5"><span class="material-symbols-outlined text-[14px]">article</span> Bài viết (${d.blogs.length})</div>`;
+                        d.blogs.forEach(b => {
+                            html += `
+                                <a href="/admin/blog/bai-viet/${b.id}" class="cmd-item flex items-center justify-between px-3 py-2 rounded-xl hover:bg-blue-50/80 text-slate-800 transition-colors">
+                                    <div class="flex items-center gap-2.5 min-w-0">
+                                        <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                                        <div class="font-bold text-xs truncate">${escapeHtml(b.title)}</div>
+                                    </div>
+                                    <span class="text-[10px] font-semibold text-slate-400 shrink-0">Chi tiết &rarr;</span>
+                                </a>
+                            `;
+                        });
+                    }
+
+                    // Danh mục
+                    if (d.categories && d.categories.length > 0) {
+                        hasResults = true;
+                        html += `<div class="px-3 pt-2 pb-1 text-[10px] font-bold text-purple-600 uppercase tracking-wider flex items-center gap-1.5"><span class="material-symbols-outlined text-[14px]">category</span> Danh mục (${d.categories.length})</div>`;
+                        d.categories.forEach(c => {
+                            html += `
+                                <a href="/admin/danh-muc-quan?q=${encodeURIComponent(c.ten_danh_muc)}" class="cmd-item flex items-center justify-between px-3 py-2 rounded-xl hover:bg-purple-50/80 text-slate-800 transition-colors">
+                                    <div class="flex items-center gap-2.5 min-w-0">
+                                        <span class="w-2 h-2 rounded-full bg-purple-500"></span>
+                                        <div class="font-bold text-xs truncate">${escapeHtml(c.ten_danh_muc)}</div>
+                                    </div>
+                                    <span class="text-[10px] font-semibold text-slate-400 shrink-0">Quản lý &rarr;</span>
+                                </a>
+                            `;
+                        });
+                    }
+
+                    // Video ẩm thực
+                    if (d.videos && d.videos.length > 0) {
+                        hasResults = true;
+                        html += `<div class="px-3 pt-2 pb-1 text-[10px] font-bold text-rose-600 uppercase tracking-wider flex items-center gap-1.5"><span class="material-symbols-outlined text-[14px]">play_circle</span> Video ẩm thực (${d.videos.length})</div>`;
+                        d.videos.forEach(v => {
+                            html += `
+                                <a href="/admin/video-shorts?q=${encodeURIComponent(v.tieu_de)}" class="cmd-item flex items-center justify-between px-3 py-2 rounded-xl hover:bg-rose-50/80 text-slate-800 transition-colors">
+                                    <div class="flex items-center gap-2.5 min-w-0">
+                                        <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                                        <div class="min-w-0">
+                                            <div class="font-bold text-xs truncate">${escapeHtml(v.tieu_de)}</div>
+                                            <div class="text-[10px] text-slate-400 truncate">${escapeHtml(v.mo_ta || '')}</div>
+                                        </div>
+                                    </div>
+                                    <span class="text-[10px] font-semibold text-slate-400 shrink-0">Xem video &rarr;</span>
+                                </a>
+                            `;
+                        });
+                    }
+
+                    // Khuyến mãi & Voucher
+                    if (d.promotions && d.promotions.length > 0) {
+                        hasResults = true;
+                        html += `<div class="px-3 pt-2 pb-1 text-[10px] font-bold text-emerald-600 uppercase tracking-wider flex items-center gap-1.5"><span class="material-symbols-outlined text-[14px]">local_offer</span> Khuyến mãi & Voucher (${d.promotions.length})</div>`;
+                        d.promotions.forEach(p => {
+                            html += `
+                                <a href="/admin/khuyen-mai-ai?q=${encodeURIComponent(p.ma_khuyen_mai || p.tieu_de)}" class="cmd-item flex items-center justify-between px-3 py-2 rounded-xl hover:bg-emerald-50/80 text-slate-800 transition-colors">
+                                    <div class="flex items-center gap-2.5 min-w-0">
+                                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                        <div class="min-w-0">
+                                            <div class="font-bold text-xs truncate">${escapeHtml(p.tieu_de || p.ma_khuyen_mai)}</div>
+                                            <div class="text-[10px] text-slate-400 truncate">${escapeHtml(p.quan?.ten_quan ? 'Quán: ' + p.quan.ten_quan : (p.mo_ta || ''))}</div>
+                                        </div>
+                                    </div>
+                                    <span class="text-[10px] font-semibold text-slate-400 shrink-0">Xem mã &rarr;</span>
+                                </a>
+                            `;
+                        });
+                    }
+
+                    if (hasResults) {
+                        resultsContainer.innerHTML = html;
+                        resultsContainer.classList.remove('hidden');
+                    } else {
+                        resultsContainer.innerHTML = `
+                            <div class="px-3 py-3 text-center text-gray-400 text-xs">
+                                Không tìm thấy kết quả Elasticsearch phù hợp với từ khóa "${escapeHtml(rawQuery)}".
+                            </div>
+                        `;
+                        resultsContainer.classList.remove('hidden');
+                    }
+                })
+                .catch(err => {
+                    if (err.name !== 'AbortError') {
+                        // ignore error
+                    }
+                });
         }
 
         document.addEventListener('keydown', function(e) {
@@ -3640,69 +3834,63 @@
                         currentHeaderTitle.innerHTML = newHeaderTitle.innerHTML;
                     }
 
-                    currentMain.style.opacity = '0';
-                    currentMain.style.transition = 'opacity 0.08s ease';
+                    currentMain.innerHTML = newMain.innerHTML;
+                    currentMain.className = newMain.className;
 
-                    setTimeout(() => {
-                        currentMain.innerHTML = newMain.innerHTML;
-                        currentMain.className = newMain.className;
+                    // Execute scripts in page content
+                    doc.querySelectorAll('#admin-main-content script, main script').forEach(s => {
+                        const newScript = document.createElement('script');
+                        Array.from(s.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+                        newScript.textContent = s.textContent;
+                        document.body.appendChild(newScript);
+                        newScript.remove();
+                    });
 
-                        // Execute scripts in page content
-                        doc.querySelectorAll('#admin-main-content script, main script').forEach(s => {
+                    // Re-run push scripts if any
+                    doc.querySelectorAll('body > script:not([src])').forEach(s => {
+                        if (!s.textContent.includes('Real-time Notification Engine') && 
+                            !s.textContent.includes('INSTANT SPA TURBO NAVIGATION') &&
+                            !s.textContent.includes('adminPageCache')) {
                             const newScript = document.createElement('script');
-                            Array.from(s.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
                             newScript.textContent = s.textContent;
                             document.body.appendChild(newScript);
                             newScript.remove();
-                        });
-
-                        // Re-run push scripts if any
-                        doc.querySelectorAll('body > script:not([src])').forEach(s => {
-                            if (!s.textContent.includes('Real-time Notification Engine') && 
-                                !s.textContent.includes('INSTANT SPA TURBO NAVIGATION') &&
-                                !s.textContent.includes('adminPageCache')) {
-                                const newScript = document.createElement('script');
-                                newScript.textContent = s.textContent;
-                                document.body.appendChild(newScript);
-                                newScript.remove();
-                            }
-                        });
-
-                        currentMain.style.opacity = '1';
-                        if (!preserveScroll) {
-                            scrollAdminToTop(false);
-                            requestAnimationFrame(() => scrollAdminToTop(false));
-                        } else {
-                            window.scrollTo({ top: savedScrollY, behavior: 'instant' });
                         }
+                    });
 
-                        initAdminFlashAlerts();
-                        updateSidebarActiveLinks(url);
+                    if (!preserveScroll) {
+                        scrollAdminToTop(false);
+                        requestAnimationFrame(() => scrollAdminToTop(false));
+                    } else {
+                        window.scrollTo({ top: savedScrollY, behavior: 'instant' });
+                    }
 
-                        if (pushState) {
-                            window.history.pushState({ url }, '', url);
-                        }
+                    initAdminFlashAlerts();
+                    updateSidebarActiveLinks(url);
 
-                        // Close mobile sidebar if open
-                        const mobileSidebar = document.getElementById('admin-sidebar-mobile');
-                        const backdrop = document.getElementById('mobile-sidebar-backdrop');
-                        if (mobileSidebar && !mobileSidebar.classList.contains('-translate-x-full')) {
-                            mobileSidebar.classList.add('-translate-x-full');
-                            backdrop?.classList.add('hidden');
-                        }
+                    if (pushState) {
+                        window.history.pushState({ url }, '', url);
+                    }
 
-                        if (bar) {
-                            bar.style.width = '100%';
-                            setTimeout(() => {
-                                bar.style.opacity = '0';
-                                bar.style.width = '0';
-                            }, 200);
-                        }
+                    // Close mobile sidebar if open
+                    const mobileSidebar = document.getElementById('admin-sidebar-mobile');
+                    const backdrop = document.getElementById('mobile-sidebar-backdrop');
+                    if (mobileSidebar && !mobileSidebar.classList.contains('-translate-x-full')) {
+                        mobileSidebar.classList.add('-translate-x-full');
+                        backdrop?.classList.add('hidden');
+                    }
 
-                        if (typeof checkRealtimeAdminNotifications === 'function') {
-                            checkRealtimeAdminNotifications();
-                        }
-                    }, 80);
+                    if (bar) {
+                        bar.style.width = '100%';
+                        setTimeout(() => {
+                            bar.style.opacity = '0';
+                            bar.style.width = '0';
+                        }, 200);
+                    }
+
+                    if (typeof checkRealtimeAdminNotifications === 'function') {
+                        checkRealtimeAdminNotifications();
+                    }
                 } else {
                     window.location.href = url;
                 }
@@ -3794,6 +3982,252 @@
             } catch (e) {}
         });
 
+        // ==========================================================================
+        // SMART MATCHING: HỖ TRỢ GÕ TIẾNG VIỆT KHÔNG DẤU, SỬA LỖI LẶP KÝ TỰ (MESI -> MESSI)
+        // ==========================================================================
+        window.adminRemoveTone = function(str) {
+            if (!str) return '';
+            return String(str).normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/đ/g, 'd').replace(/Đ/g, 'D')
+                .toLowerCase();
+        };
+
+        window.adminSmartMatch = function(text, query) {
+            if (!query) return true;
+            if (!text) return false;
+            const tRaw = String(text).toLowerCase();
+            const qRaw = String(query).trim().toLowerCase();
+            if (!qRaw) return true;
+
+            // 1. Khớp chuỗi trực tiếp (nhanh nhất)
+            if (tRaw.includes(qRaw)) return true;
+
+            // 2. Khớp chuỗi không dấu tiếng Việt
+            const t = window.adminRemoveTone(text);
+            const q = window.adminRemoveTone(query);
+            if (t.includes(q)) return true;
+
+            // 3. Khớp từng từ (token) riêng biệt: hỗ trợ lỗi gõ ký tự lặp (ví dụ "mesi" -> "messi", "coffe" -> "coffee")
+            if (q.length >= 3) {
+                const collapse = s => s.replace(/(.)\1+/g, (match, char) => char);
+                const qCollapsed = collapse(q);
+                const words = t.split(/[\s,.:;!?'"()/\-_[\]{}]+/);
+                for (const w of words) {
+                    if (!w) continue;
+                    if (w.includes(q) || collapse(w).includes(qCollapsed)) return true;
+                }
+            }
+            return false;
+        };
+
+        // ==========================================================================
+        // TOÀN BỘ CHỨC NĂNG TÌM KIẾM TRANG ADMIN: LIVE ELASTICSEARCH TỨC THÌ (KHÔNG CẦN ENTER, 0MS DELAY)
+        // ==========================================================================
+        let __adminSearchAbortController = null;
+        let __adminSearchTimer = null;
+
+        document.addEventListener('input', function(e) {
+            const input = e.target;
+            if (!input || input.type === 'password' || input.type === 'file' || input.type === 'checkbox' || input.type === 'radio') return;
+
+            // Bỏ qua các input đã có handler chuyên dụng riêng độc lập
+            if (input.id === 'featured-quick-search' || input.id === 'candidate-live-search' || input.id === 'duyet-quick-search' || input.id === 'quan-quick-search' || input.id === 'command-palette-input') {
+                return;
+            }
+
+            const form = input.closest('form');
+            const isSearchInput = input.name === 'q' || input.id?.includes('search') || input.closest('.admin-search-wrapper');
+            if (!form || !isSearchInput) return;
+            if (form.method && form.method.toUpperCase() !== 'GET') return;
+
+            const action = form.getAttribute('action') || window.location.pathname;
+            try {
+                const parsed = new URL(action, window.location.origin);
+                if (parsed.origin !== window.location.origin || !parsed.pathname.startsWith('/admin')) return;
+
+                const q = (input.value || '').trim();
+
+                // Cập nhật nút xóa nếu có trong form
+                const clearBtn = form.querySelector('[id*="clear"]');
+                if (clearBtn) {
+                    clearBtn.classList.toggle('hidden', q === '');
+                }
+
+                // BƯỚC 1: LỌC TỨC THÌ TRÊN DOM HIỆN TẠI (0MS ĐỘ TRỄ - PHẢN HỒI NGAY TRÊN MÀN HÌNH)
+                const tbody = document.querySelector('#admin-main-content table tbody') || document.querySelector('table tbody');
+                if (tbody) {
+                    let matchCount = 0;
+                    tbody.querySelectorAll('tr').forEach(row => {
+                        if (row.id === 'table-live-search-empty-row') return;
+                        // Chỉ lấy text của các cột dữ liệu (bỏ qua cột thao tác cuối cùng)
+                        const cells = Array.from(row.querySelectorAll('td'));
+                        const searchCells = cells.slice(0, Math.max(1, cells.length - 1));
+                        const text = searchCells.map(c => c.innerText).join(' ');
+                        const match = (!q || window.adminSmartMatch(text, q));
+                        row.style.display = match ? '' : 'none';
+                        if (match) matchCount++;
+                    });
+
+                    let emptyRow = document.getElementById('table-live-search-empty-row');
+                    if (q && matchCount === 0) {
+                        if (!emptyRow) {
+                            emptyRow = document.createElement('tr');
+                            emptyRow.id = 'table-live-search-empty-row';
+                            const colSpan = tbody.closest('table')?.querySelectorAll('thead th')?.length || 6;
+                            emptyRow.innerHTML = `<td colspan="${colSpan}" class="p-8 text-center text-xs text-slate-400"><div class="flex flex-col items-center justify-center gap-1.5"><span class="material-symbols-outlined text-2xl text-slate-300">search_off</span><span>Không tìm thấy dữ liệu nào phù hợp với từ khóa "${q}".</span></div></td>`;
+                            tbody.appendChild(emptyRow);
+                        }
+                    } else if (emptyRow) {
+                        emptyRow.remove();
+                    }
+                }
+
+                // BƯỚC 2: GỬI REQUEST SERVER ELASTICSEARCH TRONG NỀN (DEBOUNCE 160MS CHỐNG NGHẼN MẠNG)
+                if (__adminSearchTimer) clearTimeout(__adminSearchTimer);
+                __adminSearchTimer = setTimeout(() => {
+                    executeAdminLiveSearch(form, input);
+                }, 160);
+            } catch (err) {}
+        });
+
+        // Bắt sự kiện thay đổi dropdown lọc trong các form GET tìm kiếm
+        document.addEventListener('change', function(e) {
+            const el = e.target;
+            if (!el || el.tagName !== 'SELECT') return;
+            const form = el.closest('form');
+            if (!form || (form.method && form.method.toUpperCase() !== 'GET')) return;
+
+            // Bỏ qua nếu form có handler riêng
+            if (form.id === 'quan-filter-form' || form.id === 'featured-search-form' || form.id === 'duyet-search-form') {
+                return;
+            }
+
+            const action = form.getAttribute('action') || window.location.pathname;
+            try {
+                const parsed = new URL(action, window.location.origin);
+                if (parsed.origin !== window.location.origin || !parsed.pathname.startsWith('/admin')) return;
+
+                if (form.querySelector('input[name="q"], .admin-search-wrapper')) {
+                    executeAdminLiveSearch(form);
+                }
+            } catch (err) {}
+        });
+
+        function executeAdminLiveSearch(form, activeInput = null) {
+            if (!form) return;
+            const action = form.getAttribute('action') || window.location.pathname;
+            const formData = new FormData(form);
+            const params = new URLSearchParams();
+            for (const [key, value] of formData.entries()) {
+                if (typeof value === 'string' && value.trim() !== '') {
+                    params.set(key, value.trim());
+                }
+            }
+
+            const url = new URL(action, window.location.origin);
+            url.search = params.toString();
+
+            // Cập nhật thanh địa chỉ mà không reload trang
+            window.history.replaceState({}, '', url.toString());
+
+            if (__adminSearchAbortController) {
+                __adminSearchAbortController.abort();
+            }
+            __adminSearchAbortController = new AbortController();
+
+            fetch(url.toString(), {
+                signal: __adminSearchAbortController.signal,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(res => res.text())
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+
+                // 1. Cập nhật các vùng chứa danh sách dạng Thẻ / Grid đặc thù (Video Shorts, Khuyến mãi AI...)
+                const specialContainers = [
+                    '#videos-grid-container',
+                    '#admin-promo-list',
+                    '#admin-promo-empty'
+                ];
+                specialContainers.forEach(sel => {
+                    const newEl = doc.querySelector(sel);
+                    const oldEl = document.querySelector(sel);
+                    if (newEl && oldEl) {
+                        oldEl.innerHTML = newEl.innerHTML;
+                    }
+                });
+
+                // 2. Cập nhật tbody của bảng chính (đối với giao diện dạng Table)
+                const newTbody = doc.querySelector('#admin-main-content table tbody') || doc.querySelector('table tbody');
+                const oldTbody = document.querySelector('#admin-main-content table tbody') || document.querySelector('table tbody');
+                if (newTbody && oldTbody) {
+                    oldTbody.innerHTML = newTbody.innerHTML;
+                    if (activeInput && activeInput.value.trim() !== '') {
+                        const curQ = activeInput.value.trim();
+                        oldTbody.querySelectorAll('tr').forEach(row => {
+                            const cells = Array.from(row.querySelectorAll('td'));
+                            const searchCells = cells.slice(0, Math.max(1, cells.length - 1));
+                            const text = searchCells.map(c => c.innerText).join(' ');
+                            row.style.display = window.adminSmartMatch(text, curQ) ? '' : 'none';
+                        });
+                    }
+                }
+
+                // 3. Cập nhật khối phân trang
+                const newPagi = doc.querySelector('#quan-pagination-wrapper') || doc.querySelector('.pagination')?.closest('div, nav') || doc.querySelector('[id*="pagination"]');
+                const oldPagi = document.querySelector('#quan-pagination-wrapper') || document.querySelector('.pagination')?.closest('div, nav') || document.querySelector('[id*="pagination"]');
+                if (newPagi && oldPagi) {
+                    oldPagi.innerHTML = newPagi.innerHTML;
+                }
+
+                // 4. Cập nhật các badge số lượng thống kê nếu có (không đè lên badge của kho quán candidate độc lập)
+                doc.querySelectorAll('[id*="count"], [id*="badge"], [id*="stat"]').forEach(newBadge => {
+                    if (!newBadge.id || newBadge.id === 'candidates-count-badge') return;
+                    const oldBadge = document.getElementById(newBadge.id);
+                    if (oldBadge && oldBadge !== activeInput) {
+                        oldBadge.innerHTML = newBadge.innerHTML;
+                    }
+                });
+            })
+            .catch(err => {
+                if (err.name !== 'AbortError') {
+                    console.error('Lỗi Live Search:', err);
+                }
+            });
+        }
+
+        // Tự động kiểm tra và lọc giao diện nếu trang tải lại kèm từ khóa tìm kiếm
+        function initGlobalAdminSearchOnLoad() {
+            document.querySelectorAll('form[method="GET"] input[name="q"], form:not([method]) input[name="q"]').forEach(input => {
+                const q = (input.value || '').trim();
+                if (!q) return;
+                const form = input.closest('form');
+                if (!form) return;
+                const clearBtn = form.querySelector('[id*="clear"]');
+                if (clearBtn) clearBtn.classList.remove('hidden');
+
+                const tbody = document.querySelector('#admin-main-content table tbody') || document.querySelector('table tbody');
+                if (tbody) {
+                    tbody.querySelectorAll('tr').forEach(row => {
+                        const cells = Array.from(row.querySelectorAll('td'));
+                        const searchCells = cells.slice(0, Math.max(1, cells.length - 1));
+                        const text = searchCells.map(c => c.innerText).join(' ');
+                        row.style.display = window.adminSmartMatch(text, q) ? '' : 'none';
+                    });
+                }
+            });
+        }
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initGlobalAdminSearchOnLoad);
+        } else {
+            initGlobalAdminSearchOnLoad();
+        }
+        window.addEventListener('pageshow', initGlobalAdminSearchOnLoad);
+
         // Intercept GET search/filter forms for instant 0-delay load (ngăn chặn Chrome tự động cuộn xuống nút Lọc)
         document.addEventListener('submit', function(e) {
             const form = e.target;
@@ -3804,16 +4238,8 @@
                 if (parsed.origin !== window.location.origin || !parsed.pathname.startsWith('/admin')) return;
 
                 e.preventDefault();
-                const formData = new FormData(form);
-                const params = new URLSearchParams();
-                for (const [key, value] of formData.entries()) {
-                    if (value !== '' && value !== null && value !== undefined) {
-                        params.append(key, value);
-                    }
-                }
-                const queryString = params.toString();
-                const targetUrl = parsed.pathname + (queryString ? '?' + queryString : '');
-                instantNavigate(targetUrl, true);
+                if (__adminSearchTimer) clearTimeout(__adminSearchTimer);
+                executeAdminLiveSearch(form);
             } catch (err) {}
         });
 

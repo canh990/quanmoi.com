@@ -17,7 +17,7 @@ class AiToolsController extends Controller
         $this->aiService = $aiService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
         $danhSachQuan = Quan::with(['danhMucMenu.monAn:id,danh_muc_id,ten_mon'])
             ->select('id', 'ten_quan', 'loai_hinh_kinh_doanh', 'dia_chi_chi_tiet', 'ten_quan_huyen', 'ten_tinh_thanh')
@@ -32,13 +32,47 @@ class AiToolsController extends Controller
                 return $quan;
             });
 
-        $promotions = KhuyenMai::with('quan:id,ten_quan,slug')
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $q = trim((string) $request->input('q', ''));
+        $promoQuery = KhuyenMai::with('quan:id,ten_quan,slug');
+
+        if ($q !== '') {
+            $esService = app(\App\Services\ElasticAdminSearchService::class);
+            $esKmIds = $esService->searchKhuyenMai($q);
+
+            if ($esKmIds !== null && ! empty($esKmIds)) {
+                $promoQuery->whereIn('id', $esKmIds);
+                if (\Illuminate\Support\Facades\DB::getDriverName() === 'mysql') {
+                    $escapedIds = implode("','", array_map('addslashes', $esKmIds));
+                    $promoQuery->orderByRaw("FIELD(id, '{$escapedIds}')");
+                }
+            } else {
+                $tokens = preg_split('/\s+/u', $q, -1, PREG_SPLIT_NO_EMPTY) ?: [$q];
+                $promoQuery->where(function ($sub) use ($q, $tokens) {
+                    $sub->where('ma_voucher', 'like', "%{$q}%")
+                        ->orWhere('tieu_de', 'like', "%{$q}%")
+                        ->orWhere('slogan', 'like', "%{$q}%")
+                        ->orWhere('noi_dung', 'like', "%{$q}%")
+                        ->orWhereHas('quan', fn ($qSub) => $qSub->where('ten_quan', 'like', "%{$q}%"));
+
+                    if (count($tokens) > 1) {
+                        $sub->orWhere(function ($tokSub) use ($tokens) {
+                            foreach ($tokens as $token) {
+                                $tokSub->where(function ($w) use ($token) {
+                                    $w->where('tieu_de', 'like', "%{$token}%")
+                                      ->orWhere('ma_voucher', 'like', "%{$token}%");
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+        }
+
+        $promotions = $promoQuery->orderBy('created_at', 'desc')->get();
 
         $promotionsCount = $promotions->count();
 
-        return view('admin.ai-tools.index', compact('danhSachQuan', 'promotionsCount', 'promotions'));
+        return view('admin.ai-tools.index', compact('danhSachQuan', 'promotionsCount', 'promotions', 'q'));
     }
 
     /**

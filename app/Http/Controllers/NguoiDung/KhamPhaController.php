@@ -187,7 +187,7 @@ class KhamPhaController extends Controller
                     }
                 }
 
-                if ($isIndexOutOfSync || $quans->isEmpty() || ($quans->total() > 0 && $quans->count() < $expectedCount)) {
+                if ($isIndexOutOfSync || ($quans->total() > 0 && ($quans->isEmpty() || $quans->count() < $expectedCount))) {
                     $usedEloquentFallback = true;
                     [$quans, $fallbackQuanIds] = $this->paginateWithEloquentFallback(
                         $request,
@@ -635,105 +635,6 @@ class KhamPhaController extends Controller
         }
 
         $items = $q->get();
-
-        // Fallback Fuzzy Search (Chống sai chính tả Levenshtein / Tương đồng chuỗi) khi tìm chính xác LIKE trả về 0 kết quả
-        if ($tuKhoa !== '' && $items->isEmpty()) {
-            $baseQuery = Quan::query()->where('trang_thai', 'da_duyet')->withAvg('danhGia', 'so_sao')->withCount('danhGia');
-
-            if (!empty($danhMuc) && !in_array($danhMuc, ['Quán Nổi Bật', 'Quán Mới'])) {
-                if ($danhMuc === 'Cà phê' || $danhMuc === 'Cà phê & Trà') {
-                    $baseQuery->whereIn('loai_hinh_kinh_doanh', ['Cà phê & Trà', 'Cà phê']);
-                } elseif ($danhMuc === 'Ăn vặt' || $danhMuc === 'Đồ ăn vặt') {
-                    $baseQuery->whereIn('loai_hinh_kinh_doanh', ['Đồ ăn vặt', 'Ăn vặt']);
-                } else {
-                    $baseQuery->where('loai_hinh_kinh_doanh', $danhMuc);
-                }
-            }
-            if (!empty($tinhCodes)) {
-                $baseQuery->whereIn('tinh_thanh_id', $tinhCodes);
-            }
-            if (!empty($huyenCodes)) {
-                $baseQuery->whereIn('quan_huyen_id', $huyenCodes);
-            }
-            if ($isXacThuc) {
-                $baseQuery->where('is_xac_thuc', true);
-            }
-            if ($isNoiBat) {
-                $baseQuery->where('is_noi_bat', true);
-            }
-            if ($coShopee) {
-                $baseQuery->whereNotNull('shopeefood_url')->where('shopeefood_url', '!=', '');
-            }
-            if ($coVideo) {
-                $baseQuery->whereHas('videos', fn ($v) => $v->where('trang_thai', 'da_duyet'));
-            }
-            if ($mucGia === 'duoi_50k') {
-                $baseQuery->where('gia_nho_nhat', '<=', 50000);
-            } elseif ($mucGia === '50k_150k') {
-                $baseQuery->where('gia_nho_nhat', '<=', 150000)->where('gia_lon_nhat', '>=', 50000);
-            } elseif ($mucGia === '150k_300k') {
-                $baseQuery->where('gia_nho_nhat', '<=', 300000)->where('gia_lon_nhat', '>=', 150000);
-            } elseif ($mucGia === 'tren_300k') {
-                $baseQuery->where('gia_lon_nhat', '>=', 300000);
-            }
-
-            $kwAscii = \Illuminate\Support\Str::lower(\Illuminate\Support\Str::ascii($tuKhoa));
-            $kwWords = array_values(array_filter(preg_split('/\s+/', $kwAscii)));
-
-            if ($kwAscii !== '' && strlen($kwAscii) >= 3) {
-                $candidates = $baseQuery->with('danhMucMenu.monAn:id,danh_muc_id,ten_mon')->get();
-                $scored = [];
-
-                foreach ($candidates as $candidate) {
-                    $haystackParts = [
-                        (string) $candidate->ten_quan,
-                        (string) $candidate->loai_hinh_kinh_doanh,
-                        (string) $candidate->dia_chi_chi_tiet,
-                    ];
-                    if ($candidate->relationLoaded('danhMucMenu')) {
-                        foreach ($candidate->danhMucMenu as $dm) {
-                            foreach ($dm->monAn as $mon) {
-                                $haystackParts[] = (string) $mon->ten_mon;
-                            }
-                        }
-                    }
-
-                    $haystackAscii = \Illuminate\Support\Str::lower(\Illuminate\Support\Str::ascii(implode(' ', $haystackParts)));
-                    $tokens = array_values(array_filter(preg_split('/[^a-z0-9]+/', $haystackAscii)));
-
-                    $bestScore = 0;
-                    foreach ($kwWords as $kwWord) {
-                        if (strlen($kwWord) < 3) {
-                            continue;
-                        }
-                        if (str_contains($haystackAscii, $kwWord)) {
-                            $bestScore = max($bestScore, 100);
-                            continue;
-                        }
-                        $maxDist = strlen($kwWord) >= 6 ? 2 : 1;
-                        foreach ($tokens as $token) {
-                            if ($token === '' || abs(strlen($token) - strlen($kwWord)) > $maxDist) {
-                                continue;
-                            }
-                            $dist = levenshtein($kwWord, $token);
-                            if ($dist <= $maxDist) {
-                                $score = 90 - ($dist * 20);
-                                if ($score > $bestScore) {
-                                    $bestScore = $score;
-                                }
-                            }
-                        }
-                    }
-
-                    if ($bestScore > 0) {
-                        $scored[] = ['quan' => $candidate, 'score' => $bestScore];
-                    }
-                }
-
-                usort($scored, fn ($a, $b) => $b['score'] <=> $a['score']);
-                $items = collect(array_column($scored, 'quan'))->values();
-            }
-        }
 
         if ($dangMoCua) {
             $items = $items->filter(fn (Quan $quan) => $quan->isDangMoCua())->values();

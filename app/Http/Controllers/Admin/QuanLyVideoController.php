@@ -36,13 +36,36 @@ class QuanLyVideoController extends Controller
 
         // Tìm kiếm theo từ khóa
         if ($request->filled('q')) {
-            $keyword = trim($request->q);
-            $query->where(function ($q) use ($keyword) {
-                $q->where('tieu_de', 'like', "%{$keyword}%")
-                    ->orWhere('video_id', 'like', "%{$keyword}%")
-                    ->orWhere('nguoi_dang', 'like', "%{$keyword}%")
-                    ->orWhereHas('quan', fn ($r) => $r->where('ten_quan', 'like', "%{$keyword}%"));
-            });
+            $keyword = trim((string) $request->q);
+            $esService = app(\App\Services\ElasticAdminSearchService::class);
+            $esVideoIds = $esService->searchVideo($keyword);
+
+            if ($esVideoIds !== null && ! empty($esVideoIds)) {
+                $query->whereIn('id', $esVideoIds);
+                if (\Illuminate\Support\Facades\DB::getDriverName() === 'mysql') {
+                    $escapedIds = implode(',', array_map('intval', $esVideoIds));
+                    $query->orderByRaw("FIELD(id, {$escapedIds})");
+                }
+            } else {
+                $tokens = preg_split('/\s+/u', $keyword, -1, PREG_SPLIT_NO_EMPTY) ?: [$keyword];
+                $query->where(function ($q) use ($keyword, $tokens) {
+                    $q->where('tieu_de', 'like', "%{$keyword}%")
+                        ->orWhere('video_id', 'like', "%{$keyword}%")
+                        ->orWhere('nguoi_dang', 'like', "%{$keyword}%")
+                        ->orWhereHas('quan', fn ($r) => $r->where('ten_quan', 'like', "%{$keyword}%"));
+
+                    if (count($tokens) > 1) {
+                        $q->orWhere(function ($tokSub) use ($tokens) {
+                            foreach ($tokens as $token) {
+                                $tokSub->where(function ($w) use ($token) {
+                                    $w->where('tieu_de', 'like', "%{$token}%")
+                                      ->orWhere('nguoi_dang', 'like', "%{$token}%");
+                                });
+                            }
+                        });
+                    }
+                });
+            }
         }
 
         // Lọc theo trạng thái

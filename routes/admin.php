@@ -28,6 +28,7 @@ Route::middleware(['auth', 'KiemTraQuyenHan:admin'])->group(function () {
     // 1. Dashboard Main
     Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard.alias');
+    Route::get('/api/global-search', [AdminDashboardController::class, 'globalSearch'])->name('api.global-search');
 
     // 2. Thống kê & AI Phân tích doanh thu toàn sàn
     Route::get('/thong-ke', [ThongKeController::class, 'index'])->name('thong-ke.index');

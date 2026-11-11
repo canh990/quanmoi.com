@@ -1,4 +1,4 @@
-@extends('admin.layout')
+@extends(request()->ajax() ? 'admin.ajax_layout' : 'admin.layout')
 
 @section('title', 'Quản Lý Danh Mục Quán - Quán Mới Admin')
 @section('page-title', 'Quản Lý Danh Mục Quán Ăn')

@@ -42,50 +42,25 @@
         box-shadow: 0 2px 8px rgba(234, 88, 12, 0.25);
     }
 
-    .saved-view-toggle-group {
-        display: inline-flex;
-        align-items: center;
-        height: 40px;
-        padding: 4px;
-        background: #f3f4f6;
-        border: 1px solid #e5e7eb;
-        border-radius: 12px;
-        gap: 4px;
-    }
-
     .saved-view-toggle-btn {
         display: inline-flex;
         align-items: center;
-        justify-content: center;
         gap: 6px;
-        height: 30px;
-        padding: 0 14px;
-        border-radius: 9px;
+        padding: 7px 14px;
+        border-radius: 10px;
         font-size: 12px;
         font-weight: 700;
-        border: 1px solid transparent;
-        background: transparent;
+        border: 1px solid #e5e7eb;
+        background: #ffffff;
         color: #374151;
         cursor: pointer;
-        white-space: nowrap;
         transition: all 0.15s ease;
-    }
-
-    .saved-view-toggle-btn:hover {
-        color: #111827;
     }
 
     .saved-view-toggle-btn.is-active {
         background: #111827;
         color: #ffffff;
         border-color: #111827;
-        box-shadow: 0 2px 6px rgba(17, 24, 39, 0.15);
-    }
-
-    .saved-action-height {
-        height: 40px !important;
-        display: inline-flex !important;
-        align-items: center !important;
     }
 
     .saved-card {
@@ -214,9 +189,9 @@
                 <p class="text-sm text-gray-500 mt-1">Khám phá lại những địa điểm yêu thích của bạn.</p>
             </div>
 
-            <div class="flex flex-wrap items-center gap-2.5">
+            <div class="flex flex-wrap items-center gap-2">
                 {{-- Toggle Chế độ xem: Lưới (Grid) vs Bản đồ (Map) --}}
-                <div class="saved-view-toggle-group">
+                <div class="inline-flex p-1 bg-gray-100 rounded-xl border border-gray-200">
                     <button type="button" 
                             id="saved-view-btn-grid" 
                             onclick="switchSavedView('grid')" 
@@ -236,7 +211,7 @@
                 </div>
 
                 {{-- Nút chuyển sang trang Bản đồ lân cận --}}
-                <a href="{{ route('ban-do') }}" class="saved-action-height gap-1.5 px-4 bg-primary/10 hover:bg-primary/20 text-primary font-bold text-xs rounded-xl border border-primary/15 transition-all" title="Khám phá quán quanh bạn theo GPS">
+                <a href="{{ route('ban-do') }}" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-primary/10 hover:bg-primary/20 text-primary font-bold text-xs rounded-xl transition-all" title="Khám phá quán quanh bạn theo GPS">
                     <span class="material-symbols-outlined text-[17px]">near_me</span>
                     <span>Quét quán gần bạn</span>
                 </a>
@@ -254,24 +229,23 @@
                            id="saved-search-input" 
                            oninput="filterSavedPlaces()" 
                            placeholder="Tìm trong danh sách đã lưu..." 
-                           style="height: 40px;"
-                           class="w-full pl-10 pr-9 rounded-xl border border-gray-200 bg-white text-xs sm:text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all" />
+                           class="w-full h-10 pl-10 pr-9 rounded-xl border border-gray-200 bg-white text-xs sm:text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all" />
                     <button type="button" id="saved-search-clear" onclick="clearSavedSearch()" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700">
                         <span class="material-symbols-outlined text-[16px]">close</span>
                     </button>
                 </div>
 
                 {{-- Bộ lọc mở cửa & Sắp xếp --}}
-                <div class="flex items-center gap-2.5 self-end sm:self-auto">
+                <div class="flex items-center gap-2 self-end sm:self-auto">
                     <button type="button" 
                             id="saved-filter-open-btn" 
                             onclick="toggleFilterOpenNow()" 
-                            class="saved-action-height gap-1.5 px-3.5 rounded-xl text-xs font-bold border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition-all cursor-pointer">
-                        <span class="material-symbols-outlined text-[16px]">schedule</span>
+                            class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition-all cursor-pointer">
+                        <span class="material-symbols-outlined text-[15px]">schedule</span>
                         <span>Đang mở cửa</span>
                     </button>
 
-                    <select id="saved-sort-select" onchange="sortSavedPlaces(this.value)" style="height: 40px;" class="px-3.5 rounded-xl border border-gray-200 bg-white text-xs font-bold text-gray-700 focus:outline-none focus:border-primary cursor-pointer">
+                    <select id="saved-sort-select" onchange="sortSavedPlaces(this.value)" class="h-10 px-3 rounded-xl border border-gray-200 bg-white text-xs font-bold text-gray-700 focus:outline-none focus:border-primary">
                         <option value="newest">Mới lưu nhất</option>
                         <option value="rating_desc">Đánh giá cao nhất</option>
                         <option value="price_asc">Giá: Thấp đến cao</option>
@@ -358,19 +332,19 @@
                         {{-- Badge Trạng thái mở cửa --}}
                         <div class="absolute top-3 left-3 z-10 pointer-events-none">
                             @if($isOpen)
-                                <span style="background: rgba(5, 150, 105, 0.95); color: #ffffff;" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full backdrop-blur-md text-[11px] font-extrabold shadow-sm">
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-600/90 backdrop-blur-md text-white text-[11px] font-extrabold shadow-sm">
                                     <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
                                     Đang mở cửa
                                 </span>
                             @else
-                                <span style="background: rgba(17, 24, 39, 0.85); color: #ffffff;" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full backdrop-blur-md text-[11px] font-extrabold shadow-sm">
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-900/80 backdrop-blur-md text-white text-[11px] font-extrabold shadow-sm">
                                     Tạm đóng cửa
                                 </span>
                             @endif
                         </div>
 
                         {{-- Badge Đánh giá sao thực tế --}}
-                        <div style="background: rgba(15, 23, 42, 0.78); color: #ffffff;" class="absolute bottom-3 left-3 px-2.5 py-1 backdrop-blur-md rounded-lg text-xs font-bold flex items-center gap-1 z-10 pointer-events-none">
+                        <div class="absolute bottom-3 left-3 px-2.5 py-1 bg-black/70 backdrop-blur-md text-white rounded-lg text-xs font-bold flex items-center gap-1 z-10 pointer-events-none">
                             <span class="material-symbols-outlined text-[15px] text-amber-400" style="font-variation-settings: 'FILL' 1;">star</span>
                             <span>{{ $avgRating > 0 ? $avgRating : 'Mới' }}</span>
                             @if($ratingCount > 0)
