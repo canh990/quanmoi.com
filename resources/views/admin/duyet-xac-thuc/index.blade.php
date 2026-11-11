@@ -1,4 +1,4 @@
-@extends('admin.layout')
+@extends(request()->ajax() ? 'admin.ajax_layout' : 'admin.layout')
 
 @section('title', 'Trung Tâm Thẩm Định & Phê Duyệt Quán - Quán Mới Doanh Nghiệp')
 @section('page-title', 'Trung Tâm Duyệt & Xác Thực')
@@ -29,24 +29,28 @@
 
         {{-- Quick Toolbar --}}
         <div class="flex flex-col sm:flex-row sm:items-center gap-2.5 relative z-10 shrink-0">
-            <div class="admin-search-wrapper w-full sm:w-64 shadow-2xs">
+            <form method="GET" action="{{ route('admin.duyet-xac-thuc.index') }}" id="duyet-search-form" onsubmit="event.preventDefault(); submitDuyetSearch();" class="admin-search-wrapper w-full sm:w-72 shadow-2xs relative">
                 <span class="material-symbols-outlined text-[18px] text-slate-400">search</span>
                 <input 
                     type="text" 
+                    name="q"
                     id="duyet-quick-search" 
-                    oninput="filterCurrentTabTable(this.value)" 
-                    placeholder="Lọc nhanh quán, chủ quán, địa chỉ..." 
-                    class="w-full bg-transparent border-0 p-0 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-0 font-medium leading-normal"
+                    value="{{ $q ?? '' }}" 
+                    oninput="debounceDuyetSearch()" 
+                    placeholder="Tìm quán, người dùng (ES gần đúng)..." 
+                    style="padding-left: 0 !important; margin-left: 0 !important; text-align: left !important;"
+                    class="w-full bg-transparent border-0 p-0 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-0 font-medium leading-normal pr-5 !pl-0 text-left"
                 >
                 <button 
                     type="button" 
                     id="clear-search-btn" 
-                    onclick="clearSearchInput()" 
-                    class="hidden text-slate-400 hover:text-slate-600 cursor-pointer shrink-0"
+                    onclick="clearDuyetSearch()" 
+                    class="{{ !empty($q) ? '' : 'hidden' }} absolute right-2 text-slate-400 hover:text-slate-600 cursor-pointer shrink-0"
+                    title="Xóa tìm kiếm"
                 >
                     <span class="material-symbols-outlined text-[16px]">close</span>
                 </button>
-            </div>
+            </form>
 
             <div class="flex items-center gap-2 flex-nowrap shrink-0">
                 <button 
@@ -347,8 +351,24 @@
                         @empty
                             <tr id="pending-quan-empty-row">
                                 <td colspan="5" class="p-12 text-center text-xs text-slate-500 font-medium">
-                                    <span class="material-symbols-outlined text-4xl text-emerald-400 block mb-2">task_alt</span>
-                                    Tuyệt vời! Hiện không còn quán nào đang chờ phê duyệt.
+                                    @if(!empty($q))
+                                        <div class="py-4 text-center">
+                                            <span class="material-symbols-outlined text-4xl text-amber-500 block mb-2">search_off</span>
+                                            <p class="font-bold text-slate-800 text-sm">Không tìm thấy quán chờ duyệt nào khớp với "{{ $q }}"</p>
+                                            @if(($stats['approved_quan'] ?? 0) > 0)
+                                                <p class="text-slate-500 text-xs mt-1.5 mb-3.5">Đã tìm thấy <b class="text-emerald-600 font-bold">{{ $stats['approved_quan'] }}</b> quán đã phê duyệt phù hợp với từ khóa này.</p>
+                                                <button type="button" onclick="switchDuyetTab('approved')" class="btn-enterprise btn-enterprise-success cursor-pointer">
+                                                    <span class="material-symbols-outlined text-[15px]">task_alt</span>
+                                                    <span>Xem {{ $stats['approved_quan'] }} Quán Đã Phê Duyệt</span>
+                                                </button>
+                                            @else
+                                                <p class="text-slate-400 text-xs mt-1">Thử tìm kiếm với từ khóa khác hoặc bấm nút "✕" để xóa bộ lọc.</p>
+                                            @endif
+                                        </div>
+                                    @else
+                                        <span class="material-symbols-outlined text-4xl text-emerald-400 block mb-2">task_alt</span>
+                                        Tuyệt vời! Hiện không còn quán nào đang chờ phê duyệt.
+                                    @endif
                                 </td>
                             </tr>
                         @endforelse
@@ -781,47 +801,131 @@
         } else {
             window.location.hash = '#' + tabName;
         }
-
-        // Re-apply search filter if user already typed in search bar
-        const searchInput = document.getElementById('duyet-quick-search');
-        if (searchInput && searchInput.value) {
-            filterCurrentTabTable(searchInput.value);
-        }
     }
 
-    // Client-side instant search filter across current tab table rows
-    function filterCurrentTabTable(query) {
-        const q = (query || '').trim().toLowerCase();
+    // ========================================================
+    // TÌM KIẾM TỨC THÌ BẰNG ELASTICSEARCH (LIVE INSTANT SEARCH - KHÔNG CẦN ENTER)
+    // Hoạt động 100% ngay cả khi danh sách quán chờ duyệt đang rỗng (0 quán)
+    // ========================================================
+    let duyetSearchTimer = null;
+
+    let duyetAbortController = null;
+
+    function debounceDuyetSearch() {
+        const input = document.getElementById('duyet-quick-search');
+        const q = (input?.value || '').trim();
         const clearBtn = document.getElementById('clear-search-btn');
         if (clearBtn) {
-            if (q.length > 0) clearBtn.classList.remove('hidden');
-            else clearBtn.classList.add('hidden');
+            clearBtn.classList.toggle('hidden', q === '');
         }
 
+        // BƯỚC 1: LỌC TỨC THÌ TRÊN CÁC DÒNG TABLE CỦA TAB HIỆN TẠI (0MS DELAY)
         const activePane = document.getElementById(`tab-pane-${currentActiveTab}`);
-        if (!activePane) return;
+        if (activePane) {
+            activePane.querySelectorAll('tbody tr').forEach(row => {
+                const searchAttr = row.getAttribute('data-search') || row.innerText;
+                const match = !q || (window.adminSmartMatch ? window.adminSmartMatch(searchAttr, q) : searchAttr.toLowerCase().includes(q.toLowerCase()));
+                row.style.display = match ? '' : 'none';
+            });
+        }
 
-        const rows = activePane.querySelectorAll('.duyet-table-row');
-        let visibleCount = 0;
-
-        rows.forEach(row => {
-            const rowData = row.getAttribute('data-search') || row.innerText.toLowerCase();
-            if (q === '' || rowData.includes(q)) {
-                row.style.display = '';
-                visibleCount++;
-            } else {
-                row.style.display = 'none';
-            }
-        });
+        // BƯỚC 2: GỬI REQUEST SERVER ELASTICSEARCH TRONG NỀN (DEBOUNCE 160MS CHỐNG NGHẼN MẠNG)
+        if (duyetSearchTimer) clearTimeout(duyetSearchTimer);
+        duyetSearchTimer = setTimeout(() => {
+            submitDuyetSearch();
+        }, 160);
     }
 
-    function clearSearchInput() {
+    function clearDuyetSearch() {
+        if (duyetSearchTimer) clearTimeout(duyetSearchTimer);
         const input = document.getElementById('duyet-quick-search');
-        if (input) {
-            input.value = '';
-            filterCurrentTabTable('');
-            input.focus();
+        if (input) input.value = '';
+        const clearBtn = document.getElementById('clear-search-btn');
+        if (clearBtn) clearBtn.classList.add('hidden');
+        submitDuyetSearch();
+    }
+
+    function submitDuyetSearch() {
+        if (duyetSearchTimer) clearTimeout(duyetSearchTimer);
+        const input = document.getElementById('duyet-quick-search');
+        const q = (input?.value || '').trim();
+
+        const url = new URL(window.location.pathname, window.location.origin);
+        if (q) url.searchParams.set('q', q);
+
+        // Cập nhật thanh địa chỉ mà không reload trang
+        window.history.replaceState({}, '', url.toString());
+
+        if (duyetAbortController) {
+            duyetAbortController.abort();
         }
+        duyetAbortController = new AbortController();
+
+        fetch(url.toString(), {
+            signal: duyetAbortController.signal,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(res => res.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+
+            // Cập nhật tất cả 4 tab panes
+            ['pending', 'rejected', 'approved', 'users'].forEach(tab => {
+                const newPane = doc.getElementById(`tab-pane-${tab}`);
+                const oldPane = document.getElementById(`tab-pane-${tab}`);
+                if (newPane && oldPane) {
+                    const isHidden = oldPane.classList.contains('hidden');
+                    oldPane.innerHTML = newPane.innerHTML;
+                    oldPane.classList.toggle('hidden', isHidden);
+                }
+
+                // Cập nhật badge trên từng nút tab
+                const newBadge = doc.getElementById(`tab-badge-${tab}`);
+                const oldBadge = document.getElementById(`tab-badge-${tab}`);
+                if (newBadge && oldBadge) {
+                    oldBadge.innerText = newBadge.innerText;
+                }
+
+                // Cập nhật KPI count
+                const newStat = doc.getElementById(`stat-count-${tab}`);
+                const oldStat = document.getElementById(`stat-count-${tab}`);
+                if (newStat && oldStat) {
+                    oldStat.innerText = newStat.innerText;
+                }
+            });
+
+            // Nếu người dùng đang tìm kiếm (q !== '') và tab hiện tại có 0 kết quả -> tự động chuyển sang tab có kết quả phù hợp!
+            if (q !== '') {
+                const pendingCount = parseInt(doc.getElementById('tab-badge-pending')?.innerText || '0');
+                const rejectedCount = parseInt(doc.getElementById('tab-badge-rejected')?.innerText || '0');
+                const approvedCount = parseInt(doc.getElementById('tab-badge-approved')?.innerText || '0');
+                const usersCount = parseInt(doc.getElementById('tab-badge-users')?.innerText || '0');
+
+                const getTabCount = (tab) => {
+                    if (tab === 'pending') return pendingCount;
+                    if (tab === 'rejected') return rejectedCount;
+                    if (tab === 'approved') return approvedCount;
+                    return usersCount;
+                };
+
+                if (getTabCount(currentActiveTab) === 0) {
+                    if (pendingCount > 0) switchDuyetTab('pending');
+                    else if (approvedCount > 0) switchDuyetTab('approved');
+                    else if (rejectedCount > 0) switchDuyetTab('rejected');
+                    else if (usersCount > 0) switchDuyetTab('users');
+                }
+            } else {
+                switchDuyetTab('pending');
+            }
+        })
+        .catch(err => {
+            if (err.name !== 'AbortError') {
+                console.error('Lỗi tìm kiếm duyệt xác thực:', err);
+            }
+        });
     }
 
     // Manual sync button

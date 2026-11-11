@@ -361,8 +361,11 @@
                 <p class="text-xs text-slate-500 mt-1">Quản lý, kích hoạt hoặc xóa các voucher ưu đãi đã được lưu cho các quán ăn trên Quán Mới.</p>
             </div>
             <div>
-                <input type="text" id="admin-search-promo" onkeyup="filterAdminPromotions()" placeholder="🔍 Tìm mã voucher, tên quán..."
-                       class="px-3.5 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none w-full sm:w-64">
+                <div class="admin-search-wrapper w-full sm:w-64 shadow-2xs">
+                    <span class="material-symbols-outlined text-[18px] text-slate-400">search</span>
+                    <input type="text" id="admin-search-promo" onkeyup="filterAdminPromotions()" placeholder="Tìm mã voucher, tên quán..."
+                           class="w-full bg-transparent border-0 p-0 text-xs font-medium outline-none text-slate-800 placeholder:text-slate-400">
+                </div>
             </div>
         </div>
 
@@ -848,12 +851,27 @@
         }
     }
 
+    function removeVietnameseTones(str) {
+        if (!str) return '';
+        str = str.toLowerCase();
+        str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, 'a');
+        str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, 'e');
+        str = str.replace(/ì|í|ị|ỉ|ĩ/g, 'i');
+        str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, 'o');
+        str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, 'u');
+        str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, 'y');
+        str = str.replace(/đ/g, 'd');
+        return str;
+    }
+
     function filterAdminPromotions() {
-        const query = (document.getElementById('admin-search-promo')?.value || '').toLowerCase().trim();
+        const rawQuery = (document.getElementById('admin-search-promo')?.value || '').toLowerCase().trim();
+        const cleanQuery = removeVietnameseTones(rawQuery);
         const cards = document.querySelectorAll('#admin-promo-list > div[data-search]');
         cards.forEach(card => {
-            const searchData = card.getAttribute('data-search') || '';
-            if (!query || searchData.includes(query)) {
+            const searchData = (card.getAttribute('data-search') || '').toLowerCase();
+            const cleanData = removeVietnameseTones(searchData);
+            if (!rawQuery || searchData.includes(rawQuery) || cleanData.includes(cleanQuery)) {
                 card.style.display = '';
             } else {
                 card.style.display = 'none';

@@ -1,4 +1,4 @@
-@extends('admin.layout')
+@extends(request()->ajax() ? 'admin.ajax_layout' : 'admin.layout')
 
 @section('title', 'Quản Lý Bài Viết & Duyệt Blog - Quán Mới Admin')
 @section('page-title', 'Quản Lý & Phê Duyệt Bài Viết')
@@ -93,18 +93,39 @@
                 Đã xuất bản ({{ $stats['published'] ?? 0 }})
             </a>
 
-            <form method="GET" action="{{ route('admin.blog.posts.index') }}" class="inline-flex items-center ml-1">
+            <form method="GET" action="{{ route('admin.blog.posts.index') }}" class="inline-flex items-center gap-2 ml-1">
+                @if(request('status'))
+                    <input type="hidden" name="status" value="{{ request('status') }}">
+                @endif
+                <div class="admin-search-wrapper w-48 sm:w-64 shadow-2xs relative">
+                    <span class="material-symbols-outlined text-[16px] text-slate-400">search</span>
+                    <input type="text" 
+                           name="q" 
+                           id="blog-search-input" 
+                           value="{{ request('q') }}" 
+                           placeholder="Tìm kiếm bài viết, tác giả..." 
+                           style="padding-left: 0 !important; margin-left: 0 !important; text-align: left !important;"
+                           class="w-full bg-transparent border-0 p-0 text-xs font-medium outline-none text-slate-800 placeholder:text-slate-400 pr-5 !pl-0 text-left">
+                    <button type="button" 
+                            id="btn-clear-blog-search" 
+                            onclick="clearBlogSearch()" 
+                            class="absolute right-1.5 text-slate-400 hover:text-rose-600 transition-colors {{ empty(request('q')) ? 'hidden' : '' }}" 
+                            title="Xóa tìm kiếm">
+                        <span class="material-symbols-outlined text-[14px] block">close</span>
+                    </button>
+                </div>
                 <select name="status" onchange="this.form.submit()" class="px-2.5 py-1.5 rounded-xl border border-gray-300 text-xs font-medium outline-none focus:border-amber-500 bg-white shadow-2xs">
-                    <option value="">Khác...</option>
+                    <option value="">Trạng thái...</option>
                     <option value="draft" {{ request('status') == 'draft' ? 'selected' : '' }}>Bản nháp</option>
                     <option value="hidden" {{ request('status') == 'hidden' ? 'selected' : '' }}>Đã ẩn</option>
                 </select>
+                <button type="submit" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-colors">Tìm</button>
             </form>
 
-            @if(request('status'))
-                <a href="{{ route('admin.blog.posts.index') }}" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-semibold rounded-xl transition-colors inline-flex items-center gap-1">
+            @if(request('status') || request('q'))
+                <a href="{{ route('admin.blog.posts.index') }}" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-semibold rounded-xl transition-colors inline-flex items-center gap-1" title="Xóa tất cả bộ lọc">
                     <span class="material-symbols-outlined text-[15px]">close</span>
-                    <span>Bỏ lọc</span>
+                    <span>Xóa lọc</span>
                 </a>
             @endif
         </div>
@@ -423,5 +444,18 @@
             syncAdminBlogTable();
         }
     });
+
+    function clearBlogSearch() {
+        const input = document.getElementById('blog-search-input');
+        if (input) input.value = '';
+        const clearBtn = document.getElementById('btn-clear-blog-search');
+        if (clearBtn) clearBtn.classList.add('hidden');
+        const form = input?.closest('form');
+        if (form && typeof executeAdminLiveSearch === 'function') {
+            executeAdminLiveSearch(form);
+        } else if (form) {
+            form.submit();
+        }
+    }
 </script>
 @endsection

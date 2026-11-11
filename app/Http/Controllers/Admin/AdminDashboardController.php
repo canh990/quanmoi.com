@@ -85,4 +85,35 @@ class AdminDashboardController extends Controller
 
         return view('admin.dashboard', compact('stats', 'chartData'));
     }
+
+    /**
+     * API Tìm kiếm toàn năng bằng Elasticsearch (phục vụ Command Palette Ctrl + K)
+     */
+    public function globalSearch(Request $request)
+    {
+        $q = trim((string) $request->input('q', ''));
+        if ($q === '') {
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'quans' => [],
+                    'users' => [],
+                    'blogs' => [],
+                    'categories' => [],
+                    'videos' => [],
+                    'promotions' => [],
+                ],
+            ]);
+        }
+
+        $service = app(\App\Services\ElasticAdminSearchService::class);
+        $results = $service->globalAdminSearch($q, 6);
+
+        return response()->json([
+            'success' => true,
+            'is_elastic' => $service->isAvailable(),
+            'query' => $q,
+            'data' => $results,
+        ]);
+    }
 }

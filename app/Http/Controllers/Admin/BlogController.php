@@ -34,6 +34,44 @@ class BlogController extends Controller
         if ($request->has('status') && $request->status !== '') {
             $query->where('status', $request->status);
         }
+
+        if ($request->filled('q')) {
+            $q = trim((string) $request->input('q'));
+            $esService = app(\App\Services\ElasticAdminSearchService::class);
+            $blogFilters = [];
+            if ($request->filled('status')) {
+                $blogFilters['status'] = (string) $request->status;
+            }
+            $esBlogIds = $esService->searchBlog($q, $blogFilters);
+
+            if ($esBlogIds !== null && ! empty($esBlogIds)) {
+                $query->whereIn('id', $esBlogIds);
+                if (\Illuminate\Support\Facades\DB::getDriverName() === 'mysql') {
+                    $escapedIds = implode(',', array_map('intval', $esBlogIds));
+                    $query->orderByRaw("FIELD(id, {$escapedIds})");
+                }
+            } else {
+                $tokens = preg_split('/\s+/u', $q, -1, PREG_SPLIT_NO_EMPTY) ?: [$q];
+                $query->where(function ($sub) use ($q, $tokens) {
+                    $sub->where('title', 'like', "%{$q}%")
+                        ->orWhere('excerpt', 'like', "%{$q}%")
+                        ->orWhere('content', 'like', "%{$q}%")
+                        ->orWhereHas('user', fn($u) => $u->where('ho_ten', 'like', "%{$q}%"))
+                        ->orWhereHas('category', fn($c) => $c->where('name', 'like', "%{$q}%"));
+
+                    if (count($tokens) > 1) {
+                        $sub->orWhere(function ($tokSub) use ($tokens) {
+                            foreach ($tokens as $token) {
+                                $tokSub->where(function ($w) use ($token) {
+                                    $w->where('title', 'like', "%{$token}%")
+                                      ->orWhere('excerpt', 'like', "%{$token}%");
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+        }
         
         $blogs = $query->latest()->paginate(20)->withQueryString();
         

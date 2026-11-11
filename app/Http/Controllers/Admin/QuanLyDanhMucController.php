@@ -51,11 +51,31 @@ class QuanLyDanhMucController extends Controller
         $query = DanhMucQuan::withCount('quans');
 
         if (!empty($q)) {
-            $query->where(function ($b) use ($q) {
-                $b->where('ten_danh_muc', 'like', "%{$q}%")
-                  ->orWhere('slug', 'like', "%{$q}%")
-                  ->orWhere('mo_ta', 'like', "%{$q}%");
-            });
+            $esService = app(\App\Services\ElasticAdminSearchService::class);
+            $esCatIds = $esService->searchDanhMuc($q);
+
+            if ($esCatIds !== null && ! empty($esCatIds)) {
+                $query->whereIn('id', $esCatIds);
+                if (\Illuminate\Support\Facades\DB::getDriverName() === 'mysql') {
+                    $escapedIds = implode(',', array_map('intval', $esCatIds));
+                    $query->orderByRaw("FIELD(id, {$escapedIds})");
+                }
+            } else {
+                $tokens = preg_split('/\s+/u', $q, -1, PREG_SPLIT_NO_EMPTY) ?: [$q];
+                $query->where(function ($b) use ($q, $tokens) {
+                    $b->where('ten_danh_muc', 'like', "%{$q}%")
+                      ->orWhere('slug', 'like', "%{$q}%")
+                      ->orWhere('mo_ta', 'like', "%{$q}%");
+
+                    if (count($tokens) > 1) {
+                        $b->orWhere(function ($tokSub) use ($tokens) {
+                            foreach ($tokens as $token) {
+                                $tokSub->where('ten_danh_muc', 'like', "%{$token}%");
+                            }
+                        });
+                    }
+                });
+            }
         }
 
         $categories = $query->orderBy('thu_tu')->orderBy('id')->get();

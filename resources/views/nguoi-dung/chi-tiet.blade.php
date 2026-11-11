@@ -240,22 +240,19 @@
 
         @if(Auth::check() && (Auth::id() === $quan->chu_quan_id || (method_exists(Auth::user(), 'isAdmin') && Auth::user()->isAdmin())))
             {{-- Banner điều hướng nhanh dành cho Chủ Quán / Admin khi xem trang khách --}}
-            <div style="background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%); border: 1px solid rgba(168, 85, 247, 0.28);"
-                 class="text-white px-4 py-3 rounded-2xl mb-3 flex flex-wrap items-center justify-between gap-3 shadow-sm">
-                <div class="flex items-center gap-3 min-w-0">
-                    <span style="background: rgba(245, 158, 11, 0.18); border: 1px solid rgba(245, 158, 11, 0.4); color: #fcd34d;"
-                          class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0">
-                        <span class="material-symbols-outlined text-[18px]">storefront</span>
+            <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white px-4 py-2.5 rounded-2xl mb-3 flex flex-wrap items-center justify-between gap-3 shadow-sm border border-purple-500/20">
+                <div class="flex items-center gap-2.5 min-w-0">
+                    <span class="w-7 h-7 rounded-lg bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-300 shrink-0">
+                        <span class="material-symbols-outlined text-[16px]">storefront</span>
                     </span>
                     <div class="min-w-0">
-                        <p style="color: #ffffff;" class="text-xs sm:text-sm font-bold truncate">Chế độ xem thực khách: {{ $quan->ten_quan }}</p>
-                        <p style="color: #cbd5e1;" class="text-[11px] sm:text-xs truncate">Bạn đang xem quán với giao diện công khai mà khách hàng nhìn thấy</p>
+                        <p class="text-xs font-bold text-white truncate">Chế độ xem thực khách: {{ $quan->ten_quan }}</p>
+                        <p class="text-[10.5px] text-purple-200/80 truncate">Bạn đang xem quán với giao diện công khai mà khách hàng nhìn thấy</p>
                     </div>
                 </div>
                 <a href="{{ route('chu-quan.quan.show', ['slug' => $quan->slug]) }}"
-                   style="background: #ffffff; color: #0f172a;"
-                   class="px-3.5 py-2 rounded-xl hover:bg-amber-50 font-bold text-xs transition shadow-sm flex items-center gap-1.5 shrink-0 cursor-pointer">
-                    <span style="color: #6d28d9;" class="material-symbols-outlined text-[16px]">arrow_back</span>
+                   class="px-3.5 py-1.5 rounded-xl bg-white hover:bg-amber-50 text-slate-900 font-bold text-xs transition shadow-xs flex items-center gap-1.5 shrink-0 cursor-pointer">
+                    <span class="material-symbols-outlined text-[15px] text-purple-700">arrow_back</span>
                     <span>Quay lại Quản lý quán</span>
                 </a>
             </div>

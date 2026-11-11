@@ -13,34 +13,129 @@ class DuyetXacThucController extends Controller
 {
     public function __construct(private readonly ?AdminAuditService $adminAudit = null) {}
 
-    public function index()
+    public function index(Request $request)
     {
-        $pendingQuan = Quan::where('trang_thai', 'chua_duyet')
-            ->with(['chuQuan', 'hinhAnh'])
-            ->latest()
-            ->paginate(10, ['*'], 'pending_page');
+        $q = trim((string) $request->input('q', ''));
 
-        $rejectedQuan = Quan::where('trang_thai', 'bi_khoa')
-            ->with(['chuQuan', 'hinhAnh'])
-            ->latest()
-            ->paginate(10, ['*'], 'rejected_page');
+        $pendingQuery = Quan::where('trang_thai', 'chua_duyet')->with(['chuQuan', 'hinhAnh']);
+        $rejectedQuery = Quan::where('trang_thai', 'bi_khoa')->with(['chuQuan', 'hinhAnh']);
+        $approvedQuery = Quan::where('trang_thai', 'da_duyet')->with(['chuQuan', 'hinhAnh']);
+        $unverifiedQuery = User::where('da_xac_thuc', false);
 
-        $recentApproved = Quan::where('trang_thai', 'da_duyet')
-            ->with(['chuQuan', 'hinhAnh'])
-            ->latest('updated_at')
-            ->limit(10)
+        if ($q !== '') {
+            $esService = app(\App\Services\ElasticAdminSearchService::class);
+            $tokens = preg_split('/\s+/u', $q, -1, PREG_SPLIT_NO_EMPTY) ?: [$q];
+
+            // 1. Tìm kiếm Quán ăn bằng Elasticsearch (1 query duy nhất cho toàn bộ trạng thái)
+            $allQuanIds = $esService->searchQuan($q);
+
+            if ($allQuanIds !== null && ! empty($allQuanIds)) {
+                $escaped = implode("','", array_map('addslashes', $allQuanIds));
+                $orderByField = (\Illuminate\Support\Facades\DB::getDriverName() === 'mysql') ? "FIELD(id, '{$escaped}')" : null;
+
+                $pendingQuery->whereIn('id', $allQuanIds);
+                $rejectedQuery->whereIn('id', $allQuanIds);
+                $approvedQuery->whereIn('id', $allQuanIds);
+
+                if ($orderByField) {
+                    $pendingQuery->orderByRaw($orderByField);
+                    $rejectedQuery->orderByRaw($orderByField);
+                    $approvedQuery->orderByRaw($orderByField);
+                }
+            } else {
+                // Fallback tìm kiếm trực tiếp trong cơ sở dữ liệu nếu ES offline hoặc không có ID
+                $applyQuanDbSearch = function ($query) use ($q, $tokens) {
+                    $query->where(function ($sub) use ($q, $tokens) {
+                        $sub->where('ten_quan', 'like', "%{$q}%")
+                            ->orWhere('dia_chi_chi_tiet', 'like', "%{$q}%")
+                            ->orWhere('so_dien_thoai', 'like', "%{$q}%")
+                            ->orWhereHas('chuQuan', function ($u) use ($q) {
+                                $u->where('ho_ten', 'like', "%{$q}%")
+                                    ->orWhere('email', 'like', "%{$q}%");
+                            });
+
+                        if (count($tokens) > 1) {
+                            $sub->orWhere(function ($tokSub) use ($tokens) {
+                                foreach ($tokens as $token) {
+                                    $tokSub->where(function ($w) use ($token) {
+                                        $w->where('ten_quan', 'like', "%{$token}%")
+                                          ->orWhere('dia_chi_chi_tiet', 'like', "%{$token}%");
+                                    });
+                                }
+                            });
+                        }
+                    });
+                };
+
+                $applyQuanDbSearch($pendingQuery);
+                $applyQuanDbSearch($rejectedQuery);
+                $applyQuanDbSearch($approvedQuery);
+            }
+
+            // 2. Tìm kiếm người dùng chưa xác thực bằng Elasticsearch
+            $userIds = $esService->searchUser($q, ['da_xac_thuc' => false]);
+            if ($userIds !== null && ! empty($userIds)) {
+                $unverifiedQuery->whereIn('id', $userIds);
+                if (\Illuminate\Support\Facades\DB::getDriverName() === 'mysql') {
+                    $escaped = implode("','", array_map('addslashes', $userIds));
+                    $unverifiedQuery->orderByRaw("FIELD(id, '{$escaped}')");
+                }
+            } else {
+                $unverifiedQuery->where(function ($sub) use ($q, $tokens) {
+                    $sub->where('ho_ten', 'like', "%{$q}%")
+                        ->orWhere('email', 'like', "%{$q}%")
+                        ->orWhere('so_dien_thoai', 'like', "%{$q}%");
+
+                    if (count($tokens) > 1) {
+                        $sub->orWhere(function ($tokSub) use ($tokens) {
+                            foreach ($tokens as $token) {
+                                $tokSub->where(function ($w) use ($token) {
+                                    $w->where('ho_ten', 'like', "%{$token}%")
+                                      ->orWhere('email', 'like', "%{$token}%");
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+        }
+
+        $pendingQuan = $pendingQuery->latest()
+            ->paginate(10, ['*'], 'pending_page')
+            ->withQueryString();
+
+        $rejectedQuan = $rejectedQuery->latest()
+            ->paginate(10, ['*'], 'rejected_page')
+            ->withQueryString();
+
+        $recentApproved = $approvedQuery->latest('updated_at')
+            ->limit(20)
             ->get();
 
-        $unverifiedUsers = User::where('da_xac_thuc', false)
-            ->latest()
-            ->paginate(10, ['*'], 'users_page');
+        $unverifiedUsers = $unverifiedQuery->latest()
+            ->paginate(10, ['*'], 'users_page')
+            ->withQueryString();
 
-        $stats = [
-            'pending_quan' => Quan::where('trang_thai', 'chua_duyet')->count(),
-            'rejected_quan' => Quan::where('trang_thai', 'bi_khoa')->count(),
-            'approved_quan' => Quan::where('trang_thai', 'da_duyet')->count(),
-            'unverified_users' => User::where('da_xac_thuc', false)->count(),
-        ];
+        if ($q !== '') {
+            $stats = [
+                'pending_quan' => $pendingQuan->total(),
+                'rejected_quan' => $rejectedQuan->total(),
+                'approved_quan' => $recentApproved->count(),
+                'unverified_users' => $unverifiedUsers->total(),
+            ];
+        } else {
+            $kpi = Quan::selectRaw('
+                SUM(CASE WHEN trang_thai = "chua_duyet" THEN 1 ELSE 0 END) as pending_cnt,
+                SUM(CASE WHEN trang_thai = "bi_khoa" THEN 1 ELSE 0 END) as rejected_cnt,
+                SUM(CASE WHEN trang_thai = "da_duyet" THEN 1 ELSE 0 END) as approved_cnt
+            ')->first();
+            $stats = [
+                'pending_quan' => (int) ($kpi->pending_cnt ?? 0),
+                'rejected_quan' => (int) ($kpi->rejected_cnt ?? 0),
+                'approved_quan' => (int) ($kpi->approved_cnt ?? 0),
+                'unverified_users' => User::where('da_xac_thuc', false)->count(),
+            ];
+        }
 
         // Tự động đánh dấu các thông báo quán chờ duyệt và user chưa xác thực đã được admin xem qua
         $admin = auth()->user();
@@ -70,7 +165,8 @@ class DuyetXacThucController extends Controller
             'rejectedQuan',
             'recentApproved',
             'unverifiedUsers',
-            'stats'
+            'stats',
+            'q'
         ));
     }
 

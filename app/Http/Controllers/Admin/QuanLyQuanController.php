@@ -25,22 +25,47 @@ class QuanLyQuanController extends Controller
     public function index(Request $request)
     {
         $this->authorize('viewAny', Quan::class);
-        $query = Quan::with('chuQuan')->withTrashed();
+        $query = Quan::with(['chuQuan:id,ho_ten,email,so_dien_thoai'])->withTrashed();
 
         // 1. Search keyword (ten_quan, dia_chi_chi_tiet, so_dien_thoai, email, chu_quan name/email)
         $rawQ = $request->input('q');
+        $q = null;
+        $esIds = null;
         if (! empty($rawQ) && ! is_array($rawQ)) {
             $q = trim((string) $rawQ);
-            $query->where(function ($sub) use ($q) {
-                $sub->where('ten_quan', 'like', "%{$q}%")
-                    ->orWhere('dia_chi_chi_tiet', 'like', "%{$q}%")
-                    ->orWhere('so_dien_thoai', 'like', "%{$q}%")
-                    ->orWhere('email', 'like', "%{$q}%")
-                    ->orWhereHas('chuQuan', function ($ownerSub) use ($q) {
-                        $ownerSub->where('ho_ten', 'like', "%{$q}%")
-                            ->orWhere('email', 'like', "%{$q}%");
-                    });
-            });
+            $esService = app(\App\Services\ElasticAdminSearchService::class);
+            $esIds = $esService->searchQuan($q);
+
+            if ($esIds !== null && ! empty($esIds)) {
+                $query->whereIn('id', $esIds);
+                if (\Illuminate\Support\Facades\DB::getDriverName() === 'mysql') {
+                    $escapedIds = implode("','", array_map('addslashes', $esIds));
+                    $query->orderByRaw("FIELD(id, '{$escapedIds}')");
+                }
+            } else {
+                $tokens = preg_split('/\s+/u', $q, -1, PREG_SPLIT_NO_EMPTY) ?: [$q];
+                $query->where(function ($sub) use ($q, $tokens) {
+                    $sub->where('ten_quan', 'like', "%{$q}%")
+                        ->orWhere('dia_chi_chi_tiet', 'like', "%{$q}%")
+                        ->orWhere('so_dien_thoai', 'like', "%{$q}%")
+                        ->orWhere('email', 'like', "%{$q}%")
+                        ->orWhereHas('chuQuan', function ($ownerSub) use ($q) {
+                            $ownerSub->where('ho_ten', 'like', "%{$q}%")
+                                ->orWhere('email', 'like', "%{$q}%");
+                        });
+
+                    if (count($tokens) > 1) {
+                        $sub->orWhere(function ($tokSub) use ($tokens) {
+                            foreach ($tokens as $token) {
+                                $tokSub->where(function ($w) use ($token) {
+                                    $w->where('ten_quan', 'like', "%{$token}%")
+                                      ->orWhere('dia_chi_chi_tiet', 'like', "%{$token}%");
+                                });
+                            }
+                        });
+                    }
+                });
+            }
         }
 
         // 2. Filter by status (chua_duyet, da_duyet, bi_khoa, soft_deleted)
@@ -73,8 +98,8 @@ class QuanLyQuanController extends Controller
 
         $quanList = $query->orderBy('created_at', 'desc')->paginate(15)->withQueryString();
 
-        // Counter stats for enterprise filter tabs
-        $counts = $this->getVenueCounts();
+        // Counter stats for enterprise filter tabs (tối ưu 1 query tổng hợp, tái sử dụng esIds)
+        $counts = $this->getVenueCounts($q, $esIds);
 
         $businessTypes = $this->getBusinessTypes();
 
@@ -463,21 +488,53 @@ class QuanLyQuanController extends Controller
         return back()->with('success', $statusStr);
     }
 
-    public function getVenueCounts(): array
+    public function getVenueCounts(?string $q = null, ?array $esIds = null): array
     {
+        $base = Quan::query();
+        if (! empty($q)) {
+            if ($esIds === null) {
+                $esService = app(\App\Services\ElasticAdminSearchService::class);
+                $esIds = $esService->searchQuan($q);
+            }
+            if (! empty($esIds)) {
+                $base->whereIn('id', $esIds);
+            } else {
+                $base->where(function ($sub) use ($q) {
+                    $sub->where('ten_quan', 'like', "%{$q}%")
+                        ->orWhere('dia_chi_chi_tiet', 'like', "%{$q}%")
+                        ->orWhere('so_dien_thoai', 'like', "%{$q}%");
+                });
+            }
+        }
+
+        // Tối ưu hóa 1 query duy nhất tính gộp tất cả các trạng thái
+        $stats = (clone $base)->withTrashed()
+            ->selectRaw("
+                COUNT(*) as all_count,
+                SUM(CASE WHEN ngay_xoa IS NULL AND trang_thai = 'da_duyet' THEN 1 ELSE 0 END) as da_duyet_count,
+                SUM(CASE WHEN ngay_xoa IS NULL AND trang_thai = 'chua_duyet' THEN 1 ELSE 0 END) as chua_duyet_count,
+                SUM(CASE WHEN ngay_xoa IS NULL AND trang_thai = 'bi_khoa' THEN 1 ELSE 0 END) as bi_khoa_count,
+                SUM(CASE WHEN ngay_xoa IS NOT NULL THEN 1 ELSE 0 END) as soft_deleted_count
+            ")->first();
+
         return [
-            'all' => Quan::withTrashed()->count(),
-            'da_duyet' => Quan::whereNull('ngay_xoa')->where('trang_thai', 'da_duyet')->count(),
-            'chua_duyet' => Quan::whereNull('ngay_xoa')->where('trang_thai', 'chua_duyet')->count(),
-            'bi_khoa' => Quan::whereNull('ngay_xoa')->where('trang_thai', 'bi_khoa')->count(),
-            'soft_deleted' => Quan::onlyTrashed()->count(),
+            'all' => (int) ($stats->all_count ?? 0),
+            'da_duyet' => (int) ($stats->da_duyet_count ?? 0),
+            'chua_duyet' => (int) ($stats->chua_duyet_count ?? 0),
+            'bi_khoa' => (int) ($stats->bi_khoa_count ?? 0),
+            'soft_deleted' => (int) ($stats->soft_deleted_count ?? 0),
         ];
     }
 
     private function getBusinessTypes(): array
     {
+        static $cached = null;
+        if ($cached !== null) {
+            return $cached;
+        }
+
         $dbTypes = \App\Models\DanhMucQuan::hienThi()->sapXep()->pluck('ten_danh_muc')->toArray();
-        return !empty($dbTypes) ? $dbTypes : [
+        return $cached = (!empty($dbTypes) ? $dbTypes : [
             'Nhà hàng',
             'Cà phê & Trà',
             'Billiards & Giải trí',
@@ -487,7 +544,7 @@ class QuanLyQuanController extends Controller
             'Trà sữa & Nước ép',
             'Tiệm bánh',
             'Quán ăn bình dân',
-        ];
+        ]);
     }
 
     private function storeVenueImage(string $objectKey, string $contents): array

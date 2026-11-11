@@ -9,10 +9,28 @@ use Illuminate\Support\Str;
 
 class BlogTagController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $tags = BlogTag::withCount('blogs')->latest()->paginate(20);
-        return view('admin.blog.tags.index', compact('tags'));
+        $q = trim((string) $request->input('q', ''));
+        $query = BlogTag::withCount('blogs');
+
+        if ($q !== '') {
+            $tokens = preg_split('/\s+/u', $q, -1, PREG_SPLIT_NO_EMPTY) ?: [$q];
+            $query->where(function ($sub) use ($q, $tokens) {
+                $sub->where('name', 'like', "%{$q}%");
+
+                if (count($tokens) > 1) {
+                    $sub->orWhere(function ($tokSub) use ($tokens) {
+                        foreach ($tokens as $token) {
+                            $tokSub->where('name', 'like', "%{$token}%");
+                        }
+                    });
+                }
+            });
+        }
+
+        $tags = $query->latest()->paginate(20)->withQueryString();
+        return view('admin.blog.tags.index', compact('tags', 'q'));
     }
 
     public function store(Request $request)

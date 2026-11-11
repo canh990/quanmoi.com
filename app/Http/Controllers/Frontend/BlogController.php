@@ -47,16 +47,9 @@ class BlogController extends Controller
         if ($request->has('suggest') || ($request->ajax() && $request->has('search'))) {
             $searchTerm = trim($request->input('search', ''));
             if ($searchTerm === '') {
-                return response()->json([
-                    'success' => true,
-                    'blogs' => [],
-                    'quans' => [],
-                    'total' => 0
-                ]);
+                return response()->json([]);
             }
-
-            // 1. Gợi ý bài viết Blog
-            $blogSuggestions = Blog::with(['category'])
+            $suggestions = Blog::with(['category'])
                 ->where('status', 'published')
                 ->where(function($q) use ($searchTerm) {
                     $q->where('title', 'like', "%{$searchTerm}%")
@@ -69,7 +62,7 @@ class BlogController extends Controller
                       });
                 })
                 ->latest('published_at')
-                ->limit(4)
+                ->limit(5)
                 ->get()
                 ->map(function ($b) {
                     return [
@@ -77,62 +70,15 @@ class BlogController extends Controller
                         'title' => $b->title,
                         'slug' => $b->slug,
                         'url' => route('blog.show', $b->slug),
-                        'category' => $b->category ? $b->category->name : 'Review',
-                        'cover_url' => $b->cover_image_url ?: '/storage/blogs/covers/41Cy1EQE15hmAoyR8ZCYzOFRcWMpAcQ2hra9aDa2.png',
+                        'category' => $b->category ? $b->category->name : null,
+                        'cover_url' => $b->cover_image_url ?? 'https://placehold.co/100x70/png',
                         'published_date' => $b->published_at ? $b->published_at->format('d/m/Y') : '',
-                        'reading_time' => (int) ($b->reading_time ?? 4),
-                        'type' => 'blog',
                     ];
                 });
 
-            // 2. Gợi ý Quán ăn thực tế từ Elasticsearch (App\Models\Quan)
-            $quanSuggestions = collect();
-            try {
-                if (config('scout.driver') === 'elastic') {
-                    $quanSuggestions = \App\Models\Quan::search($searchTerm)
-                        ->whereIn('trang_thai', ['da_duyet'])
-                        ->take(3)
-                        ->get();
-                }
-            } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::warning('Scout Elasticsearch suggest error: ' . $e->getMessage());
-            }
-
-            if ($quanSuggestions->isEmpty()) {
-                $quanSuggestions = \App\Models\Quan::where('trang_thai', 'da_duyet')
-                    ->where(function ($q) use ($searchTerm) {
-                        $q->where('ten_quan', 'like', "%{$searchTerm}%")
-                          ->orWhere('dia_chi_chi_tiet', 'like', "%{$searchTerm}%")
-                          ->orWhere('loai_hinh_kinh_doanh', 'like', "%{$searchTerm}%");
-                    })
-                    ->latest('is_noi_bat')
-                    ->take(3)
-                    ->get();
-            }
-
-            $formattedQuans = $quanSuggestions->map(function ($q) {
-                return [
-                    'id' => $q->id,
-                    'title' => $q->ten_quan,
-                    'slug' => $q->slug,
-                    'url' => route('quan.detail', $q->slug),
-                    'address' => $q->dia_chi_chi_tiet ?: ($q->ten_quan_huyen ?: 'TP. Hồ Chí Minh'),
-                    'category' => $q->loai_hinh_kinh_doanh ?: 'Quán ăn',
-                    'cover_url' => $q->anh_bia_url ?: '/storage/blogs/covers/41Cy1EQE15hmAoyR8ZCYzOFRcWMpAcQ2hra9aDa2.png',
-                    'is_verified' => (bool) $q->is_xac_thuc,
-                    'type' => 'quan',
-                ];
-            });
-
-            return response()->json([
-                'success' => true,
-                'blogs' => $blogSuggestions,
-                'quans' => $formattedQuans,
-                'total' => $blogSuggestions->count() + $formattedQuans->count(),
-            ]);
+            return response()->json($suggestions);
         }
 
-        $relatedQuans = collect();
         if ($request->filled('search')) {
             $searchTerm = trim($request->search);
             $query->where(function($q) use ($searchTerm) {
@@ -149,27 +95,6 @@ class BlogController extends Controller
                       $userQ->where('ho_ten', 'like', "%{$searchTerm}%");
                   });
             });
-
-            // Tìm kiếm các quán ăn thực tế đồng bộ từ Elasticsearch
-            try {
-                if (config('scout.driver') === 'elastic') {
-                    $relatedQuans = \App\Models\Quan::search($searchTerm)
-                        ->whereIn('trang_thai', ['da_duyet'])
-                        ->take(3)
-                        ->get();
-                }
-            } catch (\Throwable $e) {}
-
-            if ($relatedQuans->isEmpty()) {
-                $relatedQuans = \App\Models\Quan::where('trang_thai', 'da_duyet')
-                    ->where(function ($q) use ($searchTerm) {
-                        $q->where('ten_quan', 'like', "%{$searchTerm}%")
-                          ->orWhere('mo_ta', 'like', "%{$searchTerm}%")
-                          ->orWhere('dia_chi_chi_tiet', 'like', "%{$searchTerm}%");
-                    })
-                    ->take(3)
-                    ->get();
-            }
         }
 
         $heroBlog = Blog::with(['user', 'category'])
@@ -204,22 +129,10 @@ class BlogController extends Controller
             $aiSearchData = $this->blogAiService->semanticSearch($request->search, 6);
         }
 
-        // Chỉ gợi ý các món ăn/chủ đề THỰC SỰ ĐÃ CÓ BÀI VIẾT REVIEW TRÊN TRANG BLOG
-        $popularBlogDishes = [
-            'Bún bò Huế',
-            'Lẩu bò',
-            'Cơm tấm sườn',
-            'Ốc chảo bơ tỏi',
-            'Buffet nướng bò Mỹ',
-            'Bánh mì chảo',
-            'Gà nướng cơm lam',
-            'Mì cay Tokbokki',
-        ];
-
         // Số bài viết đã lưu của người dùng hiện tại
         $savedBlogsCount = Auth::check() ? Auth::user()->savedBlogs()->where('blogs.status', 'published')->count() : 0;
 
-        return view('frontend.blog.index', compact('blogs', 'heroBlog', 'categories', 'tags', 'aiRecommendations', 'aiSearchData', 'savedBlogsCount', 'relatedQuans', 'popularBlogDishes'));
+        return view('frontend.blog.index', compact('blogs', 'heroBlog', 'categories', 'tags', 'aiRecommendations', 'aiSearchData', 'savedBlogsCount'));
     }
 
     public function show(Request $request, string $slug)
@@ -909,24 +822,6 @@ class BlogController extends Controller
             'recommendations' => $recommendations,
         ]);
     }
-
-    /**
-     * Trợ lý AI: "Hôm nay ăn gì?" theo Tâm trạng & Thời tiết (AI Culinary Itinerary Planner API)
-     */
-    public function planCulinaryItinerary(Request $request)
-    {
-        $mood = (string) $request->input('mood', 'happy');
-        $weather = (string) $request->input('weather', 'pleasant');
-        $companion = (string) $request->input('companion', 'couple');
-        $budget = (string) $request->input('budget', 'budget_mid');
-        $excludeIds = array_filter(array_map('intval', (array) $request->input('exclude_ids', [])));
-        $customPrompt = trim((string) $request->input('custom_prompt', ''));
-
-        $result = $this->blogAiService->planCulinaryItinerary($mood, $weather, $companion, $budget, $excludeIds, $customPrompt);
-
-        return response()->json($result);
-    }
-
 
     /**
      * Đăng ký nhận tin ẩm thực Blog (Newsletter Subscription)

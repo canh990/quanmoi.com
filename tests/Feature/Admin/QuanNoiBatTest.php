@@ -213,4 +213,42 @@ class QuanNoiBatTest extends TestCase
         $featuredResponse->assertStatus(200);
         $featuredResponse->assertSee('Cà Phê Phố Cổ Nổi Bật');
     }
+
+    public function test_admin_can_search_featured_venues_via_ajax(): void
+    {
+        app(\App\Services\ElasticAdminSearchService::class)->syncQuan($this->quanNoiBat);
+
+        $response = $this->actingAs($this->admin)->getJson(route('admin.quan-noi-bat.index', ['q' => 'Phố Cổ']));
+        $response->assertStatus(200)
+            ->assertJsonStructure([
+                'success',
+                'data' => [
+                    '*' => ['id', 'ten_quan', 'loai_hinh_kinh_doanh', 'is_noi_bat']
+                ]
+            ]);
+
+        $response->assertJsonFragment([
+            'id' => (string) $this->quanNoiBat->id,
+            'ten_quan' => 'Cà Phê Phố Cổ Nổi Bật',
+        ]);
+    }
+
+    public function test_admin_can_search_available_venues_fuzzy(): void
+    {
+        app(\App\Services\ElasticAdminSearchService::class)->syncQuan($this->quanThuong);
+
+        $response = $this->actingAs($this->admin)->getJson(route('admin.quan-noi-bat.search-available', ['q' => 'Bún Bò']));
+        $response->assertStatus(200)
+            ->assertJsonStructure([
+                'success',
+                'data' => [
+                    '*' => ['id', 'ten_quan']
+                ]
+            ]);
+
+        $response->assertJsonFragment([
+            'id' => (string) $this->quanThuong->id,
+            'ten_quan' => 'Bún Bò Huế Đề Cử',
+        ]);
+    }
 }

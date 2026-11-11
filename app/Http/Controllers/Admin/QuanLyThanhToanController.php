@@ -28,18 +28,46 @@ class QuanLyThanhToanController extends Controller
     {
         $query = ThanhToan::with(['user', 'quan']);
 
-        // 1. Tìm kiếm theo mã giao dịch, mã SePay hoặc thông tin người dùng
+        // 1. Tìm kiếm theo mã giao dịch, mã SePay hoặc thông tin người dùng / quán (Elasticsearch)
         if ($search = trim((string) $request->input('search', ''))) {
-            $query->where(function ($q) use ($search) {
-                $q->where('ma_giao_dich', 'like', "%{$search}%")
-                  ->orWhere('sepay_transaction_id', 'like', "%{$search}%")
-                  ->orWhere('sepay_order_id', 'like', "%{$search}%")
-                  ->orWhere('ghi_chu', 'like', "%{$search}%")
-                  ->orWhereHas('user', function ($uq) use ($search) {
-                      $uq->where('ho_ten', 'like', "%{$search}%")
-                         ->orWhere('email', 'like', "%{$search}%")
-                         ->orWhere('so_dien_thoai', 'like', "%{$search}%");
-                  });
+            $esService = app(\App\Services\ElasticAdminSearchService::class);
+            $esUserIds = $esService->searchUser($search);
+            $esQuanIds = $esService->searchQuan($search);
+
+            $escapedSearch = addcslashes($search, '%_');
+            $tokens = preg_split('/\s+/u', $search, -1, PREG_SPLIT_NO_EMPTY) ?: [$search];
+
+            $query->where(function ($q) use ($escapedSearch, $tokens, $esUserIds, $esQuanIds) {
+                $q->where('ma_giao_dich', 'like', "%{$escapedSearch}%")
+                  ->orWhere('sepay_transaction_id', 'like', "%{$escapedSearch}%")
+                  ->orWhere('sepay_order_id', 'like', "%{$escapedSearch}%")
+                  ->orWhere('ghi_chu', 'like', "%{$escapedSearch}%");
+
+                if ($esUserIds !== null && ! empty($esUserIds)) {
+                    $q->orWhereIn('user_id', $esUserIds);
+                } else {
+                    $q->orWhereHas('user', function ($uq) use ($escapedSearch, $tokens) {
+                        $uq->where('ho_ten', 'like', "%{$escapedSearch}%")
+                           ->orWhere('email', 'like', "%{$escapedSearch}%")
+                           ->orWhere('so_dien_thoai', 'like', "%{$escapedSearch}%");
+
+                        if (count($tokens) > 1) {
+                            $uq->orWhere(function ($tokSub) use ($tokens) {
+                                foreach ($tokens as $token) {
+                                    $tokSub->where('ho_ten', 'like', "%{$token}%");
+                                }
+                            });
+                        }
+                    });
+                }
+
+                if ($esQuanIds !== null && ! empty($esQuanIds)) {
+                    $q->orWhereIn('quan_id', $esQuanIds);
+                } else {
+                    $q->orWhereHas('quan', function ($qq) use ($escapedSearch) {
+                        $qq->where('ten_quan', 'like', "%{$escapedSearch}%");
+                    });
+                }
             });
         }
 
