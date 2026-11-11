@@ -30,9 +30,10 @@ Route::middleware(['auth', 'KiemTraQuyenHan:admin'])->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard.alias');
     Route::get('/api/global-search', [AdminDashboardController::class, 'globalSearch'])->name('api.global-search');
 
-    // 2. Thống kê
+    // 2. Thống kê & AI Phân tích doanh thu toàn sàn
     Route::get('/thong-ke', [ThongKeController::class, 'index'])->name('thong-ke.index');
     Route::get('/thong-ke/export', [ThongKeController::class, 'export'])->name('thong-ke.export');
+    Route::post('/thong-ke/ai-analyze', [ThongKeController::class, 'analyzeAi'])->name('thong-ke.ai-analyze');
 
     // 2.1. Quản lý Nạp tiền & Doanh thu Ví (SePay / VietQR)
     Route::prefix('thanh-toan')->name('thanh-toan.')->group(function () {

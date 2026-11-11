@@ -7,6 +7,7 @@ use App\Models\Blog;
 use App\Models\Quan;
 use App\Models\ThanhToan;
 use App\Models\User;
+use App\Services\AdminRevenueAiService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -14,6 +15,10 @@ use Illuminate\Support\Facades\Schema;
 
 class ThongKeController extends Controller
 {
+    public function __construct(protected AdminRevenueAiService $aiRevenueService)
+    {
+    }
+
     public function index(Request $request)
     {
         $preset = $request->input('preset');
@@ -239,6 +244,9 @@ class ThongKeController extends Controller
             $payments = collect();
         }
 
+        // 7. AI Revenue Intelligence & Platform Growth Advisor
+        $aiRevenueInsights = $this->aiRevenueService->getPlatformInsights($tuNgay, $denNgay, false);
+
         return view('admin.thong-ke.index', compact(
             'preset',
             'tuNgayStr',
@@ -253,8 +261,44 @@ class ThongKeController extends Controller
             'packageStats',
             'payments',
             'statusFilter',
-            'searchKey'
+            'searchKey',
+            'aiRevenueInsights'
         ));
+    }
+
+    /**
+     * Phân tích chuyên sâu Doanh thu toàn sàn bằng AI (AJAX Refresh)
+     */
+    public function analyzeAi(Request $request)
+    {
+        $tuNgayStr = $request->input('tu_ngay', now()->subDays(29)->format('Y-m-d'));
+        $denNgayStr = $request->input('den_ngay', now()->format('Y-m-d'));
+
+        try {
+            $tuNgay = Carbon::parse($tuNgayStr)->startOfDay();
+        } catch (\Throwable $e) {
+            $tuNgay = now()->subDays(29)->startOfDay();
+        }
+
+        try {
+            $denNgay = Carbon::parse($denNgayStr)->endOfDay();
+        } catch (\Throwable $e) {
+            $denNgay = now()->endOfDay();
+        }
+
+        if ($tuNgay > $denNgay) {
+            [$tuNgay, $denNgay] = [$denNgay->copy()->startOfDay(), $tuNgay->copy()->endOfDay()];
+        }
+
+        $focus = (string) $request->input('focus', 'tong_hop');
+        $customPrompt = trim((string) $request->input('custom_prompt', ''));
+
+        $insights = $this->aiRevenueService->getPlatformInsights($tuNgay, $denNgay, true, $focus, $customPrompt);
+
+        return response()->json([
+            'success' => true,
+            'data' => $insights,
+        ]);
     }
 
     public function export(Request $request)

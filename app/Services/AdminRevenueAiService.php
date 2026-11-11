@@ -54,10 +54,17 @@ class AdminRevenueAiService
         $aiResult = $this->callAiForRevenueAnalysis($metrics);
 
         if ($aiResult && ! empty($aiResult['nhan_dinh_cfo']) && ! empty($aiResult['khuyen_nghi_chien_luoc'])) {
+            // Đảm bảo nếu user có hỏi/chào mà LLM bỏ quên trường cau_tra_loi_cau_hoi, tạo fallback câu trả lời ngay
+            if (! empty($customPrompt) && empty($aiResult['cau_tra_loi_cau_hoi'])) {
+                $smart = $this->generateSmartFallbackInsights($metrics, $focus, $customPrompt);
+                $aiResult['cau_tra_loi_cau_hoi'] = $smart['cau_tra_loi_cau_hoi'] ?? '';
+            }
+
             $result = array_merge($aiResult, [
                 'metrics' => $metrics,
                 'focus' => $focus,
                 'custom_prompt' => $customPrompt,
+                'cau_tra_loi_cau_hoi' => $aiResult['cau_tra_loi_cau_hoi'] ?? '',
                 'analyzed_at' => now()->format('H:i:s d/m/Y'),
                 'source' => 'ai',
                 'provider_label' => $aiResult['provider_label'] ?? 'Google Gemini AI',
@@ -66,6 +73,12 @@ class AdminRevenueAiService
             Cache::put($cacheKey, $result, now()->addHours(6));
 
             return $result;
+        }
+
+        // Nếu LLM tạm thời quá tải hoặc hết quota nhưng trong cache đã có bản AI trước đó, ưu tiên giữ bản AI
+        $existing = Cache::get($cacheKey);
+        if (! empty($existing) && is_array($existing) && ($existing['source'] ?? '') === 'ai') {
+            return $existing;
         }
 
         // Lớp 3: Smart Fallback Engine (Đảm bảo phân tích chuẩn xác theo số liệu thực tế & mục tiêu chọn)
@@ -77,7 +90,8 @@ class AdminRevenueAiService
         $fallback['source'] = 'smart_engine';
         $fallback['provider_label'] = 'Kira AI CFO Engine';
 
-        Cache::put($cacheKey, $fallback, now()->addHours(6));
+        // Fallback chỉ cache 3 phút để hệ thống thử lại AI ngay khi dịch vụ khả dụng
+        Cache::put($cacheKey, $fallback, now()->addMinutes(3));
 
         return $fallback;
     }
@@ -309,8 +323,21 @@ class AdminRevenueAiService
     protected function callAiForRevenueAnalysis(array $metrics): ?array
     {
         $metricsJson = json_encode($metrics, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+        $customQuestion = trim((string) ($metrics['custom_question'] ?? ''));
 
-        $systemPrompt = <<<'SYS'
+        $customInstruction = '';
+        if ($customQuestion !== '') {
+            $customInstruction = <<<PROMPT
+
+4. QUY TẮC BẮT BUỘC KHI ADMIN HỎI HOẶC CHÀO BẠN ("custom_question" = "{$customQuestion}"):
+- Admin đang trực tiếp nhắn tin hỏi bạn trong giao diện quản trị.
+- Bạn PHẢI trả lời trực tiếp, rõ ràng, thông minh và thân thiện vào trường "cau_tra_loi_cau_hoi":
+  + Nếu Admin gửi lời chào xã giao (ví dụ: "hello", "hi", "xin chào", "chào", "hey"): Chào lại Admin thật niềm nở với tư cách Giám đốc Tài chính ảo (Virtual CFO) của Quán Mới. Giới thiệu ngắn gọn rằng bạn đã nắm toàn bộ bức tranh dòng tiền sàn và sẵn sàng phân tích, hỗ trợ Admin đạt mục tiêu tăng trưởng hoặc giải đáp bất kỳ số liệu nào.
+  + Nếu Admin hỏi câu hỏi hoặc đặt mục tiêu kinh doanh (ví dụ: "Làm sao tăng nạp ví thêm 30 triệu?", "Kích cầu gói nổi bật", "Tại sao có đơn chờ"): Trả lời thẳng vào câu hỏi, đưa ra hướng giải quyết cụ thể và viện dẫn đúng số liệu thực tế có trong báo cáo (doanh thu kỳ, số dư ví lưu hành, số quán chưa mua gói, số đơn chờ...).
+PROMPT;
+        }
+
+        $systemPrompt = <<<SYS
 Bạn là Giám đốc Tài chính (CFO) kiêm Giám đốc Tăng trưởng (Chief Growth Officer) của nền tảng ẩm thực & địa điểm Quán Mới (QuanMoi.com).
 Nhiệm vụ của bạn: Phân tích dữ liệu doanh thu nền tảng (tiền nạp ví SePay, gói ghim quán nổi bật, phí xác thực tích xanh, gói AI marketing) và đưa ra các khuyến nghị chiến lược thực chiến giúp Admin tăng doanh thu sàn.
 
@@ -319,6 +346,7 @@ QUY TẮC BẮT BUỘC:
 2. Trả về DUY NHẤT một chuỗi JSON hợp lệ (không bọc trong ```json).
 3. Cấu trúc JSON trả về phải khớp chính xác như sau:
 {
+  "cau_tra_loi_cau_hoi": "Câu trả lời trực tiếp gửi cho Admin (Bắt buộc trả lời thân thiện/chính xác nếu Admin có gửi câu hỏi hoặc lời chào ở trường custom_question, nếu không có câu hỏi thì để chuỗi rỗng)",
   "nhan_dinh_cfo": "Nhận định tổng quan 2-3 câu sắc bén về dòng tiền, tốc độ tăng trưởng và cơ cấu doanh thu của sàn trong kỳ.",
   "nhan_xet_du_bao": "Nhận xét ngắn gọn 1-2 câu về dự báo doanh thu 30 ngày tới và động lực tăng trưởng chính.",
   "diem_sang": [
@@ -372,9 +400,15 @@ QUY TẮC BẮT BUỘC:
     }
   ]
 }
+{$customInstruction}
 SYS;
 
-        $userPrompt = "Dữ liệu thống kê tài chính thực tế của nền tảng Quán Mới trong kỳ:\n" . $metricsJson . "\n\nHãy phân tích và trả về JSON đúng cấu trúc.";
+        $userPrompt = "";
+        if ($customQuestion !== '') {
+            $userPrompt .= "⚠️ ADMIN ĐANG TRỰC TIẾP HỎI/NHẮN CHO BẠN: \"{$customQuestion}\"\n";
+            $userPrompt .= "Bạn BẮT BUỘC phải trả lời trực tiếp Admin trong trường \"cau_tra_loi_cau_hoi\" (chào lại thân thiện nếu là lời chào như hello/hi, trả lời trực diện kèm số liệu thực tế nếu là câu hỏi).\n\n";
+        }
+        $userPrompt .= "Dữ liệu thống kê tài chính thực tế của nền tảng Quán Mới trong kỳ:\n" . $metricsJson . "\n\nHãy phân tích và trả về JSON đúng cấu trúc.";
 
         $chain = config('ai.failover_chain', ['gemini', 'groq', 'openrouter', 'openai', 'kira']);
 
@@ -429,11 +463,10 @@ SYS;
             return null;
         }
 
-        $models = array_unique(array_filter(array_merge(
-            [config('ai.gemini.model', 'gemini-2.0-flash')],
-            config('ai.gemini.fallback_models', ['gemini-2.0-flash', 'gemini-2.5-flash', 'gemini-1.5-flash'])
-        )));
-        $timeout = (int) config('ai.gemini.timeout', 12);
+        $configuredModel = config('ai.gemini.model', 'gemini-3.1-flash-lite');
+        $fallbackModels = config('ai.gemini.fallback_models', ['gemini-3.1-flash-lite', 'gemini-3-flash-preview', 'gemini-3.5-flash-lite', 'gemini-3.8-flash']);
+        $models = array_unique(array_filter(array_merge([$configuredModel], $fallbackModels)));
+        $timeout = (int) config('ai.gemini.timeout', 30);
 
         $payload = [
             'systemInstruction' => [
@@ -456,13 +489,18 @@ SYS;
             foreach ($models as $model) {
                 try {
                     $endpoint = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";
-                    $response = Http::connectTimeout(4)->timeout($timeout)->post($endpoint, $payload);
+                    $response = Http::connectTimeout(12)
+                        ->timeout($timeout)
+                        ->withOptions(['curl' => [CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4]])
+                        ->post($endpoint, $payload);
 
                     if ($response->successful()) {
                         $text = $response->json('candidates.0.content.parts.0.text');
                         if (! empty($text)) {
                             return trim($text);
                         }
+                    } else {
+                        Log::warning("Gemini model {$model} returned HTTP {$response->status()}: " . substr($response->body(), 0, 150));
                     }
                 } catch (\Throwable $e) {
                     Log::warning("Gemini call failed in AdminRevenueAiService ({$model}): " . $e->getMessage());
@@ -500,8 +538,9 @@ SYS;
 
         foreach ($keys as $apiKey) {
             try {
-                $response = Http::connectTimeout(4)
+                $response = Http::connectTimeout(12)
                     ->timeout($timeout)
+                    ->withOptions(['curl' => [CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4]])
                     ->withToken($apiKey)
                     ->post("{$baseUrl}/chat/completions", [
                         'model' => $model,
@@ -571,6 +610,22 @@ SYS;
         $topPkgName = $m['top_goi_dich_vu'][0]['ten_goi'] ?? 'Gói Ghim Quán Nổi Bật & Nạp Ví SePay';
         $topPkgShare = $m['top_goi_dich_vu'][0]['ty_trong_pt'] ?? 65;
 
+        $cauTraLoi = '';
+        if ($customPrompt !== '') {
+            $trimmed = mb_strtolower(trim($customPrompt), 'UTF-8');
+            if (preg_match('/^(hello|hi|chào|chao|xin chào|xin chao|hey|alo|halo)\b/ui', $trimmed)) {
+                $cauTraLoi = "Xin chào Admin! Tôi là Kira - Cố vấn Tài chính ảo (Virtual CFO) của Quán Mới. Tôi đã đồng bộ toàn bộ dữ liệu tài chính của nền tảng và luôn sẵn sàng hỗ trợ bạn theo dõi dòng tiền SePay, khai thác {$soDuViFmt} số dư ví lưu hành và đẩy mạnh bán Gói Quán Nổi Bật cho {$quanChuaNoiBat} quán tiềm năng. Bạn muốn tập trung vào mục tiêu doanh thu nào hôm nay?";
+            } elseif (str_contains($trimmed, 'nạp ví') || str_contains($trimmed, 'nap vi') || str_contains($trimmed, '30tr') || str_contains($trimmed, '30 triệu') || str_contains($trimmed, 'tiền mặt')) {
+                $cauTraLoi = "Để bứt phá doanh thu nạp ví SePay thêm 30 triệu, Admin nên kích hoạt ngay chiến dịch 'Tuần Lễ Vàng Nạp Ví' tặng +15% số dư khi nạp từ 200.000đ, đồng thời gửi thông báo tự động hỗ trợ {$m['so_don_cho']} đơn đang chờ thanh toán để chuyển đổi ngay dòng tiền mặt vào sàn.";
+            } elseif (str_contains($trimmed, 'nổi bật') || str_contains($trimmed, 'noi bat') || str_contains($trimmed, 'ghim')) {
+                $cauTraLoi = "Hiện toàn hệ thống có {$quanChuaNoiBat} quán đã duyệt nhưng chưa bật Gói Nổi Bật (đặc biệt tại {$khuVuc} với {$luotXemNganh} lượt xem). Giải pháp nhanh nhất là tung gói dùng thử 7 ngày trừ thẳng vào {$soDuViFmt} số dư ví của các chủ quán để gia tăng tỷ lệ chuyển đổi.";
+            } elseif (str_contains($trimmed, 'giải phóng') || str_contains($trimmed, 'giai phong') || str_contains($trimmed, 'số dư ví') || str_contains($trimmed, 'so du vi') || str_contains($trimmed, 'lỗi sepay') || str_contains($trimmed, 'loi sepay')) {
+                $cauTraLoi = "Hệ thống ghi nhận {$soDuViFmt} số dư ví lưu hành chưa được tiêu dùng và {$m['so_don_loi_huy']} giao dịch lỗi/hủy. Khuyến nghị mở Flash Sale Gói Ghim Nổi Bật trừ thẳng số dư ví và rà soát webhook VietQR SePay để hạn chế đơn thất bại.";
+            } else {
+                $cauTraLoi = "Phản hồi câu hỏi \"{$customPrompt}\": Trong kỳ ({$m['ky_phan_tich']}), sàn ghi nhận doanh thu {$doanhThuKyFmt} với {$m['so_don_thanh_cong']} giao dịch. Khuyến nghị trọng tâm của CFO là tập trung khai thác {$quanChuaNoiBat} quán chưa kích hoạt gói nổi bật và tận dụng {$soDuViFmt} số dư ví đang lưu hành để tối đa hóa dòng tiền.";
+            }
+        }
+
         $customIntro = $customPrompt !== ''
             ? "🎯 [Trả lời yêu cầu: \"{$customPrompt}\"] — "
             : '';
@@ -610,6 +665,7 @@ SYS;
         ];
 
         return [
+            'cau_tra_loi_cau_hoi' => $cauTraLoi,
             'nhan_dinh_cfo' => $nhanDinhCfo,
             'nhan_xet_du_bao' => $nhanXetDuBao,
             'diem_sang' => $diemSang,

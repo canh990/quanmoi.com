@@ -17,11 +17,43 @@ class CustomSearchParametersFactory extends SearchParametersFactory
 
         if (!empty($builder->query)) {
             $query['bool']['must'] = [
-                'multi_match' => [
-                    'query' => $builder->query,
-                    'fields' => ['ten_quan^3', 'mon_an^2', 'loai_hinh_kinh_doanh^1.5', 'dia_chi', 'mo_ta'],
-                    'type' => 'cross_fields',
-                    'operator' => 'AND',
+                'bool' => [
+                    'should' => [
+                        [
+                            'match' => [
+                                'ten_quan.prefix' => ['query' => $builder->query, 'operator' => 'AND', 'boost' => 6],
+                            ],
+                        ],
+                        [
+                            'multi_match' => [
+                                'query' => $builder->query,
+                                'fields' => ['ten_quan^4', 'mon_an^2.5', 'loai_hinh_kinh_doanh^1.5', 'dia_chi', 'mo_ta'],
+                                'type' => 'best_fields',
+                                'operator' => 'OR',
+                                'fuzziness' => 'AUTO',
+                                'prefix_length' => 1,
+                                'max_expansions' => 50,
+                            ],
+                        ],
+                        [
+                            'multi_match' => [
+                                'query' => $builder->query,
+                                'fields' => ['ten_quan^3', 'mon_an^2', 'loai_hinh_kinh_doanh^1.5', 'dia_chi', 'mo_ta'],
+                                'type' => 'cross_fields',
+                                'operator' => 'AND',
+                                'boost' => 2,
+                            ],
+                        ],
+                        [
+                            'multi_match' => [
+                                'query' => $builder->query,
+                                'fields' => ['ten_quan^3', 'mon_an^2', 'dia_chi'],
+                                'type' => 'phrase_prefix',
+                                'boost' => 1.5,
+                            ],
+                        ],
+                    ],
+                    'minimum_should_match' => 1,
                 ],
             ];
             $query['bool']['should'] = [

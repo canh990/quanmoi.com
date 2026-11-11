@@ -78,10 +78,16 @@ class QuanLyQuanController extends Controller
             }
         }
 
-        // 3. Filter by business type (loai_hinh_kinh_doanh)
+        // 3. Filter by business type (loai_hinh_kinh_doanh or danh_muc_id)
         $rawLoaiHinh = $request->input('loai_hinh');
-        if (! empty($rawLoaiHinh) && ! is_array($rawLoaiHinh)) {
-            $query->where('loai_hinh_kinh_doanh', (string) $rawLoaiHinh);
+        $rawDanhMucId = $request->input('danh_muc_id');
+        if (!empty($rawDanhMucId) && !is_array($rawDanhMucId)) {
+            $query->where('danh_muc_id', (int) $rawDanhMucId);
+        } elseif (! empty($rawLoaiHinh) && ! is_array($rawLoaiHinh)) {
+            $query->where(function ($sub) use ($rawLoaiHinh) {
+                $sub->where('loai_hinh_kinh_doanh', (string) $rawLoaiHinh)
+                    ->orWhereHas('danhMuc', fn ($dm) => $dm->where('ten_danh_muc', (string) $rawLoaiHinh));
+            });
         }
 
         // 4. Filter by is_noi_bat

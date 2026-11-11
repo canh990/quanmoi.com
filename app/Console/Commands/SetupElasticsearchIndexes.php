@@ -100,6 +100,11 @@ class SetupElasticsearchIndexes extends Command
                                 'analyzer' => 'vietnamese_edge_ngram',
                                 'search_analyzer' => 'vietnamese_analyzer',
                             ],
+                            'prefix' => [
+                                'type' => 'text',
+                                'analyzer' => 'vietnamese_edge_ngram',
+                                'search_analyzer' => 'vietnamese_analyzer',
+                            ],
                             'keyword' => ['type' => 'keyword', 'ignore_above' => 256],
                         ],
                     ],
@@ -113,6 +118,11 @@ class SetupElasticsearchIndexes extends Command
                                 'search_analyzer' => 'vietnamese_compact_search',
                             ],
                             'ngram' => [
+                                'type' => 'text',
+                                'analyzer' => 'vietnamese_edge_ngram',
+                                'search_analyzer' => 'vietnamese_analyzer',
+                            ],
+                            'prefix' => [
                                 'type' => 'text',
                                 'analyzer' => 'vietnamese_edge_ngram',
                                 'search_analyzer' => 'vietnamese_analyzer',
@@ -229,6 +239,11 @@ class SetupElasticsearchIndexes extends Command
                                 'analyzer' => 'vietnamese_edge_ngram',
                                 'search_analyzer' => 'vietnamese_analyzer',
                             ],
+                            'prefix' => [
+                                'type' => 'text',
+                                'analyzer' => 'vietnamese_edge_ngram',
+                                'search_analyzer' => 'vietnamese_analyzer',
+                            ],
                             'keyword' => ['type' => 'keyword', 'ignore_above' => 256],
                         ],
                     ],
@@ -273,6 +288,11 @@ class SetupElasticsearchIndexes extends Command
                                 'search_analyzer' => 'vietnamese_compact_search',
                             ],
                             'ngram' => [
+                                'type' => 'text',
+                                'analyzer' => 'vietnamese_edge_ngram',
+                                'search_analyzer' => 'vietnamese_analyzer',
+                            ],
+                            'prefix' => [
                                 'type' => 'text',
                                 'analyzer' => 'vietnamese_edge_ngram',
                                 'search_analyzer' => 'vietnamese_analyzer',
@@ -400,6 +420,11 @@ class SetupElasticsearchIndexes extends Command
                                 'analyzer' => 'vietnamese_edge_ngram',
                                 'search_analyzer' => 'vietnamese_analyzer',
                             ],
+                            'prefix' => [
+                                'type' => 'text',
+                                'analyzer' => 'vietnamese_edge_ngram',
+                                'search_analyzer' => 'vietnamese_analyzer',
+                            ],
                             'keyword' => ['type' => 'keyword', 'ignore_above' => 256],
                         ],
                     ],
@@ -475,6 +500,11 @@ class SetupElasticsearchIndexes extends Command
                                 'search_analyzer' => 'vietnamese_compact_search',
                             ],
                             'ngram' => [
+                                'type' => 'text',
+                                'analyzer' => 'vietnamese_edge_ngram',
+                                'search_analyzer' => 'vietnamese_analyzer',
+                            ],
+                            'prefix' => [
                                 'type' => 'text',
                                 'analyzer' => 'vietnamese_edge_ngram',
                                 'search_analyzer' => 'vietnamese_analyzer',

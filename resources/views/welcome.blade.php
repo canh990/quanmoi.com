@@ -39,6 +39,62 @@
 </script>
 @endpush
 
+@push('styles')
+<style>
+    .btn-nearby-load-more {
+        background-color: #ffffff !important;
+        border: 2px solid #059669 !important;
+        color: #047857 !important;
+        transition: all 0.2s ease-in-out !important;
+    }
+    .btn-nearby-load-more, .btn-nearby-load-more * {
+        color: #047857 !important;
+    }
+    .btn-nearby-load-more:hover {
+        background-color: #059669 !important;
+        border-color: #059669 !important;
+        color: #ffffff !important;
+        box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25) !important;
+    }
+    .btn-nearby-load-more:hover * {
+        color: #ffffff !important;
+    }
+
+    .btn-nearby-all-link {
+        background-color: #ecfdf5 !important;
+        border: 2px solid #a7f3d0 !important;
+        color: #065f46 !important;
+        transition: all 0.2s ease-in-out !important;
+    }
+    .btn-nearby-all-link, .btn-nearby-all-link * {
+        color: #065f46 !important;
+    }
+    .btn-nearby-all-link:hover {
+        background-color: #059669 !important;
+        border-color: #059669 !important;
+        color: #ffffff !important;
+        box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25) !important;
+    }
+    .btn-nearby-all-link:hover * {
+        color: #ffffff !important;
+    }
+
+    /* Phong cách danh mục trang chủ động theo màu cấu hình trong Admin */
+    .home-cat-card .home-cat-box {
+        background-color: var(--cat-light, #fffbeb);
+        color: var(--cat-hex, #f59e0b);
+        border: 1px solid var(--cat-border, #fde68a);
+        transition: all 0.25s ease-in-out;
+    }
+    .home-cat-card:hover .home-cat-box {
+        background-color: var(--cat-hex, #f59e0b) !important;
+        color: #ffffff !important;
+        border-color: var(--cat-hex, #f59e0b) !important;
+        transform: scale(1.05);
+    }
+</style>
+@endpush
+
 @section('content')
     {{-- Unified Responsive Main Content (Đầy đủ 100% chức năng trên cả Desktop & Mobile) --}}
     <main class="flex-grow">
@@ -106,36 +162,17 @@
                 @forelse($displayCategories as $index => $dm)
                     @php
                         $isExtra = $index >= 6;
-                        
-                        $scheme = match($dm->slug) {
-                            'nha-hang'           => ['box' => 'bg-primary/10 text-primary group-hover:bg-primary', 'default_icon' => 'restaurant'],
-                            'ca-phe-tra'         => ['box' => 'bg-secondary/10 text-secondary group-hover:bg-secondary', 'default_icon' => 'local_cafe'],
-                            'billiards-giai-tri' => ['box' => 'bg-tertiary/10 text-tertiary group-hover:bg-tertiary', 'default_icon' => 'sports_esports'],
-                            'do-an-vat'          => ['box' => 'bg-red-500/10 text-red-600 group-hover:bg-red-600', 'default_icon' => 'fastfood'],
-                            'lau-nuong'          => ['box' => 'bg-amber-500/10 text-amber-600 group-hover:bg-amber-600', 'default_icon' => 'outdoor_grill'],
-                            'quan-dem-24-7'      => ['box' => 'bg-purple-500/10 text-purple-600 group-hover:bg-purple-600', 'default_icon' => 'nightlife'],
-                            'quan-nhau'          => ['box' => 'bg-purple-500/10 text-purple-600 group-hover:bg-purple-600', 'default_icon' => 'local_bar'],
-                            'tra-sua-nuoc-ep'    => ['box' => 'bg-secondary/10 text-secondary group-hover:bg-secondary', 'default_icon' => 'emoji_food_beverage'],
-                            'tiem-banh'          => ['box' => 'bg-amber-500/10 text-amber-600 group-hover:bg-amber-600', 'default_icon' => 'bakery_dining'],
-                            'quan-an-binh-dan'   => ['box' => 'bg-primary/10 text-primary group-hover:bg-primary', 'default_icon' => 'lunch_dining'],
-                            default => match($index % 6) {
-                                0 => ['box' => 'bg-primary/10 text-primary group-hover:bg-primary', 'default_icon' => 'restaurant'],
-                                1 => ['box' => 'bg-secondary/10 text-secondary group-hover:bg-secondary', 'default_icon' => 'local_cafe'],
-                                2 => ['box' => 'bg-tertiary/10 text-tertiary group-hover:bg-tertiary', 'default_icon' => 'sports_esports'],
-                                3 => ['box' => 'bg-red-500/10 text-red-600 group-hover:bg-red-600', 'default_icon' => 'fastfood'],
-                                4 => ['box' => 'bg-amber-500/10 text-amber-600 group-hover:bg-amber-600', 'default_icon' => 'outdoor_grill'],
-                                default => ['box' => 'bg-purple-500/10 text-purple-600 group-hover:bg-purple-600', 'default_icon' => 'nightlife'],
-                            }
-                        };
-                        $boxClass = $scheme['box'];
-                        $displayIcon = $dm->icon ?: $scheme['default_icon'];
+                        $colorInfo = $dm->color_info;
+                        $displayIcon = $dm->icon ?: 'restaurant';
                     @endphp
-                    <a href="{{ route('danh-muc', $dm->slug) }}" title="{{ $dm->ten_danh_muc }} - {{ $dm->mo_ta }}" class="{{ $isExtra ? 'extra-category hidden opacity-0 translate-y-3' : '' }} block bg-surface-card rounded-2xl shadow-sm border border-surface-container hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer p-6 flex flex-col items-center text-center group">
-                        <div class="w-16 h-16 rounded-2xl {{ $boxClass }} flex items-center justify-center mb-3 group-hover:text-white transition-colors">
+                    <a href="{{ route('danh-muc', $dm->slug) }}" title="{{ $dm->ten_danh_muc }} - {{ $dm->mo_ta }}" 
+                       class="home-cat-card {{ $isExtra ? 'extra-category hidden opacity-0 translate-y-3' : '' }} block bg-surface-card rounded-2xl shadow-sm border border-surface-container hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer p-6 flex flex-col items-center text-center group"
+                       style="--cat-hex: {{ $colorInfo['hex'] }}; --cat-light: {{ $colorInfo['light'] }}; --cat-border: {{ $colorInfo['border'] }};">
+                        <div class="home-cat-box w-16 h-16 rounded-2xl flex items-center justify-center mb-3">
                             <span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">{{ $displayIcon }}</span>
                         </div>
-                        <h3 class="font-bold text-[16px] text-on-surface">{{ $dm->ten_danh_muc }}</h3>
-                        <p class="text-text-muted text-[13px] mt-1">{{ $dm->mo_ta }}</p>
+                        <h3 class="font-bold text-[16px] text-on-surface group-hover:text-primary transition-colors">{{ $dm->ten_danh_muc }}</h3>
+                        <p class="text-text-muted text-[13px] mt-1 line-clamp-1">{{ $dm->mo_ta }}</p>
                     </a>
                 @empty
                     <div class="col-span-full py-8 text-center text-text-muted">Đang cập nhật danh mục ẩm thực...</div>
@@ -244,6 +281,19 @@
                             <x-venue-card :quan="$quan" :saved-quan-ids="$savedQuanIds ?? []" />
                         @endforeach
                     @endif
+                </div>
+
+                {{-- Nút Xem thêm quán gần bạn nếu nhiều hơn 9 quán --}}
+                <div id="nearby-load-more-wrap" class="{{ ($hasGps && ($totalQuanGanBan ?? 0) > 9) ? 'flex' : 'hidden' }} mt-10 justify-center">
+                    <button type="button" 
+                            id="btn-load-more-nearby" 
+                            onclick="loadMoreNearbyVenues()" 
+                            class="btn-nearby-load-more inline-flex items-center justify-center px-8 py-3.5 rounded-full font-bold text-[15px] shadow-sm group cursor-pointer">
+                        <span id="btn-load-more-nearby-text">
+                            Xem thêm {{ max(0, ($totalQuanGanBan ?? 0) - 9) }} quán gần bạn
+                        </span>
+                        <span class="material-symbols-outlined ml-2 group-hover:translate-y-0.5 transition-transform text-[20px]">expand_more</span>
+                    </button>
                 </div>
             </div>
         </section>
@@ -866,6 +916,16 @@
         );
     }
 
+    window.NEARBY_STATE = {
+        lat: {{ $userLat && is_numeric($userLat) ? (float)$userLat : 'null' }},
+        lng: {{ $userLng && is_numeric($userLng) ? (float)$userLng : 'null' }},
+        radius: 20,
+        page: 1,
+        total: {{ (int) ($totalQuanGanBan ?? 0) }},
+        loadedCount: {{ count($quanGanBan ?? []) }},
+        isLoading: false
+    };
+
     async function fetchNearbyVenues(lat, lng, scrollOnSuccess = false) {
         const gridNearby = document.getElementById('venues-grid-nearby');
         const mobileNearby = document.getElementById('mobile-venues-nearby');
@@ -909,9 +969,49 @@
                 if (scrollOnSuccess) {
                     document.getElementById('home-nearby-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }
+
+                // Cập nhật trạng thái nút Xem thêm quán gần bạn
+                window.NEARBY_STATE.lat = lat;
+                window.NEARBY_STATE.lng = lng;
+                window.NEARBY_STATE.radius = data.meta?.radius_km || 20;
+                window.NEARBY_STATE.total = data.meta?.total || data.data.length;
+                window.NEARBY_STATE.loadedCount = data.data.length;
+                window.NEARBY_STATE.page = 1;
+
+                const moreWrap = document.getElementById('nearby-load-more-wrap');
+                const moreText = document.getElementById('btn-load-more-nearby-text');
+                const remaining = Math.max(0, window.NEARBY_STATE.total - window.NEARBY_STATE.loadedCount);
+
+                if (moreWrap) {
+                    if (window.NEARBY_STATE.total > 9 && remaining > 0) {
+                        moreWrap.classList.remove('hidden');
+                        moreWrap.classList.add('flex');
+                        if (moreText) {
+                            moreText.textContent = `Xem thêm ${remaining} quán gần bạn`;
+                        }
+                    } else if (window.NEARBY_STATE.total > 9 && remaining === 0) {
+                        moreWrap.classList.remove('hidden');
+                        moreWrap.classList.add('flex');
+                        moreWrap.innerHTML = `
+                            <a href="/ban-do?lat=${lat}&lng=${lng}" class="inline-flex items-center justify-center bg-emerald-50 border-2 border-emerald-200 text-emerald-800 px-8 py-3.5 rounded-full font-bold text-[15px] hover:bg-emerald-600 hover:text-white hover:border-emerald-600 transition-all shadow-sm group">
+                                <span>Xem tất cả ${window.NEARBY_STATE.total} quán trên bản đồ tương tác</span>
+                                <span class="material-symbols-outlined ml-2 group-hover:translate-x-1 transition-transform text-[20px]">arrow_forward</span>
+                            </a>
+                        `;
+                    } else {
+                        moreWrap.classList.add('hidden');
+                        moreWrap.classList.remove('flex');
+                    }
+                }
             } else {
                 // Không có quán trong bán kính
                 if (promptBanner) promptBanner.classList.add('hidden');
+
+                const moreWrap = document.getElementById('nearby-load-more-wrap');
+                if (moreWrap) {
+                    moreWrap.classList.add('hidden');
+                    moreWrap.classList.remove('flex');
+                }
 
                 if (gridNearby) {
                     delete gridNearby.dataset.loading;
@@ -933,6 +1033,61 @@
             }
         }
     }
+
+    // Tải thêm quán gần bạn khi bấm "Xem thêm"
+    window.loadMoreNearbyVenues = async function() {
+        if (window.NEARBY_STATE.isLoading) return;
+        const btn = document.getElementById('btn-load-more-nearby');
+        const btnText = document.getElementById('btn-load-more-nearby-text');
+        const gridNearby = document.getElementById('venues-grid-nearby');
+        if (!gridNearby || !window.NEARBY_STATE.lat || !window.NEARBY_STATE.lng) return;
+
+        window.NEARBY_STATE.isLoading = true;
+        if (btnText) btnText.textContent = 'Đang tải thêm quán...';
+
+        try {
+            const nextPage = window.NEARBY_STATE.page + 1;
+            const res = await fetch(`/api/ban-do/quan-lan-can?lat=${window.NEARBY_STATE.lat}&lng=${window.NEARBY_STATE.lng}&radius=${window.NEARBY_STATE.radius}&page=${nextPage}&per_page=9`);
+            const data = await res.json();
+
+            if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+                window.NEARBY_STATE.page = nextPage;
+                window.NEARBY_STATE.loadedCount += data.data.length;
+
+                const newCardsHtml = data.data.map(q => generateVenueCardHtml(q)).join('');
+                gridNearby.insertAdjacentHTML('beforeend', newCardsHtml);
+
+                const remaining = Math.max(0, window.NEARBY_STATE.total - window.NEARBY_STATE.loadedCount);
+                const moreWrap = document.getElementById('nearby-load-more-wrap');
+
+                if (remaining > 0) {
+                    if (btnText) btnText.textContent = `Xem thêm ${remaining} quán gần bạn`;
+                } else if (moreWrap) {
+                    moreWrap.innerHTML = `
+                        <a href="/ban-do?lat=${window.NEARBY_STATE.lat}&lng=${window.NEARBY_STATE.lng}" class="btn-nearby-all-link inline-flex items-center justify-center px-8 py-3.5 rounded-full font-bold text-[15px] shadow-sm group cursor-pointer">
+                            <span>Xem tất cả ${window.NEARBY_STATE.total} quán trên bản đồ tương tác</span>
+                            <span class="material-symbols-outlined ml-2 group-hover:translate-x-1 transition-transform text-[20px]">arrow_forward</span>
+                        </a>
+                    `;
+                }
+            } else {
+                const moreWrap = document.getElementById('nearby-load-more-wrap');
+                if (moreWrap) {
+                    moreWrap.innerHTML = `
+                        <a href="/ban-do?lat=${window.NEARBY_STATE.lat}&lng=${window.NEARBY_STATE.lng}" class="btn-nearby-all-link inline-flex items-center justify-center px-8 py-3.5 rounded-full font-bold text-[15px] shadow-sm group cursor-pointer">
+                            <span>Xem tất cả trên bản đồ tương tác</span>
+                            <span class="material-symbols-outlined ml-2 group-hover:translate-x-1 transition-transform text-[20px]">arrow_forward</span>
+                        </a>
+                    `;
+                }
+            }
+        } catch (e) {
+            console.error('Lỗi tải thêm quán gần bạn:', e);
+            if (btnText) btnText.textContent = 'Thử lại tải thêm';
+        } finally {
+            window.NEARBY_STATE.isLoading = false;
+        }
+    };
 
     // Tự động kiểm tra và yêu cầu truy cập vị trí khi vào website
     document.addEventListener('DOMContentLoaded', function() {

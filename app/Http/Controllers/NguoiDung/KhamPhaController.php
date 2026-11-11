@@ -320,7 +320,7 @@ class KhamPhaController extends Controller
                         return true;
                     }
                     $tenAscii = \Illuminate\Support\Str::lower(\Illuminate\Support\Str::ascii((string) $mon->ten_mon));
-                    return $tuKhoaAscii !== '' && str_contains($tenAscii, $tuKhoaAscii);
+                    return $tuKhoaAscii !== '' && (str_contains($tenAscii, $tuKhoaAscii) || $this->khopGanDungTenMon($tenAscii, $tuKhoaAscii));
                 })
                 ->sortBy([
                     fn ($a, $b) => (int) $b->con_hang <=> (int) $a->con_hang,
@@ -422,6 +422,34 @@ class KhamPhaController extends Controller
     /**
      * Tính khoảng cách đường chim bay giữa hai toạ độ GPS theo công thức Haversine (km).
      */
+    /**
+     * Khớp gần đúng (sai chính tả nhẹ) giữa từ khóa và từng từ trong tên món,
+     * dùng cùng quy tắc Levenshtein với fallback tìm quán ở bên dưới.
+     */
+    protected function khopGanDungTenMon(string $tenAscii, string $tuKhoaAscii): bool
+    {
+        $tokens = array_filter(preg_split('/[^a-z0-9]+/', $tenAscii));
+
+        foreach (array_filter(preg_split('/\s+/', $tuKhoaAscii)) as $kwWord) {
+            if (strlen($kwWord) < 3) {
+                return false;
+            }
+            $maxDist = strlen($kwWord) >= 6 ? 2 : 1;
+            $coTuKhop = false;
+            foreach ($tokens as $token) {
+                if (abs(strlen($token) - strlen($kwWord)) <= $maxDist && levenshtein($kwWord, $token) <= $maxDist) {
+                    $coTuKhop = true;
+                    break;
+                }
+            }
+            if (!$coTuKhop) {
+                return false;
+            }
+        }
+
+        return $tuKhoaAscii !== '';
+    }
+
     protected function calculateDistance(float $lat1, float $lon1, float $lat2, float $lon2): float
     {
         $earthRadius = 6371; // km
