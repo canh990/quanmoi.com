@@ -574,6 +574,7 @@ class SetupElasticsearchIndexes extends Command
                 'index' => $indexName,
                 'body' => [
                     'settings' => [
+                        'number_of_replicas' => 0,
                         'index.max_ngram_diff' => 20,
                         'analysis' => $analysisConfig,
                     ],
