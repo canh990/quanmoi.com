@@ -13,12 +13,30 @@ use Illuminate\Support\Facades\Validator;
 
 class QuanDanhGiaController extends Controller
 {
-    public function reply(Request $request, string $slug, string|int $reviewId, ReviewAiSummaryService $aiService): RedirectResponse
+    /**
+     * Lấy quán thuộc sở hữu của chủ quán (hoặc admin)
+     */
+    protected function getQuan(string $slug): Quan
     {
-        $quan = Quan::where('slug', $slug)
-            ->where('chu_quan_id', Auth::id())
-            ->firstOrFail();
+        $user = Auth::user();
+        if (! $user) {
+            abort(401, 'Vui lòng đăng nhập.');
+        }
+
+        $query = Quan::where('slug', $slug);
+        if (! $user->isAdmin()) {
+            $query->where('chu_quan_id', $user->id);
+        }
+
+        $quan = $query->firstOrFail();
         $this->authorize('update', $quan);
+
+        return $quan;
+    }
+
+    public function reply(Request $request, string $slug, string|int $reviewId, ReviewAiSummaryService $aiService): JsonResponse|RedirectResponse
+    {
+        $quan = $this->getQuan($slug);
 
         $danhGia = $quan->danhGia()->whereKey($reviewId)->firstOrFail();
         $field = 'phan_hoi_'.$danhGia->id;
@@ -31,6 +49,14 @@ class QuanDanhGiaController extends Controller
         ]);
 
         if ($validator->fails()) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $validator->errors()->first($field),
+                    'errors' => $validator->errors(),
+                ], 422);
+            }
+
             return back()
                 ->withErrors($validator)
                 ->withInput()
@@ -42,6 +68,7 @@ class QuanDanhGiaController extends Controller
         $danhGia->update([
             'phan_hoi' => $replyText,
             'phan_hoi_luc' => now(),
+            'updated_at' => now(),
         ]);
         $danhGia->timestamps = true;
 
@@ -77,6 +104,16 @@ class QuanDanhGiaController extends Controller
             ]);
         } catch (\Throwable $e) {}
 
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Phản hồi đánh giá đã được lưu thành công!',
+                'reply' => $replyText,
+                'reply_time' => now()->timezone('Asia/Ho_Chi_Minh')->format('d/m/Y H:i'),
+                'review_id' => (string) $danhGia->id,
+            ]);
+        }
+
         return redirect()
             ->route('chu-quan.quan.show', $quan->slug)
             ->withFragment('owner-reviews-section')
@@ -88,10 +125,7 @@ class QuanDanhGiaController extends Controller
      */
     public function aiSummary(Request $request, string $slug, ReviewAiSummaryService $aiService): JsonResponse
     {
-        $quan = Quan::where('slug', $slug)
-            ->where('chu_quan_id', Auth::id())
-            ->firstOrFail();
-        $this->authorize('update', $quan);
+        $quan = $this->getQuan($slug);
 
         $forceRefresh = $request->boolean('refresh', false);
         $summary = $aiService->getOwnerSummary($quan, $forceRefresh);
@@ -107,10 +141,7 @@ class QuanDanhGiaController extends Controller
      */
     public function suggestReply(Request $request, string $slug, string|int $reviewId, ReviewAiSummaryService $aiService): JsonResponse
     {
-        $quan = Quan::where('slug', $slug)
-            ->where('chu_quan_id', Auth::id())
-            ->firstOrFail();
-        $this->authorize('update', $quan);
+        $quan = $this->getQuan($slug);
 
         $danhGia = $quan->danhGia()->whereKey($reviewId)->firstOrFail();
         $tone = $request->input('tone');
@@ -126,9 +157,7 @@ class QuanDanhGiaController extends Controller
      */
     public function realtimeCheck(Request $request, string $slug): JsonResponse
     {
-        $quan = Quan::where('slug', $slug)
-            ->where('chu_quan_id', Auth::id())
-            ->firstOrFail();
+        $quan = $this->getQuan($slug);
         $this->authorize('update', $quan);
 
         $totalCount = (int) $quan->danhGia()->count();

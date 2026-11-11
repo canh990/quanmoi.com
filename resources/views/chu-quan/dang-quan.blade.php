@@ -109,7 +109,10 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label for="so_dien_thoai" class="text-[12px] font-bold text-gray-500 tracking-wider uppercase mb-2 block">SỐ ĐIỆN THOẠI <span class="text-red-500">*</span></label>
-                                <input id="so_dien_thoai" name="so_dien_thoai" required class="w-full px-4 py-3 rounded-lg border border-gray-200 outline-none input-focus-effect text-[16px] font-normal" placeholder="090 123 4567" type="tel"/>
+                                <input id="so_dien_thoai" name="so_dien_thoai" required inputmode="numeric" pattern="0[0-9]{9,10}" maxlength="11"
+                                       oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11);"
+                                       title="Số điện thoại phải bắt đầu bằng số 0 và có từ 10 đến 11 chữ số"
+                                       class="w-full px-4 py-3 rounded-lg border border-gray-200 outline-none input-focus-effect text-[16px] font-normal" placeholder="0901234567" type="tel"/>
                                 <p class="text-xs text-red-600 hidden mt-1" id="err-so_dien_thoai"></p>
                             </div>
                             <div>
@@ -242,7 +245,7 @@
                         </div>
                     </div>
 
-                    {{-- Admin Selects (Tỉnh/Thành ➔ Quận/Huyện ➔ Phường/Xã) --}}
+                    {{-- Admin Selects (Tỉnh/Thành ➔ Phường/Xã/Đặc khu sau sáp nhập) --}}
                     <div class="grid grid-cols-1 gap-2.5">
                         <div>
                             <label class="text-[11px] font-bold text-gray-500 uppercase mb-1 block">Tỉnh / Thành phố <span class="text-red-500">*</span></label>
@@ -253,23 +256,15 @@
                             <input type="hidden" id="ten_tinh_thanh" name="ten_tinh_thanh" />
                         </div>
 
-                        <div class="grid grid-cols-2 gap-2">
-                            <div>
-                                <label class="text-[11px] font-bold text-gray-500 uppercase mb-1 block">Quận / Huyện <span class="text-red-500">*</span></label>
-                                <select id="select-huyen" required onchange="onHuyenChange(this.value)" disabled class="w-full h-11 px-3 rounded-lg border border-gray-200 outline-none input-focus-effect font-medium text-[14px] disabled:opacity-50">
-                                    <option value="">-- Quận/Huyện --</option>
-                                </select>
-                                <input type="hidden" id="quan_huyen_id" name="quan_huyen_id" />
-                                <input type="hidden" id="ten_quan_huyen" name="ten_quan_huyen" />
-                            </div>
-                            <div>
-                                <label class="text-[11px] font-bold text-gray-500 uppercase mb-1 block">Phường / Xã</label>
-                                <select id="select-xa" onchange="onXaChange(this.value)" disabled class="w-full h-11 px-3 rounded-lg border border-gray-200 outline-none input-focus-effect font-medium text-[14px] disabled:opacity-50">
-                                    <option value="">-- Phường/Xã --</option>
-                                </select>
-                                <input type="hidden" id="phuong_xa_id" name="phuong_xa_id" />
-                                <input type="hidden" id="ten_phuong_xa" name="ten_phuong_xa" />
-                            </div>
+                        <div>
+                            <label class="text-[11px] font-bold text-gray-500 uppercase mb-1 block">Phường / Xã / Đặc khu <span class="text-red-500">*</span></label>
+                            <select id="select-xa" required onchange="onXaChange(this.value)" disabled class="w-full h-11 px-3 rounded-lg border border-gray-200 outline-none input-focus-effect font-medium text-[14px] disabled:opacity-50">
+                                <option value="">-- Chọn Phường / Xã --</option>
+                            </select>
+                            <input type="hidden" id="quan_huyen_id" name="quan_huyen_id" value="" />
+                            <input type="hidden" id="ten_quan_huyen" name="ten_quan_huyen" value="" />
+                            <input type="hidden" id="phuong_xa_id" name="phuong_xa_id" />
+                            <input type="hidden" id="ten_phuong_xa" name="ten_phuong_xa" />
                         </div>
                     </div>
 
@@ -291,7 +286,7 @@
                         lngId="kinh_do"
                         height="h-[250px]"
                         :showCoordInputs="false"
-                        :addressSelectors="['#dia_chi_chi_tiet', '#select-xa', '#select-huyen', '#select-tinh', '#ten_phuong_xa', '#ten_quan_huyen', '#ten_tinh_thanh']"
+                        :addressSelectors="['#dia_chi_chi_tiet', '#select-xa', '#select-tinh', '#ten_phuong_xa', '#ten_tinh_thanh']"
                     />
                 </div>
             </section>
@@ -439,62 +434,29 @@
     }
 
     async function onTinhChange(tinhCode) {
-        const selectHuyen = document.getElementById('select-huyen');
         const selectXa = document.getElementById('select-xa');
         const selectTinh = document.getElementById('select-tinh');
 
         document.getElementById('tinh_thanh_id').value = tinhCode || '';
-        document.getElementById('ten_tinh_thanh').value = selectTinh.options[selectTinh.selectedIndex]?.text || '';
+        document.getElementById('ten_tinh_thanh').value = tinhCode
+            ? (selectTinh.options[selectTinh.selectedIndex]?.text || '')
+            : '';
         document.getElementById('quan_huyen_id').value = '';
         document.getElementById('ten_quan_huyen').value = '';
         document.getElementById('phuong_xa_id').value = '';
         document.getElementById('ten_phuong_xa').value = '';
-        selectHuyen.innerHTML = '<option value="">Đang tải...</option>';
-        selectHuyen.disabled = true;
-        selectXa.innerHTML = '<option value="">Phường/Xã..</option>';
+        selectXa.innerHTML = '<option value="">-- Chọn Phường / Xã --</option>';
         selectXa.disabled = true;
 
         updateAddressPreview();
 
         if (!tinhCode) return;
 
-        try {
-            const res = await fetch(`/api/dia-chi/quan-huyen/${tinhCode}`);
-            const result = await res.json();
-            selectHuyen.innerHTML = '<option value="">-- Quận/Huyện --</option>';
-            if (result.success && Array.isArray(result.data)) {
-                result.data.forEach(item => {
-                    const opt = document.createElement('option');
-                    opt.value = item.code;
-                    opt.textContent = item.name;
-                    selectHuyen.appendChild(opt);
-                });
-                selectHuyen.disabled = false;
-            }
-        } catch (e) {
-            console.error('Lỗi nạp Quận/Huyện:', e);
-        }
-    }
-
-    async function onHuyenChange(huyenCode) {
-        const selectXa = document.getElementById('select-xa');
-        const selectHuyen = document.getElementById('select-huyen');
-
-        document.getElementById('quan_huyen_id').value = huyenCode || '';
-        document.getElementById('ten_quan_huyen').value = selectHuyen.options[selectHuyen.selectedIndex]?.text || '';
-        document.getElementById('phuong_xa_id').value = '';
-        document.getElementById('ten_phuong_xa').value = '';
         selectXa.innerHTML = '<option value="">Đang tải...</option>';
-        selectXa.disabled = true;
-
-        updateAddressPreview();
-
-        if (!huyenCode) return;
-
         try {
-            const res = await fetch(`/api/dia-chi/phuong-xa/${huyenCode}`);
+            const res = await fetch(`/api/dia-chi/phuong-xa-tinh/${encodeURIComponent(tinhCode)}`);
             const result = await res.json();
-            selectXa.innerHTML = '<option value="">-- Phường/Xã --</option>';
+            selectXa.innerHTML = '<option value="">-- Chọn Phường / Xã --</option>';
             if (result.success && Array.isArray(result.data)) {
                 result.data.forEach(item => {
                     const opt = document.createElement('option');
@@ -505,22 +467,26 @@
                 selectXa.disabled = false;
             }
         } catch (e) {
+            selectXa.innerHTML = '<option value="">-- Chọn Phường / Xã --</option>';
             console.error('Lỗi nạp Phường/Xã:', e);
         }
     }
 
     function onXaChange() {
         const selectXa = document.getElementById('select-xa');
-        document.getElementById('phuong_xa_id').value = selectXa.value || '';
-        document.getElementById('ten_phuong_xa').value = selectXa.options[selectXa.selectedIndex]?.text || '';
+        const xaCode = selectXa.value || '';
+        document.getElementById('phuong_xa_id').value = xaCode;
+        document.getElementById('ten_phuong_xa').value = xaCode
+            ? (selectXa.options[selectXa.selectedIndex]?.text || '')
+            : '';
         updateAddressPreview();
     }
 
     function updateAddressPreview() {
-        const street = document.getElementById('dia_chi_chi_tiet').value;
-        const ward = document.getElementById('ten_phuong_xa').value;
-        const district = document.getElementById('ten_quan_huyen').value;
-        const city = document.getElementById('ten_tinh_thanh').value;
+        const street = document.getElementById('dia_chi_chi_tiet')?.value || '';
+        const ward = document.getElementById('ten_phuong_xa')?.value || '';
+        const district = document.getElementById('ten_quan_huyen')?.value || '';
+        const city = document.getElementById('ten_tinh_thanh')?.value || '';
 
         const parts = [street, ward, district, city].filter(Boolean);
         const full = parts.length > 0 ? parts.join(', ') : 'Chưa chọn vị trí';
@@ -602,6 +568,23 @@
     async function submitForm() {
         const form = document.getElementById('dang-quan-form');
         const anhBiaInput = document.getElementById('anh_bia');
+        const phoneInput = document.getElementById('so_dien_thoai');
+        const phoneErr = document.getElementById('err-so_dien_thoai');
+
+        if (phoneInput) {
+            const phoneVal = phoneInput.value.trim();
+            if (!/^0[0-9]{9,10}$/.test(phoneVal)) {
+                if (phoneErr) {
+                    phoneErr.textContent = 'Số điện thoại không hợp lệ (phải bắt đầu bằng số 0 và có từ 10 đến 11 chữ số).';
+                    phoneErr.classList.remove('hidden');
+                }
+                showNotify('Số điện thoại không hợp lệ (phải bắt đầu bằng số 0 và có từ 10 đến 11 chữ số).', 'warning', 'Số điện thoại không hợp lệ');
+                phoneInput.focus();
+                return;
+            } else if (phoneErr) {
+                phoneErr.classList.add('hidden');
+            }
+        }
         
         if (!anhBiaInput.files || anhBiaInput.files.length === 0) {
             showNotify('Vui lòng thêm ảnh chính cho không gian quán!', 'warning', 'Thiếu ảnh bìa quán');

@@ -202,20 +202,20 @@
                             class="province-select-el w-full h-11 px-3.5 pr-9 rounded-xl border border-gray-200 bg-white text-[14px] font-medium text-gray-800 appearance-none focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition-all cursor-pointer"
                         >
                             <option value="">Toàn quốc</option>
-                            {{-- Nạp động từ provinces.open-api.vn qua /api/dia-chi/tinh-thanh --}}
+                            {{-- Nạp động từ provinces.open-api.vn (v2 sau sáp nhập) qua /api/dia-chi/tinh-thanh --}}
                         </select>
                         <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-[20px]">arrow_drop_down</span>
                     </div>
                 </div>
 
                 <div>
-                    <label for="{{ $prefix }}-district-select" class="block text-[13px] font-bold text-gray-700 mb-1.5">Quận / huyện</label>
+                    <label for="{{ $prefix }}-district-select" class="block text-[13px] font-bold text-gray-700 mb-1.5">Phường / xã</label>
                     <div class="relative">
                         <select 
                             id="{{ $prefix }}-district-select" 
                             class="district-select-el w-full h-11 px-3.5 pr-9 rounded-xl border border-gray-200 bg-white text-[14px] font-medium text-gray-800 appearance-none focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition-all cursor-pointer"
                         >
-                            <option value="">Tất cả quận/huyện</option>
+                            <option value="">Tất cả phường/xã</option>
                         </select>
                         <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-[20px]">arrow_drop_down</span>
                     </div>
@@ -298,9 +298,9 @@
         const wrapper = document.getElementById(prefix + '-wrapper');
         if (!wrapper) return;
 
-        // Mã hành chính lấy từ provinces.open-api.vn (v1) qua API nội bộ có cache
+        // Mã hành chính lấy từ provinces.open-api.vn (v2 sau sáp nhập) qua API nội bộ có cache
         const API_TINH_THANH = '/api/dia-chi/tinh-thanh';
-        const API_QUAN_HUYEN = (code) => `/api/dia-chi/quan-huyen/${encodeURIComponent(code)}`;
+        const API_QUAN_HUYEN = (code) => `/api/dia-chi/phuong-xa-tinh/${encodeURIComponent(code)}`;
         const LEGACY_TINH = { HN: '1', HCM: '79', DN: '48', CT: '92', BD: '74', DNAI: '75', VT: '77', HUE: '46', HP: '31', KH: '56', LD: '68' };
         const districtCache = {};
         let provincesPromise = null;
@@ -909,7 +909,7 @@
 
         function loadDistricts(provCode, selected) {
             if (!provCode) {
-                setOptions(districtSelect, 'Tất cả quận/huyện', []);
+                setOptions(districtSelect, 'Tất cả phường/xã', []);
                 return Promise.resolve([]);
             }
             districtSelect.disabled = true;
@@ -921,7 +921,7 @@
                     .catch(() => { delete districtCache[provCode]; return []; });
             }
             return districtCache[provCode].then(list => {
-                setOptions(districtSelect, 'Tất cả quận/huyện', list, selected);
+                setOptions(districtSelect, 'Tất cả phường/xã', list, selected);
                 districtSelect.disabled = false;
                 return list;
             });

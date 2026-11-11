@@ -515,11 +515,15 @@ class KhamPhaController extends Controller
                 $q->whereIn('tinh_thanh_id', $this->codeVariants($tinhThanhId));
             }
             if ($quanHuyenId !== '') {
-                $q->whereIn('quan_huyen_id', $this->codeVariants($quanHuyenId));
+                $variants = $this->codeVariants($quanHuyenId);
+                $q->where(function ($sub) use ($variants) {
+                    $sub->whereIn('quan_huyen_id', $variants)
+                        ->orWhereIn('phuong_xa_id', $variants);
+                });
             }
-            $mau = $q->first(['ten_tinh_thanh', 'ten_quan_huyen']);
+            $mau = $q->first(['ten_tinh_thanh', 'ten_quan_huyen', 'ten_phuong_xa']);
             $tenTinh = $tenTinh ?: (string) ($mau->ten_tinh_thanh ?? '');
-            $tenHuyen = $tenHuyen ?: ($quanHuyenId !== '' ? (string) ($mau->ten_quan_huyen ?? '') : '');
+            $tenHuyen = $tenHuyen ?: ($quanHuyenId !== '' ? (string) ($mau->ten_quan_huyen ?: ($mau->ten_phuong_xa ?? '')) : '');
         }
 
         return [$tenTinh, $tenHuyen];
@@ -565,7 +569,10 @@ class KhamPhaController extends Controller
         }
 
         if (!empty($huyenCodes)) {
-            $q->whereIn('quan_huyen_id', $huyenCodes);
+            $q->where(function ($sub) use ($huyenCodes) {
+                $sub->whereIn('quan_huyen_id', $huyenCodes)
+                    ->orWhereIn('phuong_xa_id', $huyenCodes);
+            });
         }
 
         if ($isXacThuc) {

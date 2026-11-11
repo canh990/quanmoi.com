@@ -1551,14 +1551,14 @@
                 videoElem.onerror = () => {
                     if (loading) loading.style.display = 'none';
                     console.warn('Lỗi phát MP4, tự động chuyển về nhúng Iframe TikTok');
-                    container.innerHTML = '';
-                    const iframe = document.createElement('iframe');
-                    iframe.src = `https://www.tiktok.com/embed/v2/${video.video_id}`;
-                    iframe.frameBorder = '0';
-                    iframe.allow = 'autoplay; clipboard-write; encrypted-media; picture-in-picture';
-                    iframe.allowFullscreen = true;
-                    iframe.style.cssText = 'width:100%;height:100%;border:none;display:block;background:#000;';
-                    container.appendChild(iframe);
+                    container.innerHTML = `
+                        <iframe src="https://www.tiktok.com/player/v1/${video.video_id}?music_info=1&description=1"
+                                frameborder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; fullscreen; gyroscope; picture-in-picture; web-share"
+                                referrerpolicy="no-referrer-when-downgrade"
+                                allowfullscreen
+                                style="width:100%;height:100%;border:none;display:block;background:#000;"></iframe>
+                    `;
                 };
                 videoElem.ontimeupdate = () => {
                     const prog = document.getElementById('quan-video-progress-bar');
@@ -1609,9 +1609,10 @@
             } else {
                 // Fallback iframe nếu chưa có link MP4 sạch
                 const iframe = document.createElement('iframe');
-                iframe.src = `https://www.tiktok.com/embed/v2/${video.video_id}`;
+                iframe.src = `https://www.tiktok.com/player/v1/${video.video_id}?music_info=1&description=1`;
                 iframe.frameBorder = '0';
-                iframe.allow = 'autoplay; clipboard-write; encrypted-media; picture-in-picture';
+                iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; fullscreen; gyroscope; picture-in-picture; web-share';
+                iframe.referrerPolicy = 'no-referrer-when-downgrade';
                 iframe.allowFullscreen = true;
                 iframe.style.cssText = 'width:100%;height:100%;border:none;display:block;background:#000;';
                 iframe.onload = () => { if (loading) loading.style.display = 'none'; };

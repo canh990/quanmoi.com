@@ -500,11 +500,20 @@
                             <span class="material-symbols-outlined text-primary">local_offer</span>
                             Chương trình ưu đãi của quán (<span id="promo-total-count">{{ $quan->khuyenMais->count() }}</span>)
                         </h4>
-                        <a href="#kira-ai-form-box" onclick="document.getElementById('kira-ai-form-box').scrollIntoView({behavior: 'smooth'})"
+                        <button type="button" onclick="document.getElementById('kira-ai-form-box')?.scrollIntoView({behavior: 'smooth'})"
                            class="px-3.5 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-xs rounded-xl transition flex items-center gap-1 cursor-pointer">
                             <span class="material-symbols-outlined text-[16px]">add_circle</span>
                             Tạo ưu đãi mới với AI
-                        </a>
+                        </button>
+                    </div>
+
+                    {{-- Banner Giải Thích Quy Trình Phê Duyệt Voucher --}}
+                    <div class="p-4 rounded-2xl bg-amber-50/80 border border-amber-200/80 flex items-start gap-3">
+                        <span class="material-symbols-outlined text-amber-600 text-xl shrink-0 mt-0.5">verified_user</span>
+                        <div class="text-xs text-amber-900 leading-relaxed">
+                            <p class="font-bold mb-0.5">Quy trình kiểm duyệt voucher & khuyến mãi:</p>
+                            <p>Khi bạn tạo voucher hoặc ưu đãi mới, chương trình sẽ ở trạng thái <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-200 text-amber-900 font-bold text-[11px]"><span class="w-1.5 h-1.5 rounded-full bg-amber-600"></span> Chờ duyệt</span>. <strong>Ban quản trị (Admin) sẽ kiểm tra nội dung và phê duyệt</strong> trước khi mã voucher được kích hoạt công khai cho thực khách trên trang chi tiết quán.</p>
+                        </div>
                     </div>
 
                     {{-- Công cụ kiểm tra & xác thực mã voucher của khách đến quán --}}
@@ -539,25 +548,47 @@
                                         <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
                                             {{ $km->loai_label }} ({{ $km->gia_tri_giam ?: 'Ưu đãi' }})
                                         </span>
-                                        @if($km->con_han)
+                                        @if($km->trang_thai_duyet === 'cho_duyet')
+                                            <span id="badge-status-{{ $km->id }}" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-300 flex items-center gap-1">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                                                🟡 Chờ Admin duyệt
+                                            </span>
+                                        @elseif($km->trang_thai_duyet === 'tu_choi')
+                                            <span id="badge-status-{{ $km->id }}" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 flex items-center gap-1" title="{{ $km->ly_do_tu_choi }}">
+                                                <span class="material-symbols-outlined text-[13px]">block</span>
+                                                🔴 Bị từ chối
+                                            </span>
+                                        @elseif($km->con_han)
                                             <span id="badge-status-{{ $km->id }}" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                                Đang hoạt động
+                                                🟢 Đã duyệt (Đang hoạt động)
                                             </span>
                                         @else
                                             <span id="badge-status-{{ $km->id }}" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-500">
-                                                Tạm dừng / Hết hạn
+                                                Đã duyệt (Tạm dừng / Hết hạn)
                                             </span>
                                         @endif
                                     </div>
 
-                                    <div class="flex items-center gap-2">
-                                        {{-- Toggle kích hoạt --}}
-                                        <button type="button" onclick="toggleOwnerPromotion('{{ $km->id }}')"
-                                                id="btn-toggle-{{ $km->id }}"
-                                                title="{{ $km->trang_thai ? 'Bấm để tạm dừng' : 'Bấm để kích hoạt' }}"
-                                                class="px-2.5 py-1 text-xs font-semibold rounded-lg transition {{ $km->trang_thai ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-600' }}">
-                                            {{ $km->trang_thai ? 'Bật' : 'Tắt' }}
-                                        </button>
+                                    <div class="flex items-center gap-2" id="owner-actions-{{ $km->id }}">
+                                        @if($km->trang_thai_duyet === 'cho_duyet')
+                                            <span class="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-lg font-medium italic flex items-center gap-1">
+                                                <span class="material-symbols-outlined text-[13px]">hourglass_top</span>
+                                                Đang chờ duyệt
+                                            </span>
+                                        @elseif($km->trang_thai_duyet === 'tu_choi')
+                                            <span class="text-[11px] text-rose-700 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-lg font-medium italic flex items-center gap-1" title="{{ $km->ly_do_tu_choi }}">
+                                                <span class="material-symbols-outlined text-[13px]">info</span>
+                                                Bị từ chối
+                                            </span>
+                                        @else
+                                            {{-- Toggle kích hoạt --}}
+                                            <button type="button" onclick="toggleOwnerPromotion('{{ $km->id }}')"
+                                                    id="btn-toggle-{{ $km->id }}"
+                                                    title="{{ $km->trang_thai ? 'Bấm để tạm dừng' : 'Bấm để kích hoạt' }}"
+                                                    class="px-2.5 py-1 text-xs font-semibold rounded-lg transition {{ $km->trang_thai ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-600' }}">
+                                                {{ $km->trang_thai ? 'Bật' : 'Tắt' }}
+                                            </button>
+                                        @endif
                                         {{-- Nút Xóa Voucher --}}
                                         <button type="button" onclick="deleteOwnerPromotion('{{ $km->id }}', '{{ $km->ma_voucher ?: $km->tieu_de }}')" title="Xóa voucher này"
                                                 class="px-2.5 py-1 text-xs font-bold rounded-lg bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 flex items-center gap-1 transition cursor-pointer shadow-2xs">
@@ -565,6 +596,15 @@
                                             <span>Xóa</span>
                                         </button>
                                     </div>
+                                </div>
+
+                                <div id="km-reject-reason-wrap-{{ $km->id }}">
+                                    @if($km->trang_thai_duyet === 'tu_choi' && $km->ly_do_tu_choi)
+                                        <div class="mb-2 p-2 rounded-xl bg-rose-50 text-rose-700 text-xs border border-rose-100 flex items-center gap-1.5">
+                                            <span class="material-symbols-outlined text-[14px] shrink-0 text-rose-600">info</span>
+                                            <span><strong>Lý do từ chối:</strong> {{ $km->ly_do_tu_choi }}</span>
+                                        </div>
+                                    @endif
                                 </div>
 
                                 <h5 class="font-bold text-sm text-gray-900">{{ $km->tieu_de }}</h5>
@@ -800,10 +840,9 @@
                             </button>
 
                             <button type="button" onclick="saveOwnerGeneratedPromotion()" id="btn-owner-save"
-                                    class="px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-xs rounded-xl shadow-md transition flex items-center gap-1.5 cursor-pointer ml-auto"
-                                    style="background-color: #059669; color: #ffffff;">
-                                <span class="material-symbols-outlined text-[16px]">check_circle</span>
-                                Lưu & Kích Hoạt Ưu Đãi Lên Quán Mới
+                                    class="px-5 py-2.5 bg-orange-500 text-white font-extrabold text-xs rounded-xl shadow-md flex items-center gap-1.5 cursor-pointer ml-auto">
+                                <span class="material-symbols-outlined text-[16px]">send</span>
+                                Gửi Phê Duyệt Voucher Lên Admin
                             </button>
                         </div>
                     </div>
@@ -1090,43 +1129,39 @@
                     @endif
                 </div>
 
-                @if($quan->shopeefood_url)
+                @if(filled($quan->shopeefood_url))
                     <p class="text-xs text-gray-500 mb-4 leading-relaxed">
                         In mã này và đặt tại bàn để khách quét đặt món trực tiếp trên ShopeeFood.
                     </p>
+
+                    {{-- QR canvas container --}}
+                    <div class="flex justify-center mb-4">
+                        <div class="bg-white p-3 rounded-2xl border-2 border-orange-200 shadow-inner inline-block">
+                            <div id="qr-code-container"></div>
+                        </div>
+                    </div>
+
+                    <div class="text-center mb-4 px-2">
+                        <a href="{{ $quan->shopeefood_url }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-[11px] text-orange-600 hover:text-orange-700 font-semibold truncate max-w-full hover:underline" title="{{ $quan->shopeefood_url }}">
+                            <span class="material-symbols-outlined text-[13px] shrink-0">shopping_bag</span>
+                            <span class="truncate">{{ $quan->shopeefood_url }}</span>
+                        </a>
+                    </div>
+
+                    <button onclick="downloadQR()"
+                            class="w-full h-10 bg-gray-800 hover:bg-gray-900 text-white font-bold text-[13px] rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer">
+                        <span class="material-symbols-outlined text-[18px]">download</span> Tải về PNG
+                    </button>
                 @else
-                    <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-800 mb-4 leading-relaxed flex items-start gap-2">
+                    <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-800 leading-relaxed flex items-start gap-2">
                         <span class="material-symbols-outlined text-[16px] text-amber-600 shrink-0 mt-0.5">info</span>
                         <div>
-                            <span>Quán chưa có link ShopeeFood. Bấm </span>
+                            <span>Quán chưa có link ShopeeFood nên chưa có mã QR. Bấm </span>
                             <button type="button" onclick="openEditModal()" class="font-bold underline text-amber-900 cursor-pointer">Chỉnh sửa</button>
                             <span> để cập nhật link ShopeeFood tạo mã QR đặt món.</span>
                         </div>
                     </div>
                 @endif
-
-                {{-- QR canvas container --}}
-                <div class="flex justify-center mb-4">
-                    <div class="bg-white p-3 rounded-2xl border-2 {{ $quan->shopeefood_url ? 'border-orange-200' : 'border-gray-200' }} shadow-inner inline-block">
-                        <div id="qr-code-container"></div>
-                    </div>
-                </div>
-
-                <div class="text-center mb-4 px-2">
-                    @if($quan->shopeefood_url)
-                        <a href="{{ $quan->shopeefood_url }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-[11px] text-orange-600 hover:text-orange-700 font-semibold truncate max-w-full hover:underline" title="{{ $quan->shopeefood_url }}">
-                            <span class="material-symbols-outlined text-[13px] shrink-0">shopping_bag</span>
-                            <span class="truncate">{{ $quan->shopeefood_url }}</span>
-                        </a>
-                    @else
-                        <p class="text-[11px] text-gray-400 truncate" title="{{ url('/quan/' . $quan->slug) }}">{{ url('/quan/' . $quan->slug) }}</p>
-                    @endif
-                </div>
-
-                <button onclick="downloadQR()"
-                        class="w-full h-10 bg-gray-800 hover:bg-gray-900 text-white font-bold text-[13px] rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer">
-                    <span class="material-symbols-outlined text-[18px]">download</span> Tải về PNG
-                </button>
             </div>
 
         </div>{{-- end sidebar --}}
@@ -1165,6 +1200,9 @@
                     <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Số điện thoại <span class="text-red-500">*</span></label>
                     <input type="tel" name="so_dien_thoai" id="edit-so-dien-thoai"
                            value="{{ $quan->so_dien_thoai }}" required
+                           inputmode="numeric" pattern="0[0-9]{9,10}" maxlength="11"
+                           oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11);"
+                           title="Số điện thoại phải bắt đầu bằng số 0 và có từ 10 đến 11 chữ số"
                            class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm transition">
                 </div>
 
@@ -1304,10 +1342,32 @@
     const ownerVenueTabs = Array.from(document.querySelectorAll('#owner-venue-tabs a[href^="#owner-"]'));
 
     function setOwnerVenueTab(hash) {
-        const requestedId = (hash || '').replace(/^#/, '');
-        const activeId = ownerVenueTabs.some(tab => tab.hash === `#${requestedId}`)
-            ? requestedId
-            : 'owner-menu-section';
+        const rawHash = (hash || '').trim();
+        const requestedId = rawHash.replace(/^#/, '');
+
+        let targetTab = ownerVenueTabs.find(tab => tab.hash === `#${requestedId}`);
+
+        // Nếu hash trỏ tới 1 element bên trong tab (ví dụ: #kira-ai-form-box nằm trong tab #owner-promotions-section)
+        if (!targetTab && requestedId) {
+            const el = document.getElementById(requestedId);
+            if (el) {
+                const parentSection = el.closest('section[id^="owner-"], div[id^="owner-"]');
+                if (parentSection && parentSection.id) {
+                    targetTab = ownerVenueTabs.find(tab => tab.hash === `#${parentSection.id}`);
+                }
+            }
+        }
+
+        // Nếu không khớp và trang đang có tab active, giữ nguyên tab hiện tại không được tự chuyển sang thực đơn
+        let activeId = 'owner-menu-section';
+        if (targetTab) {
+            activeId = targetTab.hash.replace(/^#/, '');
+        } else {
+            const currentActiveTab = ownerVenueTabs.find(tab => tab.classList.contains('tab-active'));
+            if (currentActiveTab) {
+                activeId = currentActiveTab.hash.replace(/^#/, '');
+            }
+        }
 
         ownerVenueTabs.forEach(tab => {
             const active = tab.hash === `#${activeId}`;
@@ -1350,10 +1410,10 @@
             },
         });
 
-        // Render QR Code (dùng qrcodejs - tương thích browser, ưu tiên link ShopeeFood đã nhập)
-        const qrTargetUrl = @json($quan->shopeefood_url ?: url('/quan/' . $quan->slug));
+        // Render QR Code (chỉ tạo mã QR khi quán đã nhập link ShopeeFood)
+        const qrTargetUrl = @json($quan->shopeefood_url ?: null);
         const qrContainer = document.getElementById('qr-code-container');
-        if (qrContainer) {
+        if (qrContainer && qrTargetUrl) {
             new QRCode(qrContainer, {
                 text: qrTargetUrl,
                 width: 160,
@@ -1847,7 +1907,7 @@
         const btn = document.getElementById('btn-owner-save');
         if (btn) {
             btn.disabled = true;
-            btn.innerHTML = '<span class="material-symbols-outlined text-[16px] animate-spin">refresh</span> Đang lưu...';
+            btn.innerHTML = '<span class="material-symbols-outlined text-[16px] animate-spin">refresh</span> Đang gửi duyệt...';
         }
 
         try {
@@ -1875,8 +1935,110 @@
 
             const data = await res.json();
             if (res.ok && data.success) {
-                showNotify(data.message || 'Đã lưu và kích hoạt ưu đãi thành công!', 'success', 'Thành công');
-                setTimeout(() => window.location.reload(), 1000);
+                const km = data.data;
+                showNotify(data.message || 'Đã gửi phê duyệt voucher lên Admin thành công!', 'success', 'Gửi duyệt thành công');
+
+                // 1. Chèn thẻ voucher mới ngay lập tức vào danh sách (KHÔNG LOAD TRANG, KHÔNG ĐỔI TAB)
+                if (km && km.id) {
+                    const list = document.getElementById('owner-promo-list');
+                    const emptyAlert = document.getElementById('owner-promo-empty');
+                    if (emptyAlert) emptyAlert.remove();
+
+                    const newCard = document.createElement('div');
+                    newCard.id = `km-card-${km.id}`;
+                    newCard.className = 'p-4 rounded-2xl border border-amber-300 ring-2 ring-amber-400/40 bg-amber-50/20 transition bg-white shadow-xs';
+
+                    const voucherCodeHtml = km.ma_voucher ? `
+                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-purple-50 text-purple-700 font-mono font-bold text-xs border border-dashed border-purple-300">
+                            <span class="material-symbols-outlined text-[13px]">confirmation_number</span>
+                            ${km.ma_voucher}
+                        </span>
+                    ` : '';
+
+                    const discountLabel = (km.gia_tri_giam || 'Ưu đãi');
+                    const promoTypeLabel = km.loai_label || 'Ưu đãi';
+
+                    const safeTitle = (km.tieu_de || '').replace(/"/g, '&quot;');
+                    const safeSlogan = km.slogan ? `<p class="text-xs italic text-gray-500 mt-0.5">"${(km.slogan || '').replace(/"/g, '&quot;')}"</p>` : '';
+                    const safeDish = km.mon_ap_dung || 'Toàn bộ thực đơn';
+                    const datesStr = (km.ngay_bat_dau || km.ngay_ket_thuc)
+                        ? `<span>⏰ <strong>Thời gian:</strong> ${km.ngay_bat_dau ? km.ngay_bat_dau.substring(0, 10) : 'Từ nay'} đến ${km.ngay_ket_thuc ? km.ngay_ket_thuc.substring(0, 10) : 'Vô thời hạn'}</span>`
+                        : '';
+
+                    newCard.innerHTML = `
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2">
+                            <div class="flex flex-wrap items-center gap-2">
+                                ${voucherCodeHtml}
+                                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                    ${promoTypeLabel} (${discountLabel})
+                                </span>
+                                <span id="badge-status-${km.id}" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-300 flex items-center gap-1">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                                    🟡 Chờ Admin duyệt
+                                </span>
+                            </div>
+
+                            <div class="flex items-center gap-2" id="owner-actions-${km.id}">
+                                <span class="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-lg font-medium italic flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-[13px]">hourglass_top</span>
+                                    Đang chờ duyệt
+                                </span>
+                                <button type="button" onclick="deleteOwnerPromotion('${km.id}', '${(km.ma_voucher || km.tieu_de || '').replace(/'/g, "\\'")}')" title="Xóa voucher này"
+                                        class="px-2.5 py-1 text-xs font-bold rounded-lg bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 flex items-center gap-1 transition cursor-pointer shadow-2xs">
+                                    <span class="material-symbols-outlined text-[15px]">delete</span>
+                                    <span>Xóa</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="km-reject-reason-wrap-${km.id}"></div>
+
+                        <h5 class="font-bold text-sm text-gray-900">${safeTitle}</h5>
+                        ${safeSlogan}
+
+                        <div class="mt-2 text-xs text-gray-500 flex flex-wrap items-center gap-x-4 gap-y-1">
+                            <span>🍽️ <strong>Áp dụng:</strong> ${safeDish}</span>
+                            ${datesStr}
+                        </div>
+
+                        <div class="mt-3 pt-2.5 border-t border-gray-100 flex items-center justify-between text-xs">
+                            <button type="button" onclick="togglePromoContent('${km.id}')" class="font-bold text-purple-600 hover:text-purple-800 flex items-center gap-1 cursor-pointer">
+                                <span class="material-symbols-outlined text-[15px]">read_more</span>
+                                <span id="label-toggle-${km.id}">Xem nội dung bài viết</span>
+                            </button>
+                            <button type="button" onclick="copyExistingPromoPost('${km.id}')" class="font-semibold text-gray-500 hover:text-gray-800 flex items-center gap-1 cursor-pointer">
+                                <span class="material-symbols-outlined text-[15px]">content_copy</span>
+                                Sao chép bài viết
+                            </button>
+                        </div>
+
+                        <div id="promo-full-content-${km.id}" class="hidden mt-3 p-3 bg-gray-50 rounded-xl text-xs text-gray-700 leading-relaxed border border-gray-100 whitespace-pre-line font-sans">
+                            ${(km.noi_dung || '')}
+                            ${km.the_le ? `<div class="mt-2 pt-2 border-t border-gray-200 text-gray-500 font-sans"><strong>Thể lệ:</strong><br>${km.the_le}</div>` : ''}
+                        </div>
+                    `;
+
+                    if (list) {
+                        list.prepend(newCard);
+                    }
+
+                    // 2. Tăng số lượng tổng voucher
+                    const countElem = document.getElementById('promo-total-count');
+                    if (countElem) {
+                        const cur = parseInt(countElem.innerText) || 0;
+                        countElem.innerText = cur + 1;
+                    }
+
+                    // 3. Đưa vào danh sách theo dõi trạng thái realtime
+                    if (typeof lastVoucherStatuses !== 'undefined') {
+                        lastVoucherStatuses[km.id] = 'cho_duyet';
+                    }
+
+                    // 4. Ẩn khung kết quả và cuộn mượt tới voucher vừa tạo
+                    const resBox = document.getElementById('owner-ai-result-box');
+                    if (resBox) resBox.classList.add('hidden');
+                    newCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
             } else {
                 const errorMsg = data.message || (data.errors ? Object.values(data.errors).flat().join('\n') : 'Không thể lưu ưu đãi');
                 showNotify(errorMsg, 'error', 'Lỗi lưu ưu đãi');
@@ -1886,9 +2048,7 @@
         } finally {
             if (btn) {
                 btn.disabled = false;
-                btn.innerHTML = '<span class="material-symbols-outlined text-[16px]">check_circle</span> Lưu & Kích Hoạt Ưu Đãi Lên Quán Mới';
-                btn.style.backgroundColor = '#059669';
-                btn.style.color = '#ffffff';
+                btn.innerHTML = '<span class="material-symbols-outlined text-[16px]">send</span> Gửi Phê Duyệt Voucher Lên Admin';
             }
         }
     }
@@ -2144,6 +2304,192 @@
     }
 
     /* =========================================================
+       ĐỒNG BỘ REALTIME TRẠNG THÁI VOUCHER KHI ADMIN DUYỆT / TỪ CHỐI
+    ========================================================= */
+    const ownerVenueId = '{{ $quan->id }}';
+
+    function handleVoucherRealtimeUpdate(payload) {
+        if (!payload || !payload.voucher_id) return;
+        if (payload.quan_id && payload.quan_id !== ownerVenueId) return;
+
+        const id = payload.voucher_id;
+        const card = document.getElementById('km-card-' + id);
+        const badge = document.getElementById('badge-status-' + id);
+        const actions = document.getElementById('owner-actions-' + id);
+        const rejectWrap = document.getElementById('km-reject-reason-wrap-' + id);
+
+        if (!card && !badge) {
+            return;
+        }
+
+        if (payload.status === 'da_duyet' || payload.action === 'voucher_approved') {
+            // 1. Cập nhật Badge Trạng Thái
+            if (badge) {
+                badge.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 animate-pulse';
+                badge.innerHTML = '🟢 Đã duyệt (Đang hoạt động)';
+                badge.title = '';
+            }
+
+            // 2. Chuyển nút từ "Đang chờ duyệt" / "Bị từ chối" sang nút Bật/Tắt
+            if (actions) {
+                const existingToggle = document.getElementById('btn-toggle-' + id);
+                if (!existingToggle) {
+                    const statusSpan = actions.querySelector('span.italic');
+                    if (statusSpan) {
+                        statusSpan.outerHTML = `
+                            <button type="button" onclick="toggleOwnerPromotion('${id}')"
+                                    id="btn-toggle-${id}"
+                                    title="Bấm để tạm dừng"
+                                    class="px-2.5 py-1 text-xs font-semibold rounded-lg transition bg-emerald-100 text-emerald-800">
+                                Bật
+                            </button>
+                        `;
+                    }
+                }
+            }
+
+            // 3. Xóa hộp lý do từ chối (nếu có trước đó)
+            if (rejectWrap) {
+                rejectWrap.innerHTML = '';
+            }
+
+            // 4. Hiệu ứng viền xanh nhấp nháy cho card
+            if (card) {
+                card.classList.remove('ring-2', 'ring-rose-400', 'bg-rose-50/20');
+                card.classList.add('ring-2', 'ring-emerald-500', 'bg-emerald-50/20');
+                setTimeout(() => {
+                    card.classList.remove('ring-2', 'ring-emerald-500', 'bg-emerald-50/20');
+                }, 4000);
+            }
+
+            // 5. Toast thông báo realtime cho chủ quán
+            if (window.showToast) {
+                window.showToast({
+                    title: '🎉 Voucher Đã Được Phê Duyệt!',
+                    message: `Ban quản trị đã phê duyệt voucher "${payload.ma_voucher || payload.tieu_de || 'của quán'}". Ưu đãi đã kích hoạt công khai!`,
+                    type: 'success'
+                });
+            }
+        } else if (payload.status === 'tu_choi' || payload.action === 'voucher_rejected') {
+            // 1. Cập nhật Badge Trạng Thái
+            if (badge) {
+                badge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 flex items-center gap-1';
+                badge.title = payload.ly_do || 'Chưa đạt tiêu chuẩn';
+                badge.innerHTML = `
+                    <span class="material-symbols-outlined text-[13px]">block</span>
+                    🔴 Bị từ chối
+                `;
+            }
+
+            // 2. Chuyển nút sang "Bị từ chối"
+            if (actions) {
+                const existingToggle = document.getElementById('btn-toggle-' + id);
+                const rejectReason = payload.ly_do || '';
+                if (existingToggle) {
+                    existingToggle.outerHTML = `
+                        <span class="text-[11px] text-rose-700 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-lg font-medium italic flex items-center gap-1" title="${rejectReason}">
+                            <span class="material-symbols-outlined text-[13px]">info</span>
+                            Bị từ chối
+                        </span>
+                    `;
+                }
+            }
+
+            // 3. Thêm hộp thông báo lý do từ chối
+            if (rejectWrap) {
+                const rejectReason = payload.ly_do || 'Chưa đạt tiêu chuẩn hệ thống';
+                rejectWrap.innerHTML = `
+                    <div class="mb-2 p-2 rounded-xl bg-rose-50 text-rose-700 text-xs border border-rose-100 flex items-center gap-1.5 animate-fadeIn">
+                        <span class="material-symbols-outlined text-[14px] shrink-0 text-rose-600">info</span>
+                        <span><strong>Lý do từ chối:</strong> ${rejectReason}</span>
+                    </div>
+                `;
+            }
+
+            // 4. Hiệu ứng viền đỏ
+            if (card) {
+                card.classList.remove('ring-2', 'ring-emerald-500', 'bg-emerald-50/20');
+                card.classList.add('ring-2', 'ring-rose-400', 'bg-rose-50/20');
+                setTimeout(() => {
+                    card.classList.remove('ring-2', 'ring-rose-400', 'bg-rose-50/20');
+                }, 4000);
+            }
+
+            // 5. Toast thông báo realtime cho chủ quán
+            if (window.showToast) {
+                window.showToast({
+                    title: '⚠️ Voucher Bị Từ Chối Duyệt',
+                    message: `Voucher "${payload.ma_voucher || payload.tieu_de || ''}" bị từ chối. Lý do: ${payload.ly_do || 'Chưa đạt tiêu chuẩn'}`,
+                    type: 'error'
+                });
+            }
+        }
+    }
+
+    // 1. Lắng nghe qua BroadcastChannel (tức thì 0ms giữa các tab cùng trình duyệt)
+    if (typeof BroadcastChannel !== 'undefined') {
+        try {
+            const voucherChannel = new BroadcastChannel('quanmoi_voucher_sync');
+            voucherChannel.onmessage = function(e) {
+                if (e.data) handleVoucherRealtimeUpdate(e.data);
+            };
+        } catch(e) {}
+    }
+
+    // 2. Lắng nghe qua Storage Event (dự phòng cho cross-tab trong trình duyệt)
+    window.addEventListener('storage', function(e) {
+        if (e.key === 'quanmoi_voucher_event' && e.newValue) {
+            try {
+                const data = JSON.parse(e.newValue);
+                handleVoucherRealtimeUpdate(data);
+            } catch(err) {}
+        }
+    });
+
+    // 3. Polling ngầm mỗi 3.5 giây (hỗ trợ trường hợp khác trình duyệt/thiết bị khác)
+    let lastVoucherStatuses = {};
+    document.querySelectorAll('[id^="km-card-"]').forEach(card => {
+        const id = card.id.replace('km-card-', '');
+        const badge = document.getElementById('badge-status-' + id);
+        if (badge) {
+            const txt = badge.innerText || '';
+            lastVoucherStatuses[id] = txt.includes('Đã duyệt') ? 'da_duyet' : (txt.includes('từ chối') ? 'tu_choi' : 'cho_duyet');
+        }
+    });
+
+    async function checkOwnerPromotionsRealtime() {
+        if (document.hidden) return;
+        try {
+            const res = await fetch('{{ route("chu-quan.quan.khuyen-mai.realtime-status", $quan->slug) }}', {
+                headers: { 'Accept': 'application/json' }
+            });
+            if (!res.ok) return;
+            const json = await res.json();
+            if (json.success && Array.isArray(json.data)) {
+                json.data.forEach(item => {
+                    const prev = lastVoucherStatuses[item.id];
+                    if (prev && prev !== item.trang_thai_duyet) {
+                        lastVoucherStatuses[item.id] = item.trang_thai_duyet;
+                        handleVoucherRealtimeUpdate({
+                            voucher_id: item.id,
+                            quan_id: ownerVenueId,
+                            status: item.trang_thai_duyet,
+                            ly_do: item.ly_do_tu_choi,
+                            ma_voucher: item.ma_voucher,
+                            tieu_de: item.tieu_de,
+                            trang_thai: item.trang_thai
+                        });
+                    } else if (!prev) {
+                        lastVoucherStatuses[item.id] = item.trang_thai_duyet;
+                    }
+                });
+            }
+        } catch(err) {}
+    }
+
+    setInterval(checkOwnerPromotionsRealtime, 3500);
+
+    /* =========================================================
        XỬ LÝ VIDEO TIKTOK CỦA CHỦ QUÁN
     ========================================================= */
     function openCreateVideoModal() {
@@ -2355,28 +2701,139 @@
         }
     }
 
-    document.getElementById('owner-video-form')?.addEventListener('submit', function(e) {
+    async function handleOwnerVideoFormSubmit(e) {
+        e.preventDefault();
+        const form = e.target;
         const fileInput = document.getElementById('owner_video_file');
-        if (fileInput && fileInput.files && fileInput.files.length > 0) {
+        const tiktokInput = document.getElementById('owner_video_input');
+
+        const hasTiktok = tiktokInput && tiktokInput.value.trim().length > 0;
+        const hasFile = fileInput && fileInput.files && fileInput.files.length > 0;
+
+        if (!hasTiktok && !hasFile) {
+            if (window.showAlertDialog) {
+                window.showAlertDialog({
+                    title: 'Thiếu thông tin video',
+                    message: 'Vui lòng dán link video TikTok hoặc chọn file video MP4 từ máy tính.',
+                    type: 'warning'
+                });
+            } else if (window.showToast) {
+                window.showToast({
+                    title: 'Thiếu thông tin video',
+                    message: 'Vui lòng dán link video TikTok hoặc chọn file video MP4 từ máy tính.',
+                    type: 'warning'
+                });
+            }
+            return;
+        }
+
+        if (hasFile) {
             const file = fileInput.files[0];
             if (file.size > 200 * 1024 * 1024) {
-                e.preventDefault();
-                if (window.showToast) {
+                const sizeMb = (file.size / (1024 * 1024)).toFixed(1);
+                if (window.showAlertDialog) {
+                    window.showAlertDialog({
+                        title: 'File quá lớn',
+                        message: `File video "${file.name}" (${sizeMb}MB) vượt quá giới hạn 200MB. Vui lòng chọn file dung lượng nhỏ hơn.`,
+                        type: 'error'
+                    });
+                } else if (window.showToast) {
                     window.showToast({
                         title: 'File quá lớn',
-                        message: `File video "${file.name}" dung lượng ${(file.size / (1024 * 1024)).toFixed(1)}MB quá lớn. Vui lòng chọn file nhỏ hơn 200MB hoặc dán link TikTok.`,
+                        message: `File video "${file.name}" vượt quá 200MB.`,
                         type: 'error'
                     });
                 }
                 return;
             }
         }
+
         const btn = document.getElementById('btn-submit-owner-video');
+        const oldBtnHtml = btn ? btn.innerHTML : '';
         if (btn) {
             btn.disabled = true;
-            btn.innerHTML = `<span class="animate-spin material-symbols-outlined text-base">sync</span> Đang xử lý tải video...`;
+            btn.innerHTML = `<span class="animate-spin material-symbols-outlined text-base">sync</span><span>Đang tải lên và gửi video...</span>`;
         }
-    });
+
+        try {
+            const formData = new FormData(form);
+            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            const res = await fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': token,
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            });
+
+            const data = await res.json().catch(() => ({}));
+
+            if (res.ok && data.success) {
+                closeCreateVideoModal();
+                resetCreateVideoForm();
+
+                // Hiển thị hộp thoại màn hình thông báo đã gửi video thành công
+                if (window.showAlertDialog) {
+                    window.showAlertDialog({
+                        title: 'Gửi video thành công!',
+                        message: data.message || 'Video review của bạn đã được gửi thành công đến Ban Quản Trị và đang ở trạng thái 🟡 "Chờ duyệt". Video sẽ được hiển thị công khai ngay sau khi Admin duyệt!',
+                        type: 'success',
+                        onOk: () => {
+                            syncOwnerVideosGrid();
+                        }
+                    });
+                } else if (window.showToast) {
+                    window.showToast({
+                        title: 'Gửi video thành công!',
+                        message: data.message || 'Video đang ở trạng thái 🟡 "Chờ duyệt".',
+                        type: 'success',
+                        duration: 6000
+                    });
+                }
+
+                // Cập nhật lại giao diện danh sách video của quán
+                syncOwnerVideosGrid(data.data?.id);
+            } else {
+                const errorMsg = data.message || (data.errors ? Object.values(data.errors).flat().join('<br>') : 'Không thể gửi video review. Vui lòng kiểm tra lại đường dẫn TikTok hoặc file tải lên.');
+                if (window.showAlertDialog) {
+                    window.showAlertDialog({
+                        title: 'Không thể gửi video',
+                        message: errorMsg,
+                        type: 'error'
+                    });
+                } else if (window.showToast) {
+                    window.showToast({
+                        title: 'Lỗi gửi video',
+                        message: errorMsg,
+                        type: 'error',
+                        duration: 6000
+                    });
+                }
+            }
+        } catch (err) {
+            console.error('Submit video error:', err);
+            if (window.showAlertDialog) {
+                window.showAlertDialog({
+                    title: 'Lỗi kết nối',
+                    message: 'Không thể kết nối máy chủ để tải video lên. Vui lòng thử lại sau giây lát.',
+                    type: 'error'
+                });
+            } else if (window.showToast) {
+                window.showToast({
+                    title: 'Lỗi kết nối',
+                    message: 'Không thể tải video lên lúc này.',
+                    type: 'error'
+                });
+            }
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = oldBtnHtml || `<span class="material-symbols-outlined text-base">send</span><span>Gửi video phê duyệt</span>`;
+            }
+        }
+    }
 
     // Enterprise Confirmation Modal Engine cho Chủ Quán
     let ownerConfirmCallback = null;
@@ -2691,19 +3148,49 @@
         document.body.classList.add('overflow-hidden');
         container.innerHTML = '';
 
-        if (videoUrl && (videoUrl.endsWith('.mp4') || videoUrl.includes('/storage/videos/'))) {
+        const playerV1Url = `https://www.tiktok.com/player/v1/${videoId}?music_info=1&description=1`;
+        const watchUrl = `https://www.tiktok.com/@creator/video/${videoId}`;
+
+        if (videoUrl && (videoUrl.endsWith('.mp4') || videoUrl.includes('/storage/videos/') || videoUrl.includes('mime_type=video_mp4'))) {
             const video = document.createElement('video');
             video.src = videoUrl;
             video.controls = true;
             video.autoplay = true;
             video.playsInline = true;
             video.className = 'w-full h-full object-contain';
+            video.onerror = () => {
+                container.innerHTML = `
+                    <iframe src="${playerV1Url}"
+                            style="width:100%;height:100%;border:none;background:#000;"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; fullscreen; gyroscope; picture-in-picture; web-share"
+                            referrerpolicy="no-referrer-when-downgrade"
+                            allowfullscreen></iframe>
+                    <div style="position:absolute;bottom:12px;left:0;right:0;text-align:center;pointer-events:auto;z-index:20;">
+                        <a href="${watchUrl}" target="_blank" rel="noopener noreferrer"
+                           style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;background:rgba(0,0,0,0.8);color:#fbbf24;font-size:11px;font-weight:bold;border-radius:9999px;border:1px solid rgba(245,158,11,0.4);text-decoration:none;">
+                            <span>Mở xem trên TikTok</span>
+                            <span class="material-symbols-outlined" style="font-size:14px;">open_in_new</span>
+                        </a>
+                    </div>
+                `;
+            };
             container.appendChild(video);
+            video.play().catch(e => console.log('Autoplay muted'));
         } else {
-            const iframe = document.createElement('iframe');
-            iframe.src = `https://www.tiktok.com/embed/v2/${videoId}`;
-            iframe.style.cssText = 'width:100%;height:100%;border:none;background:#000;';
-            container.appendChild(iframe);
+            container.innerHTML = `
+                <iframe src="${playerV1Url}"
+                        style="width:100%;height:100%;border:none;background:#000;"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; fullscreen; gyroscope; picture-in-picture; web-share"
+                        referrerpolicy="no-referrer-when-downgrade"
+                        allowfullscreen></iframe>
+                <div style="position:absolute;bottom:12px;left:0;right:0;text-align:center;pointer-events:auto;z-index:20;">
+                    <a href="${watchUrl}" target="_blank" rel="noopener noreferrer"
+                       style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;background:rgba(0,0,0,0.8);color:#fbbf24;font-size:11px;font-weight:bold;border-radius:9999px;border:1px solid rgba(245,158,11,0.4);text-decoration:none;">
+                        <span>Mở xem trên TikTok</span>
+                        <span class="material-symbols-outlined" style="font-size:14px;">open_in_new</span>
+                    </a>
+                </div>
+            `;
         }
     }
 
@@ -3281,9 +3768,10 @@
             const data = await res.json();
 
             if (data.has_updates) {
-                // 1. Cập nhật HTML danh sách đánh giá
+                // 1. Cập nhật HTML danh sách đánh giá (chỉ cập nhật khi chủ quán không đang gõ phản hồi dở dang)
                 const listContainer = document.getElementById('owner-reviews-list-container');
-                if (listContainer && data.html) {
+                const isUserTyping = listContainer && listContainer.contains(document.activeElement);
+                if (listContainer && data.html && !isUserTyping) {
                     listContainer.innerHTML = data.html;
                 }
 
@@ -3352,6 +3840,126 @@
             window.ownerReviewsState.isSyncing = false;
         }
     }
+
+    /**
+     * Xử lý gửi phản hồi đánh giá bằng AJAX mượt mà, không giật tab hay tải lại trang
+     */
+    window.handleOwnerReplySubmit = async function(event, slug, reviewId) {
+        event.preventDefault();
+        const form = event.target;
+        const textarea = document.getElementById(`phan-hoi-${reviewId}`);
+        const btn = document.getElementById(`btn-submit-reply-${reviewId}`);
+        const btnText = document.getElementById(`btn-submit-reply-text-${reviewId}`);
+        const labelMode = document.getElementById(`label-reply-mode-${reviewId}`);
+
+        if (!textarea || !textarea.value.trim()) {
+            if (window.showToast) {
+                window.showToast({
+                    title: 'Thiếu nội dung',
+                    message: 'Vui lòng nhập nội dung phản hồi cho khách hàng.',
+                    type: 'warning'
+                });
+            }
+            if (textarea) textarea.focus();
+            return;
+        }
+
+        const oldHtml = btn ? btn.innerHTML : '';
+        if (btn) {
+            btn.disabled = true;
+            btn.classList.add('opacity-75', 'cursor-not-allowed');
+            if (btnText) btnText.textContent = 'Đang lưu phản hồi...';
+        }
+
+        try {
+            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            const formData = new FormData(form);
+            const res = await fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': token,
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            });
+
+            const data = await res.json();
+            if (res.ok && data.success) {
+                // 1. Cập nhật hoặc hiển thị khung phản hồi của quán ngay trên thẻ đánh giá
+                const displayWrap = document.getElementById(`owner-reply-display-wrap-${reviewId}`);
+                const replyTextEl = document.getElementById(`owner-reply-text-${reviewId}`);
+                const replyTimeEl = document.getElementById(`owner-reply-time-${reviewId}`);
+                const wasPreviouslyReplied = displayWrap && !displayWrap.classList.contains('hidden');
+
+                if (displayWrap && replyTextEl) {
+                    replyTextEl.textContent = data.reply;
+                    if (replyTimeEl && data.reply_time) {
+                        replyTimeEl.textContent = data.reply_time;
+                    }
+                    displayWrap.classList.remove('hidden');
+                }
+
+                // 2. Cập nhật nhãn và nút
+                if (labelMode) {
+                    labelMode.textContent = 'Chỉnh sửa câu trả lời của quán';
+                }
+                if (btnText) {
+                    btnText.textContent = 'Cập nhật phản hồi';
+                }
+
+                // 3. Ẩn hint đã áp dụng mẫu
+                const hint = document.getElementById(`applied-hint-${reviewId}`);
+                if (hint) hint.classList.add('hidden');
+
+                // 4. Cập nhật badge số chưa trả lời (nếu vừa trả lời lần đầu)
+                const unrepliedEl = document.getElementById('owner-reviews-unreplied-count');
+                const tabBadge = document.getElementById('owner-reviews-tab-badge');
+                if (unrepliedEl && !wasPreviouslyReplied) {
+                    let curCount = parseInt(unrepliedEl.textContent) || 0;
+                    curCount = Math.max(0, curCount - 1);
+                    unrepliedEl.textContent = curCount;
+                    if (curCount === 0 && tabBadge) tabBadge.classList.add('hidden');
+                }
+
+                // 5. Cập nhật timestamp state nội bộ
+                if (window.ownerReviewsState) {
+                    window.ownerReviewsState.lastUpdated = new Date().toISOString();
+                }
+
+                if (window.showToast) {
+                    window.showToast({
+                        title: 'Đã lưu phản hồi!',
+                        message: data.message || 'Phản hồi đánh giá đã được lưu thành công.',
+                        type: 'success'
+                    });
+                }
+            } else {
+                if (window.showToast) {
+                    window.showToast({
+                        title: 'Không thể lưu phản hồi',
+                        message: data.message || 'Vui lòng kiểm tra lại nội dung phản hồi.',
+                        type: 'error'
+                    });
+                }
+            }
+        } catch (err) {
+            console.error('Submit review reply error:', err);
+            if (window.showToast) {
+                window.showToast({
+                    title: 'Lỗi kết nối',
+                    message: 'Không thể kết nối máy chủ để lưu phản hồi.',
+                    type: 'error'
+                });
+            }
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.classList.remove('opacity-75', 'cursor-not-allowed');
+                btn.innerHTML = oldHtml || `<span class="material-symbols-outlined text-[15px]">send</span><span>Cập nhật phản hồi</span>`;
+            }
+        }
+    };
 
     // Polling định kỳ mỗi 4 giây (chỉ chạy khi tab đang mở)
     setInterval(checkOwnerReviewsUpdates, 4000);
@@ -3454,7 +4062,7 @@
         </div>
 
         {{-- Form --}}
-        <form method="POST" action="{{ route('chu-quan.quan.videos.store', $quan->slug) }}" enctype="multipart/form-data" id="owner-video-form" class="p-5 overflow-y-auto space-y-4 text-xs">
+        <form method="POST" action="{{ route('chu-quan.quan.videos.store', $quan->slug) }}" enctype="multipart/form-data" id="owner-video-form" onsubmit="handleOwnerVideoFormSubmit(event)" class="p-5 overflow-y-auto space-y-4 text-xs">
             @csrf
 
             {{-- Thông báo kiểm duyệt --}}

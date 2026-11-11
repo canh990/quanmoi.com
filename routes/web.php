@@ -124,6 +124,8 @@ Route::prefix('chu-quan')->group(function () {
             ->name('chu-quan.quan.khuyen-mai.destroy');
         Route::post('/quan/{slug}/khuyen-mai/kiem-tra', [\App\Http\Controllers\ChuQuan\KhuyenMaiController::class, 'kiemTraVoucher'])
             ->name('chu-quan.quan.khuyen-mai.kiem-tra');
+        Route::get('/quan/{slug}/khuyen-mai/realtime-status', [\App\Http\Controllers\ChuQuan\KhuyenMaiController::class, 'realtimeStatus'])
+            ->name('chu-quan.quan.khuyen-mai.realtime-status');
 
         // Quản lý Video TikTok Review của quán (chờ duyệt)
         Route::post('/quan/{slug}/videos', [\App\Http\Controllers\ChuQuan\VideoController::class, 'store'])
@@ -139,6 +141,7 @@ Route::prefix('api')->group(function () {
     Route::get('/dia-chi/tinh-thanh', [DiaChiController::class, 'getTinhThanh']);
     Route::get('/dia-chi/quan-huyen/{tinhCode}', [DiaChiController::class, 'getQuanHuyen']);
     Route::get('/dia-chi/phuong-xa/{huyenCode}', [DiaChiController::class, 'getPhuongXa']);
+    Route::get('/dia-chi/phuong-xa-tinh/{tinhCode}', [DiaChiController::class, 'getPhuongXaTheoTinh']);
     
     // Giới hạn 20 request/phút để chống spam bào tiền API Google Maps
     Route::get('/ban-do/geocode', [BanDoController::class, 'geocode'])->middleware('throttle:20,1');
@@ -230,3 +233,4 @@ Route::post('/sepay/webhook', [NapTienController::class, 'webhook'])->name('sepa
 Route::post('/sepay/ipn', [NapTienController::class, 'ipn'])->name('sepay.ipn');
 Route::get('/tai-khoan/nap-tien/{code}/status', [NapTienController::class, 'status'])->name('sepay.status');
 Route::get('/tai-khoan/nap-tien/status/{code}', [NapTienController::class, 'status']);
+

@@ -977,9 +977,9 @@
                     <span class="material-symbols-outlined text-[18px]">reorder</span>
                     <span>Nhật Ký Tác Vụ Hệ Thống (Audit Log)</span>
                 </a>
-                <a href="{{ route('admin.ai-tools.index') }}" class="cmd-item flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 text-slate-700 font-medium transition-colors">
-                    <span class="material-symbols-outlined text-[18px]">neurology</span>
-                    <span>Trợ Lý Trí Tuệ Nhân Tạo AI</span>
+                <a href="{{ route('admin.khuyen-mai-ai.index') }}" class="cmd-item flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 text-slate-700 font-medium transition-colors">
+                    <span class="material-symbols-outlined text-[18px]">loyalty</span>
+                    <span>Phê Duyệt Voucher & Khuyến Mãi</span>
                 </a>
                 <a href="{{ route('admin.bao-mat.index') }}" class="cmd-item flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 text-slate-700 font-medium transition-colors">
                     <span class="material-symbols-outlined text-[18px]">shield</span>

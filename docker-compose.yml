@@ -22,6 +22,7 @@ services:
       DB_DATABASE: quanmoi
       DB_USERNAME: quanmoi
       DB_PASSWORD: quanmoi_password
+      SCOUT_DRIVER: elastic
       ELASTIC_HOST: http://elasticsearch:9200
       UPLOAD_LIMIT: 250M
       MEMORY_LIMIT: 512M

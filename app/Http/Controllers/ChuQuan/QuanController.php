@@ -104,7 +104,7 @@ class QuanController extends Controller
                     'tinh_thanh_id' => $validated['tinh_thanh_id'] ?? null,
                     'ten_tinh_thanh' => $validated['ten_tinh_thanh'],
                     'quan_huyen_id' => $validated['quan_huyen_id'] ?? null,
-                    'ten_quan_huyen' => $validated['ten_quan_huyen'],
+                    'ten_quan_huyen' => $validated['ten_quan_huyen'] ?? null,
                     'phuong_xa_id' => $validated['phuong_xa_id'] ?? null,
                     'ten_phuong_xa' => $validated['ten_phuong_xa'] ?? null,
                     'kinh_do' => $validated['kinh_do'] ?? 106.7009,
@@ -310,7 +310,7 @@ class QuanController extends Controller
         $this->authorize('update', $quan);
 
         $validated = $request->validate([
-            'so_dien_thoai' => 'required|string|max:20',
+            'so_dien_thoai' => ['required', 'string', 'regex:/^0[0-9]{9,10}$/'],
             'dia_chi_chi_tiet' => 'nullable|string|max:255',
             'vi_do' => 'nullable|numeric|between:-90,90',
             'kinh_do' => 'nullable|numeric|between:-180,180',
@@ -329,6 +329,7 @@ class QuanController extends Controller
             'anh_bia' => 'nullable|image|max:5120',
         ], [
             'so_dien_thoai.required' => 'Số điện thoại không được để trống.',
+            'so_dien_thoai.regex' => 'Số điện thoại không hợp lệ (phải bắt đầu bằng số 0 và có từ 10 đến 11 số).',
             'so_dien_thoai.max' => 'Số điện thoại không được vượt quá 20 ký tự.',
             'vi_do.numeric' => 'Vĩ độ (latitude) phải là định dạng số.',
             'vi_do.between' => 'Vĩ độ (latitude) phải nằm trong khoảng từ -90 đến 90.',

@@ -32,4 +32,10 @@ class DiaChiController extends Controller
         $data = $this->diaChiService->getPhuongXa($huyenCode);
         return response()->json(['success' => true, 'data' => $data]);
     }
+
+    public function getPhuongXaTheoTinh($tinhCode)
+    {
+        $data = $this->diaChiService->getPhuongXaTheoTinh($tinhCode);
+        return response()->json(['success' => true, 'data' => $data]);
+    }
 }

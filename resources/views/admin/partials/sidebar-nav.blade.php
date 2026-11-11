@@ -113,9 +113,19 @@
             <span class="material-symbols-outlined text-[18px]">admin_panel_settings</span>
             <span>Vai Trò & Phân Quyền</span>
         </a>
-        <a href="{{ route('admin.khuyen-mai-ai.index') }}" class="sidebar-item flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all {{ request()->routeIs('admin.khuyen-mai-ai.*') ? 'bg-[#F59E0B] text-white font-bold shadow-md' : 'text-slate-300 hover:bg-slate-800/80 hover:text-white' }}">
-            <span class="material-symbols-outlined text-[18px]">loyalty</span>
-            <span>Khuyến Mãi & Voucher AI</span>
+        @php
+            $pendingVouchersCount = \Illuminate\Support\Facades\Schema::hasTable('khuyen_mai') && \Illuminate\Support\Facades\Schema::hasColumn('khuyen_mai', 'trang_thai_duyet')
+                ? \App\Models\KhuyenMai::where('trang_thai_duyet', 'cho_duyet')->count()
+                : 0;
+        @endphp
+        <a href="{{ route('admin.khuyen-mai-ai.index') }}" class="sidebar-item flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all {{ request()->routeIs('admin.khuyen-mai-ai.*') ? 'bg-[#F59E0B] text-white font-bold shadow-md' : 'text-slate-300 hover:bg-slate-800/80 hover:text-white' }}">
+            <div class="flex items-center gap-2.5">
+                <span class="material-symbols-outlined text-[18px]">loyalty</span>
+                <span>Phê Duyệt Voucher</span>
+            </div>
+            <span class="px-1.5 py-0.5 text-[10px] font-bold bg-amber-500/20 text-amber-300 rounded border border-amber-500/30 {{ $pendingVouchersCount > 0 ? '' : 'hidden' }}" id="sidebar-pending-vouchers-badge">
+                {{ $pendingVouchersCount }}
+            </span>
         </a>
         <a href="{{ route('admin.thong-bao.index') }}" class="sidebar-item flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all {{ request()->routeIs('admin.thong-bao.*') ? 'bg-[#F59E0B] text-white font-bold shadow-md' : 'text-slate-300 hover:bg-slate-800/80 hover:text-white' }}">
             <div class="flex items-center gap-2.5">
@@ -127,10 +137,6 @@
         <a href="{{ route('admin.audit-log.index') }}" class="sidebar-item flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all {{ request()->routeIs('admin.audit-log.*') ? 'bg-[#F59E0B] text-white font-bold shadow-md' : 'text-slate-300 hover:bg-slate-800/80 hover:text-white' }}">
             <span class="material-symbols-outlined text-[18px]">reorder</span>
             <span>Nhật Ký Tác Vụ</span>
-        </a>
-        <a href="{{ route('admin.ai-tools.index') }}" class="sidebar-item flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all {{ request()->routeIs('admin.ai-tools.*') ? 'bg-[#F59E0B] text-white font-bold shadow-md' : 'text-slate-300 hover:bg-slate-800/80 hover:text-white' }}">
-            <span class="material-symbols-outlined text-[18px]">neurology</span>
-            <span>Trợ Lý Trí Tuệ AI</span>
         </a>
         <a href="{{ route('admin.bao-mat.index') }}" class="sidebar-item flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all {{ request()->routeIs('admin.bao-mat.*') ? 'bg-[#F59E0B] text-white font-bold shadow-md' : 'text-slate-300 hover:bg-slate-800/80 hover:text-white' }}">
             <span class="material-symbols-outlined text-[18px]">shield</span>

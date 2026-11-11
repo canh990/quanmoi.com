@@ -34,15 +34,12 @@ class QuanLyVideoController extends Controller
 
         $query = VideoShort::with('quan:id,ten_quan,slug,dia_chi_chi_tiet,ten_quan_huyen,ten_tinh_thanh');
 
-        // Tìm kiếm theo từ khóa
+        // Tìm kiếm thông minh qua Elasticsearch theo từ khóa (tên video, người đăng, ID, tên quán, món ăn)
         if ($request->filled('q')) {
-            $keyword = trim($request->q);
-            $query->where(function ($q) use ($keyword) {
-                $q->where('tieu_de', 'like', "%{$keyword}%")
-                    ->orWhere('video_id', 'like', "%{$keyword}%")
-                    ->orWhere('nguoi_dang', 'like', "%{$keyword}%")
-                    ->orWhereHas('quan', fn ($r) => $r->where('ten_quan', 'like', "%{$keyword}%"));
-            });
+            $statusFilter = ($request->filled('trang_thai') && $request->trang_thai !== 'all')
+                ? (string) $request->trang_thai
+                : null;
+            VideoShort::applyElasticSearch($query, (string) $request->q, $statusFilter);
         }
 
         // Lọc theo trạng thái

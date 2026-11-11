@@ -252,6 +252,13 @@ class HomeController extends Controller
             ], 404);
         }
 
+        if ($km->trang_thai_duyet !== 'da_duyet') {
+            return response()->json([
+                'valid' => false,
+                'message' => "Mã voucher [{$code}] chưa được kích hoạt.",
+            ], 400);
+        }
+
         if (! $km->trang_thai) {
             return response()->json([
                 'valid' => false,
