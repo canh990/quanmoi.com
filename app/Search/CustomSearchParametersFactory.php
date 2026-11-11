@@ -20,6 +20,11 @@ class CustomSearchParametersFactory extends SearchParametersFactory
                 'bool' => [
                     'should' => [
                         [
+                            'match' => [
+                                'ten_quan.prefix' => ['query' => $builder->query, 'operator' => 'AND', 'boost' => 6],
+                            ],
+                        ],
+                        [
                             'multi_match' => [
                                 'query' => $builder->query,
                                 'fields' => ['ten_quan^4', 'mon_an^2.5', 'loai_hinh_kinh_doanh^1.5', 'dia_chi', 'mo_ta'],

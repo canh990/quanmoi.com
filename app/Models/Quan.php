@@ -51,6 +51,41 @@ class Quan extends Model
         'luot_xem',
     ];
 
+    protected static function booted(): void
+    {
+        static::saving(function (Quan $quan) {
+            // Tự động gán danh_muc_id nếu đang trống nhưng có loai_hinh_kinh_doanh
+            if (empty($quan->danh_muc_id) && !empty($quan->loai_hinh_kinh_doanh)) {
+                $cat = DanhMucQuan::where('ten_danh_muc', $quan->loai_hinh_kinh_doanh)->first();
+                if (!$cat) {
+                    $aliasMap = [
+                        'Ăn vặt'         => 'do-an-vat',
+                        'Đồ ăn vặt'      => 'do-an-vat',
+                        'Cà phê'         => 'ca-phe-tra',
+                        'Cà phê & Trà'   => 'ca-phe-tra',
+                        'Quán Đêm 24/7'  => 'quan-nhau',
+                        'Quán nhậu'      => 'quan-nhau',
+                        'Quán nhậu & Bar'=> 'quan-nhau',
+                        'Cơm bình dân'   => 'quan-an-binh-dan',
+                        'Bida'           => 'billiards-giai-tri',
+                    ];
+                    $slug = $aliasMap[$quan->loai_hinh_kinh_doanh] ?? null;
+                    if ($slug) {
+                        $cat = DanhMucQuan::where('slug', $slug)->first();
+                    }
+                }
+                if ($cat) {
+                    $quan->danh_muc_id = $cat->id;
+                }
+            } elseif (!empty($quan->danh_muc_id) && empty($quan->loai_hinh_kinh_doanh)) {
+                $cat = DanhMucQuan::find($quan->danh_muc_id);
+                if ($cat) {
+                    $quan->loai_hinh_kinh_doanh = $cat->ten_danh_muc;
+                }
+            }
+        });
+    }
+
     /**
      * Tùy biến truy vấn khi import toàn bộ dữ liệu vào Scout.
      */

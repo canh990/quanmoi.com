@@ -89,7 +89,7 @@
                 <tbody class="divide-y divide-slate-100 text-xs">
                     @forelse($categories as $category)
                         @php
-                            $colorInfo = $presetColors[$category->mau_sac] ?? $presetColors['amber'];
+                            $colorInfo = $category->color_info;
                         @endphp
                         <tr class="hover:bg-slate-50/60 transition-colors group" id="row-cat-{{ $category->id }}">
                             {{-- Thứ tự --}}
@@ -101,7 +101,8 @@
 
                             {{-- Icon & Màu --}}
                             <td class="py-3.5 px-4 text-center">
-                                <div class="w-10 h-10 rounded-xl {{ $colorInfo['badge'] }} border flex items-center justify-center mx-auto shadow-xs">
+                                <div class="w-10 h-10 rounded-xl border flex items-center justify-center mx-auto shadow-xs"
+                                     style="background-color: {{ $colorInfo['light'] ?? '#fffbeb' }}; color: {{ $colorInfo['text'] ?? '#b45309' }}; border-color: {{ $colorInfo['border'] ?? '#fde68a' }};">
                                     <span class="material-symbols-outlined text-[20px]">{{ $category->icon ?: 'restaurant' }}</span>
                                 </div>
                             </td>
@@ -110,7 +111,10 @@
                             <td class="py-3.5 px-4">
                                 <div class="flex items-center gap-2">
                                     <span class="font-bold text-slate-800 text-[13px] hover:text-amber-600 transition-colors">{{ $category->ten_danh_muc }}</span>
-                                    <span class="px-1.5 py-0.5 rounded text-[10px] font-medium {{ $colorInfo['badge'] }}">{{ $colorInfo['name'] }}</span>
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold border"
+                                          style="background-color: {{ $colorInfo['light'] ?? '#fffbeb' }}; color: {{ $colorInfo['text'] ?? '#b45309' }}; border-color: {{ $colorInfo['border'] ?? '#fde68a' }};">
+                                        {{ $colorInfo['name'] }}
+                                    </span>
                                 </div>
                                 @if($category->mo_ta)
                                     <p class="text-slate-400 text-[11px] mt-0.5 line-clamp-1">{{ $category->mo_ta }}</p>
@@ -124,7 +128,7 @@
 
                             {{-- Số lượng quán --}}
                             <td class="py-3.5 px-4 text-center">
-                                <a href="{{ route('admin.quan.index', ['q' => $category->ten_danh_muc]) }}" title="Xem danh sách quán" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 hover:bg-amber-100 text-slate-700 hover:text-amber-800 font-bold text-xs transition-colors">
+                                <a href="{{ route('admin.quan.index', ['danh_muc_id' => $category->id]) }}" title="Xem danh sách quán" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 hover:bg-amber-100 text-slate-700 hover:text-amber-800 font-bold text-xs transition-colors">
                                     <span>{{ $category->quans_count }}</span>
                                     <span class="text-[10px] font-normal text-slate-400">quán</span>
                                 </a>
@@ -191,17 +195,21 @@
 </div>
 
 {{-- MODAL THÊM / SỬA DANH MỤC --}}
-<div id="categoryModal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden transform transition-all animate-in fade-in zoom-in-95 duration-150">
+<div id="categoryModal" class="fixed inset-0 hidden overflow-y-auto bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4" style="z-index: 99999 !important;">
+    <div class="bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden transform transition-all duration-150 my-auto">
         {{-- Modal Header --}}
-        <div class="px-6 py-4.5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+        <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
             <div class="flex items-center gap-2.5">
-                <div class="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center">
-                    <span class="material-symbols-outlined text-[20px]" id="modalIconPreview">category</span>
+                <div id="modalIconBox" class="w-9 h-9 rounded-xl flex items-center justify-center border shadow-xs transition-colors"
+                     style="background-color: #fffbeb; color: #b45309; border-color: #fde68a;">
+                    <span class="material-symbols-outlined text-[20px]" id="modalIconPreview">restaurant</span>
                 </div>
-                <h3 class="font-bold text-slate-800 text-sm md:text-base" id="modalTitle">Thêm Danh Mục Mới</h3>
+                <div>
+                    <h3 class="font-bold text-slate-800 text-sm md:text-base leading-tight" id="modalTitle">Thêm Danh Mục Mới</h3>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Cấu hình biểu tượng, màu sắc và hiển thị</p>
+                </div>
             </div>
-            <button type="button" onclick="closeModal()" class="w-8 h-8 rounded-full hover:bg-slate-200/60 text-slate-400 hover:text-slate-600 flex items-center justify-center transition-colors">
+            <button type="button" onclick="closeModal()" class="w-8 h-8 rounded-full hover:bg-slate-200/60 text-slate-400 hover:text-slate-600 flex items-center justify-center transition-colors cursor-pointer">
                 <span class="material-symbols-outlined text-[20px]">close</span>
             </button>
         </div>
@@ -216,7 +224,7 @@
                 <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                     Tên Danh Mục <span class="text-rose-500">*</span>
                 </label>
-                <input type="text" id="cat_ten_danh_muc" name="ten_danh_muc" required placeholder="VD: Lẩu & Nướng, Cà phê & Trà..." oninput="autoSlug(this.value)" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/10 bg-white text-slate-800 transition-all">
+                <input type="text" id="cat_ten_danh_muc" name="ten_danh_muc" required placeholder="VD: Lẩu & Nướng, Cà phê & Trà..." oninput="autoSlug(this.value)" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/10 bg-white text-slate-800 transition-all shadow-2xs">
             </div>
 
             {{-- Slug --}}
@@ -224,8 +232,8 @@
                 <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                     Đường Dẫn Tĩnh (Slug) <span class="text-slate-400 text-[10px] font-normal">(tự động sinh hoặc tùy chỉnh)</span>
                 </label>
-                <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500 font-mono">
-                    <span class="shrink-0 text-slate-400">/danh-muc/</span>
+                <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500 font-mono shadow-2xs">
+                    <span class="shrink-0 text-slate-400 select-none">/danh-muc/</span>
                     <input type="text" id="cat_slug" name="slug" placeholder="ca-phe-tra" class="w-full bg-transparent border-0 p-0 text-xs font-mono font-semibold text-slate-800 outline-none">
                 </div>
             </div>
@@ -235,53 +243,72 @@
                 <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                     Mô Tả Ngắn / Khẩu Hiệu
                 </label>
-                <input type="text" id="cat_mo_ta" name="mo_ta" placeholder="VD: Tụ tập bạn bè, chill cuối tuần..." class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/10 bg-white text-slate-800 transition-all">
+                <input type="text" id="cat_mo_ta" name="mo_ta" placeholder="VD: Tụ tập bạn bè, chill cuối tuần..." class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/10 bg-white text-slate-800 transition-all shadow-2xs">
             </div>
 
             {{-- Chọn Icon --}}
             <div>
-                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                    Biểu Tượng (Icon Material Symbol)
-                </label>
+                <div class="flex items-center justify-between mb-1.5">
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                        Biểu Tượng (Icon Material Symbol)
+                    </label>
+                    <span class="text-[11px] text-slate-400">Chọn 1 biểu tượng</span>
+                </div>
                 <input type="hidden" id="cat_icon" name="icon" value="restaurant">
-                <div class="grid grid-cols-8 gap-2 p-2 bg-slate-50 rounded-2xl border border-slate-200 max-h-36 overflow-y-auto" id="iconPicker">
-                    @foreach($presetIcons as $pIcon)
-                        <button type="button" onclick="selectIcon('{{ $pIcon['icon'] }}')" data-icon="{{ $pIcon['icon'] }}" title="{{ $pIcon['label'] }}" class="icon-choice-btn w-9 h-9 rounded-xl flex items-center justify-center text-slate-600 hover:bg-amber-100 hover:text-amber-800 transition-all">
-                            <span class="material-symbols-outlined text-[20px]">{{ $pIcon['icon'] }}</span>
-                        </button>
-                    @endforeach
+                <div class="p-2 bg-slate-50 rounded-2xl border border-slate-200">
+                    <div id="iconPicker" class="grid grid-cols-8 gap-1.5" style="display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 6px;">
+                        @foreach($presetIcons as $pIcon)
+                            <button type="button" 
+                                    onclick="selectIcon('{{ $pIcon['icon'] }}')" 
+                                    data-icon="{{ $pIcon['icon'] }}" 
+                                    title="{{ $pIcon['label'] }}" 
+                                    class="icon-choice-btn w-full aspect-square rounded-xl flex items-center justify-center text-slate-600 hover:bg-amber-100 hover:text-amber-800 transition-all cursor-pointer border border-transparent">
+                                <span class="material-symbols-outlined text-[20px] pointer-events-none">{{ $pIcon['icon'] }}</span>
+                            </button>
+                        @endforeach
+                    </div>
                 </div>
             </div>
 
             {{-- Chọn Màu sắc --}}
             <div>
-                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                    Màu Sắc Đại Diện
-                </label>
+                <div class="flex items-center justify-between mb-1.5">
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                        Màu Sắc Đại Diện
+                    </label>
+                    <span id="selectedColorName" class="text-[11px] font-bold text-amber-600">Vàng Hổ Phách</span>
+                </div>
                 <input type="hidden" id="cat_mau_sac" name="mau_sac" value="amber">
-                <div class="flex flex-wrap items-center gap-2" id="colorPicker">
+                <div class="flex flex-wrap items-center gap-2 p-2 bg-slate-50 rounded-2xl border border-slate-200" id="colorPicker">
                     @foreach($presetColors as $cKey => $cVal)
-                        <button type="button" onclick="selectColor('{{ $cKey }}')" data-color="{{ $cKey }}" title="{{ $cVal['name'] }}" class="color-choice-btn w-7 h-7 rounded-full {{ $cVal['bg'] }} ring-2 ring-transparent ring-offset-2 hover:scale-110 transition-all"></button>
+                        <button type="button" 
+                                onclick="selectColor('{{ $cKey }}', '{{ $cVal['name'] }}')" 
+                                data-color="{{ $cKey }}" 
+                                data-color-name="{{ $cVal['name'] }}"
+                                title="{{ $cVal['name'] }}" 
+                                style="background-color: {{ $cVal['hex'] }}; width: 28px; height: 28px;" 
+                                class="color-choice-btn rounded-full transition-all cursor-pointer shadow-2xs hover:scale-115 border border-black/10">
+                        </button>
                     @endforeach
                 </div>
             </div>
 
             {{-- Thứ tự & Tuỳ chọn --}}
-            <div class="grid grid-cols-2 gap-4 pt-1">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
                 <div>
                     <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                         Thứ Tự Sắp Xếp
                     </label>
-                    <input type="number" id="cat_thu_tu" name="thu_tu" value="0" min="0" class="w-full px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold outline-none focus:border-amber-500 bg-white text-slate-800">
+                    <input type="number" id="cat_thu_tu" name="thu_tu" value="0" min="0" class="w-full px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold outline-none focus:border-amber-500 bg-white text-slate-800 shadow-2xs">
                 </div>
 
-                <div class="flex flex-col justify-center space-y-2 pt-3">
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" id="cat_is_hien_thi" name="is_hien_thi" value="1" checked class="rounded border-slate-300 text-amber-600 focus:ring-amber-500">
+                <div class="flex flex-col justify-center space-y-2 pt-1 sm:pt-3">
+                    <label class="flex items-center gap-2 cursor-pointer select-none">
+                        <input type="checkbox" id="cat_is_hien_thi" name="is_hien_thi" value="1" checked class="w-4 h-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500 cursor-pointer">
                         <span class="text-xs font-semibold text-slate-700">Hiển thị công khai</span>
                     </label>
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" id="cat_is_noi_bat" name="is_noi_bat" value="1" class="rounded border-slate-300 text-amber-600 focus:ring-amber-500">
+                    <label class="flex items-center gap-2 cursor-pointer select-none">
+                        <input type="checkbox" id="cat_is_noi_bat" name="is_noi_bat" value="1" class="w-4 h-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500 cursor-pointer">
                         <span class="text-xs font-semibold text-slate-700">Ghim Trang chủ</span>
                     </label>
                 </div>
@@ -289,10 +316,10 @@
 
             {{-- Modal Footer --}}
             <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-2.5">
-                <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors">
+                <button type="button" onclick="closeModal()" class="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer">
                     Hủy bỏ
                 </button>
-                <button type="submit" class="btn-action-primary-glow">
+                <button type="submit" class="btn-action-primary-glow cursor-pointer">
                     <span class="material-symbols-outlined text-[18px]">save</span>
                     <span id="submitBtnText">Lưu Danh Mục</span>
                 </button>
@@ -304,6 +331,7 @@
 {{-- JAVASCRIPT XỬ LÝ MODAL & AJAX --}}
 <script>
     let isEditing = false;
+    const presetColorsMap = @json($presetColors);
 
     function autoSlug(text) {
         if (!isEditing) {
@@ -317,29 +345,65 @@
         }
     }
 
-    function selectIcon(iconName) {
-        document.getElementById('cat_icon').value = iconName;
-        document.getElementById('modalIconPreview').innerText = iconName;
+    function updateIconHighlight(activeIcon, hexColor) {
         document.querySelectorAll('.icon-choice-btn').forEach(btn => {
-            if (btn.dataset.icon === iconName) {
-                btn.classList.add('bg-amber-500', 'text-white', 'shadow-xs');
-                btn.classList.remove('text-slate-600');
+            if (btn.dataset.icon === activeIcon) {
+                btn.style.backgroundColor = hexColor || '#f59e0b';
+                btn.style.color = '#ffffff';
+                btn.style.borderColor = hexColor || '#d97706';
+                btn.classList.add('shadow-xs');
             } else {
-                btn.classList.remove('bg-amber-500', 'text-white', 'shadow-xs');
-                btn.classList.add('text-slate-600');
+                btn.style.backgroundColor = '';
+                btn.style.color = '';
+                btn.style.borderColor = 'transparent';
+                btn.classList.remove('shadow-xs');
             }
         });
     }
 
-    function selectColor(colorName) {
+    function selectIcon(iconName) {
+        document.getElementById('cat_icon').value = iconName;
+        const preview = document.getElementById('modalIconPreview');
+        if (preview) preview.innerText = iconName;
+
+        const currentColor = document.getElementById('cat_mau_sac')?.value || 'amber';
+        const colorMeta = presetColorsMap[currentColor] || presetColorsMap['amber'];
+        updateIconHighlight(iconName, colorMeta?.hex || '#f59e0b');
+    }
+
+    function selectColor(colorName, displayName) {
         document.getElementById('cat_mau_sac').value = colorName;
+        const colorMeta = presetColorsMap[colorName] || presetColorsMap['amber'];
+
+        // Cập nhật nhãn tên màu và màu chữ nhãn
+        const colorLabel = document.getElementById('selectedColorName');
+        if (colorLabel && colorMeta) {
+            colorLabel.innerText = displayName || colorMeta.name || colorName;
+            colorLabel.style.color = colorMeta.hex;
+        }
+
+        // Cập nhật ô preview icon ở header của modal
+        const modalIconBox = document.getElementById('modalIconBox');
+        if (modalIconBox && colorMeta) {
+            modalIconBox.style.backgroundColor = colorMeta.light;
+            modalIconBox.style.color = colorMeta.text || colorMeta.hex;
+            modalIconBox.style.borderColor = colorMeta.border;
+        }
+
+        // Cập nhật vòng chọn nút màu (ring đổi theo mã hex của chính màu đó)
         document.querySelectorAll('.color-choice-btn').forEach(btn => {
             if (btn.dataset.color === colorName) {
-                btn.classList.add('ring-amber-500', 'scale-110');
+                btn.style.boxShadow = `0 0 0 2.5px #ffffff, 0 0 0 4.5px ${colorMeta.hex}`;
+                btn.style.transform = 'scale(1.18)';
             } else {
-                btn.classList.remove('ring-amber-500', 'scale-110');
+                btn.style.boxShadow = 'none';
+                btn.style.transform = 'scale(1)';
             }
         });
+
+        // Cập nhật màu nút icon đang chọn trong grid icon
+        const currentIcon = document.getElementById('cat_icon')?.value || 'restaurant';
+        updateIconHighlight(currentIcon, colorMeta.hex);
     }
 
     function openAddModal() {
@@ -356,8 +420,8 @@
         document.getElementById('cat_is_hien_thi').checked = true;
         document.getElementById('cat_is_noi_bat').checked = false;
 
+        selectColor('amber', 'Vàng Hổ Phách');
         selectIcon('restaurant');
-        selectColor('amber');
 
         document.getElementById('categoryModal').classList.remove('hidden');
     }
@@ -376,8 +440,8 @@
         document.getElementById('cat_is_hien_thi').checked = Boolean(category.is_hien_thi);
         document.getElementById('cat_is_noi_bat').checked = Boolean(category.is_noi_bat);
 
-        selectIcon(category.icon || 'restaurant');
         selectColor(category.mau_sac || 'amber');
+        selectIcon(category.icon || 'restaurant');
 
         document.getElementById('categoryModal').classList.remove('hidden');
     }

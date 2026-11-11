@@ -80,30 +80,133 @@
         box-shadow: 0 1px 2px 0 rgba(15, 23, 42, 0.08) !important;
     }
 
-    /* AI CFO Panel */
+    /* Accordion Components */
+    .tk-accordion-card {
+        background-color: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 1rem !important;
+        overflow: hidden !important;
+        box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04) !important;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+    }
+    .tk-accordion-card:hover {
+        border-color: #cbd5e1 !important;
+    }
+    .tk-accordion-header {
+        width: 100% !important;
+        padding: 0.875rem 1.25rem !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 0.75rem !important;
+        background-color: #ffffff !important;
+        border: none !important;
+        cursor: pointer !important;
+        text-align: left !important;
+        transition: background-color 0.15s ease !important;
+    }
+    .tk-accordion-header:hover {
+        background-color: #f8fafc !important;
+    }
+    .tk-accordion-card.is-open .tk-accordion-header {
+        border-bottom: 1px solid #f1f5f9 !important;
+        background-color: #fafbfc !important;
+    }
+    .tk-accordion-icon {
+        width: 2.25rem !important;
+        height: 2.25rem !important;
+        border-radius: 0.625rem !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        flex-shrink: 0 !important;
+    }
+    .tk-accordion-badge {
+        font-size: 11px !important;
+        font-weight: 600 !important;
+        color: #475569 !important;
+        background-color: #f1f5f9 !important;
+        padding: 0.2rem 0.55rem !important;
+        border-radius: 9999px !important;
+        border: 1px solid #e2e8f0 !important;
+    }
+    .tk-accordion-chevron {
+        transition: transform 0.25s ease !important;
+    }
+    .tk-accordion-card.is-open .tk-accordion-chevron {
+        transform: rotate(180deg) !important;
+    }
+    .tk-accordion-body {
+        display: block !important;
+        padding: 1.25rem !important;
+    }
+    .tk-accordion-card:not(.is-open) .tk-accordion-body {
+        display: none !important;
+    }
+    .tk-accordion-card .tk-ai-panel {
+        border: none !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+        background: transparent !important;
+    }
+
+    /* AI CFO Panel - Clean Modern UI */
     .tk-ai-panel {
         background-color: #ffffff !important;
-        border: 1.5px solid #cbd5e1 !important;
+        border: 1px solid #e2e8f0 !important;
         border-radius: 1rem !important;
         padding: 1.25rem 1.5rem !important;
-        box-shadow: 0 4px 16px -4px rgba(15, 23, 42, 0.06) !important;
+        box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04) !important;
+    }
+    /* ChatGPT-style Container & Stream */
+    .tk-chat-container {
+        background-color: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 1rem !important;
+        overflow: hidden !important;
+        display: flex !important;
+        flex-direction: column !important;
+        box-shadow: 0 4px 14px -4px rgba(15, 23, 42, 0.06) !important;
+    }
+    .tk-chat-stream {
+        background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%) !important;
+        padding: 1.25rem !important;
+        overflow-y: auto !important;
+        max-height: 400px !important;
+        min-height: 260px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 1.125rem !important;
+        scroll-behavior: smooth !important;
+    }
+    .tk-chat-stream::-webkit-scrollbar {
+        width: 6px;
+    }
+    .tk-chat-stream::-webkit-scrollbar-track {
+        background: #f1f5f9;
+    }
+    .tk-chat-stream::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 9999px;
+    }
+    .tk-chat-stream::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
     }
     .tk-ai-control-bar {
         background-color: #f8fafc !important;
         border: 1px solid #e2e8f0 !important;
         border-radius: 0.75rem !important;
-        padding: 1rem !important;
-        overflow: hidden !important;
+        padding: 0.875rem 1rem !important;
     }
     .tk-ai-control-grid {
         display: grid !important;
         grid-template-columns: 1fr !important;
-        gap: 0.75rem !important;
-        align-items: end !important;
+        gap: 0.625rem !important;
     }
-    @media (min-width: 1024px) {
+    @media (min-width: 768px) {
         .tk-ai-control-grid {
-            grid-template-columns: 270px minmax(0, 1fr) auto !important;
+            grid-template-columns: 210px minmax(0, 1fr) auto !important;
+            align-items: center !important;
         }
     }
     .tk-ai-summary-grid {
@@ -113,7 +216,7 @@
     }
     @media (min-width: 1024px) {
         .tk-ai-summary-grid {
-            grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) !important;
+            grid-template-columns: minmax(0, 1.85fr) minmax(0, 1.15fr) !important;
         }
     }
     .tk-ai-two-col-grid {
@@ -137,65 +240,62 @@
         }
     }
     .tk-ai-cfo-box {
-        background-color: #f8fafc !important;
+        background-color: #ffffff !important;
         border: 1px solid #e2e8f0 !important;
-        border-left: 4px solid #4f46e5 !important;
         border-radius: 0.75rem !important;
-        padding: 1.125rem 1.25rem !important;
+        padding: 1.25rem !important;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        gap: 1rem;
+        gap: 1.25rem;
         min-width: 0;
     }
     .tk-ai-mini-grid {
         display: grid;
         grid-template-columns: repeat(1, minmax(0, 1fr));
-        gap: 0.75rem;
-        padding-top: 0.75rem;
-        border-top: 1px solid #e2e8f0;
+        gap: 0.625rem;
+        padding-top: 1rem;
+        border-top: 1px solid #f1f5f9;
     }
     @media (min-width: 640px) {
         .tk-ai-mini-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     }
     .tk-ai-mini-card {
-        background-color: #ffffff !important;
-        border: 1px solid #e2e8f0 !important;
-        border-radius: 0.625rem !important;
-        padding: 0.75rem 0.875rem !important;
-        box-shadow: 0 1px 2px 0 rgba(15, 23, 42, 0.03) !important;
+        background-color: #f8fafc !important;
+        border: 1px solid #f1f5f9 !important;
+        border-radius: 0.5rem !important;
+        padding: 0.625rem 0.75rem !important;
         min-width: 0;
     }
     .tk-ai-forecast-box {
-        background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%) !important;
-        border: 1px solid #a7f3d0 !important;
+        background-color: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
         border-radius: 0.75rem !important;
-        padding: 1.125rem 1.25rem !important;
+        padding: 1.25rem !important;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
         min-width: 0;
-        overflow: hidden;
     }
     .tk-ai-forecast-value-box {
         background-color: #ffffff !important;
-        border: 1px solid #a7f3d0 !important;
-        border-radius: 0.625rem !important;
-        padding: 0.75rem 0.875rem !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 0.5rem !important;
+        padding: 0.75rem 1rem !important;
         margin: 0.625rem 0 !important;
         min-width: 0;
     }
     .tk-ai-highlight-box {
-        background-color: #f0fdf4 !important;
-        border: 1px solid #bbf7d0 !important;
+        background-color: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
         border-radius: 0.75rem !important;
-        padding: 1rem 1.125rem !important;
+        padding: 1rem 1.25rem !important;
     }
     .tk-ai-warning-box {
-        background-color: #fffbeb !important;
-        border: 1px solid #fde68a !important;
+        background-color: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
         border-radius: 0.75rem !important;
-        padding: 1rem 1.125rem !important;
+        padding: 1rem 1.25rem !important;
     }
     .tk-ai-strategy-grid {
         display: grid;
@@ -207,35 +307,27 @@
     }
     .tk-ai-strategy-card {
         background-color: #ffffff !important;
-        border: 1.5px solid #cbd5e1 !important;
+        border: 1px solid #e2e8f0 !important;
         border-radius: 0.75rem !important;
         padding: 1.125rem !important;
         display: flex !important;
         flex-direction: column !important;
         justify-content: space-between !important;
         transition: all 0.15s ease !important;
-        box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04) !important;
-    }
-    .tk-ai-strategy-card.priority-high {
-        border-color: #fcd34d !important;
-        border-top: 3px solid #f59e0b !important;
-    }
-    .tk-ai-strategy-card.priority-normal {
-        border-color: #c7d2fe !important;
-        border-top: 3px solid #4f46e5 !important;
+        box-shadow: 0 1px 2px 0 rgba(15, 23, 42, 0.04) !important;
     }
     .tk-ai-strategy-card:hover {
-        box-shadow: 0 8px 20px -4px rgba(15, 23, 42, 0.1) !important;
-        transform: translateY(-1px);
+        border-color: #cbd5e1 !important;
+        box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.08) !important;
     }
     .tk-ai-solution-callout {
-        background-color: #fffbeb !important;
-        border: 1px solid #fde68a !important;
+        background-color: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
         border-radius: 0.5rem !important;
         padding: 0.625rem 0.75rem !important;
-        color: #1e293b !important;
+        color: #334155 !important;
         font-size: 0.75rem !important;
-        line-height: 1.45 !important;
+        line-height: 1.5 !important;
     }
     .tk-chip-btn {
         display: inline-flex;
@@ -271,7 +363,7 @@
     }
 </style>
 
-<div class="tk-page-wrap">
+<div class="tk-page-wrap space-y-4">
 
     {{-- 1. HEADER & FILTER BAR --}}
     <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-4 pb-3 border-b border-slate-200">
@@ -332,104 +424,140 @@
                 <span class="material-symbols-outlined">download</span>
                 <span>Xuất CSV / Excel</span>
             </a>
+
+            {{-- Accordion Master Controls (Mở tất cả / Thu gọn tất cả) --}}
+            <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200">
+                <button type="button" onclick="toggleAllAccordions(true)" class="px-2 py-1 rounded-md text-slate-700 hover:bg-white hover:shadow-2xs font-medium text-[11px] transition-all flex items-center gap-1" title="Mở rộng tất cả các mục">
+                    <span class="material-symbols-outlined text-[15px]">unfold_more</span>
+                    <span class="hidden sm:inline">Mở tất cả</span>
+                </button>
+                <span class="text-slate-300 text-xs">|</span>
+                <button type="button" onclick="toggleAllAccordions(false)" class="px-2 py-1 rounded-md text-slate-700 hover:bg-white hover:shadow-2xs font-medium text-[11px] transition-all flex items-center gap-1" title="Thu gọn tất cả các mục">
+                    <span class="material-symbols-outlined text-[15px]">unfold_less</span>
+                    <span class="hidden sm:inline">Thu gọn</span>
+                </button>
+            </div>
         </div>
     </div>
 
-    {{-- 2. 4 KPI SUMMARY CARDS (Đồng bộ chuẩn Enterprise với Dashboard & Thanh Toán) --}}
-    <div class="tk-kpi-grid">
-        {{-- Card 1: Quán mới --}}
-        <div class="tk-kpi-card">
-            <div>
-                <div class="flex items-center justify-between">
-                    <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Quán Mới Trong Kỳ</span>
-                    <span class="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-200">
-                        <span class="material-symbols-outlined text-[20px]">add_business</span>
-                    </span>
-                </div>
-                <div class="mt-3 flex items-baseline justify-between">
-                    <h3 class="text-2xl font-extrabold text-slate-900 tracking-tight">+{{ number_format($quanStats['filtered']) }}</h3>
-                    <span class="text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-                        {{ number_format($quanStats['da_duyet']) }} đã duyệt
-                    </span>
+    {{-- MỤC 1 (ACCORDION): 4 KPI SUMMARY CARDS --}}
+    <div class="tk-accordion-card" id="accordion-section-kpi">
+        <button type="button" class="tk-accordion-header" onclick="toggleTkAccordion('accordion-section-kpi')">
+            <div class="flex items-center gap-3 min-w-0">
+                <span class="tk-accordion-icon bg-amber-50 text-amber-600 border border-amber-200">
+                    <span class="material-symbols-outlined text-[20px]">bar_chart</span>
+                </span>
+                <div class="text-left min-w-0">
+                    <h2 class="text-sm sm:text-base font-bold text-slate-900 leading-tight">
+                        1. Chỉ Số Tổng Quan & Tăng Trưởng Kỳ Này
+                    </h2>
+                    <p class="text-[11px] text-slate-500 truncate mt-0.5">
+                        +{{ number_format($quanStats['filtered']) }} Quán mới • +{{ number_format($userStats['filtered']) }} Thành viên mới • {{ number_format($revenueStats['filtered'], 0, ',', '.') }}đ Doanh thu
+                    </p>
                 </div>
             </div>
-            <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                <span>Tổng toàn hệ thống: <strong class="text-slate-800">{{ number_format($quanStats['total']) }}</strong></span>
-                <a href="{{ route('admin.quan.index') }}" class="font-semibold text-amber-600 hover:underline">Quản lý →</a>
+            <div class="flex items-center gap-2 shrink-0">
+                <span class="tk-accordion-badge">4 Chỉ số</span>
+                <span class="material-symbols-outlined tk-accordion-chevron text-[20px] text-slate-400">expand_more</span>
             </div>
-        </div>
+        </button>
+        <div class="tk-accordion-body">
+            <div class="tk-kpi-grid">
+                {{-- Card 1: Quán mới --}}
+                <div class="tk-kpi-card">
+                    <div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Quán Mới Trong Kỳ</span>
+                            <span class="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-200">
+                                <span class="material-symbols-outlined text-[20px]">add_business</span>
+                            </span>
+                        </div>
+                        <div class="mt-3 flex items-baseline justify-between">
+                            <h3 class="text-2xl font-extrabold text-slate-900 tracking-tight">+{{ number_format($quanStats['filtered']) }}</h3>
+                            <span class="text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                                {{ number_format($quanStats['da_duyet']) }} đã duyệt
+                            </span>
+                        </div>
+                    </div>
+                    <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                        <span>Tổng toàn hệ thống: <strong class="text-slate-800">{{ number_format($quanStats['total']) }}</strong></span>
+                        <a href="{{ route('admin.quan.index') }}" class="font-semibold text-amber-600 hover:underline">Quản lý →</a>
+                    </div>
+                </div>
 
-        {{-- Card 2: Người dùng mới --}}
-        <div class="tk-kpi-card">
-            <div>
-                <div class="flex items-center justify-between">
-                    <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Người Dùng Mới</span>
-                    <span class="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-200">
-                        <span class="material-symbols-outlined text-[20px]">person_add</span>
-                    </span>
+                {{-- Card 2: Người dùng mới --}}
+                <div class="tk-kpi-card">
+                    <div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Người Dùng Mới</span>
+                            <span class="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-200">
+                                <span class="material-symbols-outlined text-[20px]">person_add</span>
+                            </span>
+                        </div>
+                        <div class="mt-3 flex items-baseline justify-between">
+                            <h3 class="text-2xl font-extrabold text-slate-900 tracking-tight">+{{ number_format($userStats['filtered']) }}</h3>
+                            <span class="text-[11px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
+                                {{ number_format($userStats['hoat_dong']) }} hoạt động
+                            </span>
+                        </div>
+                    </div>
+                    <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                        <span>Tổng tài khoản: <strong class="text-slate-800">{{ number_format($userStats['total']) }}</strong></span>
+                        <a href="{{ route('admin.nguoi-dung.index') }}" class="font-semibold text-indigo-600 hover:underline">Thành viên →</a>
+                    </div>
                 </div>
-                <div class="mt-3 flex items-baseline justify-between">
-                    <h3 class="text-2xl font-extrabold text-slate-900 tracking-tight">+{{ number_format($userStats['filtered']) }}</h3>
-                    <span class="text-[11px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
-                        {{ number_format($userStats['hoat_dong']) }} hoạt động
-                    </span>
-                </div>
-            </div>
-            <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                <span>Tổng tài khoản: <strong class="text-slate-800">{{ number_format($userStats['total']) }}</strong></span>
-                <a href="{{ route('admin.nguoi-dung.index') }}" class="font-semibold text-indigo-600 hover:underline">Thành viên →</a>
-            </div>
-        </div>
 
-        {{-- Card 3: Doanh thu trong kỳ --}}
-        <div class="tk-kpi-card">
-            <div>
-                <div class="flex items-center justify-between">
-                    <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Doanh Thu Gói Trong Kỳ</span>
-                    <span class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-200">
-                        <span class="material-symbols-outlined text-[20px]">payments</span>
-                    </span>
+                {{-- Card 3: Doanh thu trong kỳ --}}
+                <div class="tk-kpi-card">
+                    <div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Doanh Thu Gói Trong Kỳ</span>
+                            <span class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-200">
+                                <span class="material-symbols-outlined text-[20px]">payments</span>
+                            </span>
+                        </div>
+                        <div class="mt-3 flex items-baseline justify-between gap-2">
+                            <h3 class="text-2xl font-extrabold text-emerald-600 tracking-tight">
+                                {{ number_format($revenueStats['filtered'], 0, ',', '.') }} <span class="text-xs font-bold text-slate-500">đ</span>
+                            </h3>
+                            <span class="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                                {{ number_format($revenueStats['count_filtered']) }} đơn
+                            </span>
+                        </div>
+                    </div>
+                    <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                        <span>Tổng lũy kế: <strong class="text-slate-800">{{ number_format($revenueStats['total'], 0, ',', '.') }}đ</strong></span>
+                        <a href="{{ route('admin.thanh-toan.index') }}" class="font-semibold text-emerald-600 hover:underline">Đối soát ví →</a>
+                    </div>
                 </div>
-                <div class="mt-3 flex items-baseline justify-between gap-2">
-                    <h3 class="text-2xl font-extrabold text-emerald-600 tracking-tight">
-                        {{ number_format($revenueStats['filtered'], 0, ',', '.') }} <span class="text-xs font-bold text-slate-500">đ</span>
-                    </h3>
-                    <span class="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                        {{ number_format($revenueStats['count_filtered']) }} đơn
-                    </span>
-                </div>
-            </div>
-            <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                <span>Tổng lũy kế: <strong class="text-slate-800">{{ number_format($revenueStats['total'], 0, ',', '.') }}đ</strong></span>
-                <a href="{{ route('admin.thanh-toan.index') }}" class="font-semibold text-emerald-600 hover:underline">Đối soát ví →</a>
-            </div>
-        </div>
 
-        {{-- Card 4: Tổng lượt xem quán --}}
-        <div class="tk-kpi-card">
-            <div>
-                <div class="flex items-center justify-between">
-                    <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tổng Lượt Xem Quán</span>
-                    <span class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-200">
-                        <span class="material-symbols-outlined text-[20px]">visibility</span>
-                    </span>
+                {{-- Card 4: Tổng lượt xem quán --}}
+                <div class="tk-kpi-card">
+                    <div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tổng Lượt Xem Quán</span>
+                            <span class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-200">
+                                <span class="material-symbols-outlined text-[20px]">visibility</span>
+                            </span>
+                        </div>
+                        <div class="mt-3 flex items-baseline justify-between">
+                            <h3 class="text-2xl font-extrabold text-slate-900 tracking-tight">{{ number_format($quanStats['total_views']) }}</h3>
+                            <span class="text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                                {{ number_format($quanStats['noi_bat']) }} nổi bật
+                            </span>
+                        </div>
+                    </div>
+                    <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                        <span>Quán tích xanh: <strong class="text-slate-800">{{ number_format($quanStats['xac_thuc']) }}</strong></span>
+                        <a href="{{ route('admin.quan-noi-bat.index') }}" class="font-semibold text-blue-600 hover:underline">Quán nổi bật →</a>
+                    </div>
                 </div>
-                <div class="mt-3 flex items-baseline justify-between">
-                    <h3 class="text-2xl font-extrabold text-slate-900 tracking-tight">{{ number_format($quanStats['total_views']) }}</h3>
-                    <span class="text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-                        {{ number_format($quanStats['noi_bat']) }} nổi bật
-                    </span>
-                </div>
-            </div>
-            <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                <span>Quán tích xanh: <strong class="text-slate-800">{{ number_format($quanStats['xac_thuc']) }}</strong></span>
-                <a href="{{ route('admin.quan-noi-bat.index') }}" class="font-semibold text-blue-600 hover:underline">Quán nổi bật →</a>
             </div>
         </div>
     </div>
 
     {{-- ========================================================================= --}}
-    {{-- 3. AI REVENUE INTELLIGENCE & PLATFORM GROWTH ENGINE (SPEC 2: ADMIN AI CFO) --}}
+    {{-- MỤC 2 (ACCORDION): AI REVENUE INTELLIGENCE & PLATFORM GROWTH ENGINE (KIRA AI CFO) --}}
     {{-- ========================================================================= --}}
     @php
         $aiData = $aiRevenueInsights ?? [];
@@ -441,127 +569,174 @@
         $tongSoDuVi = $aiMetrics['tong_so_du_vi'] ?? 0;
         $quanChuaNoiBat = $aiMetrics['so_quan_chua_mua_goi_noi_bat'] ?? 0;
         $tangTruongPt = $aiMetrics['tang_truong_pt'] ?? 0;
+        $providerLabel = $aiData['provider_label'] ?? 'Google Gemini AI';
+        $analyzedAt = $aiData['analyzed_at'] ?? now()->format('H:i d/m/Y');
+        $activeCustomPrompt = $aiData['custom_prompt'] ?? '';
+        $activeAnswer = $aiData['cau_tra_loi_cau_hoi'] ?? ($aiData['nhan_dinh_cfo'] ?? '');
     @endphp
-    <div id="admin-ai-revenue-section" class="tk-ai-panel space-y-4">
-        {{-- Top Header Bar --}}
-        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3.5 border-b border-slate-200">
-            <div class="flex items-start sm:items-center gap-3">
-                <div class="w-11 h-11 rounded-xl bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center shrink-0">
-                    <span class="material-symbols-outlined text-[24px]">auto_awesome</span>
-                </div>
-                <div>
-                    <div class="flex flex-wrap items-center gap-2">
-                        <h2 class="text-base sm:text-lg font-bold tracking-tight text-slate-900">
-                            AI Phân Tích Doanh Thu & Chiến Lược Tăng Trưởng Toàn Sàn
-                        </h2>
-                        <span id="ai-provider-badge" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                            <span id="ai-provider-text">{{ $aiData['provider_label'] ?? 'Google Gemini AI' }}</span>
-                        </span>
-                    </div>
-                    <p class="text-xs text-slate-500 mt-0.5">
-                        Cố vấn Tài chính ảo (Virtual CFO) tự động phân tích dòng tiền SePay, nghĩa vụ số dư ví lưu hành, cảnh báo rời bỏ và gợi ý chiến dịch 1-chạm.
+    <div class="tk-accordion-card" id="accordion-section-ai">
+        <button type="button" class="tk-accordion-header" onclick="toggleTkAccordion('accordion-section-ai')">
+            <div class="flex items-center gap-3 min-w-0">
+                <span class="tk-accordion-icon bg-indigo-50 text-indigo-600 border border-indigo-200">
+                    <span class="material-symbols-outlined text-[20px]">smart_toy</span>
+                </span>
+                <div class="text-left min-w-0">
+                    <h2 class="text-sm sm:text-base font-bold text-slate-900 leading-tight">
+                        2. AI Cố Vấn Tăng Trưởng Doanh Thu (Kira AI CFO)
+                    </h2>
+                    <p class="text-[11px] text-slate-500 truncate mt-0.5">
+                        {{ $providerLabel }} • Khung chat trực tuyến &amp; dự báo dòng tiền 30 ngày
                     </p>
                 </div>
             </div>
-
-            <div class="flex flex-wrap items-center gap-2.5 shrink-0">
-                <div class="px-3.5 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center gap-2">
-                    <span class="material-symbols-outlined text-emerald-600 text-[20px]">verified_user</span>
+            <div class="flex items-center gap-2 shrink-0">
+                <span class="tk-accordion-badge bg-emerald-50 text-emerald-700 border-emerald-200">AI Trực tuyến</span>
+                <span class="material-symbols-outlined tk-accordion-chevron text-[20px] text-slate-400">expand_more</span>
+            </div>
+        </button>
+        <div class="tk-accordion-body">
+            <div id="admin-ai-revenue-section" class="tk-ai-panel space-y-6">
+        {{-- ========================================================================= --}}
+        {{-- KHUNG CHAT AI CFO CHUẨN CHATGPT (CHATGPT CONVERSATION INTERFACE) --}}
+        {{-- ========================================================================= --}}
+        <div class="tk-chat-container">
+            {{-- Header Chat Box (ChatGPT Style) --}}
+            <div class="p-3.5 sm:p-4 bg-slate-900 text-white flex flex-wrap items-center justify-between gap-3 border-b border-slate-800">
+                <div class="flex items-center gap-3">
+                    <div class="relative">
+                        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-500 via-purple-600 to-indigo-600 flex items-center justify-center text-white shadow-md">
+                            <span class="material-symbols-outlined text-[20px]">smart_toy</span>
+                        </div>
+                        <span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-slate-900"></span>
+                    </div>
                     <div>
-                        <p class="text-[10px] uppercase tracking-wider text-slate-500 font-bold leading-none">Điểm sức khỏe tài chính</p>
-                        <p class="text-xs font-extrabold text-emerald-800 mt-0.5" id="ai-health-label">{{ $healthScore }}/100 • {{ $healthLabel }}</p>
+                        <div class="flex items-center gap-2">
+                            <h3 class="font-bold text-sm sm:text-base text-white tracking-tight">Kira AI CFO</h3>
+                            <span id="ai-provider-text" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-950 text-indigo-300 border border-indigo-800">
+                                {{ $providerLabel }}
+                            </span>
+                        </div>
+                        <p class="text-[11px] text-emerald-400 flex items-center gap-1.5 mt-0.5">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                            Trực tuyến
+                        </p>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        {{-- Thanh điều khiển Tương tác AI CFO --}}
-        <div class="tk-ai-control-bar space-y-2.5">
-            <div class="tk-ai-control-grid">
-                <div class="min-w-0">
-                    <label for="ai-focus-select" class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                        1. Chọn trọng tâm AI phân tích
-                    </label>
-                    <select id="ai-focus-select" onchange="refreshAdminAiRevenueInsights()" class="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-xs font-bold text-slate-800 outline-none focus:border-amber-500 cursor-pointer" style="height: 38px;">
-                        <option value="tong_hop">📊 Tổng quan dòng tiền & Dự báo 30 ngày</option>
-                        <option value="kich_cau_nap_vi">💰 Chiến lược Kích cầu nạp ví SePay</option>
-                        <option value="goi_noi_bat">🔥 Chuyển đổi Quán mua Gói Nổi Bật & Tích Xanh</option>
-                        <option value="chong_roi_bo">🛡️ Cảnh báo rời bỏ (Churn Risk) & Giữ chân VIP</option>
-                    </select>
+                <div class="flex items-center gap-2">
+                    {{-- Hidden field lưu trọng tâm phân tích cho JS --}}
+                    <input type="hidden" id="ai-focus-select" value="tong_hop">
+
+                    {{-- Nút xóa chat / reset hội thoại --}}
+                    <button type="button" onclick="clearAiChatHistory()" title="Làm mới chat" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-300 hover:text-white text-xs font-medium flex items-center gap-1.5 transition-all">
+                        <span class="material-symbols-outlined text-[17px]">restart_alt</span>
+                        <span class="hidden sm:inline">Làm mới chat</span>
+                    </button>
+                </div>
+            </div>
+
+            {{-- Luồng tin nhắn Chat (Cuộn tin nhắn giống ChatGPT) --}}
+            <div id="ai-chat-messages" class="tk-chat-stream">
+                {{-- Tin nhắn chào mừng ban đầu từ AI --}}
+                <div class="flex justify-start items-start gap-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-500 text-white flex items-center justify-center shrink-0 shadow-2xs mt-0.5">
+                        <span class="material-symbols-outlined text-[18px]">smart_toy</span>
+                    </div>
+                    <div class="space-y-1 max-w-[90%] sm:max-w-[80%]">
+                        <div class="p-3.5 rounded-2xl rounded-tl-xs bg-white border border-slate-200 text-slate-800 text-xs sm:text-sm shadow-2xs leading-relaxed">
+                            Xin chào Admin! Tôi là Kira AI. Tôi có thể hỗ trợ bạn theo dõi dòng tiền SePay, giải phóng số dư ví và tối ưu hóa doanh thu toàn sàn. Bạn cần hỗ trợ gì hôm nay?
+                        </div>
+                        <p class="text-[10px] text-slate-400 pl-1">{{ now()->format('H:i') }}</p>
+                    </div>
                 </div>
 
-                <div class="min-w-0">
-                    <label for="ai-custom-prompt" class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                        2. Đặt câu hỏi hoặc mục tiêu doanh thu cho AI CFO (Tùy chọn)
-                    </label>
+                {{-- Nếu trước đó đã có câu hỏi người dùng, hiển thị tin nhắn đó và câu trả lời --}}
+                @if(!empty($activeCustomPrompt))
+                    <div class="flex justify-end items-end gap-2.5">
+                        <div class="space-y-1 max-w-[85%] sm:max-w-[75%]">
+                            <div class="p-3.5 rounded-2xl rounded-tr-xs bg-indigo-600 text-white text-xs sm:text-sm font-medium shadow-2xs leading-relaxed">
+                                {{ $activeCustomPrompt }}
+                            </div>
+                            <p class="text-[10px] text-right text-slate-400 pr-1">{{ now()->format('H:i') }}</p>
+                        </div>
+                        <div class="w-8 h-8 rounded-full bg-slate-800 text-white flex items-center justify-center shrink-0 font-bold text-xs shadow-2xs">
+                            <span class="material-symbols-outlined text-[17px]">person</span>
+                        </div>
+                    </div>
+
+                    @if(!empty($activeAnswer))
+                        <div class="flex justify-start items-start gap-2.5">
+                            <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-500 text-white flex items-center justify-center shrink-0 shadow-2xs mt-0.5">
+                                <span class="material-symbols-outlined text-[18px]">smart_toy</span>
+                            </div>
+                            <div class="space-y-1 max-w-[90%] sm:max-w-[80%]">
+                                <div class="p-3.5 rounded-2xl rounded-tl-xs bg-white border border-slate-200 text-slate-800 text-xs sm:text-sm shadow-2xs leading-relaxed whitespace-pre-line">
+                                    {{ $activeAnswer }}
+                                </div>
+                                <p class="text-[10px] text-slate-400 pl-1">{{ now()->format('H:i') }}</p>
+                            </div>
+                        </div>
+                    @endif
+                @endif
+            </div>
+
+            {{-- Vùng Nhập Tin Nhắn Ở ĐÁY Khung Chat (ChatGPT Style) --}}
+            <div class="p-3 sm:p-4 bg-white border-t border-slate-200 space-y-2">
+                {{-- Gợi ý mẫu tinh gọn --}}
+                <div class="flex flex-wrap items-center gap-1.5 text-xs">
+                    <button type="button" onclick="sendQuickAiMessage('Làm sao tăng doanh thu nạp ví SePay thêm 30 triệu trong tháng này?', 'kich_cau_nap_vi')" class="px-2.5 py-1 rounded-full bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 border border-slate-200 text-slate-700 text-[11px] font-medium transition-all shadow-2xs">
+                        💰 Tăng nạp ví +30tr
+                    </button>
+                    <button type="button" onclick="sendQuickAiMessage('Chiến lược thuyết phục các quán đang đông khách mua Gói Quán Nổi Bật?', 'goi_noi_bat')" class="px-2.5 py-1 rounded-full bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 border border-slate-200 text-slate-700 text-[11px] font-medium transition-all shadow-2xs">
+                        🔥 Kích cầu Gói Nổi Bật
+                    </button>
+                    <button type="button" onclick="sendQuickAiMessage('Làm sao giải phóng 25k số dư ví nhàn rỗi và giảm 22 đơn lỗi SePay?', 'chong_roi_bo')" class="px-2.5 py-1 rounded-full bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 border border-slate-200 text-slate-700 text-[11px] font-medium transition-all shadow-2xs">
+                        ⚡ Giảm lỗi SePay & giải phóng ví
+                    </button>
+                </div>
+
+                {{-- Ô Nhập & Nút Gửi kiểu ChatGPT --}}
+                <div class="relative flex items-center rounded-2xl bg-slate-50 border border-slate-300 focus-within:border-indigo-500 focus-within:bg-white focus-within:ring-2 focus-within:ring-indigo-100 transition-all shadow-2xs p-1.5">
                     <input type="text" id="ai-custom-prompt"
-                           onkeydown="if(event.key==='Enter'){event.preventDefault();refreshAdminAiRevenueInsights();}"
-                           placeholder="VD: Làm sao tăng doanh thu nạp ví thêm 30 triệu trong tháng này?"
-                           class="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-xs font-medium text-slate-900 outline-none focus:border-amber-500" style="height: 38px;">
+                           onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault();submitAiChatMessage();}"
+                           placeholder="Hỏi AI CFO... (Enter để gửi)"
+                           class="w-full bg-transparent pl-3 pr-2 py-2 text-xs sm:text-sm text-slate-900 placeholder-slate-400 outline-none">
+                    <button type="button"
+                            id="btn-refresh-ai-revenue"
+                            onclick="submitAiChatMessage()"
+                            class="w-9 h-9 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white flex items-center justify-center shrink-0 transition-all shadow-xs disabled:opacity-50">
+                        <span id="icon-refresh-ai" class="material-symbols-outlined text-[19px]">arrow_upward</span>
+                    </button>
                 </div>
-
-                <button type="button"
-                        id="btn-refresh-ai-revenue"
-                        onclick="refreshAdminAiRevenueInsights()"
-                        class="btn-enterprise btn-enterprise-primary px-4 shrink-0" style="height: 38px;">
-                    <span id="icon-refresh-ai" class="material-symbols-outlined">auto_awesome</span>
-                    <span id="text-refresh-ai">Kira AI Phân Tích Ngay</span>
-                </button>
-            </div>
-
-            {{-- Gợi ý câu hỏi nhanh 1-chạm --}}
-            <div class="flex flex-wrap items-center gap-1.5 pt-1">
-                <span class="text-[11px] font-bold text-slate-500 mr-1">Gợi ý câu hỏi nhanh:</span>
-                <button type="button" onclick="applyQuickAiQuestion('kich_cau_nap_vi', 'Làm sao tăng doanh thu nạp ví SePay thêm 30 triệu trong tháng này?')" class="tk-chip-btn">
-                    <span>💰 Tăng +30tr nạp ví tháng này</span>
-                </button>
-                <button type="button" onclick="applyQuickAiQuestion('goi_noi_bat', 'Chiến lược thuyết phục các quán đang đông khách mua Gói Quán Nổi Bật?')" class="tk-chip-btn">
-                    <span>🔥 Kích cầu mua Gói Quán Nổi Bật</span>
-                </button>
-                <button type="button" onclick="applyQuickAiQuestion('chong_roi_bo', 'Làm sao kích hoạt số dư ví đang nhàn rỗi và giảm tỷ lệ lỗi thanh toán QR?')" class="tk-chip-btn">
-                    <span>⚡ Giải phóng số dư ví nhàn rỗi</span>
-                </button>
             </div>
         </div>
 
-        {{-- Thông báo trạng thái sau khi AI phân tích xong --}}
-        <div id="ai-analysis-toast" class="hidden rounded-xl p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center justify-between gap-2">
-            <div class="flex items-center gap-2">
-                <span class="material-symbols-outlined text-emerald-600 text-[18px]">task_alt</span>
-                <span id="ai-analysis-toast-text">Kira AI đã phân tích xong dữ liệu doanh thu và cập nhật khuyến nghị chiến lược mới!</span>
+        {{-- BẢNG PHÂN TÍCH TÀI CHÍNH ĐỒNG BỘ DƯỚI KHUNG CHAT --}}
+        <div class="space-y-4 pt-1">
+            <div class="flex items-center justify-between gap-2 border-b border-slate-100 pb-2">
+                <span class="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-indigo-600 text-[18px]">analytics</span>
+                    Báo Cáo Phân Tích Tài Chính & Dự Báo Thời Gian Thực
+                </span>
+                <span class="text-[11px] text-slate-400" id="ai-analyzed-time">Cập nhật: {{ $analyzedAt }}</span>
             </div>
-            <span class="text-[11px] font-semibold text-emerald-700" id="ai-analysis-toast-time">Vừa xong</span>
-        </div>
 
-        {{-- Trạng thái AI Đang Suy Nghĩ & Quét Số Liệu (Loading State) --}}
-        <div id="ai-revenue-loading-box" class="hidden rounded-xl p-6 bg-amber-50 border border-amber-200 text-center space-y-2">
-            <div class="w-10 h-10 rounded-xl bg-white border border-amber-300 text-amber-600 flex items-center justify-center mx-auto">
-                <span class="material-symbols-outlined text-[24px] animate-spin">sync</span>
-            </div>
-            <h4 class="font-bold text-slate-900 text-sm" id="ai-loading-step-title">
-                Kira AI CFO đang quét dữ liệu giao dịch SePay & số dư ví toàn sàn...
-            </h4>
-            <p class="text-xs text-slate-600 max-w-lg mx-auto" id="ai-loading-step-desc">
-                Đang đối chiếu tốc độ tăng trưởng kỳ này, tỷ lệ chuyển đổi Gói Quán Nổi Bật và tính toán 3 chiến dịch hành động 1-Click tối ưu nhất.
-            </p>
-        </div>
+            {{-- Khối nội dung kết quả phân tích AI --}}
+            <div id="ai-revenue-result-container" class="space-y-4">
 
-        {{-- Khối nội dung kết quả phân tích AI --}}
-        <div id="ai-revenue-result-container" class="space-y-4">
             {{-- Row 1: CFO Executive Summary + 30-Day Revenue Forecast --}}
             <div class="tk-ai-summary-grid">
-                {{-- Left 2 cols: CFO Summary + Financial Sub-metrics --}}
+                {{-- Left: CFO Summary + Financial Sub-metrics --}}
                 <div class="tk-ai-cfo-box">
                     <div>
                         <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
-                            <span class="text-xs font-bold uppercase tracking-wider text-indigo-700 flex items-center gap-1.5">
-                                <span class="material-symbols-outlined text-[18px] text-indigo-600">psychology</span>
-                                Nhận Định Giám Đốc Tài Chính AI (CFO Executive Summary)
+                            <span class="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                                <span class="material-symbols-outlined text-[17px] text-slate-600">psychology</span>
+                                Nhận Định Tài Chính & Dòng Tiền
                             </span>
-                            <span class="text-[11px] font-semibold text-slate-500" id="ai-analyzed-time">Cập nhật: {{ $aiData['analyzed_at'] ?? now()->format('H:i d/m/Y') }}</span>
+                            <span class="text-[11px] text-slate-400" id="ai-analyzed-time">Cập nhật: {{ $aiData['analyzed_at'] ?? now()->format('H:i d/m/Y') }}</span>
                         </div>
-                        <p id="ai-cfo-summary" class="text-xs sm:text-sm text-slate-800 leading-relaxed font-medium">
+                        <p id="ai-cfo-summary" class="text-xs sm:text-sm text-slate-700 leading-relaxed font-normal">
                             {{ $aiData['nhan_dinh_cfo'] ?? 'Đang tổng hợp dữ liệu dòng tiền toàn sàn...' }}
                         </p>
                     </div>
@@ -569,50 +744,50 @@
                     {{-- 3 Quick Financial Indicators --}}
                     <div class="tk-ai-mini-grid">
                         <div class="tk-ai-mini-card">
-                            <p class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Tăng trưởng kỳ này</p>
-                            <p class="text-base font-extrabold mt-1 {{ $tangTruongPt >= 0 ? 'text-emerald-600' : 'text-rose-600' }}">
-                                {{ $tangTruongPt >= 0 ? '+' : '' }}{{ $tangTruongPt }}% <span class="text-[11px] font-medium text-slate-500">vs kỳ trước</span>
+                            <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Tăng trưởng</p>
+                            <p class="text-sm sm:text-base font-bold mt-0.5 {{ $tangTruongPt >= 0 ? 'text-emerald-600' : 'text-rose-600' }}">
+                                {{ $tangTruongPt >= 0 ? '+' : '' }}{{ $tangTruongPt }}% <span class="text-[11px] font-normal text-slate-400">vs kỳ trước</span>
                             </p>
                         </div>
                         <div class="tk-ai-mini-card">
-                            <p class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Số dư ví lưu hành (Nợ ví)</p>
-                            <p class="text-base font-extrabold text-indigo-600 mt-1">
+                            <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Số dư ví lưu hành</p>
+                            <p class="text-sm sm:text-base font-bold text-slate-800 mt-0.5">
                                 {{ number_format($tongSoDuVi, 0, ',', '.') }} đ
                             </p>
                         </div>
                         <div class="tk-ai-mini-card">
-                            <p class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Mỏ vàng chưa khai thác</p>
-                            <p class="text-base font-extrabold text-amber-600 mt-1">
-                                {{ number_format($quanChuaNoiBat) }} quán <span class="text-[11px] font-medium text-slate-500">chưa mua gói</span>
+                            <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Chưa ghim nổi bật</p>
+                            <p class="text-sm sm:text-base font-bold text-amber-600 mt-0.5">
+                                {{ number_format($quanChuaNoiBat) }} quán
                             </p>
                         </div>
                     </div>
                 </div>
 
-                {{-- Right 1 col: 30-Day Revenue Forecast --}}
+                {{-- Right: 30-Day Revenue Forecast --}}
                 <div class="tk-ai-forecast-box">
                     <div>
                         <div class="flex items-center justify-between gap-2 mb-1">
-                            <span class="text-xs font-bold uppercase tracking-wider text-emerald-900 flex items-center gap-1.5">
-                                <span class="material-symbols-outlined text-[18px] text-emerald-600 shrink-0">trending_up</span>
-                                <span>Dự Báo Doanh Thu 30 Ngày Tới</span>
+                            <span class="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                                <span class="material-symbols-outlined text-[17px] text-emerald-600 shrink-0">trending_up</span>
+                                <span>Dự Báo Doanh Thu 30 Ngày</span>
                             </span>
-                            <span class="px-2 py-0.5 rounded bg-white text-emerald-800 border border-emerald-200 text-[10px] font-bold whitespace-nowrap shrink-0">AI Forecast</span>
+                            <span class="px-2 py-0.5 rounded bg-white text-emerald-700 border border-slate-200 text-[10px] font-semibold whitespace-nowrap shrink-0">AI Forecast</span>
                         </div>
                         <div class="tk-ai-forecast-value-box">
-                            <p class="text-[11px] font-semibold text-slate-500">Ước tính dòng tiền nạp & mua gói dịch vụ:</p>
+                            <p class="text-[11px] font-medium text-slate-500">Ước tính dòng tiền nạp & gói dịch vụ:</p>
                             <h3 id="ai-forecast-range" class="text-base sm:text-lg font-extrabold text-emerald-600 mt-0.5 tracking-tight break-words">
                                 {{ number_format($duBaoMin, 0, ',', '.') }}đ – {{ number_format($duBaoMax, 0, ',', '.') }}đ
                             </h3>
                         </div>
-                        <p id="ai-forecast-note" class="text-xs text-slate-700 leading-relaxed font-medium">
+                        <p id="ai-forecast-note" class="text-xs text-slate-600 leading-relaxed font-normal">
                             {{ $aiData['nhan_xet_du_bao'] ?? '' }}
                         </p>
                     </div>
 
-                    <div class="mt-3 pt-2.5 border-t border-emerald-200 flex items-center justify-between text-xs">
-                        <span class="text-slate-600 font-medium">Đối soát dòng tiền SePay</span>
-                        <a href="{{ route('admin.thanh-toan.index') }}" class="font-bold text-emerald-700 hover:underline whitespace-nowrap">
+                    <div class="mt-3 pt-2.5 border-t border-slate-200 flex items-center justify-between text-xs">
+                        <span class="text-slate-500 font-normal">Đối soát dòng tiền SePay</span>
+                        <a href="{{ route('admin.thanh-toan.index') }}" class="font-semibold text-emerald-700 hover:underline whitespace-nowrap">
                             Quản lý ví & Nạp tiền &rarr;
                         </a>
                     </div>
@@ -623,14 +798,14 @@
             <div class="tk-ai-two-col-grid">
                 {{-- Điểm sáng tăng trưởng --}}
                 <div class="tk-ai-highlight-box">
-                    <h4 class="text-xs font-bold uppercase tracking-wider text-emerald-900 flex items-center gap-1.5 mb-2">
-                        <span class="material-symbols-outlined text-[18px] text-emerald-600">check_circle</span>
+                    <h4 class="text-xs font-bold text-slate-900 flex items-center gap-1.5 mb-2.5">
+                        <span class="material-symbols-outlined text-[17px] text-emerald-600">check_circle</span>
                         Điểm Sáng Tài Chính & Tăng Trưởng
                     </h4>
-                    <ul id="ai-highlights-list" class="space-y-1.5 text-xs text-slate-800 font-medium">
+                    <ul id="ai-highlights-list" class="space-y-1.5 text-xs text-slate-700 font-normal">
                         @foreach(($aiData['diem_sang'] ?? []) as $hl)
                             <li class="flex items-start gap-2">
-                                <span class="text-emerald-600 font-bold">•</span>
+                                <span class="text-emerald-500 font-bold">•</span>
                                 <span>{{ $hl }}</span>
                             </li>
                         @endforeach
@@ -639,14 +814,14 @@
 
                 {{-- Cảnh báo rủi ro & Điểm nghẽn --}}
                 <div class="tk-ai-warning-box">
-                    <h4 class="text-xs font-bold uppercase tracking-wider text-amber-900 flex items-center gap-1.5 mb-2">
-                        <span class="material-symbols-outlined text-[18px] text-amber-600">warning</span>
+                    <h4 class="text-xs font-bold text-slate-900 flex items-center gap-1.5 mb-2.5">
+                        <span class="material-symbols-outlined text-[17px] text-amber-500">warning</span>
                         Cảnh Báo Rủi Ro & Điểm Nghẽn Dòng Tiền
                     </h4>
-                    <ul id="ai-warnings-list" class="space-y-1.5 text-xs text-slate-800 font-medium">
+                    <ul id="ai-warnings-list" class="space-y-1.5 text-xs text-slate-700 font-normal">
                         @foreach(($aiData['canh_bao_rui_ro'] ?? []) as $warn)
                             <li class="flex items-start gap-2">
-                                <span class="text-amber-600 font-bold">•</span>
+                                <span class="text-amber-500 font-bold">•</span>
                                 <span>{{ $warn }}</span>
                             </li>
                         @endforeach
@@ -656,12 +831,12 @@
 
             {{-- Row 3: 3 Actionable Strategic Recommendations (1-Click Execution) --}}
             <div>
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-3">
-                    <h3 class="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-900 flex items-center gap-1.5">
-                        <span class="material-symbols-outlined text-[18px] text-amber-500">rocket_launch</span>
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-2.5">
+                    <h3 class="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-[17px] text-slate-700">rocket_launch</span>
                         Gợi Ý Chiến Lược Tăng Doanh Thu Sàn (Thực Thi 1-Click)
                     </h3>
-                    <span class="text-xs text-slate-500 font-medium">Bấm nút hành động trên từng thẻ để triển khai chiến dịch ngay</span>
+                    <span class="text-xs text-slate-400 font-normal">Bấm nút hành động trên từng thẻ để triển khai ngay</span>
                 </div>
 
                 <div id="ai-strategies-grid" class="tk-ai-strategy-grid">
@@ -671,14 +846,14 @@
                             $actionType = $st['hanh_dong_loai'] ?? 'broadcast';
                             $notifSample = $st['thong_bao_mau'] ?? null;
                         @endphp
-                        <div class="tk-ai-strategy-card {{ $isHigh ? 'priority-high' : 'priority-normal' }}">
+                        <div class="tk-ai-strategy-card">
                             <div class="space-y-2.5">
                                 <div class="flex items-center justify-between gap-2">
-                                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase {{ $isHigh ? 'bg-amber-100 text-amber-800 border border-amber-300' : 'bg-indigo-100 text-indigo-800 border border-indigo-200' }}">
-                                        {{ $isHigh ? '🔥 Ưu tiên cao' : '💡 Chiến lược' }}
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase {{ $isHigh ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-slate-100 text-slate-700 border border-slate-200' }}">
+                                        {{ $isHigh ? 'Ưu tiên cao' : 'Chiến lược' }}
                                     </span>
                                     @if(!empty($st['tac_dong_du_kien']))
-                                        <span class="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">{{ $st['tac_dong_du_kien'] }}</span>
+                                        <span class="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200/60">{{ $st['tac_dong_du_kien'] }}</span>
                                     @endif
                                 </div>
 
@@ -686,12 +861,12 @@
                                     {{ $st['tieu_de'] ?? 'Chiến lược tăng trưởng doanh thu' }}
                                 </h4>
 
-                                <p class="text-xs text-slate-600 leading-relaxed">
-                                    <strong class="text-slate-900">Phân tích:</strong> {{ $st['phan_tich'] ?? '' }}
+                                <p class="text-xs text-slate-600 leading-relaxed font-normal">
+                                    <strong class="text-slate-800">Phân tích:</strong> {{ $st['phan_tich'] ?? '' }}
                                 </p>
 
                                 <div class="tk-ai-solution-callout">
-                                    <strong class="text-amber-800">Giải pháp AI đề xuất:</strong> {{ $st['giai_phap'] ?? '' }}
+                                    <strong class="text-slate-900">Giải pháp AI:</strong> {{ $st['giai_phap'] ?? '' }}
                                 </div>
                             </div>
 
@@ -702,22 +877,22 @@
                                             data-noi-dung="{{ $notifSample['noi_dung'] ?? '' }}"
                                             data-doi-tuong="{{ $notifSample['doi_tuong'] ?? 'chu_quan' }}"
                                             onclick="openAiBroadcastModalFromBtn(this)"
-                                            class="btn-enterprise btn-enterprise-success w-full">
-                                        <span class="material-symbols-outlined">campaign</span>
+                                            class="btn-enterprise btn-enterprise-success w-full font-semibold text-xs">
+                                        <span class="material-symbols-outlined text-[16px]">campaign</span>
                                         <span>{{ $st['nhan_nut'] ?? 'Phát sóng ưu đãi cho Chủ Quán' }}</span>
                                     </button>
                                 @endif
 
                                 @if($actionType === 'featured_venues')
                                     <a href="{{ route('admin.quan-noi-bat.index') }}"
-                                       class="btn-enterprise btn-enterprise-secondary w-full">
-                                        <span class="material-symbols-outlined">local_fire_department</span>
+                                       class="btn-enterprise btn-enterprise-secondary w-full font-semibold text-xs">
+                                        <span class="material-symbols-outlined text-[16px]">local_fire_department</span>
                                         <span>Mở Quản Lý Quán Nổi Bật &rarr;</span>
                                     </a>
                                 @elseif($actionType === 'ai_studio')
                                     <a href="{{ route('admin.khuyen-mai-ai.index') }}"
-                                       class="btn-enterprise btn-enterprise-indigo w-full">
-                                        <span class="material-symbols-outlined">auto_fix_high</span>
+                                       class="btn-enterprise btn-enterprise-indigo w-full font-semibold text-xs">
+                                        <span class="material-symbols-outlined text-[16px]">auto_fix_high</span>
                                         <span>{{ $st['nhan_nut'] ?? 'Mở Khuyến Mãi AI Studio' }} &rarr;</span>
                                     </a>
                                 @endif
@@ -726,11 +901,35 @@
                     @endforeach
                 </div>
             </div>
+            </div>
+        </div>
+            </div>
         </div>
     </div>
 
-    {{-- 4. CHART SECTION (2 Major Charts) --}}
-    <div class="tk-main-two-one-grid">
+    {{-- MỤC 3 (ACCORDION): BIỂU ĐỒ XU HƯỚNG DOANH THU & TĂNG TRƯỞNG --}}
+    <div class="tk-accordion-card" id="accordion-section-charts">
+        <button type="button" class="tk-accordion-header" onclick="toggleTkAccordion('accordion-section-charts')">
+            <div class="flex items-center gap-3 min-w-0">
+                <span class="tk-accordion-icon bg-emerald-50 text-emerald-600 border border-emerald-200">
+                    <span class="material-symbols-outlined text-[20px]">insights</span>
+                </span>
+                <div class="text-left min-w-0">
+                    <h2 class="text-sm sm:text-base font-bold text-slate-900 leading-tight">
+                        3. Biểu Đồ Xu Hướng Doanh Thu &amp; Tăng Trưởng
+                    </h2>
+                    <p class="text-[11px] text-slate-500 truncate mt-0.5">
+                        Doanh thu {{ number_format($revenueStats['filtered'], 0, ',', '.') }}đ • Tăng trưởng quán &amp; người dùng
+                    </p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+                <span class="tk-accordion-badge">2 Biểu đồ</span>
+                <span class="material-symbols-outlined tk-accordion-chevron text-[20px] text-slate-400">expand_more</span>
+            </div>
+        </button>
+        <div class="tk-accordion-body">
+            <div class="tk-main-two-one-grid">
         {{-- Chart 1: Revenue & Transaction Trend --}}
         <div class="tk-card flex flex-col justify-between min-w-0">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
@@ -777,10 +976,33 @@
                 </span>
             </div>
         </div>
+            </div>
+        </div>
     </div>
 
-    {{-- 5. SYSTEM BREAKDOWN: TOP VENUES, REGIONAL DISTRIBUTION & PACKAGE REVENUE --}}
-    <div class="tk-main-two-one-grid">
+    {{-- MỤC 4 (ACCORDION): TOP QUÁN, PHÂN BỐ KHU VỰC & DOANH THU THEO GÓI --}}
+    <div class="tk-accordion-card" id="accordion-section-top-venues">
+        <button type="button" class="tk-accordion-header" onclick="toggleTkAccordion('accordion-section-top-venues')">
+            <div class="flex items-center gap-3 min-w-0">
+                <span class="tk-accordion-icon bg-amber-50 text-amber-600 border border-amber-200">
+                    <span class="material-symbols-outlined text-[20px]">leaderboard</span>
+                </span>
+                <div class="text-left min-w-0">
+                    <h2 class="text-sm sm:text-base font-bold text-slate-900 leading-tight">
+                        4. Xếp Hạng Top Quán &amp; Phân Bố Khu Vực, Gói Dịch Vụ
+                    </h2>
+                    <p class="text-[11px] text-slate-500 truncate mt-0.5">
+                        Top quán xem nhiều nhất • Thị phần tỉnh thành • Doanh thu theo gói
+                    </p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+                <span class="tk-accordion-badge">Cơ cấu &amp; Thứ hạng</span>
+                <span class="material-symbols-outlined tk-accordion-chevron text-[20px] text-slate-400">expand_more</span>
+            </div>
+        </button>
+        <div class="tk-accordion-body">
+            <div class="tk-main-two-one-grid">
         {{-- Top Most Viewed Venues --}}
         <div class="tk-card min-w-0">
             <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
@@ -905,10 +1127,33 @@
                 </div>
             </div>
         </div>
+            </div>
+        </div>
     </div>
 
-    {{-- 6. TRANSACTIONS TABLE IN RANGE WITH FILTER & SEARCH --}}
-    <div class="tk-card space-y-4">
+    {{-- MỤC 5 (ACCORDION): DANH SÁCH CHI TIẾT GIAO DỊCH TRONG KỲ --}}
+    <div class="tk-accordion-card {{ (request()->filled('search') || request()->filled('trang_thai_tt') || request()->filled('page')) ? 'is-open' : '' }}" id="accordion-section-transactions">
+        <button type="button" class="tk-accordion-header" onclick="toggleTkAccordion('accordion-section-transactions')">
+            <div class="flex items-center gap-3 min-w-0">
+                <span class="tk-accordion-icon bg-emerald-50 text-emerald-600 border border-emerald-200">
+                    <span class="material-symbols-outlined text-[20px]">receipt_long</span>
+                </span>
+                <div class="text-left min-w-0">
+                    <h2 class="text-sm sm:text-base font-bold text-slate-900 leading-tight">
+                        5. Danh Sách Chi Tiết Giao Dịch Trong Kỳ
+                    </h2>
+                    <p class="text-[11px] text-slate-500 truncate mt-0.5">
+                        {{ number_format($revenueStats['count_filtered']) }} giao dịch phát sinh từ {{ \Carbon\Carbon::parse($tuNgayStr)->format('d/m/Y') }} đến {{ \Carbon\Carbon::parse($denNgayStr)->format('d/m/Y') }}
+                    </p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+                <span class="tk-accordion-badge">{{ number_format($revenueStats['count_filtered']) }} Giao dịch</span>
+                <span class="material-symbols-outlined tk-accordion-chevron text-[20px] text-slate-400">expand_more</span>
+            </div>
+        </button>
+        <div class="tk-accordion-body">
+            <div class="space-y-4">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
             <div>
                 <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
@@ -998,6 +1243,8 @@
                 {{ $payments->links() }}
             </div>
         @endif
+            </div>
+        </div>
     </div>
 
 </div>
@@ -1059,6 +1306,43 @@
 
 <script type="application/json" id="admin-statistics-chart-data">@json($chartData)</script>
 <script>
+    // =========================================================================
+    // Accordion Toggle Handlers
+    // =========================================================================
+    window.toggleTkAccordion = function(id) {
+        const card = document.getElementById(id);
+        if (!card) return;
+        const isOpen = card.classList.toggle('is-open');
+        if (isOpen && id === 'accordion-section-charts') {
+            setTimeout(() => {
+                if (typeof renderAdminStatisticsCharts === 'function') {
+                    renderAdminStatisticsCharts();
+                }
+                if (window.adminRevChartInstance) window.adminRevChartInstance.resize();
+                if (window.adminGrowthChartInstance) window.adminGrowthChartInstance.resize();
+            }, 60);
+        }
+    };
+
+    window.toggleAllAccordions = function(open) {
+        document.querySelectorAll('.tk-accordion-card').forEach(card => {
+            if (open) {
+                card.classList.add('is-open');
+            } else {
+                card.classList.remove('is-open');
+            }
+        });
+        if (open) {
+            setTimeout(() => {
+                if (typeof renderAdminStatisticsCharts === 'function') {
+                    renderAdminStatisticsCharts();
+                }
+                if (window.adminRevChartInstance) window.adminRevChartInstance.resize();
+                if (window.adminGrowthChartInstance) window.adminGrowthChartInstance.resize();
+            }, 60);
+        }
+    };
+
     window.escapeHtmlAi = function(str) {
         return String(str ?? '')
             .replace(/&/g, '&amp;')
@@ -1157,13 +1441,12 @@
 
         grid.innerHTML = strategies.map(st => {
             const isHigh = (st.uu_tien || 'cao') === 'cao';
-            const priorityCls = isHigh ? 'priority-high' : 'priority-normal';
             const badgeCls = isHigh
-                ? 'bg-amber-100 text-amber-800 border border-amber-300'
-                : 'bg-indigo-100 text-indigo-800 border border-indigo-200';
-            const badgeTxt = isHigh ? '🔥 Ưu tiên cao' : '💡 Chiến lược';
+                ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                : 'bg-slate-100 text-slate-700 border border-slate-200';
+            const badgeTxt = isHigh ? 'Ưu tiên cao' : 'Chiến lược';
             const impactHtml = st.tac_dong_du_kien
-                ? `<span class="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">${window.escapeHtmlAi(st.tac_dong_du_kien)}</span>`
+                ? `<span class="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200/60">${window.escapeHtmlAi(st.tac_dong_du_kien)}</span>`
                 : '';
 
             const notif = st.thong_bao_mau || null;
@@ -1176,8 +1459,8 @@
                             data-noi-dung="${window.escapeHtmlAi(notif.noi_dung || '')}"
                             data-doi-tuong="${window.escapeHtmlAi(notif.doi_tuong || 'chu_quan')}"
                             onclick="openAiBroadcastModalFromBtn(this)"
-                            class="btn-enterprise btn-enterprise-success w-full">
-                        <span class="material-symbols-outlined">campaign</span>
+                            class="btn-enterprise btn-enterprise-success w-full font-semibold text-xs">
+                        <span class="material-symbols-outlined text-[16px]">campaign</span>
                         <span>${window.escapeHtmlAi(st.nhan_nut || 'Phát sóng ưu đãi cho Chủ Quán')}</span>
                     </button>
                 `;
@@ -1185,31 +1468,31 @@
 
             if (st.hanh_dong_loai === 'featured_venues') {
                 buttonsHtml += `
-                    <a href="${featuredUrl}" class="btn-enterprise btn-enterprise-secondary w-full">
-                        <span class="material-symbols-outlined">local_fire_department</span>
+                    <a href="${featuredUrl}" class="btn-enterprise btn-enterprise-secondary w-full font-semibold text-xs">
+                        <span class="material-symbols-outlined text-[16px]">local_fire_department</span>
                         <span>Mở Quản Lý Quán Nổi Bật &rarr;</span>
                     </a>
                 `;
             } else if (st.hanh_dong_loai === 'ai_studio') {
                 buttonsHtml += `
-                    <a href="${aiStudioUrl}" class="btn-enterprise btn-enterprise-indigo w-full">
-                        <span class="material-symbols-outlined">auto_fix_high</span>
+                    <a href="${aiStudioUrl}" class="btn-enterprise btn-enterprise-indigo w-full font-semibold text-xs">
+                        <span class="material-symbols-outlined text-[16px]">auto_fix_high</span>
                         <span>${window.escapeHtmlAi(st.nhan_nut || 'Mở Khuyến Mãi AI Studio')} &rarr;</span>
                     </a>
                 `;
             }
 
             return `
-                <div class="tk-ai-strategy-card ${priorityCls}">
+                <div class="tk-ai-strategy-card">
                     <div class="space-y-2.5">
                         <div class="flex items-center justify-between gap-2">
-                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${badgeCls}">${badgeTxt}</span>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase ${badgeCls}">${badgeTxt}</span>
                             ${impactHtml}
                         </div>
                         <h4 class="font-bold text-sm text-slate-900 leading-snug">${window.escapeHtmlAi(st.tieu_de || '')}</h4>
-                        <p class="text-xs text-slate-600 leading-relaxed"><strong class="text-slate-900">Phân tích:</strong> ${window.escapeHtmlAi(st.phan_tich || '')}</p>
+                        <p class="text-xs text-slate-600 leading-relaxed font-normal"><strong class="text-slate-800">Phân tích:</strong> ${window.escapeHtmlAi(st.phan_tich || '')}</p>
                         <div class="tk-ai-solution-callout">
-                            <strong class="text-amber-800">Giải pháp AI đề xuất:</strong> ${window.escapeHtmlAi(st.giai_phap || '')}
+                            <strong class="text-slate-900">Giải pháp AI:</strong> ${window.escapeHtmlAi(st.giai_phap || '')}
                         </div>
                     </div>
                     <div class="mt-4 pt-3 border-t border-slate-100 flex flex-col gap-2">
@@ -1220,40 +1503,119 @@
         }).join('');
     };
 
-    window.refreshAdminAiRevenueInsights = async function() {
+    window.addChatMessageToStream = function(sender, text, providerLabel = '') {
+        const stream = document.getElementById('ai-chat-messages');
+        if (!stream) return;
+
+        const timeStr = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+        const isUser = sender === 'user';
+
+        const msgHtml = isUser ? `
+            <div class="flex justify-end items-end gap-2.5">
+                <div class="space-y-1 max-w-[85%] sm:max-w-[75%]">
+                    <div class="p-3.5 rounded-2xl rounded-tr-xs bg-indigo-600 text-white text-xs sm:text-sm font-medium shadow-2xs leading-relaxed">
+                        ${window.escapeHtmlAi(text)}
+                    </div>
+                    <p class="text-[10px] text-right text-slate-400 pr-1">${timeStr}</p>
+                </div>
+                <div class="w-8 h-8 rounded-full bg-slate-800 text-white flex items-center justify-center shrink-0 font-bold text-xs shadow-2xs">
+                    <span class="material-symbols-outlined text-[17px]">person</span>
+                </div>
+            </div>
+        ` : `
+            <div class="flex justify-start items-start gap-2.5">
+                <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-500 text-white flex items-center justify-center shrink-0 shadow-2xs mt-0.5">
+                    <span class="material-symbols-outlined text-[18px]">smart_toy</span>
+                </div>
+                <div class="space-y-1 max-w-[90%] sm:max-w-[80%]">
+                    <div class="p-3.5 rounded-2xl rounded-tl-xs bg-white border border-slate-200 text-slate-800 text-xs sm:text-sm shadow-2xs leading-relaxed whitespace-pre-line">
+                        ${window.escapeHtmlAi(text)}
+                    </div>
+                    <p class="text-[10px] text-slate-400 pl-1">${timeStr}</p>
+                </div>
+            </div>
+        `;
+
+        stream.insertAdjacentHTML('beforeend', msgHtml);
+        stream.scrollTop = stream.scrollHeight;
+    };
+
+    window.showAiTypingIndicator = function() {
+        const stream = document.getElementById('ai-chat-messages');
+        if (!stream || document.getElementById('ai-chat-typing-indicator')) return;
+
+        const indicatorHtml = `
+            <div id="ai-chat-typing-indicator" class="flex justify-start items-start gap-2.5">
+                <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-500 text-white flex items-center justify-center shrink-0 shadow-2xs mt-0.5">
+                    <span class="material-symbols-outlined text-[18px] animate-spin">sync</span>
+                </div>
+                <div class="p-3 rounded-2xl rounded-tl-xs bg-white border border-slate-200 text-slate-600 text-xs shadow-2xs flex items-center gap-2">
+                    <span class="inline-block w-2 h-2 rounded-full bg-indigo-600 animate-ping"></span>
+                    <span class="font-medium text-slate-700">AI đang suy nghĩ...</span>
+                </div>
+            </div>
+        `;
+        stream.insertAdjacentHTML('beforeend', indicatorHtml);
+        stream.scrollTop = stream.scrollHeight;
+    };
+
+    window.hideAiTypingIndicator = function() {
+        const el = document.getElementById('ai-chat-typing-indicator');
+        if (el) el.remove();
+    };
+
+    window.clearAiChatHistory = function() {
+        const stream = document.getElementById('ai-chat-messages');
+        if (!stream) return;
+        const timeStr = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+        stream.innerHTML = `
+            <div class="flex justify-start items-start gap-2.5">
+                <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-500 text-white flex items-center justify-center shrink-0 shadow-2xs mt-0.5">
+                    <span class="material-symbols-outlined text-[18px]">smart_toy</span>
+                </div>
+                <div class="space-y-1 max-w-[90%] sm:max-w-[80%]">
+                    <div class="p-3.5 rounded-2xl rounded-tl-xs bg-white border border-slate-200 text-slate-800 text-xs sm:text-sm shadow-2xs leading-relaxed">
+                        Đoạn chat đã được làm mới. Tôi sẵn sàng hỗ trợ bạn theo dõi doanh thu và tối ưu hóa sàn!
+                    </div>
+                    <p class="text-[10px] text-slate-400 pl-1">${timeStr}</p>
+                </div>
+            </div>
+        `;
+    };
+
+    window.sendQuickAiMessage = function(questionText, focusMode) {
+        const focusEl = document.getElementById('ai-focus-select');
+        const promptEl = document.getElementById('ai-custom-prompt');
+        if (focusEl && focusMode) focusEl.value = focusMode;
+        if (promptEl) promptEl.value = questionText || '';
+        window.submitAiChatMessage();
+    };
+
+    window.submitAiChatMessage = async function() {
+        const promptEl = document.getElementById('ai-custom-prompt');
         const btn = document.getElementById('btn-refresh-ai-revenue');
         const icon = document.getElementById('icon-refresh-ai');
-        const text = document.getElementById('text-refresh-ai');
-        const loadingBox = document.getElementById('ai-revenue-loading-box');
-        const resultContainer = document.getElementById('ai-revenue-result-container');
-        const toastBox = document.getElementById('ai-analysis-toast');
-        const stepTitle = document.getElementById('ai-loading-step-title');
-
+        const statusText = document.getElementById('ai-chat-status-text');
         const focusVal = document.getElementById('ai-focus-select')?.value || 'tong_hop';
-        const customPromptVal = document.getElementById('ai-custom-prompt')?.value || '';
 
-        btn.disabled = true;
-        icon.textContent = 'sync';
-        icon.classList.add('animate-spin');
-        text.textContent = 'Kira AI đang phân tích...';
-
-        if (toastBox) toastBox.classList.add('hidden');
-        if (loadingBox) loadingBox.classList.remove('hidden');
-        if (resultContainer) resultContainer.style.opacity = '0.35';
-
-        if (stepTitle) {
-            stepTitle.textContent = 'Bước 1/3: Đang quét lịch sử giao dịch SePay & đối soát số dư ví lưu hành...';
-            setTimeout(() => {
-                if (btn.disabled && stepTitle) {
-                    stepTitle.textContent = 'Bước 2/3: Đang phân tích ma trận khu vực, gói Quán Nổi Bật & tính toán dự báo 30 ngày...';
-                }
-            }, 380);
-            setTimeout(() => {
-                if (btn.disabled && stepTitle) {
-                    stepTitle.textContent = 'Bước 3/3: Kira AI CFO đang tổng hợp nhận định & khởi tạo 3 chiến dịch hành động 1-Click...';
-                }
-            }, 750);
+        const messageText = (promptEl?.value || '').trim();
+        if (!messageText) {
+            promptEl?.focus();
+            return;
         }
+
+        // 1. Thêm tin nhắn của User vào khung chat (bên phải)
+        window.addChatMessageToStream('user', messageText);
+        promptEl.value = '';
+
+        // 2. Chuyển trạng thái nút gửi và hiện typing indicator của AI (bên trái)
+        if (btn) btn.disabled = true;
+        if (icon) {
+            icon.textContent = 'sync';
+            icon.classList.add('animate-spin');
+        }
+        if (statusText) statusText.textContent = 'AI đang suy nghĩ...';
+        window.showAiTypingIndicator();
 
         const startTime = Date.now();
 
@@ -1269,80 +1631,102 @@
                     tu_ngay: '{{ $tuNgayStr }}',
                     den_ngay: '{{ $denNgayStr }}',
                     focus: focusVal,
-                    custom_prompt: customPromptVal
+                    custom_prompt: messageText
                 })
             });
 
             const elapsed = Date.now() - startTime;
-            if (elapsed < 900) {
-                await new Promise(r => setTimeout(r, 900 - elapsed));
+            if (elapsed < 800) {
+                await new Promise(r => setTimeout(r, 800 - elapsed));
             }
 
             const json = await response.json();
+            window.hideAiTypingIndicator();
+
             if (response.ok && json.success && json.data) {
                 const d = json.data;
                 const m = d.metrics || {};
+                const aiReply = d.cau_tra_loi_cau_hoi || d.nhan_dinh_cfo || 'Đã phân tích xong câu hỏi của bạn.';
 
+                // 3. Thêm tin nhắn phản hồi của AI vào khung chat
+                window.addChatMessageToStream('ai', aiReply, d.provider_label || 'Google Gemini AI');
+
+                // 4. Đồng bộ các thẻ phân tích tài chính bên dưới
                 if (d.nhan_dinh_cfo) {
-                    document.getElementById('ai-cfo-summary').textContent = d.nhan_dinh_cfo;
+                    const cfoSum = document.getElementById('ai-cfo-summary');
+                    if (cfoSum) cfoSum.textContent = d.nhan_dinh_cfo;
                 }
                 if (d.provider_label) {
-                    document.getElementById('ai-provider-text').textContent = d.provider_label;
+                    const provEl = document.getElementById('ai-provider-text');
+                    if (provEl) provEl.textContent = d.provider_label;
                 }
                 if (d.analyzed_at) {
-                    document.getElementById('ai-analyzed-time').textContent = 'Cập nhật: ' + d.analyzed_at;
+                    const timeEl = document.getElementById('ai-analyzed-time');
+                    if (timeEl) timeEl.textContent = 'Cập nhật: ' + d.analyzed_at;
                 }
                 if (m.diem_suc_khoe && m.nhan_suc_khoe) {
-                    document.getElementById('ai-health-label').textContent = `${m.diem_suc_khoe}/100 • ${m.nhan_suc_khoe}`;
+                    const healthEl = document.getElementById('ai-health-label');
+                    if (healthEl) healthEl.textContent = `${m.diem_suc_khoe}/100 • ${m.nhan_suc_khoe}`;
                 }
                 if (m.du_bao_30_ngay) {
                     const minF = Number(m.du_bao_30_ngay.min || 0).toLocaleString('vi-VN') + 'đ';
                     const maxF = Number(m.du_bao_30_ngay.max || 0).toLocaleString('vi-VN') + 'đ';
-                    document.getElementById('ai-forecast-range').textContent = `${minF} – ${maxF}`;
+                    const fRange = document.getElementById('ai-forecast-range');
+                    if (fRange) fRange.textContent = `${minF} – ${maxF}`;
                 }
                 if (d.nhan_xet_du_bao) {
-                    document.getElementById('ai-forecast-note').textContent = d.nhan_xet_du_bao;
+                    const fNote = document.getElementById('ai-forecast-note');
+                    if (fNote) fNote.textContent = d.nhan_xet_du_bao;
                 }
 
                 if (Array.isArray(d.diem_sang)) {
-                    document.getElementById('ai-highlights-list').innerHTML = d.diem_sang
-                        .map(item => `<li class="flex items-start gap-2"><span class="text-emerald-600 font-bold">•</span><span>${window.escapeHtmlAi(item)}</span></li>`)
-                        .join('');
+                    const hlList = document.getElementById('ai-highlights-list');
+                    if (hlList) {
+                        hlList.innerHTML = d.diem_sang
+                            .map(item => `<li class="flex items-start gap-2"><span class="text-emerald-600 font-bold">•</span><span>${window.escapeHtmlAi(item)}</span></li>`)
+                            .join('');
+                    }
                 }
 
                 if (Array.isArray(d.canh_bao_rui_ro)) {
-                    document.getElementById('ai-warnings-list').innerHTML = d.canh_bao_rui_ro
-                        .map(item => `<li class="flex items-start gap-2"><span class="text-amber-600 font-bold">•</span><span>${window.escapeHtmlAi(item)}</span></li>`)
-                        .join('');
+                    const wnList = document.getElementById('ai-warnings-list');
+                    if (wnList) {
+                        wnList.innerHTML = d.canh_bao_rui_ro
+                            .map(item => `<li class="flex items-start gap-2"><span class="text-amber-600 font-bold">•</span><span>${window.escapeHtmlAi(item)}</span></li>`)
+                            .join('');
+                    }
                 }
 
                 if (Array.isArray(d.khuyen_nghi_chien_luoc)) {
                     window.renderAiStrategiesGrid(d.khuyen_nghi_chien_luoc);
                 }
 
-                if (toastBox) {
-                    const focusNames = {
-                        tong_hop: 'Tổng quan dòng tiền & Dự báo 30 ngày',
-                        kich_cau_nap_vi: 'Chiến lược Kích cầu nạp ví SePay',
-                        goi_noi_bat: 'Chuyển đổi Gói Nổi Bật & Tích Xanh',
-                        chong_roi_bo: 'Cảnh báo rời bỏ (Churn Risk) & Giữ chân VIP'
-                    };
-                    document.getElementById('ai-analysis-toast-text').textContent =
-                        'Kira AI đã phân tích xong [' + (focusNames[focusVal] || 'Doanh thu toàn sàn') + '] và cập nhật khuyến nghị mới!';
-                    document.getElementById('ai-analysis-toast-time').textContent = 'Lúc ' + (d.analyzed_at || 'vừa xong');
-                    toastBox.classList.remove('hidden');
-                }
+                if (statusText) statusText.textContent = 'Đã phản hồi lúc ' + (d.analyzed_at || 'vừa xong');
+            } else {
+                window.addChatMessageToStream('ai', 'Rất tiếc, hệ thống đang bận. Vui lòng thử lại sau ít giây.', 'Lỗi');
+                if (statusText) statusText.textContent = 'Không thể phản hồi';
             }
         } catch (err) {
             console.error('AI Analyze error:', err);
+            window.hideAiTypingIndicator();
+            window.addChatMessageToStream('ai', 'Lỗi kết nối mạng đến máy chủ. Vui lòng kiểm tra lại đường truyền.', 'Mạng');
+            if (statusText) statusText.textContent = 'Lỗi kết nối';
         } finally {
-            if (loadingBox) loadingBox.classList.add('hidden');
-            if (resultContainer) resultContainer.style.opacity = '1';
-            btn.disabled = false;
-            icon.classList.remove('animate-spin');
-            icon.textContent = 'auto_awesome';
-            text.textContent = 'Kira AI Phân Tích Ngay';
+            if (btn) btn.disabled = false;
+            if (icon) {
+                icon.classList.remove('animate-spin');
+                icon.textContent = 'arrow_upward';
+            }
+            if (promptEl) promptEl.focus();
         }
+    };
+
+    window.refreshAdminAiRevenueInsights = function() {
+        window.submitAiChatMessage();
+    };
+
+    window.applyQuickAiQuestion = function(focusMode, questionText) {
+        window.sendQuickAiMessage(questionText, focusMode);
     };
 
     function renderAdminStatisticsCharts() {

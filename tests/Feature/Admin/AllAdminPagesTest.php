@@ -88,6 +88,7 @@ class AllAdminPagesTest extends TestCase
             route('admin.bao-mat.index'),
             route('admin.audit-log.index'),
             route('admin.quan-noi-bat.index'),
+            route('admin.danh-muc-quan.index'),
             route('admin.ai-tools.index'),
             route('admin.seo.index'),
             route('admin.seo.edit', 'trang-chu'),
