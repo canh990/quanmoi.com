@@ -225,7 +225,6 @@ class BlogController extends Controller
                     ->get();
             }
         }
-        }
 
         // Nếu chưa được phân trang bởi Elasticsearch (không tìm kiếm hoặc fallback)
         if ($blogs === null) {
@@ -342,7 +341,6 @@ class BlogController extends Controller
             'total_published' => Blog::where('status', 'published')->count(),
             'timestamp' => now()->toIso8601String(),
         ]);
-    }
     }
 
     public function show(Request $request, string $slug)
