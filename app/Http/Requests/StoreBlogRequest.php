@@ -29,7 +29,13 @@ class StoreBlogRequest extends FormRequest
             'new_category' => ['nullable', 'string', 'max:100'],
             'excerpt' => ['nullable', 'string', 'max:500'],
             'content' => ['required', 'string'],
-            'cover_image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:5120'], // 5MB Max
+            'cover_image' => [
+                Rule::requiredIf(fn () => $this->input('action') === 'pending'),
+                'nullable',
+                'image',
+                'mimes:jpeg,png,jpg,gif,webp',
+                'max:5120',
+            ], // 5MB Max - Bắt buộc khi gửi duyệt đăng bài
             'tags' => ['nullable', 'array'],
             'custom_tags' => ['nullable', 'string', 'max:255'],
             'seo_title' => ['nullable', 'string', 'max:255'],
@@ -49,6 +55,7 @@ class StoreBlogRequest extends FormRequest
             'category_id.required' => 'Vui lòng chọn danh mục bài viết.',
             'category_id.exists' => 'Danh mục bài viết được chọn không hợp lệ.',
             'content.required' => 'Nội dung bài viết không được để trống.',
+            'cover_image.required' => 'Ảnh bìa bài viết là bắt buộc khi gửi duyệt đăng bài.',
             'cover_image.image' => 'Ảnh bìa phải là định dạng hình ảnh hợp lệ (jpg, png, webp).',
             'cover_image.mimes' => 'Ảnh bìa phải thuộc định dạng: jpeg, png, jpg, gif hoặc webp.',
             'cover_image.max' => 'Dung lượng ảnh bìa không được vượt quá 5MB.',

@@ -215,7 +215,7 @@
                                     @endif
 
                                     <button type="button" 
-                                            onclick="confirmDeleteBlog('{{ route('nguoi-dung.blog.destroy', $blog) }}', '{{ addslashes($blog->title) }}')"
+                                            onclick="confirmDeleteBlog('{{ route('nguoi-dung.blog.destroy', $blog) }}', '{{ addslashes($blog->title) }}', '{{ $blog->id }}')"
                                             class="w-10 h-10 ml-2 rounded-xl flex items-center justify-center bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all cursor-pointer shadow-2xs active:scale-95" 
                                             title="Xóa bài viết">
                                         <span class="material-symbols-outlined text-[20px]">delete</span>
@@ -279,7 +279,7 @@
                 <span class="material-symbols-outlined text-sm">warning</span> Bài viết sau khi xóa sẽ được chuyển vào thùng rác.
             </p>
 
-            <form id="deleteConfirmForm" method="POST" action="">
+            <form id="deleteConfirmForm" method="POST" action="" onsubmit="handleUserDeleteBlogSubmit(event)">
                 @csrf
                 @method('DELETE')
                 <div class="grid grid-cols-2 gap-3">
@@ -290,6 +290,7 @@
                         Hủy bỏ
                     </button>
                     <button type="submit" 
+                            id="deleteConfirmSubmitBtn"
                             style="background-color: #dc2626 !important; color: #ffffff !important; border: 1px solid #dc2626 !important;" 
                             class="w-full py-2.5 px-4 rounded-xl font-bold text-xs sm:text-sm shadow-md flex items-center justify-center gap-1.5 cursor-pointer hover:opacity-95 active:scale-95 transition-all">
                         <span class="material-symbols-outlined text-lg" style="color: #ffffff !important;">delete</span>
@@ -304,7 +305,10 @@
 
 @push('scripts')
 <script>
-    function confirmDeleteBlog(deleteUrl, blogTitle) {
+    let currentDeleteBlogId = null;
+    let currentDeleteBlogUrl = '';
+
+    function confirmDeleteBlog(deleteUrl, blogTitle, blogId) {
         const modal = document.getElementById('deleteConfirmModal');
         const modalBox = document.getElementById('deleteConfirmModalBox');
         const form = document.getElementById('deleteConfirmForm');
@@ -313,6 +317,9 @@
         if (!modal || !form) return;
 
         form.action = deleteUrl;
+        currentDeleteBlogUrl = deleteUrl;
+        currentDeleteBlogId = blogId || (deleteUrl.split('/').filter(Boolean).pop());
+
         if (titleSpan) titleSpan.textContent = blogTitle || 'Bài viết này';
 
         modal.classList.remove('hidden');
@@ -323,6 +330,107 @@
             modalBox.classList.remove('scale-95', 'opacity-0');
             modalBox.classList.add('scale-100', 'opacity-100');
         }, 10);
+    }
+
+    function handleUserDeleteBlogSubmit(event) {
+        event.preventDefault();
+        const submitBtn = document.getElementById('deleteConfirmSubmitBtn');
+        const csrfToken = document.querySelector('input[name="_token"]')?.value || document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        const blogId = currentDeleteBlogId;
+        const deleteUrl = currentDeleteBlogUrl || document.getElementById('deleteConfirmForm')?.action;
+
+        if (!deleteUrl) return;
+
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="material-symbols-outlined text-lg animate-spin" style="color: #ffffff !important;">progress_activity</span> <span style="color: #ffffff !important;">Đang xóa...</span>';
+        }
+
+        fetch(deleteUrl, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(async res => {
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(data.message || 'Không thể xóa bài viết.');
+            return data;
+        })
+        .then(data => {
+            closeDeleteModal();
+
+            // 1. Mờ dần và gỡ bỏ card khỏi DOM ngay lập tức
+            if (blogId) {
+                const card = document.getElementById('user-blog-card-' + blogId);
+                if (card) {
+                    card.style.transition = 'all 0.4s ease';
+                    card.style.opacity = '0';
+                    card.style.transform = 'scale(0.92) translateY(12px)';
+                    setTimeout(() => {
+                        card.remove();
+                        const grid = document.getElementById('user-blog-grid');
+                        if (grid && grid.children.length === 0) {
+                            grid.remove();
+                            const container = document.getElementById('user-blog-container');
+                            if (container) {
+                                container.innerHTML = `
+                                    <div class="text-center py-20 bg-surface-container-lowest rounded-3xl border border-outline-variant">
+                                        <span class="material-symbols-outlined text-6xl text-on-surface-variant mb-4">edit_document</span>
+                                        <h3 class="text-xl font-bold text-on-surface mb-2">Bạn chưa có bài viết nào</h3>
+                                        <p class="text-on-surface-variant mb-6">Hãy chia sẻ trải nghiệm và câu chuyện của bạn với mọi người.</p>
+                                        <a href="{{ route('nguoi-dung.blog.create') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-primary text-on-primary rounded-full font-bold hover:bg-primary-hover transition-colors">
+                                            <span class="material-symbols-outlined">edit</span> Viết bài ngay
+                                        </a>
+                                    </div>
+                                `;
+                            }
+                        }
+                    }, 400);
+                }
+            }
+
+            // 2. Cập nhật số lượng trên các tab lọc không cần load lại trang
+            if (data.status_counts) {
+                const counts = data.status_counts;
+                const elTotal = document.getElementById('user-blog-count-total');
+                const elDraft = document.getElementById('user-blog-count-draft');
+                const elPending = document.getElementById('user-blog-count-pending');
+                const elPublished = document.getElementById('user-blog-count-published');
+                const elRev = document.getElementById('user-blog-count-revision');
+                const elRej = document.getElementById('user-blog-count-rejected');
+                if (elTotal) elTotal.textContent = counts.total ?? 0;
+                if (elDraft) elDraft.textContent = counts.draft ?? 0;
+                if (elPending) elPending.textContent = counts.pending ?? 0;
+                if (elPublished) elPublished.textContent = counts.published ?? 0;
+                if (elRev) elRev.textContent = counts.need_revision ?? 0;
+                if (elRej) elRej.textContent = counts.rejected ?? 0;
+            }
+
+            // 3. Đồng bộ ngay lập tức sang các tab khác (như trang /blog) qua localStorage
+            try {
+                localStorage.setItem('quanmoi_blog_sync_trigger', JSON.stringify({ action: 'deleted', blog_id: blogId, timestamp: Date.now() }));
+            } catch (e) {}
+
+            // 4. Bắn thông báo Toast thành công
+            if (typeof showUserToast === 'function') {
+                showUserToast('Thành công', data.message || 'Đã xóa bài viết thành công.', '', 'success', 'check_circle');
+            } else if (typeof showToast === 'function') {
+                showToast({ title: 'Thành công', message: data.message || 'Đã xóa bài viết thành công.', type: 'success' });
+            }
+        })
+        .catch(err => {
+            alert(err.message || 'Đã xảy ra lỗi khi xóa bài viết.');
+        })
+        .finally(() => {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<span class="material-symbols-outlined text-lg" style="color: #ffffff !important;">delete</span> <span style="color: #ffffff !important; font-weight: 700;">Xác nhận xóa</span>';
+            }
+        });
     }
 
     function closeDeleteModal() {
@@ -391,6 +499,18 @@
         const blogId = notif.blog_id;
         if (!blogId) return;
 
+        // Nếu bài viết bị xóa từ quản trị viên hoặc thiết bị khác
+        if (notif.action === 'deleted') {
+            const card = document.getElementById('user-blog-card-' + blogId);
+            if (card) {
+                card.style.transition = 'all 0.4s ease';
+                card.style.opacity = '0';
+                card.style.transform = 'scale(0.92) translateY(12px)';
+                setTimeout(() => card.remove(), 400);
+            }
+            return;
+        }
+
         const card = document.getElementById('user-blog-card-' + blogId);
         const urlParams = new URLSearchParams(window.location.search);
         const currentFilterStatus = urlParams.get('status');
@@ -454,7 +574,7 @@
                         <a href="${publicUrl}" target="_blank" class="w-10 h-10 ml-3 rounded-xl flex items-center justify-center bg-surface-container text-on-surface hover:bg-primary-fixed hover:text-primary-fixed-variant transition-colors" title="Xem bài viết">
                             <span class="material-symbols-outlined text-[20px]">open_in_new</span>
                         </a>
-                        <button type="button" onclick="confirmDeleteBlog('${deleteUrl}', '${titleSafe}')" class="w-10 h-10 ml-2 rounded-xl flex items-center justify-center bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all cursor-pointer shadow-2xs active:scale-95" title="Xóa bài viết">
+                        <button type="button" onclick="confirmDeleteBlog('${deleteUrl}', '${titleSafe}', '${blogId}')" class="w-10 h-10 ml-2 rounded-xl flex items-center justify-center bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all cursor-pointer shadow-2xs active:scale-95" title="Xóa bài viết">
                             <span class="material-symbols-outlined text-[20px]">delete</span>
                         </button>
                     `;
@@ -463,7 +583,7 @@
                         <a href="${editUrl}" class="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl bg-primary text-white hover:bg-primary-hover font-label-md transition-colors shadow-xs">
                             <span class="material-symbols-outlined text-[18px]">edit</span> Chỉnh sửa & Gửi lại
                         </a>
-                        <button type="button" onclick="confirmDeleteBlog('${deleteUrl}', '${titleSafe}')" class="w-10 h-10 ml-2 rounded-xl flex items-center justify-center bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all cursor-pointer shadow-2xs active:scale-95" title="Xóa bài viết">
+                        <button type="button" onclick="confirmDeleteBlog('${deleteUrl}', '${titleSafe}', '${blogId}')" class="w-10 h-10 ml-2 rounded-xl flex items-center justify-center bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all cursor-pointer shadow-2xs active:scale-95" title="Xóa bài viết">
                             <span class="material-symbols-outlined text-[20px]">delete</span>
                         </button>
                     `;

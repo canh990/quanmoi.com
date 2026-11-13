@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -9,10 +10,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Str;
+use Laravel\Scout\Searchable;
 
 class Blog extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, Searchable;
 
     protected $fillable = [
         'user_id',
@@ -202,10 +204,10 @@ class Blog extends Model
     /**
      * Get the full URL for the blog's cover image.
      */
-    public function getCoverImageUrlAttribute(): string
+    public function getCoverImageUrlAttribute(): ?string
     {
         if (empty($this->cover_image)) {
-            return '/storage/blogs/covers/41Cy1EQE15hmAoyR8ZCYzOFRcWMpAcQ2hra9aDa2.png';
+            return null;
         }
 
         if (\Illuminate\Support\Str::startsWith($this->cover_image, ['http://', 'https://'])) {
@@ -234,5 +236,101 @@ class Blog extends Model
         $this->attributes['content'] = function_exists('clean')
             ? clean($value)
             : strip_tags((string) $value, '<h1><h2><h3><h4><h5><h6><p><br><strong><em><u><strike><s><del><ul><ol><li><blockquote><a><img><table><thead><tbody><tr><th><td><pre><code><hr>');
+    }
+
+    /**
+     * Tùy biến tên index trong Elasticsearch
+     */
+    public function searchableAs(): string
+    {
+        return 'blogs';
+    }
+
+    /**
+     * Tùy biến truy vấn khi import toàn bộ dữ liệu vào Scout.
+     */
+    protected function makeAllSearchableUsing(Builder $query): Builder
+    {
+        return $query->with(['user', 'category', 'tags']);
+    }
+
+    /**
+     * Chỉ index các bài viết đã xuất bản và không bị xóa mềm.
+     */
+    public function shouldBeSearchable(): bool
+    {
+        return $this->status === 'published' 
+            && !empty($this->published_at) 
+            && $this->published_at <= now() 
+            && $this->deleted_at === null;
+    }
+
+    /**
+     * Get the indexable data array for the model.
+     *
+     * @return array
+     */
+    public function toSearchableArray(): array
+    {
+        // Danh sách tên tags
+        $tags = [];
+        $tagSlugs = [];
+        if ($this->relationLoaded('tags')) {
+            $tags = $this->tags->pluck('name')->filter()->values()->all();
+            $tagSlugs = $this->tags->pluck('slug')->filter()->values()->all();
+        } else {
+            $tags = $this->tags()->pluck('name')->filter()->values()->all();
+            $tagSlugs = $this->tags()->pluck('slug')->filter()->values()->all();
+        }
+
+        // Tác giả
+        $authorName = '';
+        if ($this->relationLoaded('user')) {
+            $authorName = $this->user ? ($this->user->ho_ten ?: $this->user->name ?: '') : '';
+        } else {
+            $authorName = $this->user()->value('ho_ten') ?: '';
+        }
+
+        // Chuyên mục
+        $categoryName = '';
+        $categorySlug = '';
+        if ($this->relationLoaded('category')) {
+            $categoryName = $this->category ? $this->category->name : '';
+            $categorySlug = $this->category ? $this->category->slug : '';
+        } else {
+            $cat = $this->category()->first(['name', 'slug']);
+            if ($cat) {
+                $categoryName = $cat->name;
+                $categorySlug = $cat->slug;
+            }
+        }
+
+        // Làm sạch nội dung HTML để index toàn văn (plain text)
+        $cleanContent = trim(strip_tags(html_entity_decode((string) $this->content, ENT_QUOTES, 'UTF-8')));
+
+        return [
+            'id'             => (int) $this->id,
+            'title'          => (string) $this->title,
+            'slug'           => (string) $this->slug,
+            'excerpt'        => (string) $this->excerpt,
+            'content'        => $cleanContent,
+            'category'       => $categoryName,
+            'category_slug'  => $categorySlug,
+            'category_id'    => (int) $this->category_id,
+            'author'         => $authorName,
+            'user_id'        => (int) $this->user_id,
+            'tags'           => $tags,
+            'tag_slugs'      => $tagSlugs,
+            'status'         => (string) $this->status,
+            'is_hero'        => (bool) $this->is_hero,
+            'is_featured'    => (bool) $this->is_featured,
+            'view_count'     => (int) ($this->view_count ?? 0),
+            'comment_count'  => (int) ($this->comment_count ?? 0),
+            'reading_time'   => (int) ($this->reading_time ?? 4),
+            'cover_url'      => $this->cover_image_url,
+            'published_at'   => $this->published_at ? $this->published_at->timestamp : null,
+            'created_at'     => $this->created_at ? $this->created_at->timestamp : null,
+            'updated_at'     => $this->updated_at ? $this->updated_at->timestamp : null,
+        ];
     }
 }

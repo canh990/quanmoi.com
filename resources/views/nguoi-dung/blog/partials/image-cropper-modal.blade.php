@@ -37,46 +37,33 @@
     }
 </style>
 
-<!-- Modal Container (Overlay z-[99999]) -->
-<div id="blogCoverCropperModal" class="fixed inset-0 z-[99999] hidden overflow-y-auto bg-slate-950/85 backdrop-blur-md p-2 sm:p-4 md:p-6" aria-labelledby="cropper-modal-title" role="dialog" aria-modal="true">
+<!-- Modal Container (Overlay z-[200000] nổi lên trên modal tạo bài viết) -->
+<div id="blogCoverCropperModal" class="fixed inset-0 hidden overflow-y-auto bg-slate-950/90 backdrop-blur-md p-2 sm:p-4" style="z-index: 200000 !important;" aria-labelledby="cropper-modal-title" role="dialog" aria-modal="true">
     <div class="flex min-h-full items-center justify-center p-0 text-center">
-        <div class="relative w-full max-w-4xl bg-slate-900 rounded-3xl shadow-2xl border border-slate-700/80 overflow-hidden flex flex-col text-left text-slate-100 max-h-[96vh]">
+        <div class="relative w-full max-w-4xl bg-slate-900 rounded-3xl shadow-2xl border border-slate-700/80 overflow-hidden flex flex-col text-left text-slate-100 max-h-[94vh] my-auto">
             
             <!-- Modal Header -->
-            <div class="px-5 py-3.5 sm:px-6 sm:py-4 bg-slate-800/90 border-b border-slate-700/80 flex items-center justify-between shrink-0">
+            <div class="px-5 py-3 sm:px-6 sm:py-3.5 bg-slate-800/90 border-b border-slate-700/80 flex items-center justify-between shrink-0">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center shadow-md shrink-0">
-                        <span class="material-symbols-outlined text-2xl">crop</span>
+                    <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center shadow-md shrink-0">
+                        <span class="material-symbols-outlined text-xl sm:text-2xl">crop</span>
                     </div>
                     <div>
-                        <h3 id="cropper-modal-title" class="text-base sm:text-lg font-extrabold text-white flex items-center gap-2">
+                        <h3 id="cropper-modal-title" class="text-sm sm:text-base font-extrabold text-white flex items-center gap-2">
                             Chỉnh Sửa & Cắt Ảnh Bìa
                             <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">Chuẩn 21:9</span>
                         </h3>
-                        <p class="text-xs text-slate-400 font-medium">Căn chỉnh góc đẹp nhất, xoay lật, thu phóng và lọc màu sắc</p>
+                        <p class="text-[11px] sm:text-xs text-slate-400 font-medium">Căn chỉnh góc đẹp nhất, xoay lật, thu phóng và lọc màu sắc</p>
                     </div>
                 </div>
                 
-                <button type="button" onclick="closeCoverCropperModal()" class="w-9 h-9 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition-all cursor-pointer border border-slate-700" title="Đóng">
+                <button type="button" onclick="closeCoverCropperModal()" class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition-all cursor-pointer border border-slate-700" title="Đóng">
                     <span class="material-symbols-outlined text-lg">close</span>
                 </button>
             </div>
 
-            <!-- Cropper Work Area -->
-            <div class="relative flex-1 bg-slate-950 flex items-center justify-center overflow-hidden p-2 min-h-[300px] sm:min-h-[380px] max-h-[52vh]">
-                <div class="w-full h-full flex items-center justify-center">
-                    <img id="cover-cropper-image" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="Ảnh chỉnh sửa" style="display: block; max-width: 100%; max-height: 100%;">
-                </div>
-
-                <!-- Loading Spinner -->
-                <div id="cropper-loading" class="absolute inset-0 bg-slate-950/90 flex flex-col items-center justify-center gap-3 z-10 hidden">
-                    <div class="w-9 h-9 border-3 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
-                    <p class="text-xs font-semibold text-slate-400">Đang tải ảnh vào trình chỉnh sửa...</p>
-                </div>
-            </div>
-
-            <!-- Toolbar Controls -->
-            <div class="p-3 sm:p-5 bg-slate-900 border-t border-slate-800 space-y-3 shrink-0">
+            <!-- Toolbar Controls (Giao diện chỉnh sửa đưa lên phía trên) -->
+            <div class="p-3 sm:p-4 bg-slate-900 border-b border-slate-800 space-y-2.5 shrink-0">
                 
                 <!-- Row 1: Aspect Ratio Selectors -->
                 <div class="flex flex-wrap items-center justify-between gap-2">
@@ -106,25 +93,25 @@
                 </div>
 
                 <!-- Row 2: Action Tool Buttons & Preset Filters -->
-                <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-800/80">
+                <div class="flex flex-wrap items-center justify-between gap-2.5 pt-2 border-t border-slate-800/80">
                     <!-- Transform Buttons -->
                     <div class="flex items-center flex-wrap gap-1.5">
-                        <button type="button" onclick="rotateCropper(-90)" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-all cursor-pointer flex items-center justify-center" title="Xoay trái 90°">
+                        <button type="button" onclick="rotateCropper(-90)" class="p-1.5 sm:p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-all cursor-pointer flex items-center justify-center" title="Xoay trái 90°">
                             <span class="material-symbols-outlined text-lg">rotate_left</span>
                         </button>
-                        <button type="button" onclick="rotateCropper(90)" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-all cursor-pointer flex items-center justify-center" title="Xoay phải 90°">
+                        <button type="button" onclick="rotateCropper(90)" class="p-1.5 sm:p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-all cursor-pointer flex items-center justify-center" title="Xoay phải 90°">
                             <span class="material-symbols-outlined text-lg">rotate_right</span>
                         </button>
-                        <button type="button" onclick="flipCropperX()" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-all cursor-pointer flex items-center justify-center" title="Lật ngang">
+                        <button type="button" onclick="flipCropperX()" class="p-1.5 sm:p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-all cursor-pointer flex items-center justify-center" title="Lật ngang">
                             <span class="material-symbols-outlined text-lg">swap_horiz</span>
                         </button>
-                        <button type="button" onclick="flipCropperY()" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-all cursor-pointer flex items-center justify-center" title="Lật dọc">
+                        <button type="button" onclick="flipCropperY()" class="p-1.5 sm:p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-all cursor-pointer flex items-center justify-center" title="Lật dọc">
                             <span class="material-symbols-outlined text-lg">swap_vert</span>
                         </button>
-                        <button type="button" onclick="zoomCropper(-0.1)" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-all cursor-pointer flex items-center justify-center" title="Thu nhỏ">
+                        <button type="button" onclick="zoomCropper(-0.1)" class="p-1.5 sm:p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-all cursor-pointer flex items-center justify-center" title="Thu nhỏ">
                             <span class="material-symbols-outlined text-lg">zoom_out</span>
                         </button>
-                        <button type="button" onclick="zoomCropper(0.1)" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-all cursor-pointer flex items-center justify-center" title="Phóng to">
+                        <button type="button" onclick="zoomCropper(0.1)" class="p-1.5 sm:p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-all cursor-pointer flex items-center justify-center" title="Phóng to">
                             <span class="material-symbols-outlined text-lg">zoom_in</span>
                         </button>
                         <button type="button" onclick="resetCropper()" class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 text-xs font-bold transition-all cursor-pointer flex items-center gap-1" title="Khôi phục gốc">
@@ -134,7 +121,7 @@
                     </div>
 
                     <!-- Preset Color Filters -->
-                    <div class="flex items-center gap-1.5 overflow-x-auto py-1">
+                    <div class="flex items-center gap-1.5 overflow-x-auto py-0.5">
                         <span class="text-[11px] font-bold text-slate-500 uppercase mr-1 hidden lg:inline">Bộ lọc:</span>
                         <button type="button" onclick="setCropperFilter('none', this)" class="filter-btn active px-2.5 py-1 text-xs font-bold rounded-lg border border-slate-700 bg-slate-800 text-slate-300 hover:text-white transition-all cursor-pointer">
                             Gốc
@@ -155,8 +142,21 @@
                 </div>
             </div>
 
-            <!-- Modal Footer -->
-            <div class="px-5 py-3.5 sm:px-6 sm:py-4 bg-slate-800/90 border-t border-slate-700/80 flex items-center justify-end gap-3 shrink-0">
+            <!-- Cropper Work Area (Khung ảnh nằm ở giữa) -->
+            <div class="relative flex-1 bg-slate-950 flex items-center justify-center overflow-hidden p-2 min-h-[280px] sm:min-h-[340px] max-h-[50vh]">
+                <div class="w-full h-full flex items-center justify-center">
+                    <img id="cover-cropper-image" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="Ảnh chỉnh sửa" style="display: block; max-width: 100%; max-height: 100%;">
+                </div>
+
+                <!-- Loading Spinner -->
+                <div id="cropper-loading" class="absolute inset-0 bg-slate-950/90 flex flex-col items-center justify-center gap-3 z-10 hidden">
+                    <div class="w-9 h-9 border-3 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
+                    <p class="text-xs font-semibold text-slate-400">Đang tải ảnh vào trình chỉnh sửa...</p>
+                </div>
+            </div>
+
+            <!-- Modal Footer (Nút Hủy bỏ và Áp dụng nằm cố định ở đáy) -->
+            <div class="px-5 py-3 sm:px-6 sm:py-3.5 bg-slate-800/90 border-t border-slate-700/80 flex items-center justify-end gap-3 shrink-0">
                 <button type="button" onclick="closeCoverCropperModal()" class="px-4 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-700 text-xs font-bold transition-all cursor-pointer">
                     Hủy bỏ
                 </button>
@@ -489,8 +489,17 @@
                     }
                     if (placeholder) placeholder.classList.add('hidden');
                     if (actionsBar) actionsBar.classList.remove('hidden');
+                    const modalFixedBtn = document.getElementById('modal-cover-fixed-edit-btn');
+                    if (modalFixedBtn) modalFixedBtn.classList.remove('hidden');
+                    const modalBadge = document.getElementById('modal-cover-badge');
+                    if (modalBadge) modalBadge.classList.remove('hidden');
+
+                    const err = document.getElementById('cover-error-message');
+                    if (err) err.classList.add('hidden');
+                    const cContainer = document.getElementById('cover-preview-container');
+                    if (cContainer) cContainer.classList.remove('border-rose-500', 'ring-2', 'ring-rose-300');
                     if (container) {
-                        container.classList.remove('border-dashed');
+                        container.classList.remove('border-dashed', 'border-rose-500', 'ring-2', 'ring-rose-300');
                         container.classList.add('border-solid', 'border-amber-400');
                     }
                 } else {
@@ -509,6 +518,8 @@
                     const preview = document.getElementById('cover-preview');
                     const placeholder = document.getElementById('cover-placeholder');
                     const actionsBar = document.getElementById('page-cover-actions-bar');
+                    const pageFixedBtn = document.getElementById('page-cover-fixed-edit-btn');
+                    const pageBadge = document.getElementById('page-cover-badge');
 
                     if (preview) {
                         preview.src = URL.createObjectURL(blob);
@@ -516,6 +527,13 @@
                     }
                     if (placeholder) placeholder.classList.add('hidden');
                     if (actionsBar) actionsBar.classList.remove('hidden');
+                    if (pageFixedBtn) pageFixedBtn.classList.remove('hidden');
+                    if (pageBadge) pageBadge.classList.remove('hidden');
+
+                    const err = document.getElementById('cover-error-message');
+                    if (err) err.classList.add('hidden');
+                    const cContainer = document.getElementById('cover-preview-container');
+                    if (cContainer) cContainer.classList.remove('border-rose-500', 'ring-2', 'ring-rose-300');
                 }
 
                 closeCoverCropperModal();

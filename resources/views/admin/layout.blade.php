@@ -1994,6 +1994,9 @@
                     if (typeof showRealtimeToast === 'function') {
                         showRealtimeToast('Đã Phê Duyệt', data.message || 'Bài viết đã được xuất bản thành công!', '', 'check_circle', 'bg-emerald-500');
                     }
+                    try {
+                        localStorage.setItem('quanmoi_blog_sync_trigger', JSON.stringify({ action: 'approved', blog_id: blogId, timestamp: Date.now() }));
+                    } catch(e) {}
                     clearAdminPageCache();
                     closeBlogQuickPreviewModal();
 
@@ -2248,6 +2251,9 @@
                     if (typeof showRealtimeToast === 'function') {
                         showRealtimeToast('Đã Xóa', data.message || 'Bài viết đã được xóa thành công.', '', 'delete', 'bg-slate-700');
                     }
+                    try {
+                        localStorage.setItem('quanmoi_blog_sync_trigger', JSON.stringify({ action: 'deleted', blog_id: blogId, timestamp: Date.now() }));
+                    } catch(e) {}
                     clearAdminPageCache();
                     closeBlogQuickPreviewModal();
 
