@@ -313,4 +313,43 @@ class DangQuanTest extends TestCase
         $response->assertSee('id="qr-code-container"', false);
         $response->assertSee('https://shopeefood.vn/ho-chi-minh/quan-co-shopeefood', false);
     }
+
+    public function test_user_can_create_quan_with_same_name_as_soft_deleted_quan(): void
+    {
+        $this->withoutMiddleware(\Illuminate\Routing\Middleware\ThrottleRequests::class);
+        $roleNguoiDung = VaiTro::create(['ten' => 'nguoi_dung']);
+        VaiTro::create(['ten' => 'chu_quan']);
+        $user = User::factory()->create(['vai_tro_id' => $roleNguoiDung->id]);
+
+        $deletedQuan = \App\Models\Quan::create([
+            'chu_quan_id' => $user->id,
+            'ten_quan' => 'Quán Sushi',
+            'loai_hinh_kinh_doanh' => 'Nhà hàng',
+            'slug' => 'quan-sushi',
+            'so_dien_thoai' => '0901234567',
+            'dia_chi_chi_tiet' => '10 Lê Lợi',
+            'ten_tinh_thanh' => 'Thành phố Hồ Chí Minh',
+            'ten_phuong_xa' => 'Phường Bến Thành',
+            'gio_mo_cua' => '08:00',
+            'gio_dong_cua' => '22:00',
+            'trang_thai' => 'da_duyet',
+        ]);
+        $deletedQuan->delete();
+
+        $response = $this->actingAs($user)->postJson('/chu-quan/dang-quan', [
+            'ten_quan' => 'Quán Sushi',
+            'loai_hinh_kinh_doanh' => 'Nhà hàng',
+            'so_dien_thoai' => '0912345678',
+            'dia_chi_chi_tiet' => '20 Nguyễn Huệ',
+            'tinh_thanh_id' => '79',
+            'ten_tinh_thanh' => 'Thành phố Hồ Chí Minh',
+            'phuong_xa_id' => '26740',
+            'ten_phuong_xa' => 'Phường Sài Gòn',
+            'gio_mo_cua' => '08:00',
+            'gio_dong_cua' => '22:00',
+        ]);
+
+        $response->assertOk()->assertJson(['success' => true]);
+        $this->assertDatabaseHas('quan', ['slug' => 'quan-sushi-1', 'ten_quan' => 'Quán Sushi']);
+    }
 }

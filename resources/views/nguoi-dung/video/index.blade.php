@@ -271,6 +271,23 @@
     let activeVideoPlayer = null;
     let isMuted = false;
 
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function formatVideoTime(sec) {
+        if (isNaN(sec) || sec < 0) return '00:00';
+        const m = Math.floor(sec / 60);
+        const s = Math.floor(sec % 60);
+        return `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+    }
+
     function openVideoModal(index) {
         if (!videoDataList || videoDataList.length === 0) return;
         currentVideoIndex = index;
@@ -288,7 +305,8 @@
         // ƯU TIÊN 1: Phát bằng video HTML5 thuần nếu có link video MP4 sạch (Không dính bất kỳ nút/chữ TikTok nào)
         if (video.clean_url) {
             const playerWrapper = document.createElement('div');
-            playerWrapper.className = 'relative w-full h-full bg-black flex items-center justify-center select-none overflow-hidden';
+            playerWrapper.className = 'relative w-full h-full bg-black select-none overflow-hidden';
+            playerWrapper.style.cssText = 'position: relative; width: 100%; height: 100%; background: #000; overflow: hidden;';
 
             const videoElem = document.createElement('video');
             videoElem.src = video.clean_url;
@@ -301,12 +319,13 @@
 
             // Top overlay: Quán ăn & Nút âm lượng
             const topBar = document.createElement('div');
-            topBar.className = 'absolute top-3 inset-x-3 flex items-center justify-between z-30 pointer-events-none';
+            topBar.className = 'absolute top-3 left-3 right-3 flex items-center justify-between z-30 pointer-events-none';
+            topBar.style.cssText = 'position: absolute; top: 12px; left: 12px; right: 12px; width: calc(100% - 24px); box-sizing: border-box;';
             topBar.innerHTML = `
                 ${video.quan_name ? `
                     <a href="${video.quan_url}" onclick="event.stopPropagation()" class="pointer-events-auto inline-flex items-center gap-1.5 bg-black/60 hover:bg-orange-600 backdrop-blur-md text-white text-xs font-bold px-3 py-1.5 rounded-full transition shadow-lg max-w-[240px]">
                         <span class="material-symbols-outlined text-sm text-orange-400">restaurant</span>
-                        <span class="truncate">${video.quan_name}</span>
+                        <span class="truncate">${escapeHtml(video.quan_name)}</span>
                     </a>
                 ` : '<div></div>'}
                 <div class="flex items-center gap-2 pointer-events-auto">
@@ -325,17 +344,21 @@
                 </div>
             `;
 
-            // Bottom overlay: Tiêu đề, tác giả & Thanh tiến trình
+            // Bottom overlay: Tiêu đề, tác giả & Thanh tiến trình trải đều full-width
             const bottomBar = document.createElement('div');
-            bottomBar.className = 'absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-4 pt-10 z-30 pointer-events-none';
+            bottomBar.className = 'absolute bottom-0 left-0 right-0 w-full bg-gradient-to-t from-black/95 via-black/65 to-transparent px-4 sm:px-5 pb-4 pt-14 z-30 pointer-events-none text-left';
+            bottomBar.style.cssText = 'position: absolute; bottom: 0; left: 0; right: 0; width: 100%; box-sizing: border-box;';
             bottomBar.innerHTML = `
-                <p class="text-white font-bold text-sm leading-snug line-clamp-2 drop-shadow-md mb-1">${video.title || 'Video Review'}</p>
-                <div class="flex items-center gap-2 text-white/80 text-xs">
-                    <span class="font-semibold">${video.author || '@reviewer'}</span>
-                    ${video.views > 0 ? `<span>• ${Number(video.views).toLocaleString('vi-VN')} lượt xem</span>` : ''}
+                <p class="text-white font-bold text-sm sm:text-base leading-snug line-clamp-2 drop-shadow-md mb-1.5 w-full text-left">${escapeHtml(video.title || 'Video Review')}</p>
+                <div class="flex items-center justify-between gap-2 text-white/85 text-xs w-full mb-2">
+                    <div class="flex items-center gap-1.5 truncate">
+                        <span class="font-semibold text-white drop-shadow truncate">${escapeHtml(video.author || '@reviewer')}</span>
+                        ${video.views > 0 ? `<span class="text-white/70 shrink-0">• ${Number(video.views).toLocaleString('vi-VN')} lượt xem</span>` : ''}
+                    </div>
+                    <div id="video-time-display" class="text-white/80 font-mono text-[11px] font-medium shrink-0 ml-2 tracking-tight">00:00 / 00:00</div>
                 </div>
-                <div id="video-progress-container" class="mt-2.5 w-full bg-white/20 hover:bg-white/40 h-1.5 rounded-full overflow-hidden cursor-pointer pointer-events-auto relative">
-                    <div id="video-progress-bar" class="bg-orange-500 h-full w-0 transition-all duration-75"></div>
+                <div id="video-progress-container" class="w-full bg-white/25 hover:bg-white/40 h-1.5 sm:h-2 hover:h-2.5 rounded-full overflow-hidden cursor-pointer pointer-events-auto relative transition-all duration-150">
+                    <div id="video-progress-bar" class="bg-gradient-to-r from-amber-500 to-orange-500 h-full w-0 transition-all duration-75 rounded-full"></div>
                 </div>
             `;
 
@@ -347,8 +370,25 @@
 
             activeVideoPlayer = videoElem;
 
-            // Xử lý sự kiện video
-            videoElem.onloadeddata = () => { loading.style.display = 'none'; };
+            // Xử lý sự kiện video & cập nhật thanh thời lượng
+            const updateProgress = () => {
+                const prog = bottomBar.querySelector('#video-progress-bar');
+                const timeDisplay = bottomBar.querySelector('#video-time-display');
+                if (prog && videoElem.duration) {
+                    prog.style.width = `${(videoElem.currentTime / videoElem.duration) * 100}%`;
+                }
+                if (timeDisplay && videoElem.duration) {
+                    timeDisplay.textContent = `${formatVideoTime(videoElem.currentTime)} / ${formatVideoTime(videoElem.duration)}`;
+                }
+            };
+
+            videoElem.onloadeddata = () => {
+                loading.style.display = 'none';
+                updateProgress();
+            };
+            videoElem.onloadedmetadata = updateProgress;
+            videoElem.ontimeupdate = updateProgress;
+
             videoElem.onerror = () => {
                 loading.style.display = 'none';
                 console.warn('Lỗi phát MP4, tự động chuyển về nhúng Iframe TikTok');
@@ -360,12 +400,6 @@
                             allowfullscreen
                             style="width:100%;height:100%;border:none;display:block;background:#000;"></iframe>
                 `;
-            };
-            videoElem.ontimeupdate = () => {
-                const prog = document.getElementById('video-progress-bar');
-                if (prog && videoElem.duration) {
-                    prog.style.width = `${(videoElem.currentTime / videoElem.duration) * 100}%`;
-                }
             };
 
             // Tự động phát mượt mà (nếu trình duyệt chặn âm thanh thì phát ở chế độ tắt tiếng)
@@ -394,17 +428,45 @@
                 };
             }
 
-            // Click vào thanh timeline để tua
+            // Kéo / Click tua trên thanh tiến trình video
             const progContainer = bottomBar.querySelector('#video-progress-container');
             if (progContainer) {
-                progContainer.onclick = (e) => {
-                    e.stopPropagation();
+                let isDragging = false;
+                const seek = (clientX) => {
                     const rect = progContainer.getBoundingClientRect();
-                    const pos = (e.clientX - rect.left) / rect.width;
+                    const pos = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
                     if (videoElem.duration) {
                         videoElem.currentTime = pos * videoElem.duration;
+                        updateProgress();
                     }
                 };
+
+                progContainer.addEventListener('mousedown', (e) => {
+                    e.stopPropagation();
+                    isDragging = true;
+                    seek(e.clientX);
+                });
+
+                progContainer.addEventListener('touchstart', (e) => {
+                    e.stopPropagation();
+                    isDragging = true;
+                    if (e.touches && e.touches[0]) seek(e.touches[0].clientX);
+                }, { passive: true });
+
+                window.addEventListener('mousemove', (e) => {
+                    if (isDragging) {
+                        seek(e.clientX);
+                    }
+                });
+
+                window.addEventListener('touchmove', (e) => {
+                    if (isDragging && e.touches && e.touches[0]) {
+                        seek(e.touches[0].clientX);
+                    }
+                }, { passive: true });
+
+                window.addEventListener('mouseup', () => { isDragging = false; });
+                window.addEventListener('touchend', () => { isDragging = false; });
             }
         }
         // ƯU TIÊN 2: Fallback Iframe nếu chưa có bản MP4 sạch

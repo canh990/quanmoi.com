@@ -71,11 +71,11 @@ class QuanController extends Controller
             }
         }
 
-        $baseSlug = Str::slug($validated['ten_quan']);
+        $baseSlug = Str::slug($validated['ten_quan']) ?: 'quan';
         $slug = $baseSlug;
         $counter = 1;
 
-        while (Quan::where('slug', $slug)->exists()) {
+        while (Quan::withTrashed()->where('slug', $slug)->exists()) {
             $slug = $baseSlug.'-'.$counter;
             $counter++;
         }

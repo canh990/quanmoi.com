@@ -1171,7 +1171,7 @@
 {{-- ===================================================== --}}
 {{-- MODAL: CHỈNH SỬA THÔNG TIN QUÁN                       --}}
 {{-- ===================================================== --}}
-<div id="edit-modal" class="fixed inset-0 z-[9999] hidden" aria-modal="true">
+<div id="edit-modal" class="fixed inset-0 hidden" style="z-index: 100005;" aria-modal="true">
     {{-- Backdrop --}}
     <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeEditModal()"></div>
 
@@ -4043,12 +4043,12 @@
 </script>
 
 {{-- Modal Đăng Video Review Mới Cho Chủ Quán --}}
-<div id="modal-create-video" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs hidden transition-opacity" onclick="if(event.target === this) closeCreateVideoModal()">
-    <div class="bg-white rounded-3xl max-w-lg w-full max-h-[92vh] flex flex-col shadow-2xl border border-gray-100 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+<div id="modal-create-video" class="fixed inset-0 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs hidden transition-opacity" style="z-index: 100005;" onclick="if(event.target === this) closeCreateVideoModal()">
+    <div class="bg-white rounded-3xl max-w-lg w-full max-h-[88vh] flex flex-col shadow-2xl border border-gray-100 overflow-hidden animate-in fade-in zoom-in-95 duration-150 my-auto">
         {{-- Modal Header --}}
-        <div class="p-5 border-b border-gray-100 bg-gradient-to-r from-orange-50 to-rose-50/50 flex items-center justify-between gap-3">
+        <div class="p-4 sm:p-5 border-b border-gray-100 bg-gradient-to-r from-orange-50 to-rose-50/50 flex items-center justify-between gap-3 shrink-0">
             <div class="flex items-center gap-2.5">
-                <div class="w-9 h-9 rounded-xl bg-orange-500 text-white flex items-center justify-center shadow-xs">
+                <div class="w-9 h-9 rounded-xl bg-orange-500 text-white flex items-center justify-center shadow-xs shrink-0">
                     <span class="material-symbols-outlined text-lg">smart_display</span>
                 </div>
                 <div>
@@ -4056,13 +4056,13 @@
                     <p class="text-[11px] text-gray-500 mt-0.5">Quán: {{ $quan->ten_quan }}</p>
                 </div>
             </div>
-            <button type="button" onclick="closeCreateVideoModal()" class="w-8 h-8 rounded-full bg-white text-gray-400 hover:text-gray-700 hover:bg-gray-100 flex items-center justify-center transition-colors cursor-pointer shadow-2xs">
+            <button type="button" onclick="closeCreateVideoModal()" class="w-8 h-8 rounded-full bg-white text-gray-400 hover:text-gray-700 hover:bg-gray-100 flex items-center justify-center transition-colors cursor-pointer shadow-2xs shrink-0">
                 <span class="material-symbols-outlined text-lg">close</span>
             </button>
         </div>
 
         {{-- Form --}}
-        <form method="POST" action="{{ route('chu-quan.quan.videos.store', $quan->slug) }}" enctype="multipart/form-data" id="owner-video-form" onsubmit="handleOwnerVideoFormSubmit(event)" class="p-5 overflow-y-auto space-y-4 text-xs">
+        <form method="POST" action="{{ route('chu-quan.quan.videos.store', $quan->slug) }}" enctype="multipart/form-data" id="owner-video-form" onsubmit="handleOwnerVideoFormSubmit(event)" class="p-4 sm:p-5 overflow-y-auto space-y-4 text-xs flex-1">
             @csrf
 
             {{-- Thông báo kiểm duyệt --}}
@@ -4232,7 +4232,7 @@
 </script>
 
 {{-- MODAL XÁC NHẬN CHUNG DÀNH CHO CHỦ QUÁN (THAY THẾ TOÀN BỘ CONFIRM NATIVE) --}}
-<div id="owner-confirm-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+<div id="owner-confirm-modal" class="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 hidden" style="z-index: 100005;">
     <div id="owner-confirm-box" class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center space-y-4 transform transition-transform scale-95 duration-200">
         <div id="owner-confirm-icon-wrap" class="w-14 h-14 rounded-2xl mx-auto flex items-center justify-center bg-red-100 text-red-600" style="background-color: #fee2e2; color: #dc2626;">
             <span id="owner-confirm-icon" class="material-symbols-outlined text-3xl">delete</span>
