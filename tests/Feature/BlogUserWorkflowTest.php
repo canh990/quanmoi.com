@@ -185,23 +185,53 @@ class BlogUserWorkflowTest extends TestCase
         $this->assertNotNull($blog);
         $this->assertEquals('draft', $blog->status);
 
-        // 2. Update and submit for review
+        // 2. Update and submit for review (requires cover image)
         $updateResponse = $this->actingAs($this->user)->put(route('nguoi-dung.blog.update', $blog->id), [
             'title' => 'Kinh nghiệm đi ăn buffet nướng 99k chất lượng',
             'category_id' => $this->category->id,
             'excerpt' => 'Một vài lưu ý nhỏ đã cập nhật',
             'content' => '<p>Chi tiết các quán nướng giá rẻ sinh viên đã kiểm chứng</p>',
+            'cover_image' => UploadedFile::fake()->image('cover_buffet.jpg', 1200, 500),
             'action' => 'pending',
         ]);
         $updateResponse->assertRedirect(route('nguoi-dung.blog.index'));
 
         $blog->refresh();
         $this->assertEquals('pending', $blog->status);
+        $this->assertNotNull($blog->cover_image);
 
         // 3. Delete blog
         $deleteResponse = $this->actingAs($this->user)->delete(route('nguoi-dung.blog.destroy', $blog->id));
         $deleteResponse->assertRedirect();
         $this->assertSoftDeleted('blogs', ['id' => $blog->id]);
+    }
+
+    public function test_cannot_submit_blog_for_review_without_cover_image()
+    {
+        // 1. Tạo bài viết gửi duyệt (action = pending) mà thiếu ảnh bìa -> Bị chặn
+        $response = $this->actingAs($this->user)->post(route('nguoi-dung.blog.store'), [
+            'title' => 'Bài viết thử nghiệm thiếu ảnh bìa',
+            'category_id' => $this->category->id,
+            'content' => '<p>Nội dung bài viết gửi duyệt</p>',
+            'action' => 'pending',
+        ]);
+
+        $response->assertSessionHasErrors('cover_image');
+        $this->assertDatabaseMissing('blogs', ['title' => 'Bài viết thử nghiệm thiếu ảnh bìa']);
+
+        // 2. Tạo bản nháp (action = draft) không có ảnh bìa -> Được phép
+        $draftResponse = $this->actingAs($this->user)->post(route('nguoi-dung.blog.store'), [
+            'title' => 'Bài viết bản nháp không cần ảnh bìa',
+            'category_id' => $this->category->id,
+            'content' => '<p>Nội dung bản nháp</p>',
+            'action' => 'draft',
+        ]);
+
+        $draftResponse->assertRedirect(route('nguoi-dung.blog.index'));
+        $this->assertDatabaseHas('blogs', [
+            'title' => 'Bài viết bản nháp không cần ảnh bìa',
+            'status' => 'draft',
+        ]);
     }
 
     public function test_ai_suggest_titles_endpoint()
@@ -221,5 +251,80 @@ class BlogUserWorkflowTest extends TestCase
         ]);
         $response->assertStatus(200);
         $response->assertJsonStructure(['success', 'data']);
+    }
+
+    public function test_member_can_delete_blog_via_ajax_without_page_reload()
+    {
+        $blog = Blog::factory()->create([
+            'user_id' => $this->user->id,
+            'category_id' => $this->category->id,
+            'title' => 'Bài viết cần xóa qua AJAX',
+            'status' => 'draft',
+        ]);
+
+        $response = $this->actingAs($this->user)->deleteJson(route('nguoi-dung.blog.destroy', $blog));
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'blog_id' => $blog->id,
+            ])
+            ->assertJsonStructure([
+                'success',
+                'message',
+                'blog_id',
+                'blog_title',
+                'status_counts' => ['total', 'draft', 'pending', 'published', 'need_revision', 'rejected'],
+            ]);
+
+        $this->assertSoftDeleted('blogs', ['id' => $blog->id]);
+    }
+
+    public function test_public_blog_realtime_feed_endpoint()
+    {
+        $blog1 = Blog::factory()->create([
+            'user_id' => $this->user->id,
+            'category_id' => $this->category->id,
+            'title' => 'Bài viết mới xuất bản 1',
+            'status' => 'published',
+            'published_at' => now(),
+        ]);
+
+        $blog2 = Blog::factory()->create([
+            'user_id' => $this->user->id,
+            'category_id' => $this->category->id,
+            'title' => 'Bài viết chuẩn bị xóa 2',
+            'status' => 'published',
+            'published_at' => now()->subMinutes(5),
+        ]);
+
+        // Client đã có blog2 trên màn hình (known_ids = blog2->id, since = 2 phút trước)
+        $response = $this->getJson(route('blog.realtime-feed', [
+            'known_ids' => $blog2->id,
+            'since' => now()->subMinutes(2)->toIso8601String(),
+        ]));
+
+        $response->assertStatus(200)
+            ->assertJson(['success' => true])
+            ->assertJsonStructure([
+                'success',
+                'new_blogs',
+                'deleted_ids',
+                'total_published',
+                'timestamp',
+            ]);
+
+        $newBlogs = $response->json('new_blogs');
+        $this->assertNotEmpty($newBlogs);
+        $this->assertEquals($blog1->id, $newBlogs[0]['id']);
+        $this->assertStringContainsString('public-blog-card-' . $blog1->id, $newBlogs[0]['html']);
+
+        // Xóa blog2 -> kiểm tra realtime-feed phát hiện deleted_ids
+        $blog2->delete();
+
+        $responseAfterDelete = $this->getJson(route('blog.realtime-feed', ['known_ids' => $blog2->id]));
+        $responseAfterDelete->assertStatus(200);
+        $deletedIds = $responseAfterDelete->json('deleted_ids');
+        $this->assertContains((string) $blog2->id, array_map('strval', $deletedIds));
     }
 }

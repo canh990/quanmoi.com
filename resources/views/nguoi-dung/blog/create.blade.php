@@ -154,7 +154,13 @@
         <!-- Cover Image -->
         <div class="bg-surface-container-lowest p-6 rounded-3xl border border-outline-variant">
             <div class="flex items-center justify-between mb-2">
-                <label class="block text-sm font-bold text-on-surface">Ảnh bìa bài viết</label>
+                <div class="flex items-center gap-2">
+                    <label class="block text-sm font-bold text-on-surface">Ảnh bìa bài viết <span class="text-red-500">*</span></label>
+                    <span class="text-xs text-rose-600 font-semibold bg-rose-50 border border-rose-200/80 px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-2xs">
+                        <span class="material-symbols-outlined text-[14px] text-rose-500">lock</span>
+                        Bắt buộc khi gửi duyệt bài
+                    </span>
+                </div>
                 <span id="page-cover-badge" class="hidden text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1 rounded-full flex items-center gap-1 shadow-2xs">
                     <span class="material-symbols-outlined text-xs">aspect_ratio</span> Tỷ lệ 21:9 chuẩn
                 </span>
@@ -199,6 +205,17 @@
                     </button>
                 </div>
             </div>
+
+            <p id="cover-error-message" class="hidden mt-2.5 text-xs font-bold text-rose-600 flex items-center gap-1.5 bg-rose-50 border border-rose-200/80 p-2.5 rounded-xl">
+                <span class="material-symbols-outlined text-base text-rose-500">error</span>
+                <span>Ảnh bìa bài viết là <strong>bắt buộc</strong> mới được gửi duyệt đăng bài. Vui lòng tải lên ảnh bìa!</span>
+            </p>
+            @error('cover_image')
+                <p class="mt-2.5 text-xs font-bold text-rose-600 flex items-center gap-1.5 bg-rose-50 border border-rose-200/80 p-2.5 rounded-xl">
+                    <span class="material-symbols-outlined text-base text-rose-500">error</span>
+                    <span>{{ $message }}</span>
+                </p>
+            @enderror
         </div>
 
         {{-- AI Content Writer Assistant Toolbar --}}
@@ -706,6 +723,34 @@
         if(html === '<p><br></p>') html = '';
         document.getElementById('content-input').value = html;
         
+        // KIỂM TRA BẮT BUỘC ẢNH BÌA KHI GỬI DUYỆT ĐĂNG BÀI
+        if (action === 'pending') {
+            const coverInput = document.getElementById('cover_image');
+            const coverPreview = document.getElementById('cover-preview');
+            const hasCoverFile = coverInput && coverInput.files && coverInput.files.length > 0;
+            const hasCoverPreview = coverPreview && coverPreview.src && !coverPreview.classList.contains('hidden') && !coverPreview.src.includes('data:image/gif');
+
+            if (!hasCoverFile && !hasCoverPreview) {
+                const errorMsg = document.getElementById('cover-error-message');
+                if (errorMsg) errorMsg.classList.remove('hidden');
+
+                const container = document.getElementById('cover-preview-container');
+                if (container) {
+                    container.classList.add('border-rose-500', 'ring-2', 'ring-rose-300');
+                    container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+
+                if (typeof showAiToast === 'function') {
+                    showAiToast('Ảnh bìa bài viết là bắt buộc mới được gửi duyệt đăng bài!', 'error');
+                } else if (typeof showToast === 'function') {
+                    showToast({ title: 'Thiếu ảnh bìa bài viết', message: 'Vui lòng tải lên ảnh bìa trước khi gửi duyệt bài!', type: 'error' });
+                } else {
+                    alert('Ảnh bìa bài viết là bắt buộc mới được gửi duyệt đăng bài! Vui lòng tải lên ảnh bìa.');
+                }
+                return false;
+            }
+        }
+        
         // Set action (draft or pending)
         document.getElementById('action-input').value = action;
         
@@ -714,6 +759,11 @@
     }
 
     function previewImage(input) {
+        const errorMsg = document.getElementById('cover-error-message');
+        if (errorMsg) errorMsg.classList.add('hidden');
+        const container = document.getElementById('cover-preview-container');
+        if (container) container.classList.remove('border-rose-500', 'ring-2', 'ring-rose-300');
+
         if (input.files && input.files[0]) {
             const file = input.files[0];
             if (!file.type.match(/^image\//)) {

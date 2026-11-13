@@ -49,52 +49,100 @@ class BlogController extends Controller
             if ($searchTerm === '') {
                 return response()->json([]);
             }
-            $suggestions = Blog::with(['category'])
-                ->where('status', 'published')
-                ->where(function($q) use ($searchTerm) {
-                    $q->where('title', 'like', "%{$searchTerm}%")
-                      ->orWhere('excerpt', 'like', "%{$searchTerm}%")
-                      ->orWhereHas('category', function ($catQ) use ($searchTerm) {
-                          $catQ->where('name', 'like', "%{$searchTerm}%");
-                      })
-                      ->orWhereHas('tags', function ($tagQ) use ($searchTerm) {
-                          $tagQ->where('name', 'like', "%{$searchTerm}%");
-                      });
-                })
-                ->latest('published_at')
-                ->limit(5)
-                ->get()
-                ->map(function ($b) {
-                    return [
-                        'id' => $b->id,
-                        'title' => $b->title,
-                        'slug' => $b->slug,
-                        'url' => route('blog.show', $b->slug),
-                        'category' => $b->category ? $b->category->name : null,
-                        'cover_url' => $b->cover_image_url ?? 'https://placehold.co/100x70/png',
-                        'published_date' => $b->published_at ? $b->published_at->format('d/m/Y') : '',
-                    ];
-                });
+            // 1. Gợi ý bài viết Blog qua Elasticsearch (Scout) hoặc DB fallback
+            $blogSuggestions = collect();
+            try {
+                if (config('scout.driver') === 'elastic') {
+                    $esBlogs = Blog::search($searchTerm)
+                        ->where('status', 'published')
+                        ->take(4)
+                        ->get();
 
-            return response()->json($suggestions);
-        }
+                    if ($esBlogs->isNotEmpty()) {
+                        $blogSuggestions = $esBlogs;
+                    }
+                }
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Scout Elasticsearch blog suggest error: ' . $e->getMessage());
+            }
 
-        if ($request->filled('search')) {
-            $searchTerm = trim($request->search);
-            $query->where(function($q) use ($searchTerm) {
-                $q->where('title', 'like', "%{$searchTerm}%")
-                  ->orWhere('excerpt', 'like', "%{$searchTerm}%")
-                  ->orWhere('content', 'like', "%{$searchTerm}%")
-                  ->orWhereHas('category', function ($catQ) use ($searchTerm) {
-                      $catQ->where('name', 'like', "%{$searchTerm}%");
-                  })
-                  ->orWhereHas('tags', function ($tagQ) use ($searchTerm) {
-                      $tagQ->where('name', 'like', "%{$searchTerm}%");
-                  })
-                  ->orWhereHas('user', function ($userQ) use ($searchTerm) {
-                      $userQ->where('ho_ten', 'like', "%{$searchTerm}%");
-                  });
+            if ($blogSuggestions->isEmpty()) {
+                $blogSuggestions = Blog::with(['category'])
+                    ->where('status', 'published')
+                    ->where(function($q) use ($searchTerm) {
+                        $q->where('title', 'like', "%{$searchTerm}%")
+                          ->orWhere('excerpt', 'like', "%{$searchTerm}%")
+                          ->orWhereHas('category', function ($catQ) use ($searchTerm) {
+                              $catQ->where('name', 'like', "%{$searchTerm}%");
+                          })
+                          ->orWhereHas('tags', function ($tagQ) use ($searchTerm) {
+                              $tagQ->where('name', 'like', "%{$searchTerm}%");
+                          });
+                    })
+                    ->latest('published_at')
+                    ->limit(4)
+                    ->get();
+            }
+
+            $formattedBlogs = $blogSuggestions->map(function ($b) {
+                return [
+                    'id' => $b->id,
+                    'title' => $b->title,
+                    'slug' => $b->slug,
+                    'url' => route('blog.show', $b->slug),
+                    'category' => $b->category ? $b->category->name : 'Review',
+                    'cover_url' => $b->cover_image_url ?: '/storage/blogs/covers/41Cy1EQE15hmAoyR8ZCYzOFRcWMpAcQ2hra9aDa2.png',
+                    'published_date' => $b->published_at ? $b->published_at->format('d/m/Y') : '',
+                    'reading_time' => (int) ($b->reading_time ?? 4),
+                    'type' => 'blog',
+                ];
             });
+
+            // 2. Gợi ý Quán ăn thực tế từ Elasticsearch (App\Models\Quan)
+            $quanSuggestions = collect();
+            try {
+                if (config('scout.driver') === 'elastic') {
+                    $quanSuggestions = \App\Models\Quan::search($searchTerm)
+                        ->whereIn('trang_thai', ['da_duyet'])
+                        ->take(3)
+                        ->get();
+                }
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Scout Elasticsearch suggest error: ' . $e->getMessage());
+            }
+
+            if ($quanSuggestions->isEmpty()) {
+                $quanSuggestions = \App\Models\Quan::where('trang_thai', 'da_duyet')
+                    ->where(function ($q) use ($searchTerm) {
+                        $q->where('ten_quan', 'like', "%{$searchTerm}%")
+                          ->orWhere('dia_chi_chi_tiet', 'like', "%{$searchTerm}%")
+                          ->orWhere('loai_hinh_kinh_doanh', 'like', "%{$searchTerm}%");
+                    })
+                    ->latest('is_noi_bat')
+                    ->take(3)
+                    ->get();
+            }
+
+            $formattedQuans = $quanSuggestions->map(function ($q) {
+                return [
+                    'id' => $q->id,
+                    'title' => $q->ten_quan,
+                    'slug' => $q->slug,
+                    'url' => route('quan.detail', $q->slug),
+                    'address' => $q->dia_chi_chi_tiet ?: ($q->ten_quan_huyen ?: 'TP. Hồ Chí Minh'),
+                    'category' => $q->loai_hinh_kinh_doanh ?: 'Quán ăn',
+                    'cover_url' => $q->anh_bia_url ?: '/storage/blogs/covers/41Cy1EQE15hmAoyR8ZCYzOFRcWMpAcQ2hra9aDa2.png',
+                    'is_verified' => (bool) $q->is_xac_thuc,
+                    'type' => 'quan',
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'blogs' => $formattedBlogs,
+                'quans' => $formattedQuans,
+                'total' => $formattedBlogs->count() + $formattedQuans->count(),
+            ]);
         }
 
         $heroBlog = Blog::with(['user', 'category'])
@@ -103,12 +151,88 @@ class BlogController extends Controller
             ->latest('published_at')
             ->first();
 
-        // Exclude hero blog from main list if exists
-        if ($heroBlog) {
-            $query->where('id', '!=', $heroBlog->id);
+        // Chỉ loại trừ heroBlog khỏi danh sách dưới nếu hero post đang thực sự hiển thị ở banner đầu trang
+        $isShowingHeroBanner = $heroBlog && !$request->filled('search') && !$request->filled('category') && !$request->filled('tag');
+
+        $blogs = null;
+        $relatedQuans = collect();
+
+        if ($request->filled('search')) {
+            $searchTerm = trim($request->search);
+
+            // 1. Tìm kiếm danh sách bài viết bằng Elasticsearch Scout
+            try {
+                if (config('scout.driver') === 'elastic') {
+                    $scoutQuery = Blog::search($searchTerm)
+                        ->where('status', 'published');
+
+                    if ($request->filled('category')) {
+                        $scoutQuery->where('category_slug', $request->category);
+                    }
+
+                    if ($request->filled('tag')) {
+                        $scoutQuery->where('tag_slugs', $request->tag);
+                    }
+
+                    $blogs = $scoutQuery->query(function ($q) use ($heroBlog, $isShowingHeroBanner) {
+                        $q->with(['user', 'category']);
+                        if ($isShowingHeroBanner) {
+                            $q->where('id', '!=', $heroBlog->id);
+                        }
+                    })->paginate(12)->withQueryString();
+                }
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Scout Elasticsearch blog search error: ' . $e->getMessage());
+                $blogs = null;
+            }
+
+            // 2. Fallback SQL nếu Elasticsearch không bật hoặc gặp lỗi kết nối
+            if ($blogs === null) {
+                $query->where(function($q) use ($searchTerm) {
+                    $q->where('title', 'like', "%{$searchTerm}%")
+                      ->orWhere('excerpt', 'like', "%{$searchTerm}%")
+                      ->orWhere('content', 'like', "%{$searchTerm}%")
+                      ->orWhereHas('category', function ($catQ) use ($searchTerm) {
+                          $catQ->where('name', 'like', "%{$searchTerm}%");
+                      })
+                      ->orWhereHas('tags', function ($tagQ) use ($searchTerm) {
+                          $tagQ->where('name', 'like', "%{$searchTerm}%");
+                      })
+                      ->orWhereHas('user', function ($userQ) use ($searchTerm) {
+                          $userQ->where('ho_ten', 'like', "%{$searchTerm}%");
+                      });
+                });
+            }
+
+            // 3. Tìm kiếm các quán ăn thực tế đồng bộ từ Elasticsearch
+            try {
+                if (config('scout.driver') === 'elastic') {
+                    $relatedQuans = \App\Models\Quan::search($searchTerm)
+                        ->whereIn('trang_thai', ['da_duyet'])
+                        ->take(3)
+                        ->get();
+                }
+            } catch (\Throwable $e) {}
+
+            if ($relatedQuans->isEmpty()) {
+                $relatedQuans = \App\Models\Quan::where('trang_thai', 'da_duyet')
+                    ->where(function ($q) use ($searchTerm) {
+                        $q->where('ten_quan', 'like', "%{$searchTerm}%")
+                          ->orWhere('mo_ta', 'like', "%{$searchTerm}%")
+                          ->orWhere('dia_chi_chi_tiet', 'like', "%{$searchTerm}%");
+                    })
+                    ->take(3)
+                    ->get();
+            }
         }
 
-        $blogs = $query->latest('published_at')->paginate(12)->withQueryString();
+        // Nếu chưa được phân trang bởi Elasticsearch (không tìm kiếm hoặc fallback)
+        if ($blogs === null) {
+            if ($isShowingHeroBanner) {
+                $query->where('id', '!=', $heroBlog->id);
+            }
+            $blogs = $query->latest('published_at')->paginate(12)->withQueryString();
+        }
         
         $categories = BlogCategory::where('status', true)->get();
         
@@ -118,7 +242,7 @@ class BlogController extends Controller
         $aiRecommendations = $this->blogAiService->getSmartRecommendations(
             Auth::user(),
             null,
-            $request->session()->getId(),
+            $request->hasSession() ? $request->session()->getId() : 'guest-session',
             $request->ip(),
             4
         );
@@ -132,7 +256,91 @@ class BlogController extends Controller
         // Số bài viết đã lưu của người dùng hiện tại
         $savedBlogsCount = Auth::check() ? Auth::user()->savedBlogs()->where('blogs.status', 'published')->count() : 0;
 
-        return view('frontend.blog.index', compact('blogs', 'heroBlog', 'categories', 'tags', 'aiRecommendations', 'aiSearchData', 'savedBlogsCount'));
+        return view('frontend.blog.index', compact('blogs', 'heroBlog', 'categories', 'tags', 'aiRecommendations', 'aiSearchData', 'savedBlogsCount', 'relatedQuans'));
+    }
+
+    /**
+     * Đồng bộ bài viết thời gian thực: phát hiện bài viết mới được duyệt hoặc bài viết đã bị xóa mà không cần load lại trang.
+     */
+    public function realtimeFeed(Request $request)
+    {
+        $rawKnownIds = $request->query('known_ids', '');
+        $knownIds = is_array($rawKnownIds) 
+            ? $rawKnownIds 
+            : array_values(array_filter(array_map('trim', explode(',', (string) $rawKnownIds))));
+
+        $categorySlug = $request->query('category');
+        $tagSlug = $request->query('tag');
+        $search = trim((string) $request->query('search', ''));
+        $since = $request->query('since');
+
+        // 1. Chỉ tìm bài viết mới nếu có mốc thời gian $since (tránh đổi bài viết cũ khi tải lại trang)
+        $newCards = [];
+        if ($since) {
+            $sinceCarbon = null;
+            try {
+                $sinceCarbon = \Illuminate\Support\Carbon::parse($since);
+            } catch (\Throwable $e) {}
+
+            if ($sinceCarbon) {
+                $query = Blog::with(['user', 'category'])
+                    ->where('status', 'published')
+                    ->where('published_at', '>', $sinceCarbon);
+
+                if ($categorySlug) {
+                    $query->whereHas('category', fn($q) => $q->where('slug', $categorySlug));
+                }
+                if ($tagSlug) {
+                    $query->whereHas('tags', fn($q) => $q->where('slug', $tagSlug));
+                }
+                if ($search !== '') {
+                    $query->where(function($q) use ($search) {
+                        $q->where('title', 'like', "%{$search}%")
+                          ->orWhere('excerpt', 'like', "%{$search}%");
+                    });
+                }
+
+                if (!empty($knownIds)) {
+                    $query->whereNotIn('id', $knownIds);
+                }
+
+                $newBlogs = $query->latest('published_at')->limit(5)->get();
+
+                foreach ($newBlogs as $b) {
+                    $newCards[] = [
+                        'id' => $b->id,
+                        'title' => $b->title,
+                        'slug' => $b->slug,
+                        'published_at' => $b->published_at ? $b->published_at->toIso8601String() : null,
+                        'html' => view('frontend.blog.partials.card', ['blog' => $b])->render(),
+                    ];
+                }
+            }
+        }
+
+        // 2. Kiểm tra trong số các knownIds đã có trên client, bài nào đã bị xóa hoặc không còn published
+        $deletedIds = [];
+        if (!empty($knownIds)) {
+            $stillPublishedIds = Blog::whereIn('id', $knownIds)
+                ->where('status', 'published')
+                ->pluck('id')
+                ->map(fn($id) => (string) $id)
+                ->toArray();
+
+            foreach ($knownIds as $kid) {
+                if ($kid !== '' && !in_array((string) $kid, $stillPublishedIds, true)) {
+                    $deletedIds[] = $kid;
+                }
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'new_blogs' => $newCards,
+            'deleted_ids' => $deletedIds,
+            'total_published' => Blog::where('status', 'published')->count(),
+            'timestamp' => now()->toIso8601String(),
+        ]);
     }
 
     public function show(Request $request, string $slug)
@@ -169,7 +377,7 @@ class BlogController extends Controller
             // Increment views for published blogs only
             $this->blogService->incrementView(
                 $blog, 
-                $request->session()->getId(), 
+                $request->hasSession() ? $request->session()->getId() : 'guest-session', 
                 $request->ip()
             );
             $blog->refresh();
@@ -225,7 +433,7 @@ class BlogController extends Controller
         $aiRecommendations = $this->blogAiService->getSmartRecommendations(
             Auth::user(),
             $blog,
-            $request->session()->getId(),
+            $request->hasSession() ? $request->session()->getId() : 'guest-session',
             $request->ip(),
             4
         );
@@ -266,7 +474,7 @@ class BlogController extends Controller
 
         $incremented = $this->blogService->incrementView(
             $blog,
-            $request->session()->getId(),
+            $request->hasSession() ? $request->session()->getId() : 'guest-session',
             $request->ip()
         );
 
@@ -812,7 +1020,7 @@ class BlogController extends Controller
         $recommendations = $this->blogAiService->getSmartRecommendations(
             Auth::user(),
             $currentBlog,
-            $request->session()->getId(),
+            $request->hasSession() ? $request->session()->getId() : 'guest-session',
             $request->ip(),
             (int) $request->input('limit', 4)
         );

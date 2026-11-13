@@ -196,88 +196,43 @@
         <!-- Article Grid -->
         <div class="lg:w-3/4">
             @if(request()->filled('search'))
-                <div class="mb-6 p-4 bg-amber-50/90 border border-amber-200/90 rounded-2xl flex items-center justify-between shadow-2xs">
-                    <div class="flex items-center gap-2.5">
+                <div class="mb-4 p-4 bg-amber-50/90 border border-amber-200/90 rounded-2xl flex items-center justify-between shadow-2xs">
+                    <div class="flex items-center gap-2.5 flex-wrap">
                         <span class="material-symbols-outlined text-amber-600 text-xl">search</span>
-                        <div>
+                        <div class="flex items-center gap-2 flex-wrap">
                             <span class="text-xs text-slate-500 font-medium">Kết quả tìm kiếm cho:</span>
-                            <span class="font-extrabold text-sm text-slate-900 ml-1">"{{ request('search') }}"</span>
-                            <span class="text-xs font-bold text-amber-800 bg-amber-100 px-2.5 py-0.5 rounded-full ml-2">
+                            <span class="font-extrabold text-sm text-slate-900">"{{ request('search') }}"</span>
+                            <span class="text-xs font-bold text-amber-800 bg-amber-100 px-2.5 py-0.5 rounded-full">
                                 {{ $blogs->total() }} bài viết
                             </span>
+                            @if(config('scout.driver') === 'elastic')
+                                <span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800 bg-emerald-100/90 border border-emerald-300 px-2.5 py-0.5 rounded-full" title="Dữ liệu được truy vấn và xếp hạng theo độ liên quan thời gian thực từ cụm Elasticsearch">
+                                    <span class="material-symbols-outlined text-[13px] text-emerald-600">bolt</span>
+                                    <span>Elasticsearch Engine</span>
+                                </span>
+                            @endif
                         </div>
                     </div>
-                    <a href="{{ route('blog.index', array_filter(['category' => request('category'), 'tag' => request('tag')])) }}" class="text-xs font-bold text-slate-500 hover:text-red-600 flex items-center gap-1 py-1 px-3 rounded-xl hover:bg-white transition-all">
+                    <a href="{{ route('blog.index', array_filter(['category' => request('category'), 'tag' => request('tag')])) }}" class="text-xs font-bold text-slate-500 hover:text-red-600 flex items-center gap-1 py-1 px-3 rounded-xl hover:bg-white transition-all shrink-0">
                         <span class="material-symbols-outlined text-base">close</span>
                         <span>Xóa tìm kiếm</span>
                     </a>
                 </div>
             @endif
 
+            <div id="public-blogs-container">
             @if($blogs->count() > 0)
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter" id="public-blogs-grid">
                     @foreach($blogs as $blog)
-                        <!-- Blog Card -->
-                        <article class="level-1-card flex flex-col h-full group border border-outline-variant hover:border-amber-400/80 hover:ring-2 hover:ring-amber-400/30 hover:shadow-lg transition-all duration-300 relative">
-                            <div class="relative w-full">
-                                <a href="{{ route('blog.show', $blog->slug) }}" class="blog-card-cover-frame">
-                                    @if($blog->category)
-                                        <div class="absolute top-3 left-3 z-10 bg-primary-container text-on-primary px-2 py-0.5 rounded-md font-label-md text-label-md uppercase font-bold max-w-[calc(100%-4rem)] truncate">{{ $blog->category->name }}</div>
-                                    @endif
-                                    <div class="absolute bottom-3 right-3 z-10 px-2.5 py-0.5 rounded-md bg-black/60 backdrop-blur-md text-white font-semibold text-[10px] flex items-center gap-1 shadow-sm" title="Thời gian đăng: {{ ($blog->published_at ?? $blog->created_at)?->format('d/m/Y H:i') }}">
-                                        <span class="material-symbols-outlined text-[12px] text-amber-300">schedule</span>
-                                        <span>{{ ($blog->published_at ?? $blog->created_at)?->diffForHumans() ?? 'Vừa xong' }}</span>
-                                    </div>
-                                    <img src="{{ $blog->cover_image_url ?? 'https://placehold.co/600x400/png' }}" alt="{{ $blog->title }}"/>
-                                </a>
-                                {{-- Nút Bookmark ở góc trên bên phải ảnh --}}
-                                <button type="button" 
-                                        onclick="event.preventDefault(); event.stopPropagation(); toggleBlogBookmark(this, '{{ $blog->id }}', '{{ $blog->slug }}', '{{ addslashes($blog->title) }}')" 
-                                        data-blog-id="{{ $blog->id }}" 
-                                        data-blog-slug="{{ $blog->slug }}" 
-                                        class="blog-bookmark-btn absolute top-3 right-3 z-10 w-8 h-8 bg-white/90 hover:bg-white backdrop-blur-md rounded-full flex items-center justify-center text-slate-700 hover:text-amber-500 shadow-sm hover:scale-110 active:scale-90 transition-transform cursor-pointer" 
-                                        title="Lưu bài viết"
-                                        aria-label="Lưu bài viết">
-                                    <span class="material-symbols-outlined text-[18px]">bookmark</span>
-                                </button>
-                            </div>
-                            <div class="p-4 flex flex-col flex-grow">
-                                <a href="{{ route('blog.show', $blog->slug) }}" class="flex-grow block">
-                                    <h3 class="font-title-md text-title-md text-on-surface mb-2 line-clamp-2 group-hover:text-primary transition-colors font-bold">{{ $blog->title }}</h3>
-                                    <p class="text-text-muted font-body-sm text-body-sm mb-4 line-clamp-3">{{ $blog->excerpt ?? Str::limit(strip_tags($blog->content), 120) }}</p>
-                                </a>
-                                <div class="mt-auto pt-4 border-t border-outline-variant flex justify-between items-center gap-2">
-                                    <span class="font-label-sm text-label-sm text-text-muted flex items-center gap-1 truncate min-w-0">
-                                        @if($blog->user)
-                                            <a href="{{ route('blog.author', $blog->user->id) }}" class="hover:text-primary transition-colors font-medium hover:underline truncate" title="Xem bài viết của tác giả {{ $blog->user->ho_ten }}">
-                                                {{ Str::limit($blog->user->ho_ten, 15) }}
-                                            </a>
-                                        @else
-                                            <span>Tác giả</span>
-                                        @endif
-                                        <span>•</span>
-                                        <span class="shrink-0">{{ ($blog->published_at ?? $blog->created_at)?->format('d/m/Y') ?? 'Mới' }}</span>
-                                    </span>
-                                    <div class="font-label-sm text-label-sm text-text-muted flex items-center gap-1.5 sm:gap-2 shrink-0">
-                                        <span class="blog-view-count-wrap flex items-center gap-1 font-semibold text-slate-600 hover:text-amber-700 transition-all px-2 py-0.5 rounded-lg border border-transparent hover:border-amber-400 hover:ring-2 hover:ring-amber-400/30 hover:shadow-xs cursor-pointer whitespace-nowrap" data-blog-slug="{{ $blog->slug }}" data-blog-id="{{ $blog->id }}" title="{{ number_format($blog->view_count ?? 0) }} lượt xem">
-                                            <span class="material-symbols-outlined text-[15px] text-amber-600">visibility</span>
-                                            <span class="blog-view-count-text">{{ number_format($blog->view_count ?? 0) }}</span>
-                                        </span>
-                                        <span class="flex items-center gap-1 font-semibold text-slate-600 hover:text-primary transition-all px-2 py-0.5 rounded-lg border border-transparent hover:border-amber-400 hover:ring-2 hover:ring-amber-400/30 hover:shadow-xs cursor-pointer whitespace-nowrap" title="{{ number_format($blog->comment_count ?? 0) }} bình luận">
-                                            <span class="material-symbols-outlined text-[15px] text-primary">forum</span>
-                                            <span>{{ number_format($blog->comment_count ?? 0) }}</span>
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </article>
+                        @include('frontend.blog.partials.card', ['blog' => $blog])
                     @endforeach
                 </div>
                 
-                <div class="mt-12 flex justify-center">
+                <div class="mt-12 flex justify-center" id="public-blogs-pagination">
                     {{ $blogs->links() }}
                 </div>
             @else
+                <div id="public-blogs-empty-state">
                 @if(request()->filled('search'))
                     <div class="text-center py-16 bg-white rounded-3xl border border-outline-variant shadow-sm px-4">
                         <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600">
@@ -305,7 +260,9 @@
                         @endauth
                     </div>
                 @endif
+                </div>
             @endif
+            </div>
         </div>
         
         <!-- Sidebar -->
@@ -490,13 +447,13 @@
                 <!-- Cover Image Upload & Editor -->
                 <div>
                     <div class="flex items-center justify-between mb-1.5">
-                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600">Ảnh bìa bài viết</label>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600">Ảnh bìa bài viết <span class="text-red-500">*</span></label>
                         <span id="modal-cover-badge" class="hidden text-[11px] font-bold text-amber-700 bg-amber-100/90 px-2.5 py-0.5 rounded-full border border-amber-300 flex items-center gap-1 shadow-2xs">
                             <span class="material-symbols-outlined text-xs">aspect_ratio</span> Tỷ lệ 21:9 chuẩn
                         </span>
                     </div>
 
-                    <div class="relative w-full h-44 sm:h-48 min-h-[160px] bg-amber-50/40 rounded-2xl overflow-hidden border-2 border-dashed border-amber-300/80 hover:border-amber-500 hover:bg-amber-50/80 transition-all duration-200 flex flex-col items-center justify-center text-center p-2 group shadow-2xs" id="modal-cover-container">
+                    <div class="relative w-full aspect-[21/9] min-h-[160px] max-h-[260px] bg-amber-50/40 rounded-2xl overflow-hidden border-2 border-dashed border-amber-300/80 hover:border-amber-500 hover:bg-amber-50/80 transition-all duration-200 flex flex-col items-center justify-center text-center p-2 group shadow-2xs" id="modal-cover-container">
                         <input type="file" name="cover_image" id="modal_cover_image" accept="image/jpeg,image/png,image/webp" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onchange="previewModalCoverImage(this)">
                         
                         <!-- Placeholder khi chưa có ảnh -->
@@ -512,7 +469,7 @@
                         </div>
                         
                         <!-- Preview ảnh -->
-                        <img id="modal-cover-preview" src="" alt="Ảnh bìa bài viết" class="absolute inset-0 w-full h-full object-cover hidden">
+                        <img id="modal-cover-preview" src="" alt="Ảnh bìa bài viết" class="absolute inset-0 w-full h-full object-cover object-center hidden">
                         
                         <!-- Overlay & Actions Bar khi đã có ảnh -->
                         <div id="modal-cover-actions-bar" class="absolute inset-0 bg-slate-950/45 backdrop-blur-[1px] opacity-0 group-hover:opacity-100 transition-opacity duration-200 hidden flex flex-col items-center justify-center gap-2 p-3 z-20">
@@ -984,7 +941,7 @@
                 if (fixedBtn) fixedBtn.classList.remove('hidden');
                 if (badge) badge.classList.remove('hidden');
                 if (container) {
-                    container.classList.remove('border-dashed');
+                    container.classList.remove('border-dashed', 'border-rose-500', 'ring-2', 'ring-rose-300');
                     container.classList.add('border-solid', 'border-amber-400');
                 }
 
@@ -1325,6 +1282,7 @@
 
         if (!title || !catVal || !html.trim()) {
             if (alertBox) {
+                alertBox.innerHTML = '<span class="material-symbols-outlined text-rose-600 text-lg">warning</span><span>Vui lòng nhập đầy đủ Tiêu đề, chọn Danh mục và điền Nội dung bài viết trước khi gửi!</span>';
                 alertBox.classList.remove('hidden');
                 alertBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
@@ -1334,6 +1292,32 @@
                 showToast({ title: 'Thiếu thông tin', message: 'Vui lòng nhập đầy đủ Tiêu đề, Danh mục và Nội dung bài viết!', type: 'warning' });
             }
             return;
+        }
+
+        // BẮT BUỘC PHẢI CÓ ẢNH BÌA MỚI GỬI DUYỆT ĐĂNG BÀI
+        if (action === 'pending') {
+            const coverInput = document.getElementById('modal_cover_image');
+            const coverPreview = document.getElementById('modal-cover-preview');
+            const hasCover = (coverInput && coverInput.files && coverInput.files.length > 0) ||
+                             (coverPreview && coverPreview.src && !coverPreview.classList.contains('hidden') && !coverPreview.src.includes('data:image/gif'));
+
+            if (!hasCover) {
+                const container = document.getElementById('modal-cover-container');
+                if (container) {
+                    container.classList.add('border-rose-500', 'ring-2', 'ring-rose-300');
+                    container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                if (alertBox) {
+                    alertBox.innerHTML = '<span class="material-symbols-outlined text-rose-600 text-lg">warning</span><span>Ảnh bìa bài viết là <strong>bắt buộc</strong> mới được gửi duyệt đăng bài. Vui lòng tải lên ảnh bìa!</span>';
+                    alertBox.classList.remove('hidden');
+                }
+                if (typeof showAiToast === 'function') {
+                    showAiToast('Ảnh bìa bài viết là bắt buộc mới được gửi duyệt đăng bài!', 'error');
+                } else if (typeof showToast === 'function') {
+                    showToast({ title: 'Thiếu ảnh bìa bài viết', message: 'Vui lòng tải lên ảnh bìa trước khi gửi duyệt bài!', type: 'error' });
+                }
+                return;
+            }
         }
 
         if (alertBox) alertBox.classList.add('hidden');
@@ -1374,30 +1358,79 @@
             .then(res => res.json())
             .then(data => {
                 listContainer.innerHTML = '';
-                if (data && data.length > 0) {
-                    data.forEach(item => {
-                        const row = document.createElement('a');
-                        row.href = item.url;
-                        row.className = 'flex items-center gap-3 p-3 hover:bg-amber-50/80 transition-colors group cursor-pointer';
-                        row.innerHTML = `
-                            <img src="${item.cover_url}" class="w-12 h-10 object-cover rounded-lg shrink-0 border border-slate-100" />
-                            <div class="flex-1 min-w-0">
-                                <h5 class="text-xs font-bold text-slate-800 group-hover:text-amber-700 truncate">${item.title}</h5>
-                                <div class="flex items-center gap-2 mt-0.5 text-[10px] text-slate-400">
-                                    ${item.category ? `<span class="text-amber-700 font-semibold">${item.category}</span>` : ''}
-                                    ${item.published_date ? `<span>• ${item.published_date}</span>` : ''}
-                                </div>
-                            </div>
-                            <span class="material-symbols-outlined text-sm text-slate-300 group-hover:text-amber-600 shrink-0">chevron_right</span>
+                const quans = data.quans || [];
+                const blogs = data.blogs || (Array.isArray(data) ? data : []);
+                const hasResults = quans.length > 0 || blogs.length > 0;
+
+                if (hasResults) {
+                    // Group 1: Quán ăn thực tế từ Elasticsearch
+                    if (quans.length > 0) {
+                        const qHeader = document.createElement('div');
+                        qHeader.className = 'px-3 py-1.5 bg-amber-500/10 text-[10px] font-extrabold text-amber-900 uppercase tracking-wider flex items-center justify-between border-b border-amber-200/50';
+                        qHeader.innerHTML = `
+                            <span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[14px] text-amber-600">storefront</span>Quán ăn thực tế (Elasticsearch)</span>
+                            <span class="text-[9px] bg-white px-1.5 py-0.2 rounded text-amber-700 font-bold">${quans.length} quán</span>
                         `;
-                        listContainer.appendChild(row);
-                    });
+                        listContainer.appendChild(qHeader);
+
+                        quans.forEach(q => {
+                            const row = document.createElement('a');
+                            row.href = q.url;
+                            row.className = 'flex items-center gap-2.5 p-2.5 hover:bg-amber-50/80 transition-colors group cursor-pointer border-b border-slate-50 last:border-b-0';
+                            row.innerHTML = `
+                                <img src="${q.cover_url}" 
+                                     onerror="this.onerror=null; this.src='/storage/blogs/covers/41Cy1EQE15hmAoyR8ZCYzOFRcWMpAcQ2hra9aDa2.png';" 
+                                     class="w-10 h-10 object-cover rounded-lg shrink-0 border border-slate-100" />
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-1">
+                                        <h5 class="text-xs font-bold text-slate-800 group-hover:text-primary truncate">${q.title}</h5>
+                                        ${q.is_verified ? '<span class="material-symbols-outlined text-[13px] text-emerald-500 shrink-0" title="Đã xác thực">verified</span>' : ''}
+                                    </div>
+                                    <p class="text-[10px] text-slate-400 truncate mt-0.5">${q.address}</p>
+                                </div>
+                                <span class="material-symbols-outlined text-sm text-slate-300 group-hover:text-primary shrink-0">chevron_right</span>
+                            `;
+                            listContainer.appendChild(row);
+                        });
+                    }
+
+                    // Group 2: Bài viết & Review
+                    if (blogs.length > 0) {
+                        const bHeader = document.createElement('div');
+                        bHeader.className = 'px-3 py-1.5 bg-slate-100 text-[10px] font-extrabold text-slate-700 uppercase tracking-wider flex items-center justify-between border-b border-slate-200/50';
+                        bHeader.innerHTML = `
+                            <span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[14px] text-primary">menu_book</span>Bài viết & Review (Elasticsearch)</span>
+                            <span class="text-[9px] bg-white px-1.5 py-0.2 rounded text-slate-600 font-bold">${blogs.length} bài</span>
+                        `;
+                        listContainer.appendChild(bHeader);
+
+                        blogs.forEach(item => {
+                            const row = document.createElement('a');
+                            row.href = item.url;
+                            row.className = 'flex items-center gap-2.5 p-2.5 hover:bg-amber-50/80 transition-colors group cursor-pointer border-b border-slate-50 last:border-b-0';
+                            row.innerHTML = `
+                                <img src="${item.cover_url}" 
+                                     onerror="this.onerror=null; this.src='/storage/blogs/covers/41Cy1EQE15hmAoyR8ZCYzOFRcWMpAcQ2hra9aDa2.png';" 
+                                     class="w-10 h-10 object-cover rounded-lg shrink-0 border border-slate-100" />
+                                <div class="flex-1 min-w-0">
+                                    <h5 class="text-xs font-bold text-slate-800 group-hover:text-amber-700 truncate">${item.title}</h5>
+                                    <div class="flex items-center gap-2 mt-0.5 text-[10px] text-slate-400">
+                                        ${item.category ? `<span class="text-amber-700 font-semibold">${item.category}</span>` : ''}
+                                        ${item.reading_time ? `<span>• ${item.reading_time} phút đọc</span>` : ''}
+                                    </div>
+                                </div>
+                                <span class="material-symbols-outlined text-sm text-slate-300 group-hover:text-amber-600 shrink-0">chevron_right</span>
+                            `;
+                            listContainer.appendChild(row);
+                        });
+                    }
+
                     suggestionsBox.classList.remove('hidden');
                 } else {
                     listContainer.innerHTML = `
-                        <div class="p-4 text-center text-xs text-slate-400 flex items-center justify-center gap-1.5">
-                            <span class="material-symbols-outlined text-base text-slate-300">search_off</span>
-                            <span>Không có bài viết khớp</span>
+                        <div class="p-4 text-center text-xs text-slate-400 flex flex-col items-center justify-center gap-1">
+                            <span class="material-symbols-outlined text-lg text-slate-300">search_off</span>
+                            <span>Không tìm thấy quán ăn hay bài viết phù hợp</span>
                         </div>
                     `;
                     suggestionsBox.classList.remove('hidden');
@@ -1568,6 +1601,150 @@
                     }
                 }
             } catch(err) {}
+        });
+    })();
+
+    // ==========================================
+    // ĐỒNG BỘ BÀI VIẾT THỜI GIAN THỰC (REALTIME FEED)
+    // Tự động hiện bài khi được duyệt, tự động xóa bài khi bị gỡ bỏ mà không cần load lại trang
+    // ==========================================
+    (function initPublicBlogRealtimeSync() {
+        let isSyncing = false;
+        let syncPollTimer = null;
+        let lastKnownSyncTime = '{{ now()->toIso8601String() }}';
+
+        function getVisibleBlogIds() {
+            const cards = document.querySelectorAll('#public-blogs-grid > [data-blog-id]');
+            return Array.from(cards).map(c => c.getAttribute('data-blog-id')).filter(Boolean);
+        }
+
+        function syncPublicBlogFeed(isImmediate = false) {
+            if (isSyncing) return;
+            if (!isImmediate && document.visibilityState === 'hidden') return;
+
+            const knownIds = getVisibleBlogIds();
+            const urlParams = new URLSearchParams(window.location.search);
+            const category = urlParams.get('category') || '';
+            const tag = urlParams.get('tag') || '';
+            const search = urlParams.get('search') || '';
+            const pageNum = parseInt(urlParams.get('page') || '1', 10);
+
+            // Khi ở trang 2 trở đi hoặc đang có tìm kiếm, không tự chèn bài mới vào để giữ nguyên danh sách bình thường
+            let feedUrl = `/blog/realtime-feed?known_ids=${encodeURIComponent(knownIds.join(','))}`;
+            if (pageNum === 1 && !search) {
+                feedUrl += `&since=${encodeURIComponent(lastKnownSyncTime)}`;
+            }
+            if (category) feedUrl += `&category=${encodeURIComponent(category)}`;
+            if (tag) feedUrl += `&tag=${encodeURIComponent(tag)}`;
+            if (search) feedUrl += `&search=${encodeURIComponent(search)}`;
+
+            isSyncing = true;
+            fetch(feedUrl, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (!data || !data.success) return;
+
+                if (data.timestamp) {
+                    lastKnownSyncTime = data.timestamp;
+                }
+
+                const grid = document.getElementById('public-blogs-grid');
+                const emptyState = document.getElementById('public-blogs-empty-state');
+                const container = document.getElementById('public-blogs-container');
+
+                // 1. Gỡ bỏ các bài viết đã bị xóa khỏi hệ thống
+                if (data.deleted_ids && Array.isArray(data.deleted_ids) && data.deleted_ids.length > 0) {
+                    data.deleted_ids.forEach(delId => {
+                        const card = document.getElementById(`public-blog-card-${delId}`);
+                        if (card) {
+                            card.style.transition = 'all 0.45s ease';
+                            card.style.opacity = '0';
+                            card.style.transform = 'scale(0.9) translateY(-10px)';
+                            setTimeout(() => {
+                                card.remove();
+                                const currentGrid = document.getElementById('public-blogs-grid');
+                                if (currentGrid && currentGrid.children.length === 0) {
+                                    if (emptyState) {
+                                        emptyState.classList.remove('hidden');
+                                    }
+                                }
+                            }, 450);
+                        }
+                    });
+                }
+
+                // 2. Chèn các bài viết mới vừa được duyệt xuất bản vào đầu danh sách (không hiện popup thông báo)
+                if (data.new_blogs && Array.isArray(data.new_blogs) && data.new_blogs.length > 0) {
+                    if (!grid && emptyState && container) {
+                        emptyState.remove();
+                        const newGridHtml = `
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter" id="public-blogs-grid">
+                            </div>
+                        `;
+                        container.insertAdjacentHTML('afterbegin', newGridHtml);
+                    }
+
+                    const activeGrid = document.getElementById('public-blogs-grid');
+                    if (activeGrid) {
+                        data.new_blogs.forEach(b => {
+                            if (!document.getElementById(`public-blog-card-${b.id}`)) {
+                                const temp = document.createElement('div');
+                                temp.innerHTML = b.html.trim();
+                                const newCard = temp.firstElementChild;
+                                if (newCard) {
+                                    newCard.style.opacity = '0';
+                                    newCard.style.transform = 'translateY(-18px) scale(0.97)';
+                                    newCard.classList.add('ring-2', 'ring-amber-400', 'shadow-xl', 'transition-all', 'duration-700');
+
+                                    activeGrid.insertBefore(newCard, activeGrid.firstChild);
+
+                                    requestAnimationFrame(() => {
+                                        setTimeout(() => {
+                                            newCard.style.opacity = '1';
+                                            newCard.style.transform = 'translateY(0) scale(1)';
+                                        }, 40);
+                                    });
+
+                                    setTimeout(() => {
+                                        newCard.classList.remove('ring-2', 'ring-amber-400', 'shadow-xl');
+                                    }, 4500);
+                                }
+                            }
+                        });
+                    }
+                }
+            })
+            .catch(() => {})
+            .finally(() => {
+                isSyncing = false;
+            });
+        }
+
+        // 1. Định kỳ kiểm tra (8 giây một lần)
+        syncPollTimer = setInterval(() => syncPublicBlogFeed(false), 8000);
+
+        // 2. Lắng nghe storage event (đồng bộ ngay lập tức khi người dùng thao tác ở tab khác)
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'quanmoi_blog_sync_trigger') {
+                syncPublicBlogFeed(true);
+            }
+        });
+
+        // 3. Lắng nghe sự kiện hệ thống cập nhật bài viết
+        window.addEventListener('quanmoi:blog-status-updated', function(e) {
+            syncPublicBlogFeed(true);
+        });
+
+        // 4. Khi người dùng chuyển tab quay lại, kiểm tra ngay lập tức
+        document.addEventListener('visibilitychange', function() {
+            if (document.visibilityState === 'visible') {
+                syncPublicBlogFeed(true);
+            }
         });
     })();
 </script>

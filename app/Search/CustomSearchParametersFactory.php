@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Search;
 
+use App\Models\Blog;
+use App\Models\Quan;
 use Elastic\ScoutDriver\Factories\SearchParametersFactory;
 use Laravel\Scout\Builder;
 
@@ -12,6 +14,20 @@ class CustomSearchParametersFactory extends SearchParametersFactory
     protected function getModelSearchFields(Builder $builder): array
     {
         $model = $builder->model;
+
+        if ($model instanceof Blog) {
+            return [
+                ['title^5', 'excerpt^2.5', 'tags^2.5', 'category^2', 'author^1.5', 'content'],
+                ['title^4', 'excerpt^2', 'tags^2', 'category^1.5', 'content'],
+                ['title^4', 'tags^2', 'category^1.5'],
+                [
+                    ['match_phrase' => ['title' => ['query' => $builder->query, 'boost' => 10]]],
+                    ['match_phrase' => ['excerpt' => ['query' => $builder->query, 'boost' => 5]]],
+                    ['match_phrase' => ['category' => ['query' => $builder->query, 'boost' => 5]]],
+                    ['match_phrase' => ['tags' => ['query' => $builder->query, 'boost' => 6]]],
+                ],
+            ];
+        }
 
         if ($model instanceof \App\Models\VideoShort) {
             return [
@@ -58,12 +74,14 @@ class CustomSearchParametersFactory extends SearchParametersFactory
 
         if (!empty($builder->query)) {
             [$bestFields, $crossFields, $phraseFields, $exactPhrases] = $this->getModelSearchFields($builder);
+            $prefixField = ($builder->model instanceof Blog) ? 'title.prefix' : 'ten_quan.prefix';
+
             $query['bool']['must'] = [
                 'bool' => [
                     'should' => [
                         [
                             'match' => [
-                                'ten_quan.prefix' => ['query' => $builder->query, 'operator' => 'AND', 'boost' => 6],
+                                $prefixField => ['query' => $builder->query, 'operator' => 'AND', 'boost' => 6],
                             ],
                         ],
                         [
@@ -111,11 +129,12 @@ class CustomSearchParametersFactory extends SearchParametersFactory
 
         return $query;
     }
+
     protected function makeFilter(Builder $builder): ?array
     {
         $filter = collect();
 
-        // 1. Xử lý $builder->wheres (Tương thích cả Scout cũ dạng key=>value và Scout mới dạng ['field'=>..., 'value'=>...])
+        // 1. Xử lý $builder->wheres (Tương thích cả Scout dạng key=>value và dạng ['field'=>..., 'value'=>...])
         foreach ($builder->wheres as $key => $item) {
             $field = is_array($item) && isset($item['field']) ? (string) $item['field'] : (string) $key;
             $value = is_array($item) && array_key_exists('value', $item) ? $item['value'] : $item;
@@ -195,15 +214,20 @@ class CustomSearchParametersFactory extends SearchParametersFactory
             }
 
             // Standard term filter
+            $termField = $this->resolveFilterField($field, $value);
             $filter->push([
-                'term' => [$field => $value],
+                'term' => [$termField => $value],
             ]);
         }
 
         // 2. Xử lý $builder->whereIns
-        $whereIns = collect($builder->whereIns)->map(static fn (array $values, string $field) => [
-            'terms' => [$field => $values],
-        ])->values();
+        $whereIns = collect($builder->whereIns)->map(function (array $values, string $field) {
+            $firstVal = reset($values);
+            $termsField = $this->resolveFilterField($field, $firstVal);
+            return [
+                'terms' => [$termsField => array_values($values)],
+            ];
+        })->values();
 
         if ($whereIns->isNotEmpty()) {
             $filter->push([
@@ -214,9 +238,13 @@ class CustomSearchParametersFactory extends SearchParametersFactory
         }
 
         // 3. Xử lý $builder->whereNotIns
-        $whereNotIns = collect($builder->whereNotIns)->map(static fn (array $values, string $field) => [
-            'terms' => [$field => $values],
-        ])->values();
+        $whereNotIns = collect($builder->whereNotIns)->map(function (array $values, string $field) {
+            $firstVal = reset($values);
+            $termsField = $this->resolveFilterField($field, $firstVal);
+            return [
+                'terms' => [$termsField => array_values($values)],
+            ];
+        })->values();
 
         if ($whereNotIns->isNotEmpty()) {
             $filter->push([
@@ -227,6 +255,32 @@ class CustomSearchParametersFactory extends SearchParametersFactory
         }
 
         return $filter->isEmpty() ? null : $filter->all();
+    }
+
+    /**
+     * Xác định field name chính xác cho Term/Terms query (thêm .keyword cho text strings nếu cần)
+     */
+    protected function resolveFilterField(string $field, mixed $sampleValue): string
+    {
+        if (str_ends_with($field, '.keyword')) {
+            return $field;
+        }
+
+        if (is_numeric($sampleValue) || is_bool($sampleValue)) {
+            return $field;
+        }
+
+        $numericOrIdFields = [
+            'id', 'user_id', 'category_id', 'tinh_thanh_id', 'quan_huyen_id', 'phuong_xa_id',
+            'luot_xem', 'view_count', 'comment_count', 'reading_time', 'diem_danh_gia',
+            'gia_nho_nhat', 'gia_lon_nhat', 'created_at', 'updated_at', 'published_at',
+        ];
+
+        if (in_array($field, $numericOrIdFields, true)) {
+            return $field;
+        }
+
+        return $field . '.keyword';
     }
 
     protected function makeSort(Builder $builder): ?array
@@ -256,8 +310,12 @@ class CustomSearchParametersFactory extends SearchParametersFactory
 
         // Các orders thông thường
         foreach ($builder->orders as $order) {
+            $col = $order['column'];
+            if (in_array($col, ['title', 'category', 'status', 'ten_quan'], true)) {
+                $col .= '.keyword';
+            }
             $sort->push([
-                $order['column'] => $order['direction'],
+                $col => $order['direction'],
             ]);
         }
 

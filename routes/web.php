@@ -25,6 +25,7 @@ Route::get('/danh-muc/{slug}', [KhamPhaController::class, 'danhMuc'])->name('dan
 Route::get('/quan-moi', [KhamPhaController::class, 'quanMoi'])->name('quan-moi');
 Route::get('/quan-noi-bat', [KhamPhaController::class, 'quanNoiBat'])->name('quan-noi-bat');
 Route::get('/blog', [FrontendBlogController::class, 'index'])->name('blog.index');
+Route::get('/blog/realtime-feed', [FrontendBlogController::class, 'realtimeFeed'])->name('blog.realtime-feed');
 Route::post('/blog/dang-ky-nhan-tin', [FrontendBlogController::class, 'subscribeNewsletter'])->middleware('throttle:15,1')->name('blog.newsletter.subscribe');
 Route::get('/blog/huy-dang-ky-nhan-tin/{token}', [FrontendBlogController::class, 'unsubscribeNewsletter'])->name('blog.newsletter.unsubscribe');
 Route::get('/blog/tac-gia/{id}', [FrontendBlogController::class, 'author'])->name('blog.author');

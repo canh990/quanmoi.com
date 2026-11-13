@@ -36,6 +36,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Bỏ qua lỗi E_WARNING đặc thù của Docker trên Windows (NTFS volume) khi touch() view cache
+        set_error_handler(function (int $errno, string $errstr): bool {
+            if (str_contains($errstr, 'Utime failed')) {
+                return true;
+            }
+            return false;
+        }, E_WARNING);
+
         if (! $this->app->runningInConsole() && (request()->header('x-forwarded-proto') === 'https' || request()->isSecure())) {
             \Illuminate\Support\Facades\URL::forceScheme('https');
         }

@@ -85,6 +85,10 @@ class BlogController extends Controller
     {
         $data = $request->validated();
         
+        if (isset($data['action']) && $data['action'] === 'pending' && !$request->hasFile('cover_image')) {
+            return back()->withErrors(['cover_image' => 'Ảnh bìa bài viết là bắt buộc khi gửi duyệt đăng bài.'])->withInput();
+        }
+        
         try {
             $blog = new Blog();
             $blog->user_id = Auth::id();
@@ -212,6 +216,10 @@ class BlogController extends Controller
     {
         $data = $request->validated();
         
+        if (isset($data['action']) && $data['action'] === 'pending' && empty($blog->cover_image) && !$request->hasFile('cover_image')) {
+            return back()->withErrors(['cover_image' => 'Ảnh bìa bài viết là bắt buộc khi gửi duyệt đăng bài.'])->withInput();
+        }
+        
         $oldStatus = $blog->status;
         
         $blog->title = $data['title'];
@@ -335,7 +343,30 @@ class BlogController extends Controller
         // When user soft deletes, we don't necessarily delete the R2 image yet.
         // It will be deleted if they forceDelete later.
         
+        $blogId = $blog->id;
+        $blogTitle = $blog->title;
         $blog->delete();
+
+        if (request()->expectsJson() || request()->ajax()) {
+            $user = Auth::user();
+            $statusCounts = [
+                'total' => $user ? $user->blogs()->count() : 0,
+                'draft' => $user ? $user->blogs()->where('status', 'draft')->count() : 0,
+                'pending' => $user ? $user->blogs()->where('status', 'pending')->count() : 0,
+                'published' => $user ? $user->blogs()->where('status', 'published')->count() : 0,
+                'need_revision' => $user ? $user->blogs()->where('status', 'need_revision')->count() : 0,
+                'rejected' => $user ? $user->blogs()->where('status', 'rejected')->count() : 0,
+            ];
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Đã xóa bài viết thành công.',
+                'blog_id' => $blogId,
+                'blog_title' => $blogTitle,
+                'status_counts' => $statusCounts,
+            ]);
+        }
+
         return back()->with('success', 'Đã xóa bài viết.');
     }
 

@@ -29,7 +29,19 @@ class UpdateBlogRequest extends FormRequest
             'new_category' => ['nullable', 'string', 'max:100'],
             'excerpt' => ['nullable', 'string', 'max:500'],
             'content' => ['required', 'string'],
-            'cover_image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:5120'], // 5MB Max
+            'cover_image' => [
+                Rule::requiredIf(function () {
+                    if ($this->input('action') !== 'pending') {
+                        return false;
+                    }
+                    $blog = $this->route('blog');
+                    return empty($blog?->cover_image);
+                }),
+                'nullable',
+                'image',
+                'mimes:jpeg,png,jpg,gif,webp',
+                'max:5120',
+            ], // 5MB Max - Bắt buộc khi gửi duyệt bài nếu chưa có ảnh bìa
             'tags' => ['nullable', 'array'],
             'custom_tags' => ['nullable', 'string', 'max:255'],
             'seo_title' => ['nullable', 'string', 'max:255'],
@@ -47,6 +59,7 @@ class UpdateBlogRequest extends FormRequest
             'title.required' => 'Tiêu đề không được để trống.',
             'category_id.required' => 'Vui lòng chọn danh mục.',
             'content.required' => 'Nội dung bài viết không được để trống.',
+            'cover_image.required' => 'Ảnh bìa bài viết là bắt buộc khi gửi duyệt đăng bài.',
             'cover_image.image' => 'Ảnh bìa phải là định dạng hình ảnh.',
             'cover_image.max' => 'Dung lượng ảnh bìa không được vượt quá 5MB.',
         ];
