@@ -57,9 +57,43 @@ class KhuyenMaiAiController extends Controller
                 return $quan;
             });
 
-        $promotions = KhuyenMai::with('quan:id,ten_quan,slug')
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $q = trim((string) request('q', ''));
+        $promoQuery = KhuyenMai::with('quan:id,ten_quan,slug');
+
+        if ($q !== '') {
+            $esService = app(\App\Services\ElasticAdminSearchService::class);
+            $esKmIds = $esService->searchKhuyenMai($q);
+
+            if ($esKmIds !== null && ! empty($esKmIds)) {
+                $promoQuery->whereIn('id', $esKmIds);
+                if (\Illuminate\Support\Facades\DB::getDriverName() === 'mysql') {
+                    $escapedIds = implode("','", array_map('addslashes', $esKmIds));
+                    $promoQuery->orderByRaw("FIELD(id, '{$escapedIds}')");
+                }
+            } else {
+                $tokens = preg_split('/\s+/u', $q, -1, PREG_SPLIT_NO_EMPTY) ?: [$q];
+                $promoQuery->where(function ($sub) use ($q, $tokens) {
+                    $sub->where('ma_voucher', 'like', "%{$q}%")
+                        ->orWhere('tieu_de', 'like', "%{$q}%")
+                        ->orWhere('slogan', 'like', "%{$q}%")
+                        ->orWhere('noi_dung', 'like', "%{$q}%")
+                        ->orWhereHas('quan', fn ($qSub) => $qSub->where('ten_quan', 'like', "%{$q}%"));
+
+                    if (count($tokens) > 1) {
+                        $sub->orWhere(function ($tokSub) use ($tokens) {
+                            foreach ($tokens as $token) {
+                                $tokSub->where(function ($w) use ($token) {
+                                    $w->where('tieu_de', 'like', "%{$token}%")
+                                      ->orWhere('ma_voucher', 'like', "%{$token}%");
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+        }
+
+        $promotions = $promoQuery->orderBy('created_at', 'desc')->get();
 
         $promotionsCount = $promotions->count();
 

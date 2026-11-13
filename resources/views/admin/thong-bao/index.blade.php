@@ -241,6 +241,19 @@
         renderLiveNotificationFeed();
     }
 
+    function removeVietnameseTones(str) {
+        if (!str) return '';
+        str = str.toLowerCase();
+        str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, 'a');
+        str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, 'e');
+        str = str.replace(/ì|í|ị|ỉ|ĩ/g, 'i');
+        str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, 'o');
+        str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, 'u');
+        str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, 'y');
+        str = str.replace(/đ/g, 'd');
+        return str;
+    }
+
     function handleSearchNotifs(val) {
         searchQuery = (val || '').toLowerCase().trim();
         renderLiveNotificationFeed();
@@ -288,13 +301,18 @@
             ? all
             : all.filter(n => n.type === activeFeedFilter);
 
-        // Lọc theo search input
+        // Lọc theo search input (hỗ trợ tiếng Việt không dấu & gần đúng)
         if (searchQuery) {
+            const cleanQuery = removeVietnameseTones(searchQuery);
             filtered = filtered.filter(n => {
                 const t = (n.title || '').toLowerCase();
                 const d = (n.description || '').toLowerCase();
                 const c = (n.category_label || '').toLowerCase();
-                return t.includes(searchQuery) || d.includes(searchQuery) || c.includes(searchQuery);
+                const tClean = removeVietnameseTones(t);
+                const dClean = removeVietnameseTones(d);
+                const cClean = removeVietnameseTones(c);
+                return t.includes(searchQuery) || d.includes(searchQuery) || c.includes(searchQuery)
+                    || tClean.includes(cleanQuery) || dClean.includes(cleanQuery) || cClean.includes(cleanQuery);
             });
         }
 

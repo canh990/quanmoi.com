@@ -1,4 +1,4 @@
-@extends('admin.layout')
+@extends(request()->ajax() ? 'admin.ajax_layout' : 'admin.layout')
 
 @section('title', 'Phân Quyền & Override - Admin Quán Mới')
 @section('page-title', 'Phân Quyền Hệ Thống')
@@ -308,11 +308,11 @@
 
     {{-- Search In Drawer --}}
     <div class="p-3 border-b border-slate-200 bg-white shrink-0">
-        <div class="relative flex items-center">
-            <span class="material-symbols-outlined absolute left-2.5 text-slate-400 text-[18px]">search</span>
+        <div class="admin-search-wrapper w-full bg-slate-50 border border-slate-300 focus-within:bg-white focus-within:border-indigo-500 shadow-2xs">
+            <span class="material-symbols-outlined text-slate-400 text-[18px]">search</span>
             <input type="text" id="filter-perm-input" onkeyup="filterPermissionsList(this.value)"
                    placeholder="Tìm kiếm mã quyền hoặc mô tả..."
-                   class="w-full pl-8 pr-3 py-1.5 text-xs font-semibold text-slate-900 bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-300 outline-none">
+                   class="w-full bg-transparent border-0 p-0 text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:outline-none">
         </div>
     </div>
 

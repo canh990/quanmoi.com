@@ -697,12 +697,27 @@
         }
     }
 
+    function removeVietnameseTones(str) {
+        if (!str) return '';
+        str = str.toLowerCase();
+        str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, 'a');
+        str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, 'e');
+        str = str.replace(/ì|í|ị|ỉ|ĩ/g, 'i');
+        str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, 'o');
+        str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, 'u');
+        str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, 'y');
+        str = str.replace(/đ/g, 'd');
+        return str;
+    }
+
     function filterAdminPromotions() {
-        const query = (document.getElementById('admin-search-promo')?.value || '').toLowerCase().trim();
+        const rawQuery = (document.getElementById('admin-search-promo')?.value || '').toLowerCase().trim();
+        const cleanQuery = removeVietnameseTones(rawQuery);
         const cards = document.querySelectorAll('#admin-promo-list > div[data-search]');
         cards.forEach(card => {
-            const searchData = card.getAttribute('data-search') || '';
-            if (!query || searchData.includes(query)) {
+            const searchData = (card.getAttribute('data-search') || '').toLowerCase();
+            const cleanData = removeVietnameseTones(searchData);
+            if (!rawQuery || searchData.includes(rawQuery) || cleanData.includes(cleanQuery)) {
                 card.style.display = '';
             } else {
                 card.style.display = 'none';

@@ -38,7 +38,7 @@ class QuanNoiBatController extends Controller
     /**
      * Màn hình chính Quản lý Quán Nổi Bật (Thiết kế Single-screen Viewport Fit)
      */
-    public function index(Request $request): View
+    public function index(Request $request): View|JsonResponse
     {
         $this->authorizeAccess();
 
@@ -50,16 +50,39 @@ class QuanNoiBatController extends Controller
             ->with(['chuQuan:id,ho_ten,email,so_dien_thoai']);
 
         if ($q !== '') {
-            $featuredQuery->where(function ($sub) use ($q) {
-                $sub->where('ten_quan', 'like', "%{$q}%")
-                    ->orWhere('dia_chi_chi_tiet', 'like', "%{$q}%")
-                    ->orWhere('ten_quan_huyen', 'like', "%{$q}%")
-                    ->orWhere('ten_tinh_thanh', 'like', "%{$q}%")
-                    ->orWhereHas('chuQuan', function ($cSub) use ($q) {
-                        $cSub->where('ho_ten', 'like', "%{$q}%")
-                            ->orWhere('email', 'like', "%{$q}%");
-                    });
-            });
+            $esService = app(\App\Services\ElasticAdminSearchService::class);
+            $esIds = $esService->searchQuan($q, ['is_noi_bat' => true]);
+
+            if ($esIds !== null && ! empty($esIds)) {
+                $featuredQuery->whereIn('id', $esIds);
+                if (\Illuminate\Support\Facades\DB::getDriverName() === 'mysql') {
+                    $escapedIds = implode("','", array_map('addslashes', $esIds));
+                    $featuredQuery->orderByRaw("FIELD(id, '{$escapedIds}')");
+                }
+            } else {
+                $tokens = preg_split('/\s+/u', $q, -1, PREG_SPLIT_NO_EMPTY) ?: [$q];
+                $featuredQuery->where(function ($sub) use ($q, $tokens) {
+                    $sub->where('ten_quan', 'like', "%{$q}%")
+                        ->orWhere('dia_chi_chi_tiet', 'like', "%{$q}%")
+                        ->orWhere('ten_quan_huyen', 'like', "%{$q}%")
+                        ->orWhere('ten_tinh_thanh', 'like', "%{$q}%")
+                        ->orWhereHas('chuQuan', function ($cSub) use ($q) {
+                            $cSub->where('ho_ten', 'like', "%{$q}%")
+                                ->orWhere('email', 'like', "%{$q}%");
+                        });
+
+                    if (count($tokens) > 1) {
+                        $sub->orWhere(function ($tokSub) use ($tokens) {
+                            foreach ($tokens as $token) {
+                                $tokSub->where(function ($w) use ($token) {
+                                    $w->where('ten_quan', 'like', "%{$token}%")
+                                      ->orWhere('dia_chi_chi_tiet', 'like', "%{$token}%");
+                                });
+                            }
+                        });
+                    }
+                });
+            }
         }
 
         if (! empty($loaiHinh)) {
@@ -72,6 +95,36 @@ class QuanNoiBatController extends Controller
 
         $featuredQuan = $featuredQuery->orderByDesc('updated_at')->get();
 
+        // Trả về JSON cho tìm kiếm AJAX / Live Elasticsearch search
+        if ($request->ajax() || $request->expectsJson() || $request->query('ajax')) {
+            return response()->json([
+                'success' => true,
+                'data' => $featuredQuan->map(function ($item) {
+                    return [
+                        'id' => (string) $item->id,
+                        'ten_quan' => $item->ten_quan,
+                        'loai_hinh_kinh_doanh' => $item->loai_hinh_kinh_doanh ?? 'Ẩm thực',
+                        'dia_chi' => trim($item->dia_chi_chi_tiet . ', ' . $item->ten_quan_huyen . ', ' . $item->ten_tinh_thanh),
+                        'so_dien_thoai' => $item->so_dien_thoai ?? '',
+                        'anh_bia_url' => $item->anh_bia_url,
+                        'is_xac_thuc' => (bool) $item->is_xac_thuc,
+                        'is_noi_bat' => (bool) $item->is_noi_bat,
+                        'trang_thai' => $item->trang_thai,
+                        'gio_mo_cua' => $item->gio_mo_cua,
+                        'gio_dong_cua' => $item->gio_dong_cua,
+                        'is_dang_mo_cua' => $item->isDangMoCua(),
+                        'luot_xem' => (int) ($item->luot_xem ?? 0),
+                        'chu_quan' => $item->chuQuan?->ho_ten ?? 'Hệ thống',
+                        'slug' => $item->slug,
+                        'shopeefood_url' => $item->shopeefood_url,
+                        'tiktok_url' => $item->tiktok_url,
+                    ];
+                })->values(),
+                'total' => $featuredQuan->count(),
+                'is_elastic' => $q !== '' && app(\App\Services\ElasticAdminSearchService::class)::isAvailable(),
+            ]);
+        }
+
         // Kho quán sẵn sàng để đề cử thêm vào nổi bật (trạng thái đã duyệt, chưa nổi bật)
         $allQuan = Quan::where('is_noi_bat', false)
             ->where('trang_thai', 'da_duyet')
@@ -80,11 +133,18 @@ class QuanNoiBatController extends Controller
             ->take(60)
             ->get();
 
-        // Metrics & KPI cards
-        $totalFeatured = Quan::where('is_noi_bat', true)->count();
-        $totalActiveFeatured = Quan::where('is_noi_bat', true)->where('trang_thai', 'da_duyet')->count();
-        $totalVerifiedFeatured = Quan::where('is_noi_bat', true)->where('is_xac_thuc', true)->count();
-        $totalViewsFeatured = (int) Quan::where('is_noi_bat', true)->sum('luot_xem');
+        // Metrics & KPI cards (kết hợp 1 query tổng hợp siêu tốc)
+        $kpiStats = Quan::where('is_noi_bat', true)
+            ->selectRaw('
+                COUNT(*) as total_featured,
+                SUM(CASE WHEN trang_thai = "da_duyet" THEN 1 ELSE 0 END) as active_featured,
+                SUM(CASE WHEN is_xac_thuc = 1 THEN 1 ELSE 0 END) as verified_featured,
+                SUM(COALESCE(luot_xem, 0)) as total_views
+            ')->first();
+        $totalFeatured = (int) ($kpiStats->total_featured ?? 0);
+        $totalActiveFeatured = (int) ($kpiStats->active_featured ?? 0);
+        $totalVerifiedFeatured = (int) ($kpiStats->verified_featured ?? 0);
+        $totalViewsFeatured = (int) ($kpiStats->total_views ?? 0);
         $openNowFeatured = $featuredQuan->filter(fn ($item) => $item->isDangMoCua())->count();
 
         // Danh sách loại hình kinh doanh cho bộ lọc
@@ -102,7 +162,10 @@ class QuanNoiBatController extends Controller
             'totalVerifiedFeatured',
             'totalViewsFeatured',
             'openNowFeatured',
-            'businessTypes'
+            'businessTypes',
+            'q',
+            'loaiHinh',
+            'status'
         ));
     }
 
@@ -121,15 +184,38 @@ class QuanNoiBatController extends Controller
             ->with(['chuQuan:id,ho_ten']);
 
         if ($q !== '') {
-            $query->where(function ($sub) use ($q) {
-                $sub->where('ten_quan', 'like', "%{$q}%")
-                    ->orWhere('dia_chi_chi_tiet', 'like', "%{$q}%")
-                    ->orWhere('ten_quan_huyen', 'like', "%{$q}%")
-                    ->orWhere('ten_tinh_thanh', 'like', "%{$q}%")
-                    ->orWhereHas('chuQuan', function ($cSub) use ($q) {
-                        $cSub->where('ho_ten', 'like', "%{$q}%");
-                    });
-            });
+            $esService = app(\App\Services\ElasticAdminSearchService::class);
+            $esIds = $esService->searchQuan($q, ['is_noi_bat' => false, 'trang_thai' => 'da_duyet']);
+
+            if ($esIds !== null && ! empty($esIds)) {
+                $query->whereIn('id', $esIds);
+                if (\Illuminate\Support\Facades\DB::getDriverName() === 'mysql') {
+                    $escapedIds = implode("','", array_map('addslashes', $esIds));
+                    $query->orderByRaw("FIELD(id, '{$escapedIds}')");
+                }
+            } else {
+                $tokens = preg_split('/\s+/u', $q, -1, PREG_SPLIT_NO_EMPTY) ?: [$q];
+                $query->where(function ($sub) use ($q, $tokens) {
+                    $sub->where('ten_quan', 'like', "%{$q}%")
+                        ->orWhere('dia_chi_chi_tiet', 'like', "%{$q}%")
+                        ->orWhere('ten_quan_huyen', 'like', "%{$q}%")
+                        ->orWhere('ten_tinh_thanh', 'like', "%{$q}%")
+                        ->orWhereHas('chuQuan', function ($cSub) use ($q) {
+                            $cSub->where('ho_ten', 'like', "%{$q}%");
+                        });
+
+                    if (count($tokens) > 1) {
+                        $sub->orWhere(function ($tokSub) use ($tokens) {
+                            foreach ($tokens as $token) {
+                                $tokSub->where(function ($w) use ($token) {
+                                    $w->where('ten_quan', 'like', "%{$token}%")
+                                      ->orWhere('dia_chi_chi_tiet', 'like', "%{$token}%");
+                                });
+                            }
+                        });
+                    }
+                });
+            }
         }
 
         if (! empty($loaiHinh)) {
@@ -172,12 +258,10 @@ class QuanNoiBatController extends Controller
         $quan->is_noi_bat = true;
         $quan->save();
 
-        if (method_exists($quan, 'searchable')) {
-            try {
-                $quan->searchable();
-            } catch (\Throwable $e) {
-                Log::warning('QuanNoiBat store Scout sync error: ' . $e->getMessage());
-            }
+        try {
+            app(\App\Services\ElasticAdminSearchService::class)->syncQuan($quan);
+        } catch (\Throwable $e) {
+            Log::warning('QuanNoiBat store ES sync error: ' . $e->getMessage());
         }
 
         $this->adminAudit->record($request->user(), 'venue.featured_added', $quan, $request, [
@@ -249,12 +333,10 @@ class QuanNoiBatController extends Controller
 
         $quan->update($validated);
 
-        if (method_exists($quan, 'searchable')) {
-            try {
-                $quan->searchable();
-            } catch (\Throwable $e) {
-                Log::warning('QuanNoiBat update Scout sync error: ' . $e->getMessage());
-            }
+        try {
+            app(\App\Services\ElasticAdminSearchService::class)->syncQuan($quan);
+        } catch (\Throwable $e) {
+            Log::warning('QuanNoiBat update ES sync error: ' . $e->getMessage());
         }
 
         $this->adminAudit->record($request->user(), 'venue.featured_updated', $quan, $request, [
@@ -304,12 +386,10 @@ class QuanNoiBatController extends Controller
         $quan->is_noi_bat = ! $quan->is_noi_bat;
         $quan->save();
 
-        if (method_exists($quan, 'searchable')) {
-            try {
-                $quan->searchable();
-            } catch (\Throwable $e) {
-                Log::warning('QuanNoiBat toggle Scout sync error: ' . $e->getMessage());
-            }
+        try {
+            app(\App\Services\ElasticAdminSearchService::class)->syncQuan($quan);
+        } catch (\Throwable $e) {
+            Log::warning('QuanNoiBat toggle ES sync error: ' . $e->getMessage());
         }
 
         $this->adminAudit->record($request->user(), 'venue.featured_toggled', $quan, $request, [
@@ -363,12 +443,10 @@ class QuanNoiBatController extends Controller
         $quan->is_noi_bat = false;
         $quan->save();
 
-        if (method_exists($quan, 'searchable')) {
-            try {
-                $quan->searchable();
-            } catch (\Throwable $e) {
-                Log::warning('QuanNoiBat destroy Scout sync error: ' . $e->getMessage());
-            }
+        try {
+            app(\App\Services\ElasticAdminSearchService::class)->syncQuan($quan);
+        } catch (\Throwable $e) {
+            Log::warning('QuanNoiBat destroy ES sync error: ' . $e->getMessage());
         }
 
         $this->adminAudit->record($request->user(), 'venue.featured_removed', $quan, $request, [

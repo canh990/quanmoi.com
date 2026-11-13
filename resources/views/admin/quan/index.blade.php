@@ -1,4 +1,4 @@
-@extends('admin.layout')
+@extends(request()->ajax() ? 'admin.ajax_layout' : 'admin.layout')
 
 @section('title', 'Quản Lý Quán - Quán Mới Admin')
 @section('page-title', 'Quản Lý Địa Điểm Quán & Duyệt Bài')
@@ -35,15 +35,29 @@
 
     {{-- Search & Filters Bar (Sleek Compact Toolbar) --}}
     <div class="bg-white p-3 rounded-2xl border border-slate-200/90 shadow-2xs">
-        <form method="GET" action="{{ route('admin.quan.index') }}" class="flex flex-wrap items-center gap-2.5 w-full">
+        <form method="GET" action="{{ route('admin.quan.index') }}" id="quan-filter-form" onsubmit="event.preventDefault(); submitQuanSearch();" class="flex flex-wrap items-center gap-2.5 w-full">
             {{-- Search Keyword --}}
-            <div class="admin-search-wrapper flex-1 min-w-[200px] shadow-2xs">
+            <div class="admin-search-wrapper flex-1 min-w-[200px] shadow-2xs relative">
                 <span class="material-symbols-outlined text-[16px] text-slate-400">search</span>
-                <input type="text" name="q" value="{{ request('q') }}" placeholder="Tìm tên quán, địa chỉ, sđt, chủ sở hữu..." class="w-full bg-transparent border-0 p-0 text-xs font-medium outline-none text-slate-800 placeholder:text-slate-400">
+                <input type="text" 
+                       name="q" 
+                       id="quan-quick-search" 
+                       value="{{ request('q') }}" 
+                       oninput="debounceQuanSearch()" 
+                       placeholder="Tìm tên quán, địa chỉ, sđt, chủ sở hữu (ES gần đúng)..." 
+                       style="padding-left: 0 !important; margin-left: 0 !important; text-align: left !important;"
+                       class="w-full bg-transparent border-0 p-0 text-xs font-medium outline-none text-slate-800 placeholder:text-slate-400 pr-5 !pl-0 text-left">
+                <button type="button" 
+                        id="btn-clear-quan-search" 
+                        onclick="clearQuanSearch()" 
+                        class="absolute right-2 text-slate-400 hover:text-rose-600 transition-colors {{ empty(request('q')) ? 'hidden' : '' }}" 
+                        title="Xóa tìm kiếm">
+                    <span class="material-symbols-outlined text-[14px] block">close</span>
+                </button>
             </div>
 
             {{-- Status Filter --}}
-            <select name="status" class="px-2.5 py-1.5 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-amber-500 bg-white text-slate-700">
+            <select name="status" onchange="submitQuanSearch()" class="px-2.5 py-1.5 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-amber-500 bg-white text-slate-700">
                 <option value="">-- Tất cả trạng thái --</option>
                 <option value="chua_duyet" {{ request('status') == 'chua_duyet' ? 'selected' : '' }}>Chờ duyệt</option>
                 <option value="da_duyet" {{ request('status') == 'da_duyet' ? 'selected' : '' }}>Đã duyệt (Hoạt động)</option>
@@ -52,7 +66,7 @@
             </select>
 
             {{-- Business Type Filter --}}
-            <select name="loai_hinh" class="px-2.5 py-1.5 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-amber-500 bg-white text-slate-700">
+            <select name="loai_hinh" onchange="submitQuanSearch()" class="px-2.5 py-1.5 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-amber-500 bg-white text-slate-700">
                 <option value="">-- Tất cả loại hình --</option>
                 @foreach($businessTypes as $type)
                     <option value="{{ $type }}" {{ request('loai_hinh') == $type ? 'selected' : '' }}>{{ $type }}</option>
@@ -60,14 +74,14 @@
             </select>
 
             {{-- Verified Filter --}}
-            <select name="is_xac_thuc" class="px-2.5 py-1.5 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-amber-500 bg-white text-slate-700">
+            <select name="is_xac_thuc" onchange="submitQuanSearch()" class="px-2.5 py-1.5 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-amber-500 bg-white text-slate-700">
                 <option value="">-- Tick xanh --</option>
                 <option value="1" {{ request('is_xac_thuc') === '1' ? 'selected' : '' }}>Có Tick Xanh</option>
                 <option value="0" {{ request('is_xac_thuc') === '0' ? 'selected' : '' }}>Chưa có Tick Xanh</option>
             </select>
 
             {{-- Featured Filter --}}
-            <select name="is_noi_bat" class="px-2.5 py-1.5 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-amber-500 bg-white text-slate-700">
+            <select name="is_noi_bat" onchange="submitQuanSearch()" class="px-2.5 py-1.5 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-amber-500 bg-white text-slate-700">
                 <option value="">-- Nổi bật --</option>
                 <option value="1" {{ request('is_noi_bat') === '1' ? 'selected' : '' }}>Quán Nổi Bật</option>
                 <option value="0" {{ request('is_noi_bat') === '0' ? 'selected' : '' }}>Quán Thường</option>
@@ -80,12 +94,10 @@
             </button>
 
             {{-- Reset Filter Button --}}
-            @if(request()->hasAny(['q', 'status', 'loai_hinh', 'is_xac_thuc', 'is_noi_bat']))
-                <a href="{{ route('admin.quan.index') }}" class="btn-action-secondary" title="Xóa toàn bộ bộ lọc">
-                    <span class="material-symbols-outlined text-[16px]">restart_alt</span>
-                    <span>Xóa lọc</span>
-                </a>
-            @endif
+            <button type="button" id="btn-reset-quan-filter" onclick="resetQuanFilters()" class="btn-action-secondary {{ request()->hasAny(['q', 'status', 'loai_hinh', 'is_xac_thuc', 'is_noi_bat']) ? '' : 'hidden' }}" title="Xóa toàn bộ bộ lọc">
+                <span class="material-symbols-outlined text-[16px]">restart_alt</span>
+                <span>Xóa lọc</span>
+            </button>
         </form>
     </div>
 
@@ -109,7 +121,7 @@
                         <th class="py-2.5 px-1.5 sm:px-2 text-right whitespace-nowrap" style="width: 170px;">THAO TÁC</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100 text-xs">
+                <tbody id="quan-table-body" class="divide-y divide-slate-100 text-xs">
                     @forelse($quanList as $quan)
                         <tr id="quan-mgmt-row-{{ $quan->id }}" class="hover:bg-slate-50/80 transition-colors {{ $quan->trashed() ? 'bg-rose-50/30' : '' }}">
                             {{-- 1. Tên Quán & Loại hình --}}
@@ -237,7 +249,7 @@
         </div>
 
         {{-- Pagination & Summary --}}
-        <div class="p-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div id="quan-pagination-wrapper" class="p-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <p class="text-xs text-slate-500">
                 Hiển thị từ <span class="font-bold text-slate-700">{{ $quanList->firstItem() ?? 0 }}</span> đến <span class="font-bold text-slate-700">{{ $quanList->lastItem() ?? 0 }}</span> trong tổng số <span class="font-bold text-slate-700">{{ $quanList->total() }}</span> quán
             </p>
@@ -260,6 +272,151 @@
 </div>
 
 <script>
+    // ========================================================
+    // TÌM KIẾM TỨC THÌ (LIVE INSTANT SEARCH ELASTICSEARCH - KHÔNG CẦN ENTER, 0MS DELAY)
+    // ========================================================
+    let quanAbortController = null;
+    let quanSearchTimer = null;
+    let initialQuanTbodyHtml = null;
+
+    function debounceQuanSearch() {
+        const input = document.getElementById('quan-quick-search');
+        const q = (input?.value || '').trim();
+        const clearBtn = document.getElementById('btn-clear-quan-search');
+        if (clearBtn) clearBtn.classList.toggle('hidden', q === '');
+
+        const tbody = document.getElementById('quan-table-body');
+        if (initialQuanTbodyHtml === null && tbody) {
+            initialQuanTbodyHtml = tbody.innerHTML;
+        }
+
+        // BƯỚC 1: LỌC TỨC THÌ TRÊN DOM HIỆN TẠI (0MS - PHẢN HỒI NGAY LẬP TỨC KHI GÕ TỪNG PHÍM)
+        if (tbody) {
+            if (q === '') {
+                tbody.innerHTML = initialQuanTbodyHtml;
+            } else {
+                const rows = tbody.querySelectorAll('tr[id^="quan-mgmt-row-"]');
+                let matchCount = 0;
+                rows.forEach(row => {
+                    const cells = Array.from(row.querySelectorAll('td'));
+                    const searchCells = cells.slice(0, Math.max(1, cells.length - 1));
+                    const text = searchCells.map(c => c.innerText).join(' ');
+                    const match = window.adminSmartMatch ? window.adminSmartMatch(text, q) : text.toLowerCase().includes(q.toLowerCase());
+                    row.style.display = match ? '' : 'none';
+                    if (match) matchCount++;
+                });
+
+                // Nếu không có dòng nào khớp trên trang hiện tại, hiển thị thông báo tạm thời chờ server
+                const emptyRow = document.getElementById('quan-temp-empty-row');
+                if (matchCount === 0 && !emptyRow) {
+                    const tr = document.createElement('tr');
+                    tr.id = 'quan-temp-empty-row';
+                    tr.innerHTML = `<td colspan="5" class="p-6 text-center text-xs text-slate-400"><div class="flex items-center justify-center gap-1.5"><span class="w-3.5 h-3.5 border-2 border-amber-500 border-t-transparent rounded-full animate-spin"></span><span>Đang tìm kiếm toàn bộ kho dữ liệu Elasticsearch cho "${q}"...</span></div></td>`;
+                    tbody.appendChild(tr);
+                } else if (matchCount > 0 && emptyRow) {
+                    emptyRow.remove();
+                }
+            }
+        }
+
+        // BƯỚC 2: GỬI REQUEST ELASTICSEARCH TRONG NỀN (DEBOUNCE 160MS ĐỂ CHỐNG NGHẼN MẠNG)
+        if (quanSearchTimer) clearTimeout(quanSearchTimer);
+        quanSearchTimer = setTimeout(() => {
+            submitQuanSearch();
+        }, 160);
+    }
+
+    function clearQuanSearch() {
+        if (quanSearchTimer) clearTimeout(quanSearchTimer);
+        const input = document.getElementById('quan-quick-search');
+        if (input) input.value = '';
+        const clearBtn = document.getElementById('btn-clear-quan-search');
+        if (clearBtn) clearBtn.classList.add('hidden');
+        submitQuanSearch();
+    }
+
+    function resetQuanFilters() {
+        if (quanSearchTimer) clearTimeout(quanSearchTimer);
+        const form = document.getElementById('quan-filter-form');
+        if (!form) return;
+        form.querySelectorAll('input, select').forEach(el => {
+            if (el.tagName === 'INPUT') el.value = '';
+            if (el.tagName === 'SELECT') el.selectedIndex = 0;
+        });
+        const clearBtn = document.getElementById('btn-clear-quan-search');
+        if (clearBtn) clearBtn.classList.add('hidden');
+        const resetBtn = document.getElementById('btn-reset-quan-filter');
+        if (resetBtn) resetBtn.classList.add('hidden');
+        submitQuanSearch();
+    }
+
+    function submitQuanSearch() {
+        if (quanSearchTimer) clearTimeout(quanSearchTimer);
+        const form = document.getElementById('quan-filter-form');
+        if (!form) return;
+
+        const formData = new FormData(form);
+        const params = new URLSearchParams();
+        for (const [key, value] of formData.entries()) {
+            if (typeof value === 'string' && value.trim() !== '') {
+                params.set(key, value.trim());
+            }
+        }
+
+        const resetBtn = document.getElementById('btn-reset-quan-filter');
+        if (resetBtn) {
+            resetBtn.classList.toggle('hidden', params.toString() === '');
+        }
+
+        const url = new URL(form.action, window.location.origin);
+        url.search = params.toString();
+
+        // Cập nhật thanh địa chỉ mà không reload trang
+        window.history.replaceState({}, '', url.toString());
+
+        if (quanAbortController) {
+            quanAbortController.abort();
+        }
+        quanAbortController = new AbortController();
+
+        fetch(url.toString(), {
+            signal: quanAbortController.signal,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(res => res.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+
+            const newTbody = doc.getElementById('quan-table-body');
+            const oldTbody = document.getElementById('quan-table-body');
+            if (newTbody && oldTbody) {
+                oldTbody.innerHTML = newTbody.innerHTML;
+            }
+
+            const newPagination = doc.getElementById('quan-pagination-wrapper');
+            const oldPagination = document.getElementById('quan-pagination-wrapper');
+            if (newPagination && oldPagination) {
+                oldPagination.innerHTML = newPagination.innerHTML;
+            }
+
+            // Cập nhật các badge số lượng quán theo trạng thái
+            ['all', 'da_duyet', 'chua_duyet', 'bi_khoa', 'soft_deleted'].forEach(status => {
+                const newCountEl = doc.getElementById(`quan-count-${status}`);
+                const oldCountEl = document.getElementById(`quan-count-${status}`);
+                if (newCountEl && oldCountEl) {
+                    oldCountEl.innerText = newCountEl.innerText;
+                }
+            });
+        })
+        .catch(err => {
+            if (err.name !== 'AbortError') {
+                console.error('Lỗi tìm kiếm quán:', err);
+            }
+        });
+    }
     // Quick View Modal handler
     function adminQuickViewQuan(quanId) {
         const modal = document.getElementById('quick-view-modal');

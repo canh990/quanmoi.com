@@ -212,17 +212,31 @@ class ThongKeController extends Controller
                 $query->where('trang_thai', $statusFilter);
             }
             if ($searchKey) {
+                $esService = app(\App\Services\ElasticAdminSearchService::class);
+                $esUserIds = $esService->searchUser($searchKey);
+                $esQuanIds = $esService->searchQuan($searchKey);
+
                 $escapedSearch = addcslashes($searchKey, '%_');
-                $query->where(function ($q) use ($escapedSearch) {
+                $query->where(function ($q) use ($escapedSearch, $esUserIds, $esQuanIds) {
                     $q->where('ma_giao_dich', 'like', "%{$escapedSearch}%")
-                      ->orWhere('ten_goi_dich_vu', 'like', "%{$escapedSearch}%")
-                      ->orWhereHas('user', function ($uq) use ($escapedSearch) {
-                          $uq->where('ho_ten', 'like', "%{$escapedSearch}%")
-                             ->orWhere('email', 'like', "%{$escapedSearch}%");
-                      })
-                      ->orWhereHas('quan', function ($qq) use ($escapedSearch) {
-                          $qq->where('ten_quan', 'like', "%{$escapedSearch}%");
-                      });
+                      ->orWhere('ten_goi_dich_vu', 'like', "%{$escapedSearch}%");
+
+                    if ($esUserIds !== null && ! empty($esUserIds)) {
+                        $q->orWhereIn('user_id', $esUserIds);
+                    } else {
+                        $q->orWhereHas('user', function ($uq) use ($escapedSearch) {
+                            $uq->where('ho_ten', 'like', "%{$escapedSearch}%")
+                               ->orWhere('email', 'like', "%{$escapedSearch}%");
+                        });
+                    }
+
+                    if ($esQuanIds !== null && ! empty($esQuanIds)) {
+                        $q->orWhereIn('quan_id', $esQuanIds);
+                    } else {
+                        $q->orWhereHas('quan', function ($qq) use ($escapedSearch) {
+                            $qq->where('ten_quan', 'like', "%{$escapedSearch}%");
+                        });
+                    }
                 });
             }
             $payments = $query->latest()->paginate(15)->withQueryString();

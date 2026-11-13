@@ -9,10 +9,29 @@ use Illuminate\Support\Str;
 
 class BlogCategoryController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $categories = BlogCategory::withCount('blogs')->latest()->paginate(15);
-        return view('admin.blog.categories.index', compact('categories'));
+        $q = trim((string) $request->input('q', ''));
+        $query = BlogCategory::withCount('blogs');
+
+        if ($q !== '') {
+            $tokens = preg_split('/\s+/u', $q, -1, PREG_SPLIT_NO_EMPTY) ?: [$q];
+            $query->where(function ($sub) use ($q, $tokens) {
+                $sub->where('name', 'like', "%{$q}%")
+                    ->orWhere('description', 'like', "%{$q}%");
+
+                if (count($tokens) > 1) {
+                    $sub->orWhere(function ($tokSub) use ($tokens) {
+                        foreach ($tokens as $token) {
+                            $tokSub->where('name', 'like', "%{$token}%");
+                        }
+                    });
+                }
+            });
+        }
+
+        $categories = $query->latest()->paginate(15)->withQueryString();
+        return view('admin.blog.categories.index', compact('categories', 'q'));
     }
 
     public function store(Request $request)

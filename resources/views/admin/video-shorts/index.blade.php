@@ -1,4 +1,4 @@
-@extends('admin.layout')
+@extends(request()->ajax() ? 'admin.ajax_layout' : 'admin.layout')
 
 @section('title', 'Phê Duyệt Video TikTok Review - Quán Mới Admin')
 @section('page-title', 'Phê Duyệt Video TikTok / Shorts Review')
@@ -111,9 +111,9 @@
             {{-- Tìm kiếm từ khóa --}}
             <div class="lg:col-span-2">
                 <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Tìm kiếm video</label>
-                <div class="relative">
-                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
-                    <input type="text" name="q" value="{{ request('q') }}" placeholder="Nhập tên video, người đăng, ID hoặc quán..." class="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none">
+                <div class="admin-search-wrapper w-full shadow-2xs">
+                    <span class="material-symbols-outlined text-[18px] text-slate-400">search</span>
+                    <input type="text" name="q" value="{{ request('q') }}" placeholder="Nhập tên video, người đăng, ID hoặc quán..." class="w-full bg-transparent border-0 p-0 text-xs font-medium outline-none text-slate-800 placeholder:text-slate-400">
                 </div>
             </div>
 

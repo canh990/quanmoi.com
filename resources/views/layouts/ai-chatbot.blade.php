@@ -7,7 +7,7 @@ $botAvatarSvg = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" xml
 </svg>';
 @endphp
 
-<div id="aiChatbotContainer" class="fixed right-3 sm:right-4 z-50 flex flex-col items-end print:hidden pointer-events-none">
+<div id="aiChatbotContainer" style="position: fixed !important; bottom: 12px !important; right: 12px !important; z-index: 99999 !important;" class="fixed bottom-3 right-3 sm:bottom-4 sm:right-4 z-50 flex flex-col items-end print:hidden pointer-events-none">
 
     {{-- Chat Window (Facebook Messenger Mini Pop-up Tab - Thu nhỏ gọn gàng, cố định khít khung màn hình) --}}
     <div id="aiChatWindow" 
@@ -192,11 +192,9 @@ $botAvatarSvg = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" xml
     {{-- Modern Floating Launcher Button & Tooltip (FB Messenger Bubble Style) --}}
     <div id="aiChatLauncherWrapper" class="relative flex items-center pointer-events-auto">
         {{-- Tooltip banner (shown initially, auto dismisses) --}}
-        <div id="aiChatTooltip"
-             style="background-color: #0f172a !important; color: #ffffff !important; border: 1px solid rgba(51, 65, 85, 0.85) !important; box-shadow: 0 8px 20px rgba(15, 23, 42, 0.25) !important;"
-             class="hidden md:flex items-center gap-1.5 text-[11px] font-semibold py-1.5 px-3.5 rounded-full mr-2.5 transition-opacity">
-            <span style="color: #fbbf24 !important;" class="material-symbols-outlined text-[14px]">auto_awesome</span>
-            <span style="color: #ffffff !important;">Hỏi AI tìm quán ngon</span>
+        <div id="aiChatTooltip" class="hidden md:flex items-center gap-1.5 bg-slate-900/90 text-white text-[11px] font-medium py-1.5 px-3 rounded-full shadow-lg mr-2.5 backdrop-blur-sm border border-slate-700/60 transition-opacity animate-pulse">
+            <span class="material-symbols-outlined text-amber-400 text-[14px]">auto_awesome</span>
+            <span>Hỏi AI tìm quán ngon</span>
         </div>
 
         {{-- Main Circular Messenger-style Floating Button with High-tech Logo --}}
@@ -236,7 +234,7 @@ $botAvatarSvg = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" xml
 <style>
     #aiChatbotContainer {
         position: fixed !important;
-        bottom: 74px !important;
+        bottom: 12px !important;
         right: 12px !important;
         z-index: 99999 !important;
         display: flex !important;
@@ -246,7 +244,7 @@ $botAvatarSvg = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" xml
         margin: 0 !important;
         padding: 0 !important;
     }
-    @media (min-width: 768px) {
+    @media (min-width: 640px) {
         #aiChatbotContainer {
             bottom: 16px !important;
             right: 16px !important;

@@ -1,4 +1,4 @@
-@extends('admin.layout')
+@extends(request()->ajax() ? 'admin.ajax_layout' : 'admin.layout')
 
 @section('title', 'Nhật Ký Hệ Thống - Quán Mới Admin')
 @section('page-title', 'Nhật Ký Tác Vụ Quản Trị')
@@ -10,7 +10,27 @@
             <span class="material-symbols-outlined text-slate-700">history</span>
             Lịch Sử Thao Tác Quản Trị Hệ Thống
         </h3>
-        <p class="text-xs text-slate-500 mb-6">Theo dõi mọi thay đổi dữ liệu, hành động cập nhật, khóa/xóa tài khoản hoặc duyệt thông tin.</p>
+        <p class="text-xs text-slate-500 mb-4">Theo dõi mọi thay đổi dữ liệu, hành động cập nhật, khóa/xóa tài khoản hoặc duyệt thông tin.</p>
+
+        {{-- Search Bar with Elasticsearch --}}
+        <div class="mb-5">
+            <form method="GET" action="{{ route('admin.audit-log.index') }}" class="flex flex-wrap items-center gap-2.5">
+                <div class="admin-search-wrapper flex-1 min-w-[240px] max-w-md shadow-2xs">
+                    <span class="material-symbols-outlined text-[16px] text-slate-400">search</span>
+                    <input type="text" name="q" value="{{ $q ?? '' }}" placeholder="Tìm người thực hiện, hành động, ID đối tượng, IP..." class="w-full bg-transparent border-0 p-0 text-xs font-medium outline-none text-slate-800 placeholder:text-slate-400">
+                </div>
+                <button type="submit" class="btn-action-primary-glow">
+                    <span class="material-symbols-outlined text-[16px]">filter_alt</span>
+                    <span>Tìm kiếm</span>
+                </button>
+                @if(!empty($q))
+                    <a href="{{ route('admin.audit-log.index') }}" class="btn-action-secondary" title="Xóa tìm kiếm">
+                        <span class="material-symbols-outlined text-[16px]">restart_alt</span>
+                        <span>Xóa lọc</span>
+                    </a>
+                @endif
+            </form>
+        </div>
 
         <div class="overflow-x-auto">
             <table class="w-full text-left text-xs text-slate-700">
