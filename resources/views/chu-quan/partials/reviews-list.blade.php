@@ -37,22 +37,20 @@
         @endif
 
         {{-- Phản hồi đã có của quán --}}
-        @if($danhGia->phan_hoi)
-            <div class="mt-3.5 rounded-xl bg-gradient-to-r from-orange-50/80 to-amber-50/50 border border-orange-100/80 p-3.5 space-y-1">
-                <div class="flex items-center justify-between gap-2">
-                    <div class="flex items-center gap-1.5 text-xs font-bold text-orange-700">
-                        <span class="material-symbols-outlined text-[15px]">store</span>
-                        <span>Phản hồi của quán</span>
-                    </div>
-                    @if($danhGia->phan_hoi_luc)
-                        <time class="text-[11px] text-orange-600/70">{{ $danhGia->phan_hoi_luc->timezone('Asia/Ho_Chi_Minh')->format('d/m/Y H:i') }}</time>
-                    @endif
+        <div id="owner-reply-display-wrap-{{ $danhGia->id }}" class="{{ $danhGia->phan_hoi ? '' : 'hidden' }} mt-3.5 rounded-xl bg-gradient-to-r from-orange-50/80 to-amber-50/50 border border-orange-100/80 p-3.5 space-y-1">
+            <div class="flex items-center justify-between gap-2">
+                <div class="flex items-center gap-1.5 text-xs font-bold text-orange-700">
+                    <span class="material-symbols-outlined text-[15px]">store</span>
+                    <span>Phản hồi của quán</span>
                 </div>
-                <p class="whitespace-pre-line break-words text-xs text-gray-700 leading-relaxed [overflow-wrap:anywhere] pt-1">
-                    {{ $danhGia->phan_hoi }}
-                </p>
+                <time id="owner-reply-time-{{ $danhGia->id }}" class="text-[11px] text-orange-600/70">
+                    {{ $danhGia->phan_hoi_luc ? $danhGia->phan_hoi_luc->timezone('Asia/Ho_Chi_Minh')->format('d/m/Y H:i') : '' }}
+                </time>
             </div>
-        @endif
+            <p id="owner-reply-text-{{ $danhGia->id }}" class="whitespace-pre-line break-words text-xs text-gray-700 leading-relaxed [overflow-wrap:anywhere] pt-1">
+                {{ $danhGia->phan_hoi }}
+            </p>
+        </div>
 
         {{-- Form trả lời / chỉnh sửa phản hồi --}}
         @php
@@ -101,11 +99,11 @@
             }
         @endphp
 
-        <form method="POST" action="{{ route('chu-quan.quan.danh-gia.reply', ['slug' => $quan->slug, 'reviewId' => $danhGia->id]) }}" class="mt-4 space-y-3 pt-3 border-t border-slate-100">
+        <form method="POST" action="{{ route('chu-quan.quan.danh-gia.reply', ['slug' => $quan->slug, 'reviewId' => $danhGia->id]) }}" onsubmit="handleOwnerReplySubmit(event, '{{ $quan->slug }}', '{{ $danhGia->id }}')" class="mt-4 space-y-3 pt-3 border-t border-slate-100">
             @csrf
             @method('PUT')
             <div class="flex flex-wrap items-center justify-between gap-2">
-                <label for="phan-hoi-{{ $danhGia->id }}" class="block text-xs font-bold text-slate-800">
+                <label for="phan-hoi-{{ $danhGia->id }}" id="label-reply-mode-{{ $danhGia->id }}" class="block text-xs font-bold text-slate-800">
                     {{ $danhGia->phan_hoi ? 'Chỉnh sửa câu trả lời của quán' : 'Trả lời khách hàng này' }}
                 </label>
                 <div class="flex items-center gap-2">
@@ -218,9 +216,9 @@
                 <p class="text-xs text-red-600 font-medium">{{ $message }}</p>
             @enderror
             <div class="flex items-center justify-end">
-                <button type="submit" class="rounded-xl bg-primary px-4 py-2 text-xs font-bold text-white hover:brightness-110 shadow-xs transition cursor-pointer flex items-center gap-1">
+                <button type="submit" id="btn-submit-reply-{{ $danhGia->id }}" class="rounded-xl bg-primary px-4 py-2 text-xs font-bold text-white hover:brightness-110 shadow-xs transition cursor-pointer flex items-center gap-1">
                     <span class="material-symbols-outlined text-[15px]">send</span>
-                    <span>{{ $danhGia->phan_hoi ? 'Cập nhật phản hồi' : 'Gửi phản hồi cho khách' }}</span>
+                    <span id="btn-submit-reply-text-{{ $danhGia->id }}">{{ $danhGia->phan_hoi ? 'Cập nhật phản hồi' : 'Gửi phản hồi cho khách' }}</span>
                 </button>
             </div>
         </form>

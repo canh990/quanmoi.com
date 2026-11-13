@@ -2,16 +2,16 @@
 
 namespace App\Models;
 
+use App\Traits\SafeSearchable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Laravel\Scout\Searchable;
 
 class Quan extends Model
 {
-    use HasFactory, HasUuids, SoftDeletes, Searchable;
+    use HasFactory, HasUuids, SoftDeletes, SafeSearchable;
 
     protected $table = 'quan';
     const DELETED_AT = 'ngay_xoa';
@@ -148,7 +148,7 @@ class Quan extends Model
             'co_shopeefood'        => !empty($this->shopeefood_url),
             'duoi_50k'             => ($this->gia_nho_nhat !== null && (float) $this->gia_nho_nhat <= 50000),
             'dang_mo_cua'          => $this->isDangMoCua(),
-            'co_video_review'      => $this->relationLoaded('videos') ? $this->videos->isNotEmpty() : $this->videos()->exists(),
+            'co_video_review'      => $this->relationLoaded('videos') ? $this->videos->where('trang_thai', 'da_duyet')->isNotEmpty() : $this->videos()->where('trang_thai', 'da_duyet')->exists(),
             'mon_an'               => $danhSachMon,
             'created_at'           => $this->created_at ? $this->created_at->timestamp : null,
             'updated_at'           => $this->updated_at ? $this->updated_at->timestamp : null,
@@ -331,6 +331,7 @@ class Quan extends Model
     {
         return $this->hasMany(KhuyenMai::class, 'quan_id')
             ->where('trang_thai', true)
+            ->where('trang_thai_duyet', 'da_duyet')
             ->where(function ($query) {
                 $query->whereNull('ngay_ket_thuc')
                     ->orWhereDate('ngay_ket_thuc', '>=', now()->toDateString());

@@ -38,66 +38,56 @@ class KhuyenMaiAiController extends Controller
     }
 
     /**
-     * Màn hình Studio Tạo & Quản Lý Khuyến Mãi AI
+     * Màn hình Phê Duyệt & Quản Lý Voucher / Khuyến Mãi
      */
-    public function index()
+    public function index(Request $request)
     {
         $this->authorizeAccess();
 
-        $danhSachQuan = Quan::with(['danhMucMenu.monAn:id,danh_muc_id,ten_mon'])
-            ->select('id', 'ten_quan', 'loai_hinh_kinh_doanh', 'dia_chi_chi_tiet', 'ten_quan_huyen', 'ten_tinh_thanh')
-            ->where('trang_thai', 'da_duyet')
-            ->orderBy('ten_quan')
-            ->get()
-            ->map(function ($quan) {
-                $monAnList = $quan->danhMucMenu->flatMap(function ($dm) {
-                    return $dm->monAn->pluck('ten_mon');
-                })->unique()->filter()->values();
-                $quan->danh_sach_mon = $monAnList;
-                return $quan;
-            });
+        $query = KhuyenMai::with(['quan:id,ten_quan,slug', 'nguoiDuyet:id,ho_ten,email'])
+            ->orderBy('created_at', 'desc');
 
-        $q = trim((string) request('q', ''));
-        $promoQuery = KhuyenMai::with('quan:id,ten_quan,slug');
+        // Lọc theo trạng thái phê duyệt
+        $filterStatus = $request->query('trang_thai_duyet');
+        if (! empty($filterStatus) && in_array($filterStatus, ['cho_duyet', 'da_duyet', 'tu_choi'])) {
+            $query->where('trang_thai_duyet', $filterStatus);
+        }
 
-        if ($q !== '') {
+        // Tìm kiếm thông minh qua Elasticsearch (mã voucher, tiêu đề, món áp dụng, tên quán)
+        if ($request->filled('q')) {
+            $q = trim((string) $request->query('q'));
             $esService = app(\App\Services\ElasticAdminSearchService::class);
             $esKmIds = $esService->searchKhuyenMai($q);
 
             if ($esKmIds !== null && ! empty($esKmIds)) {
-                $promoQuery->whereIn('id', $esKmIds);
+                $query->whereIn('id', $esKmIds);
                 if (\Illuminate\Support\Facades\DB::getDriverName() === 'mysql') {
                     $escapedIds = implode("','", array_map('addslashes', $esKmIds));
-                    $promoQuery->orderByRaw("FIELD(id, '{$escapedIds}')");
+                    $query->orderByRaw("FIELD(id, '{$escapedIds}')");
                 }
             } else {
-                $tokens = preg_split('/\s+/u', $q, -1, PREG_SPLIT_NO_EMPTY) ?: [$q];
-                $promoQuery->where(function ($sub) use ($q, $tokens) {
-                    $sub->where('ma_voucher', 'like', "%{$q}%")
-                        ->orWhere('tieu_de', 'like', "%{$q}%")
-                        ->orWhere('slogan', 'like', "%{$q}%")
-                        ->orWhere('noi_dung', 'like', "%{$q}%")
-                        ->orWhereHas('quan', fn ($qSub) => $qSub->where('ten_quan', 'like', "%{$q}%"));
-
-                    if (count($tokens) > 1) {
-                        $sub->orWhere(function ($tokSub) use ($tokens) {
-                            foreach ($tokens as $token) {
-                                $tokSub->where(function ($w) use ($token) {
-                                    $w->where('tieu_de', 'like', "%{$token}%")
-                                      ->orWhere('ma_voucher', 'like', "%{$token}%");
-                                });
-                            }
-                        });
-                    }
-                });
+                KhuyenMai::applyElasticSearch($query, $q, $filterStatus);
             }
         }
 
-        $promotions = $promoQuery->orderBy('created_at', 'desc')->get();
+        $promotions = $query->get();
 
+        // Thống kê nhanh các chỉ số
+        $totalCount = KhuyenMai::count();
+        $pendingCount = KhuyenMai::where('trang_thai_duyet', 'cho_duyet')->count();
+        $approvedCount = KhuyenMai::where('trang_thai_duyet', 'da_duyet')->count();
+        $rejectedCount = KhuyenMai::where('trang_thai_duyet', 'tu_choi')->count();
         $promotionsCount = $promotions->count();
 
-        return view('admin.khuyen-mai-ai.index', compact('danhSachQuan', 'promotions', 'promotionsCount'));
+        return view('admin.khuyen-mai-ai.index', compact(
+            'promotions',
+            'promotionsCount',
+            'totalCount',
+            'pendingCount',
+            'approvedCount',
+            'rejectedCount',
+            'filterStatus'
+        ));
     }
 
     /**
@@ -250,13 +240,101 @@ class KhuyenMaiAiController extends Controller
             'ngay_ket_thuc' => $validated['ngay_ket_thuc'],
             'mon_ap_dung' => $validated['mon_ap_dung'],
             'trang_thai' => true,
+            'trang_thai_duyet' => 'da_duyet', // Do Admin tạo trực tiếp nên tự động duyệt
+            'nguoi_duyet_id' => Auth::id(),
+            'ngay_duyet' => now(),
             'ai_provider' => 'kira_ai',
         ]);
 
         return response()->json([
             'success' => true,
-            'message' => 'Đã lưu chương trình khuyến mãi cho quán thành công!',
+            'message' => 'Đã lưu và phê duyệt chương trình khuyến mãi cho quán thành công!',
             'data' => $km,
+        ]);
+    }
+
+    /**
+     * Phê duyệt voucher do chủ quán tạo
+     */
+    public function approve(string $id)
+    {
+        $this->authorizeAccess();
+
+        $km = KhuyenMai::findOrFail($id);
+        $km->trang_thai_duyet = 'da_duyet';
+        $km->trang_thai = true;
+        $km->nguoi_duyet_id = Auth::id();
+        $km->ngay_duyet = now();
+        $km->ly_do_tu_choi = null;
+        $km->save();
+
+        try {
+            \App\Models\AdminAuditLog::create([
+                'actor_id' => Auth::id(),
+                'action' => 'voucher.approved',
+                'target_type' => 'App\Models\KhuyenMai',
+                'target_id' => (string) $km->id,
+                'metadata' => [
+                    'tieu_de' => $km->tieu_de,
+                    'ma_voucher' => $km->ma_voucher,
+                ],
+                'ip_address' => request()->ip(),
+            ]);
+        } catch (\Throwable $e) {}
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Đã phê duyệt voucher khuyến mãi thành công! Mã ưu đãi hiện đã hiển thị cho thực khách.',
+            'data' => $km,
+            'counts' => [
+                'total' => KhuyenMai::count(),
+                'pending' => KhuyenMai::where('trang_thai_duyet', 'cho_duyet')->count(),
+                'approved' => KhuyenMai::where('trang_thai_duyet', 'da_duyet')->count(),
+                'rejected' => KhuyenMai::where('trang_thai_duyet', 'tu_choi')->count(),
+            ],
+        ]);
+    }
+
+    /**
+     * Từ chối voucher do chủ quán tạo
+     */
+    public function reject(Request $request, string $id)
+    {
+        $this->authorizeAccess();
+
+        $km = KhuyenMai::findOrFail($id);
+        $km->trang_thai_duyet = 'tu_choi';
+        $km->trang_thai = false;
+        $km->ly_do_tu_choi = $request->input('ly_do') ?: 'Nội dung voucher hoặc chương trình khuyến mãi chưa phù hợp.';
+        $km->nguoi_duyet_id = Auth::id();
+        $km->ngay_duyet = now();
+        $km->save();
+
+        try {
+            \App\Models\AdminAuditLog::create([
+                'actor_id' => Auth::id(),
+                'action' => 'voucher.rejected',
+                'target_type' => 'App\Models\KhuyenMai',
+                'target_id' => (string) $km->id,
+                'metadata' => [
+                    'tieu_de' => $km->tieu_de,
+                    'ma_voucher' => $km->ma_voucher,
+                    'ly_do' => $km->ly_do_tu_choi,
+                ],
+                'ip_address' => request()->ip(),
+            ]);
+        } catch (\Throwable $e) {}
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Đã từ chối duyệt voucher khuyến mãi.',
+            'data' => $km,
+            'counts' => [
+                'total' => KhuyenMai::count(),
+                'pending' => KhuyenMai::where('trang_thai_duyet', 'cho_duyet')->count(),
+                'approved' => KhuyenMai::where('trang_thai_duyet', 'da_duyet')->count(),
+                'rejected' => KhuyenMai::where('trang_thai_duyet', 'tu_choi')->count(),
+            ],
         ]);
     }
 

@@ -9,6 +9,47 @@ use Laravel\Scout\Builder;
 
 class CustomSearchParametersFactory extends SearchParametersFactory
 {
+    protected function getModelSearchFields(Builder $builder): array
+    {
+        $model = $builder->model;
+
+        if ($model instanceof \App\Models\VideoShort) {
+            return [
+                ['tieu_de^4', 'ten_quan^3', 'mon_an^2.5', 'nguoi_dang^1.5', 'video_id^1.5'],
+                ['tieu_de^3', 'ten_quan^2.5', 'mon_an^2', 'nguoi_dang^1.5'],
+                ['tieu_de^3', 'ten_quan^2', 'mon_an^1.5', 'nguoi_dang'],
+                [
+                    ['match_phrase' => ['tieu_de' => ['query' => $builder->query, 'boost' => 10]]],
+                    ['match_phrase' => ['ten_quan' => ['query' => $builder->query, 'boost' => 8]]],
+                    ['match_phrase' => ['mon_an' => ['query' => $builder->query, 'boost' => 6]]],
+                ],
+            ];
+        }
+
+        if ($model instanceof \App\Models\KhuyenMai) {
+            return [
+                ['ma_voucher^5', 'tieu_de^4', 'ten_quan^3', 'mon_ap_dung^2', 'slogan^1.5', 'noi_dung'],
+                ['ma_voucher^4', 'tieu_de^3', 'ten_quan^2.5', 'mon_ap_dung^2'],
+                ['ma_voucher^4', 'tieu_de^3', 'ten_quan^2', 'mon_ap_dung'],
+                [
+                    ['match_phrase' => ['ma_voucher' => ['query' => $builder->query, 'boost' => 10]]],
+                    ['match_phrase' => ['tieu_de' => ['query' => $builder->query, 'boost' => 8]]],
+                    ['match_phrase' => ['ten_quan' => ['query' => $builder->query, 'boost' => 6]]],
+                ],
+            ];
+        }
+
+        return [
+            ['ten_quan^4', 'mon_an^2.5', 'loai_hinh_kinh_doanh^1.5', 'dia_chi', 'mo_ta'],
+            ['ten_quan^3', 'mon_an^2', 'loai_hinh_kinh_doanh^1.5', 'dia_chi', 'mo_ta'],
+            ['ten_quan^3', 'mon_an^2', 'dia_chi'],
+            [
+                ['match_phrase' => ['ten_quan' => ['query' => $builder->query, 'boost' => 10]]],
+                ['match_phrase' => ['mon_an' => ['query' => $builder->query, 'boost' => 8]]],
+            ],
+        ];
+    }
+
     protected function makeQuery(Builder $builder): array
     {
         $query = [
@@ -16,6 +57,7 @@ class CustomSearchParametersFactory extends SearchParametersFactory
         ];
 
         if (!empty($builder->query)) {
+            [$bestFields, $crossFields, $phraseFields, $exactPhrases] = $this->getModelSearchFields($builder);
             $query['bool']['must'] = [
                 'bool' => [
                     'should' => [
@@ -27,7 +69,7 @@ class CustomSearchParametersFactory extends SearchParametersFactory
                         [
                             'multi_match' => [
                                 'query' => $builder->query,
-                                'fields' => ['ten_quan^4', 'mon_an^2.5', 'loai_hinh_kinh_doanh^1.5', 'dia_chi', 'mo_ta'],
+                                'fields' => $bestFields,
                                 'type' => 'best_fields',
                                 'operator' => 'OR',
                                 'fuzziness' => 'AUTO',
@@ -38,7 +80,7 @@ class CustomSearchParametersFactory extends SearchParametersFactory
                         [
                             'multi_match' => [
                                 'query' => $builder->query,
-                                'fields' => ['ten_quan^3', 'mon_an^2', 'loai_hinh_kinh_doanh^1.5', 'dia_chi', 'mo_ta'],
+                                'fields' => $crossFields,
                                 'type' => 'cross_fields',
                                 'operator' => 'AND',
                                 'boost' => 2,
@@ -47,7 +89,7 @@ class CustomSearchParametersFactory extends SearchParametersFactory
                         [
                             'multi_match' => [
                                 'query' => $builder->query,
-                                'fields' => ['ten_quan^3', 'mon_an^2', 'dia_chi'],
+                                'fields' => $phraseFields,
                                 'type' => 'phrase_prefix',
                                 'boost' => 1.5,
                             ],
@@ -56,10 +98,7 @@ class CustomSearchParametersFactory extends SearchParametersFactory
                     'minimum_should_match' => 1,
                 ],
             ];
-            $query['bool']['should'] = [
-                ['match_phrase' => ['ten_quan' => ['query' => $builder->query, 'boost' => 10]]],
-                ['match_phrase' => ['mon_an' => ['query' => $builder->query, 'boost' => 8]]],
-            ];
+            $query['bool']['should'] = $exactPhrases;
         } else {
             $query['bool']['must'] = [
                 'match_all' => new \stdClass(),

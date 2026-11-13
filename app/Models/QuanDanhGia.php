@@ -15,6 +15,26 @@ class QuanDanhGia extends Model
         'phan_hoi_luc' => 'datetime',
     ];
 
+    /**
+     * Đồng bộ lại điểm đánh giá trung bình của quán lên Elasticsearch khi có đánh giá mới/sửa/xóa.
+     */
+    protected static function booted(): void
+    {
+        $sync = static function (QuanDanhGia $danhGia): void {
+            $quan = $danhGia->quan;
+            if ($quan && method_exists($quan, 'shouldBeSearchable') && $quan->shouldBeSearchable()) {
+                try {
+                    $quan->searchable();
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::warning('Sync Quan Elastic after QuanDanhGia change failed: ' . $e->getMessage());
+                }
+            }
+        };
+
+        static::saved($sync);
+        static::deleted($sync);
+    }
+
     public function quan(): BelongsTo
     {
         return $this->belongsTo(Quan::class, 'quan_id');

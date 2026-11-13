@@ -34,11 +34,16 @@ class QuanLyVideoController extends Controller
 
         $query = VideoShort::with('quan:id,ten_quan,slug,dia_chi_chi_tiet,ten_quan_huyen,ten_tinh_thanh');
 
-        // Tìm kiếm theo từ khóa
+        // Tìm kiếm thông minh qua Elasticsearch theo từ khóa (tên video, người đăng, ID, tên quán, món ăn)
         if ($request->filled('q')) {
             $keyword = trim((string) $request->q);
+            $statusFilter = ($request->filled('trang_thai') && $request->trang_thai !== 'all')
+                ? (string) $request->trang_thai
+                : null;
+
             $esService = app(\App\Services\ElasticAdminSearchService::class);
-            $esVideoIds = $esService->searchVideo($keyword);
+            $esFilters = $statusFilter ? ['trang_thai' => $statusFilter] : [];
+            $esVideoIds = $esService->searchVideo($keyword, $esFilters);
 
             if ($esVideoIds !== null && ! empty($esVideoIds)) {
                 $query->whereIn('id', $esVideoIds);
@@ -47,24 +52,7 @@ class QuanLyVideoController extends Controller
                     $query->orderByRaw("FIELD(id, {$escapedIds})");
                 }
             } else {
-                $tokens = preg_split('/\s+/u', $keyword, -1, PREG_SPLIT_NO_EMPTY) ?: [$keyword];
-                $query->where(function ($q) use ($keyword, $tokens) {
-                    $q->where('tieu_de', 'like', "%{$keyword}%")
-                        ->orWhere('video_id', 'like', "%{$keyword}%")
-                        ->orWhere('nguoi_dang', 'like', "%{$keyword}%")
-                        ->orWhereHas('quan', fn ($r) => $r->where('ten_quan', 'like', "%{$keyword}%"));
-
-                    if (count($tokens) > 1) {
-                        $q->orWhere(function ($tokSub) use ($tokens) {
-                            foreach ($tokens as $token) {
-                                $tokSub->where(function ($w) use ($token) {
-                                    $w->where('tieu_de', 'like', "%{$token}%")
-                                      ->orWhere('nguoi_dang', 'like', "%{$token}%");
-                                });
-                            }
-                        });
-                    }
-                });
+                VideoShort::applyElasticSearch($query, $keyword, $statusFilter);
             }
         }
 

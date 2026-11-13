@@ -109,28 +109,47 @@ class KhuyenMaiController extends Controller
         $khuyenMai = KhuyenMai::create([
             'quan_id' => $quan->id,
             'tieu_de' => $validated['tieu_de'],
-            'ma_voucher' => $validated['ma_voucher'] ? strtoupper(trim($validated['ma_voucher'])) : null,
-            'loai_khuyen_mai' => $validated['loai_khuyen_mai'],
-            'gia_tri_giam' => $validated['gia_tri_giam'],
-            'slogan' => $validated['slogan'],
-            'noi_dung' => $validated['noi_dung'],
-            'the_le' => $validated['the_le'],
-            'ngay_bat_dau' => $validated['ngay_bat_dau'],
-            'ngay_ket_thuc' => $validated['ngay_ket_thuc'],
-            'mon_ap_dung' => $validated['mon_ap_dung'],
-            'trang_thai' => true,
+            'ma_voucher' => ! empty($validated['ma_voucher']) ? strtoupper(trim($validated['ma_voucher'])) : null,
+            'loai_khuyen_mai' => $validated['loai_khuyen_mai'] ?? 'giam_phan_tram',
+            'gia_tri_giam' => $validated['gia_tri_giam'] ?? '20%',
+            'slogan' => $validated['slogan'] ?? null,
+            'noi_dung' => $validated['noi_dung'] ?? '',
+            'the_le' => $validated['the_le'] ?? null,
+            'ngay_bat_dau' => $validated['ngay_bat_dau'] ?? null,
+            'ngay_ket_thuc' => $validated['ngay_ket_thuc'] ?? null,
+            'mon_ap_dung' => $validated['mon_ap_dung'] ?? 'Toàn bộ thực đơn',
+            'trang_thai' => false, // Chưa kích hoạt công khai khi chưa được duyệt
+            'trang_thai_duyet' => 'cho_duyet', // Chờ Admin phê duyệt giống quản lý video
             'ai_provider' => $validated['ai_provider'] ?? 'kira_ai',
         ]);
+
+        // Ghi log kiểm duyệt cho Admin
+        try {
+            \App\Models\AdminAuditLog::create([
+                'actor_id' => auth()->id(),
+                'action' => 'voucher.submitted',
+                'target_type' => 'App\Models\KhuyenMai',
+                'target_id' => (string) $khuyenMai->id,
+                'metadata' => [
+                    'tieu_de' => $khuyenMai->tieu_de,
+                    'ma_voucher' => $khuyenMai->ma_voucher,
+                    'ten_quan' => $quan->ten_quan,
+                ],
+                'ip_address' => $request->ip(),
+            ]);
+        } catch (\Throwable $e) {}
+
+        $successMsg = 'Đã gửi voucher/khuyến mãi thành công! Ưu đãi đang ở trạng thái 🟡 "Chờ duyệt" và sẽ hiển thị công khai cho thực khách ngay sau khi Ban quản trị (Admin) phê duyệt.';
 
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Đã lưu và kích hoạt chương trình khuyến mãi thành công!',
+                'message' => $successMsg,
                 'data' => $khuyenMai,
             ]);
         }
 
-        return back()->with('success', 'Đã lưu và kích hoạt chương trình khuyến mãi thành công!');
+        return back()->with('success', $successMsg);
     }
 
     /**
@@ -140,6 +159,20 @@ class KhuyenMaiController extends Controller
     {
         $quan = $this->getQuan($slug);
         $km = KhuyenMai::where('id', $id)->where('quan_id', $quan->id)->firstOrFail();
+
+        if ($km->trang_thai_duyet === 'cho_duyet') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Voucher này đang ở trạng thái 🟡 "Chờ duyệt". Bạn cần chờ Admin phê duyệt trước khi có thể bật hoạt động.',
+            ], 422);
+        }
+
+        if ($km->trang_thai_duyet === 'tu_choi') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Voucher này đã bị từ chối phê duyệt' . ($km->ly_do_tu_choi ? ": {$km->ly_do_tu_choi}" : '. Vui lòng tạo voucher khác.'),
+            ], 422);
+        }
 
         $km->trang_thai = ! $km->trang_thai;
         $km->save();
@@ -192,6 +225,13 @@ class KhuyenMaiController extends Controller
             ], 404);
         }
 
+        if ($km->trang_thai_duyet !== 'da_duyet') {
+            return response()->json([
+                'success' => false,
+                'message' => "Mã voucher [{$code}] đang ở trạng thái \"{$km->trang_thai_duyet_label}\", chưa được Ban quản trị phê duyệt.",
+            ], 422);
+        }
+
         $isExpired = $km->ngay_ket_thuc && $km->ngay_ket_thuc->endOfDay()->isPast();
 
         return response()->json([
@@ -209,6 +249,39 @@ class KhuyenMaiController extends Controller
                 'slogan' => $km->slogan,
             ],
             'message' => $isExpired ? 'Mã này đã hết hạn!' : ($km->trang_thai ? 'Mã voucher hợp lệ!' : 'Mã này đang bị tạm dừng!'),
+        ]);
+    }
+
+    /**
+     * Kiểm tra trạng thái phê duyệt realtime của các voucher của quán
+     */
+    public function realtimeStatus(Request $request, string $slug)
+    {
+        $quan = $this->getQuan($slug);
+
+        $vouchers = KhuyenMai::where('quan_id', $quan->id)
+            ->select('id', 'trang_thai_duyet', 'trang_thai', 'ly_do_tu_choi', 'ma_voucher', 'tieu_de', 'ngay_duyet')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($km) {
+                return [
+                    'id' => (string) $km->id,
+                    'trang_thai_duyet' => $km->trang_thai_duyet,
+                    'trang_thai' => (bool) $km->trang_thai,
+                    'con_han' => (bool) $km->con_han,
+                    'ly_do_tu_choi' => $km->ly_do_tu_choi,
+                    'ma_voucher' => $km->ma_voucher,
+                    'tieu_de' => $km->tieu_de,
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'data' => $vouchers,
+            'total' => $vouchers->count(),
+            'pending' => $vouchers->where('trang_thai_duyet', 'cho_duyet')->count(),
+            'approved' => $vouchers->where('trang_thai_duyet', 'da_duyet')->count(),
+            'rejected' => $vouchers->where('trang_thai_duyet', 'tu_choi')->count(),
         ]);
     }
 }
