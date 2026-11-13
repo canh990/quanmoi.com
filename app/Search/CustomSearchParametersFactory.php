@@ -11,6 +11,61 @@ use Laravel\Scout\Builder;
 
 class CustomSearchParametersFactory extends SearchParametersFactory
 {
+    protected function getModelSearchFields(Builder $builder): array
+    {
+        $model = $builder->model;
+
+        if ($model instanceof Blog) {
+            return [
+                ['title^5', 'excerpt^2.5', 'tags^2.5', 'category^2', 'author^1.5', 'content'],
+                ['title^4', 'excerpt^2', 'tags^2', 'category^1.5', 'content'],
+                ['title^4', 'tags^2', 'category^1.5'],
+                [
+                    ['match_phrase' => ['title' => ['query' => $builder->query, 'boost' => 10]]],
+                    ['match_phrase' => ['excerpt' => ['query' => $builder->query, 'boost' => 5]]],
+                    ['match_phrase' => ['category' => ['query' => $builder->query, 'boost' => 5]]],
+                    ['match_phrase' => ['tags' => ['query' => $builder->query, 'boost' => 6]]],
+                ],
+            ];
+        }
+
+        if ($model instanceof \App\Models\VideoShort) {
+            return [
+                ['tieu_de^4', 'ten_quan^3', 'mon_an^2.5', 'nguoi_dang^1.5', 'video_id^1.5'],
+                ['tieu_de^3', 'ten_quan^2.5', 'mon_an^2', 'nguoi_dang^1.5'],
+                ['tieu_de^3', 'ten_quan^2', 'mon_an^1.5', 'nguoi_dang'],
+                [
+                    ['match_phrase' => ['tieu_de' => ['query' => $builder->query, 'boost' => 10]]],
+                    ['match_phrase' => ['ten_quan' => ['query' => $builder->query, 'boost' => 8]]],
+                    ['match_phrase' => ['mon_an' => ['query' => $builder->query, 'boost' => 6]]],
+                ],
+            ];
+        }
+
+        if ($model instanceof \App\Models\KhuyenMai) {
+            return [
+                ['ma_voucher^5', 'tieu_de^4', 'ten_quan^3', 'mon_ap_dung^2', 'slogan^1.5', 'noi_dung'],
+                ['ma_voucher^4', 'tieu_de^3', 'ten_quan^2.5', 'mon_ap_dung^2'],
+                ['ma_voucher^4', 'tieu_de^3', 'ten_quan^2', 'mon_ap_dung'],
+                [
+                    ['match_phrase' => ['ma_voucher' => ['query' => $builder->query, 'boost' => 10]]],
+                    ['match_phrase' => ['tieu_de' => ['query' => $builder->query, 'boost' => 8]]],
+                    ['match_phrase' => ['ten_quan' => ['query' => $builder->query, 'boost' => 6]]],
+                ],
+            ];
+        }
+
+        return [
+            ['ten_quan^4', 'mon_an^2.5', 'loai_hinh_kinh_doanh^1.5', 'dia_chi', 'mo_ta'],
+            ['ten_quan^3', 'mon_an^2', 'loai_hinh_kinh_doanh^1.5', 'dia_chi', 'mo_ta'],
+            ['ten_quan^3', 'mon_an^2', 'dia_chi'],
+            [
+                ['match_phrase' => ['ten_quan' => ['query' => $builder->query, 'boost' => 10]]],
+                ['match_phrase' => ['mon_an' => ['query' => $builder->query, 'boost' => 8]]],
+            ],
+        ];
+    }
+
     protected function makeQuery(Builder $builder): array
     {
         $query = [
@@ -18,118 +73,50 @@ class CustomSearchParametersFactory extends SearchParametersFactory
         ];
 
         if (!empty($builder->query)) {
-            if ($builder->model instanceof Blog) {
-                // Tối ưu hóa tìm kiếm chuyên sâu cho Blog ẩm thực
-                $query['bool']['must'] = [
-                    'bool' => [
-                        'should' => [
-                            // 1. Best fields: tiêu đề (trọng số 5), tóm tắt (2.5), tags (2.5), chuyên mục (2), tác giả (1.5), nội dung (1)
-                            [
-                                'multi_match' => [
-                                    'query' => $builder->query,
-                                    'fields' => [
-                                        'title^5',
-                                        'excerpt^2.5',
-                                        'tags^2.5',
-                                        'category^2',
-                                        'author^1.5',
-                                        'content',
-                                    ],
-                                    'type' => 'best_fields',
-                                    'operator' => 'OR',
-                                    'fuzziness' => 'AUTO',
-                                    'prefix_length' => 1,
-                                    'max_expansions' => 50,
-                                ],
-                            ],
-                            // 2. Cross fields: kết hợp nhiều từ khóa liên tiếp (AND)
-                            [
-                                'multi_match' => [
-                                    'query' => $builder->query,
-                                    'fields' => [
-                                        'title^4',
-                                        'excerpt^2',
-                                        'tags^2',
-                                        'category^1.5',
-                                        'content',
-                                    ],
-                                    'type' => 'cross_fields',
-                                    'operator' => 'AND',
-                                    'boost' => 2,
-                                ],
-                            ],
-                            // 3. Phrase prefix: hỗ trợ gõ gợi ý tức thì
-                            [
-                                'multi_match' => [
-                                    'query' => $builder->query,
-                                    'fields' => [
-                                        'title^4',
-                                        'tags^2',
-                                        'category^1.5',
-                                    ],
-                                    'type' => 'phrase_prefix',
-                                    'boost' => 1.5,
-                                ],
-                            ],
-                        ],
-                        'minimum_should_match' => 1,
-                    ],
-                ];
+            [$bestFields, $crossFields, $phraseFields, $exactPhrases] = $this->getModelSearchFields($builder);
+            $prefixField = ($builder->model instanceof Blog) ? 'title.prefix' : 'ten_quan.prefix';
 
-                // 4. Boost cụm từ chính xác (Exact match boosting)
-                $query['bool']['should'] = [
-                    ['match_phrase' => ['title' => ['query' => $builder->query, 'boost' => 10]]],
-                    ['match_phrase' => ['excerpt' => ['query' => $builder->query, 'boost' => 5]]],
-                    ['match_phrase' => ['category' => ['query' => $builder->query, 'boost' => 5]]],
-                    ['match_phrase' => ['tags' => ['query' => $builder->query, 'boost' => 6]]],
-                ];
-            } else {
-                // Tối ưu hóa tìm kiếm cho Quán ăn (Quan)
-                $query['bool']['must'] = [
-                    'bool' => [
-                        'should' => [
-                            [
-                                'match' => [
-                                    'ten_quan.prefix' => ['query' => $builder->query, 'operator' => 'AND', 'boost' => 6],
-                                ],
-                            ],
-                            [
-                                'multi_match' => [
-                                    'query' => $builder->query,
-                                    'fields' => ['ten_quan^4', 'mon_an^2.5', 'loai_hinh_kinh_doanh^1.5', 'dia_chi', 'mo_ta'],
-                                    'type' => 'best_fields',
-                                    'operator' => 'OR',
-                                    'fuzziness' => 'AUTO',
-                                    'prefix_length' => 1,
-                                    'max_expansions' => 50,
-                                ],
-                            ],
-                            [
-                                'multi_match' => [
-                                    'query' => $builder->query,
-                                    'fields' => ['ten_quan^3', 'mon_an^2', 'loai_hinh_kinh_doanh^1.5', 'dia_chi', 'mo_ta'],
-                                    'type' => 'cross_fields',
-                                    'operator' => 'AND',
-                                    'boost' => 2,
-                                ],
-                            ],
-                            [
-                                'multi_match' => [
-                                    'query' => $builder->query,
-                                    'fields' => ['ten_quan^3', 'mon_an^2', 'dia_chi'],
-                                    'type' => 'phrase_prefix',
-                                    'boost' => 1.5,
-                                ],
+            $query['bool']['must'] = [
+                'bool' => [
+                    'should' => [
+                        [
+                            'match' => [
+                                $prefixField => ['query' => $builder->query, 'operator' => 'AND', 'boost' => 6],
                             ],
                         ],
-                        'minimum_should_match' => 1,
+                        [
+                            'multi_match' => [
+                                'query' => $builder->query,
+                                'fields' => $bestFields,
+                                'type' => 'best_fields',
+                                'operator' => 'OR',
+                                'fuzziness' => 'AUTO',
+                                'prefix_length' => 1,
+                                'max_expansions' => 50,
+                            ],
+                        ],
+                        [
+                            'multi_match' => [
+                                'query' => $builder->query,
+                                'fields' => $crossFields,
+                                'type' => 'cross_fields',
+                                'operator' => 'AND',
+                                'boost' => 2,
+                            ],
+                        ],
+                        [
+                            'multi_match' => [
+                                'query' => $builder->query,
+                                'fields' => $phraseFields,
+                                'type' => 'phrase_prefix',
+                                'boost' => 1.5,
+                            ],
+                        ],
                     ],
-                ];
-                $query['bool']['should'] = [
-                    ['match_phrase' => ['ten_quan' => ['query' => $builder->query, 'boost' => 10]]],
-                    ['match_phrase' => ['mon_an' => ['query' => $builder->query, 'boost' => 8]]],
-                ];
-            }
+                    'minimum_should_match' => 1,
+                ],
+            ];
+            $query['bool']['should'] = $exactPhrases;
         } else {
             $query['bool']['must'] = [
                 'match_all' => new \stdClass(),

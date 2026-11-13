@@ -44,7 +44,7 @@ class AppServiceProvider extends ServiceProvider
             return false;
         }, E_WARNING);
 
-        if (request()->header('x-forwarded-proto') === 'https' || request()->isSecure()) {
+        if (! $this->app->runningInConsole() && (request()->header('x-forwarded-proto') === 'https' || request()->isSecure())) {
             \Illuminate\Support\Facades\URL::forceScheme('https');
         }
         \Carbon\Carbon::setLocale('vi');
@@ -164,7 +164,12 @@ class AppServiceProvider extends ServiceProvider
             \Illuminate\Support\Facades\Cache::forever('db_last_mutated_at', (string) microtime(true));
         };
 
-        \App\Models\Quan::saved($clearAdminStatsCache);
+        \App\Models\Quan::saved(function ($quan) use ($clearAdminStatsCache) {
+            $clearAdminStatsCache();
+            try {
+                app(\App\Services\ElasticAdminSearchService::class)->syncQuan($quan);
+            } catch (\Throwable $e) {}
+        });
         \App\Models\Quan::deleted(function ($quan) use ($clearAdminStatsCache) {
             $clearAdminStatsCache();
             \Illuminate\Support\Facades\Cache::forever('last_deleted_quan_info', [
@@ -172,10 +177,23 @@ class AppServiceProvider extends ServiceProvider
                 'name' => $quan->ten_quan,
                 'deleted_at' => (string) microtime(true),
             ]);
+            try {
+                app(\App\Services\ElasticAdminSearchService::class)->deleteDocument('quan', $quan->id);
+            } catch (\Throwable $e) {}
         });
-        \App\Models\Quan::restored($clearAdminStatsCache);
+        \App\Models\Quan::restored(function ($quan) use ($clearAdminStatsCache) {
+            $clearAdminStatsCache();
+            try {
+                app(\App\Services\ElasticAdminSearchService::class)->syncQuan($quan);
+            } catch (\Throwable $e) {}
+        });
 
-        \App\Models\User::saved($clearAdminStatsCache);
+        \App\Models\User::saved(function ($user) use ($clearAdminStatsCache) {
+            $clearAdminStatsCache();
+            try {
+                app(\App\Services\ElasticAdminSearchService::class)->syncUser($user);
+            } catch (\Throwable $e) {}
+        });
         \App\Models\User::deleted(function ($user) use ($clearAdminStatsCache) {
             $clearAdminStatsCache();
             \Illuminate\Support\Facades\Cache::forever('last_deleted_user_info', [
@@ -184,26 +202,74 @@ class AppServiceProvider extends ServiceProvider
                 'email' => $user->email,
                 'deleted_at' => (string) microtime(true),
             ]);
+            try {
+                app(\App\Services\ElasticAdminSearchService::class)->deleteDocument('users', $user->id);
+            } catch (\Throwable $e) {}
         });
-        \App\Models\User::restored($clearAdminStatsCache);
+        \App\Models\User::restored(function ($user) use ($clearAdminStatsCache) {
+            $clearAdminStatsCache();
+            try {
+                app(\App\Services\ElasticAdminSearchService::class)->syncUser($user);
+            } catch (\Throwable $e) {}
+        });
 
-        \App\Models\DanhMucQuan::saved($clearAdminStatsCache);
-        \App\Models\DanhMucQuan::deleted($clearAdminStatsCache);
+        \App\Models\DanhMucQuan::saved(function ($dm) use ($clearAdminStatsCache) {
+            $clearAdminStatsCache();
+            try {
+                app(\App\Services\ElasticAdminSearchService::class)->syncDanhMuc($dm);
+            } catch (\Throwable $e) {}
+        });
+        \App\Models\DanhMucQuan::deleted(function ($dm) use ($clearAdminStatsCache) {
+            $clearAdminStatsCache();
+            try {
+                app(\App\Services\ElasticAdminSearchService::class)->deleteDocument('danh_muc_quan', $dm->id);
+            } catch (\Throwable $e) {}
+        });
 
-        \App\Models\Blog::saved($clearAdminStatsCache);
-        \App\Models\Blog::deleted($clearAdminStatsCache);
+        \App\Models\Blog::saved(function ($blog) use ($clearAdminStatsCache) {
+            $clearAdminStatsCache();
+            try {
+                app(\App\Services\ElasticAdminSearchService::class)->syncBlog($blog);
+            } catch (\Throwable $e) {}
+        });
+        \App\Models\Blog::deleted(function ($blog) use ($clearAdminStatsCache) {
+            $clearAdminStatsCache();
+            try {
+                app(\App\Services\ElasticAdminSearchService::class)->deleteDocument('blogs', $blog->id);
+            } catch (\Throwable $e) {}
+        });
 
         \App\Models\ThanhToan::saved($clearAdminStatsCache);
         \App\Models\ThanhToan::deleted($clearAdminStatsCache);
 
         if (class_exists(\App\Models\KhuyenMai::class)) {
-            \App\Models\KhuyenMai::saved($clearAdminStatsCache);
-            \App\Models\KhuyenMai::deleted($clearAdminStatsCache);
+            \App\Models\KhuyenMai::saved(function ($km) use ($clearAdminStatsCache) {
+                $clearAdminStatsCache();
+                try {
+                    app(\App\Services\ElasticAdminSearchService::class)->syncKhuyenMai($km);
+                } catch (\Throwable $e) {}
+            });
+            \App\Models\KhuyenMai::deleted(function ($km) use ($clearAdminStatsCache) {
+                $clearAdminStatsCache();
+                try {
+                    app(\App\Services\ElasticAdminSearchService::class)->deleteDocument('khuyen_mai', $km->id);
+                } catch (\Throwable $e) {}
+            });
         }
 
         if (class_exists(\App\Models\VideoShort::class)) {
-            \App\Models\VideoShort::saved($clearAdminStatsCache);
-            \App\Models\VideoShort::deleted($clearAdminStatsCache);
+            \App\Models\VideoShort::saved(function ($v) use ($clearAdminStatsCache) {
+                $clearAdminStatsCache();
+                try {
+                    app(\App\Services\ElasticAdminSearchService::class)->syncVideo($v);
+                } catch (\Throwable $e) {}
+            });
+            \App\Models\VideoShort::deleted(function ($v) use ($clearAdminStatsCache) {
+                $clearAdminStatsCache();
+                try {
+                    app(\App\Services\ElasticAdminSearchService::class)->deleteDocument('video_shorts', $v->id);
+                } catch (\Throwable $e) {}
+            });
         }
     }
 

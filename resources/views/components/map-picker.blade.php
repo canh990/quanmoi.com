@@ -344,7 +344,7 @@
             const address = collectAddressString(inst);
             if (!address || address.length < 3) {
                 if (!silent) {
-                    alert('Vui lòng nhập địa chỉ hoặc chọn Tỉnh/Thành, Quận/Huyện trước khi tìm trên bản đồ.');
+                    alert('Vui lòng nhập địa chỉ hoặc chọn Tỉnh/Thành, Phường/Xã trước khi tìm trên bản đồ.');
                 }
                 return;
             }

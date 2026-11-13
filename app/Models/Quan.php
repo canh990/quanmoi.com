@@ -2,16 +2,16 @@
 
 namespace App\Models;
 
+use App\Traits\SafeSearchable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Laravel\Scout\Searchable;
 
 class Quan extends Model
 {
-    use HasFactory, HasUuids, SoftDeletes, Searchable;
+    use HasFactory, HasUuids, SoftDeletes, SafeSearchable;
 
     protected $table = 'quan';
     const DELETED_AT = 'ngay_xoa';
@@ -50,6 +50,41 @@ class Quan extends Model
         'is_xac_thuc',
         'luot_xem',
     ];
+
+    protected static function booted(): void
+    {
+        static::saving(function (Quan $quan) {
+            // Tự động gán danh_muc_id nếu đang trống nhưng có loai_hinh_kinh_doanh
+            if (empty($quan->danh_muc_id) && !empty($quan->loai_hinh_kinh_doanh)) {
+                $cat = DanhMucQuan::where('ten_danh_muc', $quan->loai_hinh_kinh_doanh)->first();
+                if (!$cat) {
+                    $aliasMap = [
+                        'Ăn vặt'         => 'do-an-vat',
+                        'Đồ ăn vặt'      => 'do-an-vat',
+                        'Cà phê'         => 'ca-phe-tra',
+                        'Cà phê & Trà'   => 'ca-phe-tra',
+                        'Quán Đêm 24/7'  => 'quan-nhau',
+                        'Quán nhậu'      => 'quan-nhau',
+                        'Quán nhậu & Bar'=> 'quan-nhau',
+                        'Cơm bình dân'   => 'quan-an-binh-dan',
+                        'Bida'           => 'billiards-giai-tri',
+                    ];
+                    $slug = $aliasMap[$quan->loai_hinh_kinh_doanh] ?? null;
+                    if ($slug) {
+                        $cat = DanhMucQuan::where('slug', $slug)->first();
+                    }
+                }
+                if ($cat) {
+                    $quan->danh_muc_id = $cat->id;
+                }
+            } elseif (!empty($quan->danh_muc_id) && empty($quan->loai_hinh_kinh_doanh)) {
+                $cat = DanhMucQuan::find($quan->danh_muc_id);
+                if ($cat) {
+                    $quan->loai_hinh_kinh_doanh = $cat->ten_danh_muc;
+                }
+            }
+        });
+    }
 
     /**
      * Tùy biến truy vấn khi import toàn bộ dữ liệu vào Scout.
@@ -113,7 +148,7 @@ class Quan extends Model
             'co_shopeefood'        => !empty($this->shopeefood_url),
             'duoi_50k'             => ($this->gia_nho_nhat !== null && (float) $this->gia_nho_nhat <= 50000),
             'dang_mo_cua'          => $this->isDangMoCua(),
-            'co_video_review'      => $this->relationLoaded('videos') ? $this->videos->isNotEmpty() : $this->videos()->exists(),
+            'co_video_review'      => $this->relationLoaded('videos') ? $this->videos->where('trang_thai', 'da_duyet')->isNotEmpty() : $this->videos()->where('trang_thai', 'da_duyet')->exists(),
             'mon_an'               => $danhSachMon,
             'created_at'           => $this->created_at ? $this->created_at->timestamp : null,
             'updated_at'           => $this->updated_at ? $this->updated_at->timestamp : null,
@@ -296,6 +331,7 @@ class Quan extends Model
     {
         return $this->hasMany(KhuyenMai::class, 'quan_id')
             ->where('trang_thai', true)
+            ->where('trang_thai_duyet', 'da_duyet')
             ->where(function ($query) {
                 $query->whereNull('ngay_ket_thuc')
                     ->orWhereDate('ngay_ket_thuc', '>=', now()->toDateString());

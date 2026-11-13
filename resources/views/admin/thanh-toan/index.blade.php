@@ -29,9 +29,9 @@
                 <span>Xuất CSV / Excel</span>
             </a>
 
-            <a href="{{ route('admin.thong-ke.index') }}#admin-ai-revenue-section" class="btn-enterprise btn-enterprise-primary" title="Xem AI CFO phân tích doanh thu toàn sàn & biểu đồ thống kê">
-                <span class="material-symbols-outlined">auto_awesome</span>
-                <span>AI Phân tích doanh thu</span>
+            <a href="{{ route('admin.thong-ke.index') }}" class="btn-enterprise btn-enterprise-secondary" title="Xem biểu đồ thống kê tổng hợp">
+                <span class="material-symbols-outlined">query_stats</span>
+                <span>Biểu đồ thống kê</span>
             </a>
         </div>
     </div>
@@ -189,17 +189,17 @@
 
     {{-- Transactions Table --}}
     <div class="bg-white rounded-xl border border-slate-200/90 shadow-xs overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
+        <div class="overflow-x-auto w-full">
+            <table class="w-full text-left border-collapse min-w-[960px]">
                 <thead>
                     <tr class="bg-slate-50/90 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                        <th class="py-3 px-4">Mã Giao Dịch</th>
-                        <th class="py-3 px-4">Khách Hàng & Ví</th>
-                        <th class="py-3 px-4">Số Tiền</th>
-                        <th class="py-3 px-4">Phương Thức</th>
-                        <th class="py-3 px-4">Trạng Thái</th>
-                        <th class="py-3 px-4">Thời Gian</th>
-                        <th class="py-3 px-4 text-right">Thao Tác</th>
+                        <th class="py-3 px-3.5 min-w-[145px]">Mã Giao Dịch</th>
+                        <th class="py-3 px-3.5 min-w-[180px]">Khách Hàng & Ví</th>
+                        <th class="py-3 px-3.5 min-w-[125px]">Số Tiền</th>
+                        <th class="py-3 px-3 min-w-[105px] text-center">Phương Thức</th>
+                        <th class="py-3 px-3 min-w-[120px] text-center">Trạng Thái</th>
+                        <th class="py-3 px-3 min-w-[115px]">Thời Gian</th>
+                        <th class="py-3 px-3.5 min-w-[215px] text-right sticky right-0 bg-slate-50/95 z-10 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.04)]">Thao Tác</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 text-xs">
@@ -226,9 +226,9 @@
                             $formattedAmountLabel = number_format((float) $item->so_tien, 0, ',', '.') . ' VNĐ';
                             $userNameLabel = $item->user->ho_ten ?? 'Khách hàng';
                         @endphp
-                        <tr class="hover:bg-slate-50/80 transition-colors">
+                        <tr class="hover:bg-slate-50/80 transition-colors group">
                             {{-- Mã Giao Dịch --}}
-                            <td class="py-3.5 px-4 align-top">
+                            <td class="py-3.5 px-3.5 align-top">
                                 <div class="font-bold text-slate-900 font-mono text-xs flex items-center gap-1.5">
                                     <span>#{{ $item->ma_giao_dich }}</span>
                                 </div>
@@ -238,14 +238,14 @@
                                     </div>
                                 @endif
                                 @if($item->ghi_chu)
-                                    <div class="text-[11px] text-slate-400 mt-0.5 line-clamp-1 max-w-[230px]" title="{{ $item->ghi_chu }}">
+                                    <div class="text-[11px] text-slate-400 mt-0.5 line-clamp-1 max-w-[200px]" title="{{ $item->ghi_chu }}">
                                         {{ $item->ghi_chu }}
                                     </div>
                                 @endif
                             </td>
 
                             {{-- Khách Hàng --}}
-                            <td class="py-3.5 px-4 align-top">
+                            <td class="py-3.5 px-3.5 align-top">
                                 @if($item->user)
                                     <div class="flex items-center gap-2.5">
                                         <div class="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 font-bold flex items-center justify-center text-xs shrink-0 border border-indigo-200/60">
@@ -267,7 +267,7 @@
                             </td>
 
                             {{-- Số Tiền --}}
-                            <td class="py-3.5 px-4 align-top whitespace-nowrap">
+                            <td class="py-3.5 px-3.5 align-top whitespace-nowrap">
                                 <div class="text-sm font-extrabold {{ $isDebit ? 'text-rose-600' : ($isSuccess ? 'text-emerald-600' : 'text-slate-900') }}">
                                     {{ $isDebit ? '-' : '+' }}{{ number_format((float) $item->so_tien, 0, ',', '.') }} đ
                                 </div>
@@ -277,7 +277,7 @@
                             </td>
 
                             {{-- Phương Thức --}}
-                            <td class="py-3.5 px-4 align-top whitespace-nowrap">
+                            <td class="py-3.5 px-3 align-top whitespace-nowrap text-center">
                                 @if($item->phuong_thuc === 'vietqr')
                                     <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
                                         <span class="material-symbols-outlined text-[13px]">qr_code_2</span>
@@ -297,7 +297,7 @@
                             </td>
 
                             {{-- Trạng Thái --}}
-                            <td class="py-3.5 px-4 align-top whitespace-nowrap">
+                            <td class="py-3.5 px-3 align-top whitespace-nowrap text-center">
                                 @if($isSuccess)
                                     <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
@@ -322,30 +322,32 @@
                             </td>
 
                             {{-- Thời Gian --}}
-                            <td class="py-3.5 px-4 align-top whitespace-nowrap text-slate-600">
+                            <td class="py-3.5 px-3 align-top whitespace-nowrap text-slate-600">
                                 <div class="font-semibold text-slate-800">{{ optional($item->created_at)->format('d/m/Y H:i') }}</div>
                                 <div class="text-[10.5px] text-slate-400">{{ optional($item->created_at)->diffForHumans() }}</div>
                             </td>
 
-                            {{-- Thao Tác --}}
-                            <td class="py-3.5 px-4 align-top text-right whitespace-nowrap">
-                                <div class="inline-flex items-center justify-end gap-1.5">
+                            {{-- Thao Tác (Sticky bên phải chống tràn, đầy đủ nút bấm không bị cắt) --}}
+                            <td class="py-3.5 px-3.5 align-top text-right whitespace-nowrap sticky right-0 bg-white group-hover:bg-slate-50 transition-colors z-10 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.04)]">
+                                <div class="inline-flex items-center justify-end gap-1.5 flex-nowrap">
                                     {{-- Xem chi tiết --}}
                                     <button type="button"
                                         data-detail="{{ json_encode($detailPayload) }}"
                                         onclick="openPaymentDetailModal(JSON.parse(this.dataset.detail))"
-                                        class="btn-enterprise btn-enterprise-secondary !px-2.5 !py-1"
+                                        class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors cursor-pointer shrink-0"
                                         title="Xem chi tiết & dữ liệu Webhook SePay">
-                                        <span class="material-symbols-outlined">visibility</span>
+                                        <span class="material-symbols-outlined text-[15px]">visibility</span>
                                         <span>Chi tiết</span>
                                     </button>
 
                                     @if($isPending)
                                         {{-- Đồng bộ SePay --}}
-                                        <form action="{{ route('admin.thanh-toan.sync', $item->id) }}" method="POST" class="inline">
+                                        <form action="{{ route('admin.thanh-toan.sync', $item->id) }}" method="POST" class="inline m-0 shrink-0">
                                             @csrf
-                                            <button type="submit" class="btn-enterprise btn-enterprise-secondary !px-2.5 !py-1" title="Kiểm tra & đồng bộ trạng thái từ cổng SePay">
-                                                <span class="material-symbols-outlined">sync</span>
+                                            <button type="submit" 
+                                                class="w-7 h-7 inline-flex items-center justify-center rounded-lg bg-slate-100 hover:bg-blue-50 text-slate-600 hover:text-blue-600 border border-slate-200 hover:border-blue-300 transition-colors cursor-pointer shrink-0" 
+                                                title="Kiểm tra & đồng bộ trạng thái từ cổng SePay">
+                                                <span class="material-symbols-outlined text-[15px]">sync</span>
                                             </button>
                                         </form>
 
@@ -356,18 +358,20 @@
                                             data-amount="{{ $formattedAmountLabel }}"
                                             data-user="{{ $userNameLabel }}"
                                             onclick="openApproveModal(this.dataset.id, this.dataset.code, this.dataset.amount, this.dataset.user)"
-                                            class="btn-enterprise btn-enterprise-success !px-2.5 !py-1"
+                                            class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xs transition-colors cursor-pointer shrink-0"
                                             title="Xác nhận đã nhận tiền và cộng vào ví">
-                                            <span class="material-symbols-outlined">check_circle</span>
+                                            <span class="material-symbols-outlined text-[15px]">check_circle</span>
                                             <span>Duyệt</span>
                                         </button>
 
                                         {{-- Hủy đơn --}}
-                                        <form action="{{ route('admin.thanh-toan.cancel', $item->id) }}" method="POST" class="inline" onsubmit="return confirm('Bạn có chắc muốn hủy đơn nạp tiền #{{ $item->ma_giao_dich }}?');">
+                                        <form action="{{ route('admin.thanh-toan.cancel', $item->id) }}" method="POST" class="inline m-0 shrink-0" onsubmit="return confirm('Bạn có chắc muốn hủy đơn nạp tiền #{{ $item->ma_giao_dich }}?');">
                                             @csrf
                                             @method('PUT')
-                                            <button type="submit" class="btn-enterprise btn-enterprise-soft-danger !px-2.5 !py-1" title="Hủy giao dịch chờ này">
-                                                <span class="material-symbols-outlined">cancel</span>
+                                            <button type="submit" 
+                                                class="w-7 h-7 inline-flex items-center justify-center rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 hover:text-rose-700 border border-rose-200 transition-colors cursor-pointer shrink-0" 
+                                                title="Hủy giao dịch chờ này">
+                                                <span class="material-symbols-outlined text-[15px]">close</span>
                                             </button>
                                         </form>
                                     @endif

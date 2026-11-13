@@ -66,96 +66,6 @@
     .animate-modal-in {
         animation: modalFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
-
-    /* AI Culinary Planner Pills */
-    .planner-pill {
-        background-color: #f8fafc;
-        border-color: #e2e8f0;
-        color: #475569;
-    }
-    .planner-pill:hover {
-        background-color: #f1f5f9;
-        border-color: #cbd5e1;
-        color: #1e293b;
-    }
-    .planner-pill.active-pill {
-        background-color: #a04100 !important;
-        border-color: #a04100 !important;
-        color: #ffffff !important;
-        box-shadow: 0 2px 8px rgba(160, 65, 0, 0.25);
-    }
-
-    /* AI Culinary Planner Card & Fixed Cover Frame */
-    .planner-card-item {
-        background: #ffffff;
-        border-radius: 16px;
-        border: 1px solid #e2e8f0;
-        padding: 16px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-    }
-    .planner-card-item:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
-        border-color: #f59e0b;
-    }
-    .planner-img-frame {
-        position: relative;
-        width: 100%;
-        height: 190px !important;
-        max-height: 190px !important;
-        min-height: 190px !important;
-        overflow: hidden;
-        border-radius: 12px;
-        background-color: #f1f5f9;
-        margin-bottom: 10px;
-        display: block;
-    }
-    .planner-img-frame img {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        object-position: center;
-        transition: transform 0.5s ease;
-        color: transparent !important;
-        font-size: 0 !important;
-    }
-    .planner-card-item:hover .planner-img-frame img {
-        transform: scale(1.04);
-    }
-
-    /* Premium AI Planner Button */
-    .planner-btn-gradient {
-        background: linear-gradient(135deg, #f97316 0%, #ea580c 50%, #c2410c 100%);
-        color: #ffffff !important;
-        font-weight: 700;
-        font-size: 13px;
-        padding: 10px 24px;
-        border-radius: 14px;
-        border: 1px solid rgba(255, 255, 255, 0.25);
-        box-shadow: 0 4px 16px rgba(234, 88, 12, 0.35);
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-        cursor: pointer;
-    }
-    .planner-btn-gradient:hover {
-        background: linear-gradient(135deg, #fb923c 0%, #f97316 50%, #ea580c 100%);
-        box-shadow: 0 6px 22px rgba(234, 88, 12, 0.48);
-        transform: translateY(-1px);
-    }
-    .planner-btn-gradient:active {
-        transform: scale(0.97);
-        box-shadow: 0 2px 8px rgba(234, 88, 12, 0.28);
-    }
 </style>
 @endpush
 
@@ -604,37 +514,6 @@
                         <span>Xóa tìm kiếm</span>
                     </a>
                 </div>
-
-                @if(isset($relatedQuans) && $relatedQuans->count() > 0)
-                    <div class="mb-6 p-4 bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/10 border border-amber-300 rounded-2xl shadow-xs">
-                        <div class="flex items-center justify-between mb-3">
-                            <span class="text-xs font-extrabold text-amber-950 flex items-center gap-1.5 uppercase tracking-wider">
-                                <span class="material-symbols-outlined text-amber-600 text-base">storefront</span>
-                                <span>Quán ăn thực tế tìm thấy qua Elasticsearch</span>
-                            </span>
-                            <span class="text-[10px] font-extrabold text-amber-800 bg-white/90 px-2.5 py-0.5 rounded-full border border-amber-300">
-                                {{ $relatedQuans->count() }} địa điểm
-                            </span>
-                        </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            @foreach($relatedQuans as $rQuan)
-                                <a href="{{ route('quan.detail', $rQuan->slug) }}" class="flex items-center gap-2.5 p-2.5 bg-white rounded-xl border border-amber-200 hover:border-amber-400 hover:shadow-xs transition-all group">
-                                    <div class="w-12 h-12 rounded-lg overflow-hidden shrink-0 bg-slate-100 relative">
-                                        <img src="{{ $rQuan->anh_bia_url ?: '/storage/blogs/covers/41Cy1EQE15hmAoyR8ZCYzOFRcWMpAcQ2hra9aDa2.png' }}" 
-                                             alt="{{ $rQuan->ten_quan }}"
-                                             onerror="this.onerror=null; this.src='/storage/blogs/covers/41Cy1EQE15hmAoyR8ZCYzOFRcWMpAcQ2hra9aDa2.png';"
-                                             style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; color: transparent; font-size: 0;" />
-                                    </div>
-                                    <div class="min-w-0 flex-1">
-                                        <h4 class="text-xs font-bold text-slate-800 group-hover:text-primary truncate">{{ $rQuan->ten_quan }}</h4>
-                                        <p class="text-[10px] text-slate-500 truncate">{{ $rQuan->dia_chi_chi_tiet ?: ($rQuan->ten_quan_huyen ?: 'TP.HCM') }}</p>
-                                        <span class="text-[10px] text-amber-700 font-semibold inline-block mt-0.5">{{ $rQuan->loai_hinh_kinh_doanh ?: 'Quán ăn' }}</span>
-                                    </div>
-                                </a>
-                            @endforeach
-                        </div>
-                    </div>
-                @endif
             @endif
 
             <div id="public-blogs-container">
@@ -1752,7 +1631,7 @@
         }
     }
 
-    // Live Blog Search Suggestions with Elasticsearch & Blog Synchronization
+    // Live Blog Search Suggestions
     let searchDebounceTimer = null;
     function handleBlogSearchInput(input) {
         clearTimeout(searchDebounceTimer);

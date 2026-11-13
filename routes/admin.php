@@ -28,6 +28,7 @@ Route::middleware(['auth', 'KiemTraQuyenHan:admin'])->group(function () {
     // 1. Dashboard Main
     Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard.alias');
+    Route::get('/api/global-search', [AdminDashboardController::class, 'globalSearch'])->name('api.global-search');
 
     // 2. Thống kê & AI Phân tích doanh thu toàn sàn
     Route::get('/thong-ke', [ThongKeController::class, 'index'])->name('thong-ke.index');
@@ -122,22 +123,18 @@ Route::middleware(['auth', 'KiemTraQuyenHan:admin'])->group(function () {
     Route::put('/quan-noi-bat/{id}/toggle', [QuanNoiBatController::class, 'toggle'])->name('quan-noi-bat.toggle')->where('id', '[0-9a-fA-F\-]+');
     Route::delete('/quan-noi-bat/{id}', [QuanNoiBatController::class, 'destroy'])->name('quan-noi-bat.destroy')->where('id', '[0-9a-fA-F\-]+');
 
-    // 12. AI Tools
-    Route::get('/ai-tools', [AiToolsController::class, 'index'])->name('ai-tools.index');
-    Route::post('/ai-tools/generate', [AiToolsController::class, 'generateSeoDescription'])->name('ai-tools.generate');
-    Route::post('/ai-tools/generate-promotion', [AiToolsController::class, 'generatePromotion'])->name('ai-tools.generate-promotion');
-    Route::post('/ai-tools/save-promotion', [AiToolsController::class, 'savePromotion'])->name('ai-tools.save-promotion');
-    Route::delete('/ai-tools/promotions/{id}', [AiToolsController::class, 'destroyPromotion'])->name('ai-tools.destroy-promotion');
-    Route::put('/ai-tools/promotions/{id}/toggle', [AiToolsController::class, 'togglePromotion'])->name('ai-tools.toggle-promotion');
-    Route::post('/ai-tools/test-connection', [AiToolsController::class, 'testConnection'])->name('ai-tools.test-connection');
+    // 12. AI Tools (chuyển hướng sang Khuyến Mãi & Voucher AI để tránh trùng lặp)
+    Route::get('/ai-tools', fn () => redirect()->route('admin.khuyen-mai-ai.index'))->name('ai-tools.index');
 
-    // 13. Khuyến Mãi AI Studio & Voucher (Module riêng trong Vận Hành & Phân Quyền)
+    // 13. Khuyến Mãi AI Studio & Phê Duyệt Voucher (Module Vận Hành & Phân Quyền)
     Route::prefix('khuyen-mai-ai')->name('khuyen-mai-ai.')->group(function () {
         Route::get('/', [KhuyenMaiAiController::class, 'index'])->name('index');
         Route::post('/generate', [KhuyenMaiAiController::class, 'generate'])->name('generate');
         Route::post('/store', [KhuyenMaiAiController::class, 'store'])->name('store');
         Route::delete('/{id}', [KhuyenMaiAiController::class, 'destroy'])->name('destroy');
         Route::put('/{id}/toggle', [KhuyenMaiAiController::class, 'toggle'])->name('toggle');
+        Route::put('/{id}/approve', [KhuyenMaiAiController::class, 'approve'])->name('approve');
+        Route::put('/{id}/reject', [KhuyenMaiAiController::class, 'reject'])->name('reject');
     });
 
     // 14. Quản lý Video Shorts / TikTok Review

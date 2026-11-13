@@ -123,7 +123,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Số điện thoại liên hệ <span class="text-rose-500">*</span></label>
-                        <input type="text" name="so_dien_thoai" value="{{ old('so_dien_thoai', $quan->so_dien_thoai) }}" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-amber-500 bg-slate-50/40">
+                        <input type="tel" name="so_dien_thoai" value="{{ old('so_dien_thoai', $quan->so_dien_thoai) }}" required inputmode="numeric" pattern="0[0-9]{9,10}" maxlength="11" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11);" title="Số điện thoại phải bắt đầu bằng số 0 và có từ 10 đến 11 chữ số" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-amber-500 bg-slate-50/40">
                         @error('so_dien_thoai') <p class="text-xs text-rose-600 mt-1">{{ $message }}</p> @enderror
                     </div>
 

@@ -75,7 +75,32 @@ class BanDoController extends Controller
         $maxLng = min(180.0, $userLng + $deltaLng);
 
         // 2. Truy vấn các quán công khai (trang_thai = da_duyet, chưa xóa mềm) có tọa độ hợp lệ trong Bounding Box
-        $baseQuery = Quan::query()
+        $baseCondition = Quan::query()
+            ->where('trang_thai', 'da_duyet')
+            ->whereNotNull('vi_do')
+            ->whereNotNull('kinh_do')
+            ->whereBetween('vi_do', [$minLat, $maxLat])
+            ->whereBetween('kinh_do', [$minLng, $maxLng]);
+
+        if ($tuKhoa !== '') {
+            $escapedKeyword = addcslashes($tuKhoa, '%_\\');
+            $likePattern = "%{$escapedKeyword}%";
+            $baseCondition->where(function ($q) use ($likePattern) {
+                $q->where('ten_quan', 'like', $likePattern)
+                    ->orWhere('dia_chi_chi_tiet', 'like', $likePattern)
+                    ->orWhere('ten_phuong_xa', 'like', $likePattern)
+                    ->orWhere('ten_quan_huyen', 'like', $likePattern)
+                    ->orWhere('loai_hinh_kinh_doanh', 'like', $likePattern)
+                    ->orWhereHas('danhMucMenu.monAn', function ($dishQuery) use ($likePattern) {
+                        $dishQuery->where('ten_mon', 'like', $likePattern);
+                    });
+            });
+        }
+
+        // Lưu query chưa lọc danh mục để đếm động số lượng thực tế từng danh mục trong bán kính quét
+        $unfilteredCategoryQuery = clone $baseCondition;
+
+        $baseQuery = (clone $baseCondition)
             ->withAvg('danhGia', 'so_sao')
             ->withCount('danhGia')
             ->select([
@@ -97,12 +122,7 @@ class BanDoController extends Controller
                 'anh_bia_key',
                 'is_xac_thuc',
                 'is_noi_bat',
-            ])
-            ->where('trang_thai', 'da_duyet')
-            ->whereNotNull('vi_do')
-            ->whereNotNull('kinh_do')
-            ->whereBetween('vi_do', [$minLat, $maxLat])
-            ->whereBetween('kinh_do', [$minLng, $maxLng]);
+            ]);
 
         if ($danhMuc !== '' && ! in_array($danhMuc, ['Quán Nổi Bật', 'Quán Mới'], true)) {
             if ($danhMuc === 'Cà phê' || $danhMuc === 'Cà phê & Trà') {
@@ -114,26 +134,23 @@ class BanDoController extends Controller
             }
         }
 
-        if ($tuKhoa !== '') {
-            $escapedKeyword = addcslashes($tuKhoa, '%_\\');
-            $likePattern = "%{$escapedKeyword}%";
-            $baseQuery->where(function ($q) use ($likePattern) {
-                $q->where('ten_quan', 'like', $likePattern)
-                    ->orWhere('dia_chi_chi_tiet', 'like', $likePattern)
-                    ->orWhere('ten_phuong_xa', 'like', $likePattern)
-                    ->orWhere('ten_quan_huyen', 'like', $likePattern)
-                    ->orWhere('loai_hinh_kinh_doanh', 'like', $likePattern)
-                    ->orWhereHas('danhMucMenu.monAn', function ($dishQuery) use ($likePattern) {
-                        $dishQuery->where('ten_mon', 'like', $likePattern);
-                    });
-            });
-        }
-
         $driver = DB::connection()->getDriverName();
 
         // 3. Tính khoảng cách Haversine và lọc chính xác theo bán kính ngay tại Backend
+        $categoryCounts = [];
+        $totalInArea = 0;
+
         if (in_array($driver, ['mysql', 'mariadb', 'pgsql'], true)) {
             $haversineSql = '(6371 * ACOS(LEAST(1.0, GREATEST(-1.0, COS(RADIANS(?)) * COS(RADIANS(vi_do)) * COS(RADIANS(kinh_do) - RADIANS(?)) + SIN(RADIANS(?)) * SIN(RADIANS(vi_do))))))';
+
+            // Đếm số lượng quán theo từng danh mục thực tế có trong bán kính quét
+            $categoryCounts = (clone $unfilteredCategoryQuery)
+                ->whereRaw("{$haversineSql} <= ?", [$userLat, $userLng, $userLat, $radiusKm])
+                ->groupBy('loai_hinh_kinh_doanh')
+                ->selectRaw('loai_hinh_kinh_doanh, count(*) as aggregate')
+                ->pluck('aggregate', 'loai_hinh_kinh_doanh')
+                ->toArray();
+            $totalInArea = (int) array_sum($categoryCounts);
 
             $query = (clone $baseQuery)
                 ->selectRaw("{$haversineSql} AS khoang_cach_km", [$userLat, $userLng, $userLat])
@@ -146,6 +163,14 @@ class BanDoController extends Controller
             $lastPage = $paginator->lastPage();
         } else {
             // Fallback cho SQLite (môi trường test không có hàm lượng giác ACOS/RADIANS mặc định)
+            $allUnfiltered = $unfilteredCategoryQuery->get()
+                ->filter(fn (Quan $quan) => $this->calculateHaversineKm($userLat, $userLng, (float) $quan->vi_do, (float) $quan->kinh_do) <= $radiusKm);
+            $categoryCounts = $allUnfiltered
+                ->groupBy('loai_hinh_kinh_doanh')
+                ->map->count()
+                ->toArray();
+            $totalInArea = (int) array_sum($categoryCounts);
+
             $matched = $baseQuery->get()
                 ->map(function (Quan $quan) use ($userLat, $userLng) {
                     $quan->khoang_cach_km = $this->calculateHaversineKm(
@@ -207,6 +232,8 @@ class BanDoController extends Controller
                 'radius_km' => $radiusKm,
                 'keyword' => $tuKhoa,
                 'total' => $total,
+                'total_in_area' => $totalInArea,
+                'category_counts' => $categoryCounts,
                 'current_page' => $page,
                 'per_page' => $perPage,
                 'last_page' => $lastPage,

@@ -169,4 +169,187 @@ class DangQuanTest extends TestCase
         $response->assertDontSee('id="btnToggleBizTypes"', false);
         $response->assertDontSee('extra-biz-type hidden');
     }
+
+    public function test_so_dien_thoai_must_be_digits_only_when_creating_quan(): void
+    {
+        $this->withoutMiddleware(\Illuminate\Routing\Middleware\ThrottleRequests::class);
+        $user = User::factory()->create();
+
+        $basePayload = [
+            'ten_quan' => 'Quan Test So Dien Thoai',
+            'loai_hinh_kinh_doanh' => 'Nhà hàng',
+            'dia_chi_chi_tiet' => '123 Lê Lợi',
+            'tinh_thanh_id' => '79',
+            'ten_tinh_thanh' => 'Thành phố Hồ Chí Minh',
+            'phuong_xa_id' => '26734',
+            'ten_phuong_xa' => 'Phường Tân Định',
+            'gio_mo_cua' => '08:00',
+            'gio_dong_cua' => '22:00',
+        ];
+
+        $this->actingAs($user)
+            ->postJson('/chu-quan/dang-quan', array_merge($basePayload, ['so_dien_thoai' => '090abc1234']))
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['so_dien_thoai']);
+
+        $this->actingAs($user)
+            ->postJson('/chu-quan/dang-quan', array_merge($basePayload, ['so_dien_thoai' => '090 123 4567']))
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['so_dien_thoai']);
+
+        // Giới hạn độ dài 10-11 chữ số và bắt đầu bằng số 0
+        $this->actingAs($user)
+            ->postJson('/chu-quan/dang-quan', array_merge($basePayload, ['so_dien_thoai' => '091234567'])) // 9 số
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['so_dien_thoai']);
+
+        $this->actingAs($user)
+            ->postJson('/chu-quan/dang-quan', array_merge($basePayload, ['so_dien_thoai' => '091234567890'])) // 12 số
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['so_dien_thoai']);
+
+        $this->actingAs($user)
+            ->postJson('/chu-quan/dang-quan', array_merge($basePayload, ['so_dien_thoai' => '9123456789'])) // không bắt đầu bằng 0
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['so_dien_thoai']);
+    }
+
+    public function test_user_can_create_quan_with_two_tier_merged_address_without_quan_huyen(): void
+    {
+        $this->withoutMiddleware(\Illuminate\Routing\Middleware\ThrottleRequests::class);
+        $roleNguoiDung = VaiTro::create(['ten' => 'nguoi_dung']);
+        VaiTro::create(['ten' => 'chu_quan']);
+        $user = User::factory()->create(['vai_tro_id' => $roleNguoiDung->id]);
+
+        $response = $this->actingAs($user)->postJson('/chu-quan/dang-quan', [
+            'ten_quan' => 'Quan Hai Cap Sau Sap Nhap',
+            'loai_hinh_kinh_doanh' => 'Nhà hàng',
+            'so_dien_thoai' => '0912345678',
+            'dia_chi_chi_tiet' => '45 Nguyễn Huệ',
+            'tinh_thanh_id' => '79',
+            'ten_tinh_thanh' => 'Thành phố Hồ Chí Minh',
+            'phuong_xa_id' => '26740',
+            'ten_phuong_xa' => 'Phường Sài Gòn',
+            'gio_mo_cua' => '08:00',
+            'gio_dong_cua' => '22:00',
+        ]);
+
+        $response->assertOk()->assertJson(['success' => true]);
+
+        $this->assertDatabaseHas('quan', [
+            'ten_quan' => 'Quan Hai Cap Sau Sap Nhap',
+            'tinh_thanh_id' => '79',
+            'ten_tinh_thanh' => 'Thành phố Hồ Chí Minh',
+            'quan_huyen_id' => null,
+            'ten_quan_huyen' => null,
+            'phuong_xa_id' => '26740',
+            'ten_phuong_xa' => 'Phường Sài Gòn',
+        ]);
+    }
+
+    public function test_dang_quan_view_uses_merged_two_tier_location_and_numeric_phone(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->get('/chu-quan/dang-quan');
+
+        $response->assertOk();
+        $response->assertSee('/api/dia-chi/phuong-xa-tinh/', false);
+        $response->assertSee('pattern="0[0-9]{9,10}"', false);
+        $response->assertSee('maxlength="11"', false);
+        $response->assertDontSee('id="select-huyen"', false);
+    }
+
+    public function test_chu_quan_voucher_submit_button_has_solid_single_color(): void
+    {
+        $roleChuQuan = VaiTro::create(['ten' => 'chu_quan']);
+        $user = User::factory()->create(['vai_tro_id' => $roleChuQuan->id]);
+
+        $quan = \App\Models\Quan::create([
+            'chu_quan_id' => $user->id,
+            'ten_quan' => 'Quan Voucher Test',
+            'loai_hinh_kinh_doanh' => 'Nhà hàng',
+            'slug' => 'quan-voucher-test',
+            'so_dien_thoai' => '0901234567',
+            'dia_chi_chi_tiet' => '12 Lê Lợi',
+            'ten_tinh_thanh' => 'Thành phố Hồ Chí Minh',
+            'ten_phuong_xa' => 'Phường Bến Thành',
+            'gio_mo_cua' => '08:00',
+            'gio_dong_cua' => '22:00',
+            'trang_thai' => 'da_duyet',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('chu-quan.quan.show', ['slug' => $quan->slug]));
+
+        $response->assertOk();
+        $response->assertSee('id="btn-owner-save"', false);
+        $response->assertDontSee('from-amber-500 to-orange-500', false);
+        $response->assertDontSee('id="qr-code-container"', false);
+    }
+
+    public function test_chu_quan_qr_shows_only_when_shopeefood_url_is_set(): void
+    {
+        $roleChuQuan = VaiTro::create(['ten' => 'chu_quan']);
+        $user = User::factory()->create(['vai_tro_id' => $roleChuQuan->id]);
+
+        $quan = \App\Models\Quan::create([
+            'chu_quan_id' => $user->id,
+            'ten_quan' => 'Quan Co ShopeeFood',
+            'loai_hinh_kinh_doanh' => 'Nhà hàng',
+            'slug' => 'quan-co-shopeefood',
+            'so_dien_thoai' => '0901234567',
+            'dia_chi_chi_tiet' => '12 Lê Lợi',
+            'ten_tinh_thanh' => 'Thành phố Hồ Chí Minh',
+            'ten_phuong_xa' => 'Phường Bến Thành',
+            'gio_mo_cua' => '08:00',
+            'gio_dong_cua' => '22:00',
+            'shopeefood_url' => 'https://shopeefood.vn/ho-chi-minh/quan-co-shopeefood',
+            'trang_thai' => 'da_duyet',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('chu-quan.quan.show', ['slug' => $quan->slug]));
+
+        $response->assertOk();
+        $response->assertSee('id="qr-code-container"', false);
+        $response->assertSee('https://shopeefood.vn/ho-chi-minh/quan-co-shopeefood', false);
+    }
+
+    public function test_user_can_create_quan_with_same_name_as_soft_deleted_quan(): void
+    {
+        $this->withoutMiddleware(\Illuminate\Routing\Middleware\ThrottleRequests::class);
+        $roleNguoiDung = VaiTro::create(['ten' => 'nguoi_dung']);
+        VaiTro::create(['ten' => 'chu_quan']);
+        $user = User::factory()->create(['vai_tro_id' => $roleNguoiDung->id]);
+
+        $deletedQuan = \App\Models\Quan::create([
+            'chu_quan_id' => $user->id,
+            'ten_quan' => 'Quán Sushi',
+            'loai_hinh_kinh_doanh' => 'Nhà hàng',
+            'slug' => 'quan-sushi',
+            'so_dien_thoai' => '0901234567',
+            'dia_chi_chi_tiet' => '10 Lê Lợi',
+            'ten_tinh_thanh' => 'Thành phố Hồ Chí Minh',
+            'ten_phuong_xa' => 'Phường Bến Thành',
+            'gio_mo_cua' => '08:00',
+            'gio_dong_cua' => '22:00',
+            'trang_thai' => 'da_duyet',
+        ]);
+        $deletedQuan->delete();
+
+        $response = $this->actingAs($user)->postJson('/chu-quan/dang-quan', [
+            'ten_quan' => 'Quán Sushi',
+            'loai_hinh_kinh_doanh' => 'Nhà hàng',
+            'so_dien_thoai' => '0912345678',
+            'dia_chi_chi_tiet' => '20 Nguyễn Huệ',
+            'tinh_thanh_id' => '79',
+            'ten_tinh_thanh' => 'Thành phố Hồ Chí Minh',
+            'phuong_xa_id' => '26740',
+            'ten_phuong_xa' => 'Phường Sài Gòn',
+            'gio_mo_cua' => '08:00',
+            'gio_dong_cua' => '22:00',
+        ]);
+
+        $response->assertOk()->assertJson(['success' => true]);
+        $this->assertDatabaseHas('quan', ['slug' => 'quan-sushi-1', 'ten_quan' => 'Quán Sushi']);
+    }
 }

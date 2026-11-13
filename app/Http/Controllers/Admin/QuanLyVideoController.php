@@ -34,15 +34,26 @@ class QuanLyVideoController extends Controller
 
         $query = VideoShort::with('quan:id,ten_quan,slug,dia_chi_chi_tiet,ten_quan_huyen,ten_tinh_thanh');
 
-        // Tìm kiếm theo từ khóa
+        // Tìm kiếm thông minh qua Elasticsearch theo từ khóa (tên video, người đăng, ID, tên quán, món ăn)
         if ($request->filled('q')) {
-            $keyword = trim($request->q);
-            $query->where(function ($q) use ($keyword) {
-                $q->where('tieu_de', 'like', "%{$keyword}%")
-                    ->orWhere('video_id', 'like', "%{$keyword}%")
-                    ->orWhere('nguoi_dang', 'like', "%{$keyword}%")
-                    ->orWhereHas('quan', fn ($r) => $r->where('ten_quan', 'like', "%{$keyword}%"));
-            });
+            $keyword = trim((string) $request->q);
+            $statusFilter = ($request->filled('trang_thai') && $request->trang_thai !== 'all')
+                ? (string) $request->trang_thai
+                : null;
+
+            $esService = app(\App\Services\ElasticAdminSearchService::class);
+            $esFilters = $statusFilter ? ['trang_thai' => $statusFilter] : [];
+            $esVideoIds = $esService->searchVideo($keyword, $esFilters);
+
+            if ($esVideoIds !== null && ! empty($esVideoIds)) {
+                $query->whereIn('id', $esVideoIds);
+                if (\Illuminate\Support\Facades\DB::getDriverName() === 'mysql') {
+                    $escapedIds = implode(',', array_map('intval', $esVideoIds));
+                    $query->orderByRaw("FIELD(id, {$escapedIds})");
+                }
+            } else {
+                VideoShort::applyElasticSearch($query, $keyword, $statusFilter);
+            }
         }
 
         // Lọc theo trạng thái

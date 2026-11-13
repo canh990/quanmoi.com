@@ -13,8 +13,8 @@
         {{-- Hidden location filter inputs --}}
         <input type="hidden" name="tinh_thanh_id" id="{{ $prefix }}-tinh-thanh-id" value="{{ request('tinh_thanh_id') }}">
         <input type="hidden" name="quan_huyen_id" id="{{ $prefix }}-quan-huyen-id" value="{{ request('quan_huyen_id') }}">
-        <input type="hidden" name="lat" id="{{ $prefix }}-lat" value="{{ request('lat') }}">
-        <input type="hidden" name="lng" id="{{ $prefix }}-lng" value="{{ request('lng', request('lon')) }}">
+        <input type="hidden" name="lat" id="{{ $prefix }}-lat" value="{{ request('lat') ?? request()->cookie('user_lat') ?? '' }}">
+        <input type="hidden" name="lng" id="{{ $prefix }}-lng" value="{{ request('lng', request('lon')) ?? request()->cookie('user_lng') ?? '' }}">
         <input type="hidden" name="ban_kinh" id="{{ $prefix }}-ban-kinh" value="{{ request('ban_kinh') }}">
         <input type="hidden" name="sap_xep" id="{{ $prefix }}-sap-xep" value="{{ request('sap_xep') }}">
 
@@ -82,52 +82,91 @@
         {{-- ╚══════════════════════════════════════════════════════════════╝ --}}
         <div 
             id="{{ $prefix }}-suggestions-dropdown" 
-            class="absolute top-[calc(100%+8px)] left-0 right-0 w-full bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.18)] border border-gray-100 p-4 md:p-5 hidden z-50 text-left transition-all duration-200 overflow-hidden"
+            class="absolute top-[calc(100%+8px)] left-0 right-0 w-full bg-white rounded-3xl shadow-[0_25px_60px_rgba(0,0,0,0.18)] border border-gray-100 p-4 md:p-5 hidden z-50 text-left transition-all duration-200 overflow-hidden"
         >
+            <style>
+                .ai-need-pill {
+                    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+                    white-space: nowrap;
+                }
+                .ai-need-pill.active-need {
+                    background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%) !important;
+                    color: #ffffff !important;
+                    font-weight: 700 !important;
+                    border: 1px solid #ea580c !important;
+                    box-shadow: 0 3px 10px rgba(234, 88, 12, 0.28) !important;
+                }
+                .ai-need-pill:not(.active-need) {
+                    background-color: #f8fafc !important;
+                    color: #475569 !important;
+                    border: 1px solid #e2e8f0 !important;
+                    font-weight: 600 !important;
+                }
+                .ai-need-pill:not(.active-need):hover {
+                    background-color: #f1f5f9 !important;
+                    color: #0f172a !important;
+                    border-color: #cbd5e1 !important;
+                }
+                .ai-suggestion-item {
+                    background: #ffffff;
+                    border: 1px solid #f1f5f9;
+                    border-radius: 16px;
+                    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+                }
+                .ai-suggestion-item:hover {
+                    background: #fffbf5;
+                    border-color: #fed7aa;
+                    transform: translateY(-1px);
+                    box-shadow: 0 6px 16px -4px rgba(234, 88, 12, 0.12);
+                }
+            </style>
+
             {{-- AI Suggestions (Hiển thị khi ô tìm kiếm rỗng - tự động gợi ý theo nhu cầu & ngữ cảnh) --}}
             <div id="{{ $prefix }}-default-panel">
                 {{-- Header với AI context label --}}
-                <div class="flex items-center justify-between mb-2.5 px-1">
-                    <h4 class="font-extrabold text-[15px] text-gray-800 flex items-center gap-2">
-                        <span class="w-1.5 h-4 rounded-full inline-block" style="background-color: #a04100;"></span>
-                        <span id="{{ $prefix }}-ai-label">Gợi ý món ngon cho bạn</span>
-                    </h4>
-                    <div class="flex items-center gap-2">
-                        <span id="{{ $prefix }}-ai-context" class="text-[11.5px] font-semibold px-2.5 py-0.5 rounded-full flex items-center gap-1.5 transition-all duration-300" style="color: #a04100; background-color: rgba(160,65,0,0.08);">
-                            <span class="w-1.5 h-1.5 rounded-full bg-[#a04100] animate-pulse"></span>
+                <div class="flex items-center justify-between mb-3 px-1">
+                    <div class="flex items-center gap-2 min-w-0">
+                        <span class="w-2 h-4 rounded-full bg-gradient-to-b from-orange-500 to-amber-600 shrink-0"></span>
+                        <h4 class="font-black text-[14.5px] sm:text-[15.5px] text-gray-900 truncate" id="{{ $prefix }}-ai-label">
+                            Gợi ý món ngon cho bạn
+                        </h4>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <span id="{{ $prefix }}-ai-context" class="text-[11.5px] font-bold px-3 py-1 rounded-full flex items-center gap-1.5 transition-all duration-300 bg-orange-50 text-orange-700 border border-orange-200/70 shadow-2xs">
+                            <span class="w-1.5 h-1.5 rounded-full bg-orange-600 animate-pulse"></span>
                             <span>AI đang phân tích...</span>
                         </span>
                     </div>
                 </div>
 
                 {{-- Nhu cầu của bạn (AI tự động chọn, có thể đổi theo ý muốn) --}}
-                <div class="mb-3 px-0.5">
-                    <div class="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar text-[11.5px] select-none" id="{{ $prefix }}-need-pills">
-                        <button type="button" data-need="auto" class="ai-need-pill active-need px-2.5 py-1 rounded-full font-bold transition-all border shrink-0 flex items-center gap-1 cursor-pointer">
+                <div class="mb-3.5 px-0.5">
+                    <div class="flex items-center gap-2 overflow-x-auto pb-1.5 no-scrollbar text-[12px] select-none scroll-smooth" id="{{ $prefix }}-need-pills">
+                        <button type="button" data-need="auto" class="ai-need-pill active-need px-3.5 py-1.5 rounded-full font-bold shrink-0 flex items-center gap-1.5 cursor-pointer">
                             <span>✨</span>
                             <span>AI Tự động</span>
                         </button>
-                        <button type="button" data-need="bua_chinh" class="ai-need-pill px-2.5 py-1 rounded-full font-medium transition-all border shrink-0 flex items-center gap-1 cursor-pointer">
+                        <button type="button" data-need="bua_chinh" class="ai-need-pill px-3.5 py-1.5 rounded-full shrink-0 flex items-center gap-1.5 cursor-pointer">
                             <span>🍱</span>
                             <span>Bữa no chính</span>
                         </button>
-                        <button type="button" data-need="nhanh_gon" class="ai-need-pill px-2.5 py-1 rounded-full font-medium transition-all border shrink-0 flex items-center gap-1 cursor-pointer">
+                        <button type="button" data-need="nhanh_gon" class="ai-need-pill px-3.5 py-1.5 rounded-full shrink-0 flex items-center gap-1.5 cursor-pointer">
                             <span>⚡</span>
                             <span>Nhanh gọn</span>
                         </button>
-                        <button type="button" data-need="thanh_dam" class="ai-need-pill px-2.5 py-1 rounded-full font-medium transition-all border shrink-0 flex items-center gap-1 cursor-pointer">
+                        <button type="button" data-need="thanh_dam" class="ai-need-pill px-3.5 py-1.5 rounded-full shrink-0 flex items-center gap-1.5 cursor-pointer">
                             <span>🥗</span>
                             <span>Thanh đạm</span>
                         </button>
-                        <button type="button" data-need="an_vat" class="ai-need-pill px-2.5 py-1 rounded-full font-medium transition-all border shrink-0 flex items-center gap-1 cursor-pointer">
+                        <button type="button" data-need="an_vat" class="ai-need-pill px-3.5 py-1.5 rounded-full shrink-0 flex items-center gap-1.5 cursor-pointer">
                             <span>🧋</span>
                             <span>Ăn vặt & Nước</span>
                         </button>
-                        <button type="button" data-need="lau_nuong" class="ai-need-pill px-2.5 py-1 rounded-full font-medium transition-all border shrink-0 flex items-center gap-1 cursor-pointer">
+                        <button type="button" data-need="lau_nuong" class="ai-need-pill px-3.5 py-1.5 rounded-full shrink-0 flex items-center gap-1.5 cursor-pointer">
                             <span>🍲</span>
                             <span>Lẩu & Nướng</span>
                         </button>
-                        <button type="button" data-need="tiet_kiem" class="ai-need-pill px-2.5 py-1 rounded-full font-medium transition-all border shrink-0 flex items-center gap-1 cursor-pointer">
+                        <button type="button" data-need="tiet_kiem" class="ai-need-pill px-3.5 py-1.5 rounded-full shrink-0 flex items-center gap-1.5 cursor-pointer">
                             <span>💰</span>
                             <span>Tiết kiệm</span>
                         </button>
@@ -135,30 +174,30 @@
                 </div>
 
                 {{-- Loading skeleton --}}
-                <div id="{{ $prefix }}-ai-loading" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                <div id="{{ $prefix }}-ai-loading" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3">
                     @for ($i = 0; $i < 6; $i++)
-                    <div class="flex items-center gap-2.5 p-2.5 rounded-xl border border-gray-100 bg-white shadow-2xs animate-pulse">
-                        <div class="w-10 h-10 rounded-xl bg-gray-200 flex-shrink-0"></div>
-                        <div class="flex-1 space-y-1.5">
-                            <div class="h-3 bg-gray-200 rounded-full w-3/4"></div>
-                            <div class="h-2 bg-gray-100 rounded-full w-1/2"></div>
+                    <div class="flex items-center gap-3 p-2.5 rounded-2xl border border-gray-100 bg-gray-50/50 shadow-2xs animate-pulse">
+                        <div class="w-14 h-14 rounded-xl bg-gray-200 flex-shrink-0"></div>
+                        <div class="flex-1 space-y-2">
+                            <div class="h-3.5 bg-gray-200 rounded-full w-4/5"></div>
+                            <div class="h-3 bg-gray-150 rounded-full w-3/5"></div>
                         </div>
                     </div>
                     @endfor
                 </div>
 
                 {{-- AI Suggestions Grid (JS rendered) --}}
-                <div id="{{ $prefix }}-ai-grid" class="hidden grid grid-cols-2 sm:grid-cols-3 gap-2.5"></div>
+                <div id="{{ $prefix }}-ai-grid" class="hidden grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3"></div>
 
                 {{-- Footer trợ lý AI --}}
-                <div class="mt-3 pt-2.5 border-t border-gray-100 flex items-center justify-between text-[11px] text-gray-400 px-1">
-                    <span class="flex items-center gap-1">
-                        <span class="material-symbols-outlined text-[14px] text-[#a04100]">auto_awesome</span>
+                <div class="mt-3.5 pt-3 border-t border-gray-100 flex items-center justify-between text-[11.5px] text-gray-500 px-1">
+                    <span class="flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-[16px] text-orange-600">auto_awesome</span>
                         <span>Kira AI tự động gợi ý theo nhu cầu & thời gian</span>
                     </span>
-                    <button type="button" onclick="if (typeof toggleAiChatbot === 'function') { toggleAiChatbot(true); }" class="font-semibold text-[#a04100] hover:underline flex items-center gap-0.5 cursor-pointer">
+                    <button type="button" onclick="if (typeof toggleAiChatbot === 'function') { toggleAiChatbot(true); }" class="font-bold text-orange-600 hover:text-orange-700 hover:underline flex items-center gap-0.5 cursor-pointer transition-colors">
                         <span>Hỏi Kira AI</span>
-                        <span class="material-symbols-outlined text-[13px]">arrow_forward</span>
+                        <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
                     </button>
                 </div>
             </div>
@@ -202,20 +241,20 @@
                             class="province-select-el w-full h-11 px-3.5 pr-9 rounded-xl border border-gray-200 bg-white text-[14px] font-medium text-gray-800 appearance-none focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition-all cursor-pointer"
                         >
                             <option value="">Toàn quốc</option>
-                            {{-- Nạp động từ provinces.open-api.vn qua /api/dia-chi/tinh-thanh --}}
+                            {{-- Nạp động từ provinces.open-api.vn (v2 sau sáp nhập) qua /api/dia-chi/tinh-thanh --}}
                         </select>
                         <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-[20px]">arrow_drop_down</span>
                     </div>
                 </div>
 
                 <div>
-                    <label for="{{ $prefix }}-district-select" class="block text-[13px] font-bold text-gray-700 mb-1.5">Quận / huyện</label>
+                    <label for="{{ $prefix }}-district-select" class="block text-[13px] font-bold text-gray-700 mb-1.5">Phường / xã</label>
                     <div class="relative">
                         <select 
                             id="{{ $prefix }}-district-select" 
                             class="district-select-el w-full h-11 px-3.5 pr-9 rounded-xl border border-gray-200 bg-white text-[14px] font-medium text-gray-800 appearance-none focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition-all cursor-pointer"
                         >
-                            <option value="">Tất cả quận/huyện</option>
+                            <option value="">Tất cả phường/xã</option>
                         </select>
                         <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-[20px]">arrow_drop_down</span>
                     </div>
@@ -298,9 +337,9 @@
         const wrapper = document.getElementById(prefix + '-wrapper');
         if (!wrapper) return;
 
-        // Mã hành chính lấy từ provinces.open-api.vn (v1) qua API nội bộ có cache
+        // Mã hành chính lấy từ provinces.open-api.vn (v2 sau sáp nhập) qua API nội bộ có cache
         const API_TINH_THANH = '/api/dia-chi/tinh-thanh';
-        const API_QUAN_HUYEN = (code) => `/api/dia-chi/quan-huyen/${encodeURIComponent(code)}`;
+        const API_QUAN_HUYEN = (code) => `/api/dia-chi/phuong-xa-tinh/${encodeURIComponent(code)}`;
         const LEGACY_TINH = { HN: '1', HCM: '79', DN: '48', CT: '92', BD: '74', DNAI: '75', VT: '77', HUE: '46', HP: '31', KH: '56', LD: '68' };
         const districtCache = {};
         let provincesPromise = null;
@@ -347,6 +386,35 @@
         let currentLat = null;
         let currentLng = null;
 
+        function getCookie(name) {
+            const match = document.cookie.match(new RegExp('(^|;\\s*)' + name + '=([^;]*)'));
+            return match ? decodeURIComponent(match[2]) : null;
+        }
+
+        function initExistingGps() {
+            const latVal = (hiddenLat && hiddenLat.value) || getCookie('user_lat');
+            const lngVal = (hiddenLng && hiddenLng.value) || getCookie('user_lng');
+            if (latVal && lngVal && !isNaN(parseFloat(latVal)) && !isNaN(parseFloat(lngVal))) {
+                currentLat = parseFloat(latVal);
+                currentLng = parseFloat(lngVal);
+                if (hiddenLat) hiddenLat.value = latVal;
+                if (hiddenLng) hiddenLng.value = lngVal;
+                if (gpsStatus) {
+                    gpsStatus.className = 'flex items-center gap-2.5 p-3 rounded-xl border border-emerald-200 bg-emerald-50 text-[12.5px] text-emerald-800 font-medium';
+                }
+                if (gpsStatusIcon) {
+                    gpsStatusIcon.className = 'material-symbols-outlined text-[20px] text-emerald-600';
+                    gpsStatusIcon.textContent = 'my_location';
+                }
+                if (gpsStatusText) {
+                    const r = (radiusInput && radiusInput.value) || '3';
+                    gpsStatusText.textContent = `Đã có tọa độ vị trí (${r} km)`;
+                }
+                if (gpsBtnText) gpsBtnText.textContent = 'Lấy lại vị trí';
+            }
+        }
+        initExistingGps();
+
         function switchTab(mode) {
             activeTab = mode;
             if (mode === 'area') {
@@ -371,6 +439,10 @@
                 }
                 if (paneGps) paneGps.classList.remove('hidden');
                 if (paneArea) paneArea.classList.add('hidden');
+
+                if (!currentLat || !currentLng) {
+                    initExistingGps();
+                }
             }
         }
 
@@ -486,7 +558,7 @@
         const aiNeedPills   = document.getElementById(prefix + '-need-pills');
 
         let currentAiNeed = 'auto';
-        const AI_SUGGESTIONS_KEY = 'qm_ai_suggestions_v3_' + prefix;
+        const AI_SUGGESTIONS_KEY = 'qm_ai_suggestions_v4_' + prefix;
         const AI_SUGGESTIONS_TTL = 3 * 60 * 1000; // 3 phút cache pool
         const HISTORY_KEY        = 'qm_search_history';
 
@@ -529,13 +601,8 @@
                     currentAiNeed = need;
 
                     // Cập nhật giao diện pill active
-                    aiNeedPills.querySelectorAll('.ai-need-pill').forEach(p => {
-                        p.classList.remove('active-need', 'bg-[#a04100]', 'text-white', 'border-[#a04100]', 'shadow-xs', 'font-bold');
-                        p.classList.add('bg-gray-50', 'text-gray-700', 'border-gray-200', 'font-medium');
-                    });
-
-                    this.classList.remove('bg-gray-50', 'text-gray-700', 'border-gray-200', 'font-medium');
-                    this.classList.add('active-need', 'bg-[#a04100]', 'text-white', 'border-[#a04100]', 'shadow-xs', 'font-bold');
+                    aiNeedPills.querySelectorAll('.ai-need-pill').forEach(p => p.classList.remove('active-need'));
+                    this.classList.add('active-need');
 
                     aiCurrentSliceIndex = 0;
                     loadAiSuggestions(true);
@@ -546,7 +613,7 @@
         // Render một item gợi ý món ăn
         function renderAiSuggestionItem(item) {
             const el = document.createElement('div');
-            el.className = 'ai-suggestion-item flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-[#a04100]/5 border border-gray-100 hover:border-[#a04100]/30 transition-all cursor-pointer group bg-white shadow-2xs relative';
+            el.className = 'ai-suggestion-item flex items-center gap-3 p-2.5 rounded-2xl cursor-pointer group relative';
             el.setAttribute('data-search', item.search_term || item.dish);
             el.setAttribute('data-slug', item.quan_slug || '');
 
@@ -555,28 +622,43 @@
             const dishName = escapeHtml(item.dish || '');
             const subtitle = escapeHtml(item.subtitle || 'Quán ngon chuẩn vị');
             const priceText = item.price_formatted ? escapeHtml(item.price_formatted) : '';
-            const reason = escapeHtml(item.reason || 'Món ngon nổi bật');
-            const badge = escapeHtml(item.badge || 'AI');
+            
+            // Xử lý reason tinh tế: không lặp lại tên quán
+            let reason = item.reason || '';
+            if (reason.includes('Có tại quán')) {
+                reason = 'Món bán chạy tại quán';
+            }
+            const cleanReason = escapeHtml(reason);
+            const rawBadge = (item.badge && item.badge !== 'Quán Đã Duyệt') ? item.badge : '';
+            const badge = escapeHtml(rawBadge);
 
             el.innerHTML = `
-                <div class="w-11 h-11 rounded-xl overflow-hidden flex-shrink-0 group-hover:scale-105 transition-transform bg-gray-100 relative">
+                <div class="relative w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 bg-gray-100 shadow-2xs group-hover:scale-105 transition-transform duration-300">
                     <img src="${escapeHtml(img)}" alt="${dishName}"
                          class="w-full h-full object-cover"
                          loading="lazy"
                          onerror="this.src='${defaultImg}'">
+                    ${badge ? `
+                        <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/85 via-black/55 to-transparent pt-2 pb-0.5 px-0.5 text-center">
+                            <span class="text-[8.5px] font-bold text-white tracking-tight uppercase leading-none block truncate">${badge}</span>
+                        </div>
+                    ` : ''}
                 </div>
                 <div class="overflow-hidden min-w-0 flex-1 pr-1">
-                    <div class="flex items-center justify-between gap-1">
-                        <div class="font-bold text-[13px] md:text-[13.5px] text-gray-800 group-hover:text-primary truncate" style="--tw-text-opacity:1;">${dishName}</div>
-                        <span class="text-[9.5px] font-bold px-1.5 py-0.5 rounded-md bg-orange-50 text-[#a04100] shrink-0 border border-orange-100/60 leading-none">${badge}</span>
+                    <h5 class="font-bold text-[13.5px] text-gray-900 group-hover:text-primary transition-colors leading-snug truncate" title="${dishName}">
+                        ${dishName}
+                    </h5>
+                    <div class="flex items-center gap-1.5 text-[11.5px] text-gray-500 mt-1 truncate">
+                        ${priceText ? `<span class="font-extrabold text-[#ea580c]">${priceText}</span><span class="text-gray-300">·</span>` : ''}
+                        <span class="truncate flex items-center gap-1 font-medium text-gray-600">
+                            <span class="material-symbols-outlined text-[13px] text-gray-400 shrink-0">storefront</span>
+                            <span class="truncate">${subtitle}</span>
+                        </span>
                     </div>
-                    <div class="flex items-center gap-1.5 text-[11px] text-gray-500 truncate mt-0.5">
-                        ${priceText ? `<span class="font-bold text-[#a04100]">${priceText}</span><span class="text-gray-300">·</span>` : ''}
-                        <span class="truncate">${subtitle}</span>
-                    </div>
-                    <div class="text-[10px] text-gray-400 truncate mt-0.5 flex items-center gap-1">
-                        <span class="truncate">${reason}</span>
-                    </div>
+                    ${cleanReason ? `
+                    <div class="text-[10px] text-gray-400 mt-0.5 truncate flex items-center gap-1">
+                        <span class="truncate">${cleanReason}</span>
+                    </div>` : ''}
                 </div>
             `;
 
@@ -689,7 +771,7 @@
             if (aiLoading) aiLoading.classList.remove('hidden');
             if (aiGrid) aiGrid.classList.add('hidden');
             if (aiContext) {
-                aiContext.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-[#a04100] animate-pulse"></span> AI đang phân tích...';
+                aiContext.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-orange-600 animate-pulse"></span> AI đang phân tích...';
             }
 
             // Gọi API lấy pool 18 món
@@ -909,7 +991,7 @@
 
         function loadDistricts(provCode, selected) {
             if (!provCode) {
-                setOptions(districtSelect, 'Tất cả quận/huyện', []);
+                setOptions(districtSelect, 'Tất cả phường/xã', []);
                 return Promise.resolve([]);
             }
             districtSelect.disabled = true;
@@ -921,7 +1003,7 @@
                     .catch(() => { delete districtCache[provCode]; return []; });
             }
             return districtCache[provCode].then(list => {
-                setOptions(districtSelect, 'Tất cả quận/huyện', list, selected);
+                setOptions(districtSelect, 'Tất cả phường/xã', list, selected);
                 districtSelect.disabled = false;
                 return list;
             });
@@ -1033,6 +1115,10 @@
                     (pos) => {
                         currentLat = pos.coords.latitude;
                         currentLng = pos.coords.longitude;
+                        document.cookie = `user_lat=${currentLat}; path=/; max-age=2592000; SameSite=Lax`;
+                        document.cookie = `user_lng=${currentLng}; path=/; max-age=2592000; SameSite=Lax`;
+                        if (hiddenLat) hiddenLat.value = currentLat;
+                        if (hiddenLng) hiddenLng.value = currentLng;
                         if (gpsStatus) gpsStatus.className = 'flex items-center gap-2.5 p-3 rounded-xl border border-emerald-200 bg-emerald-50 text-[12.5px] text-emerald-800 font-medium';
                         if (gpsStatusIcon) {
                             gpsStatusIcon.className = 'material-symbols-outlined text-[20px] text-emerald-600';
@@ -1111,16 +1197,90 @@
                         hiddenQuanHuyen.value = '';
                         locationLabel.textContent = 'Chọn khu vực';
                     }
+                    closeLocation();
+                    if (prefix === 'kp') {
+                        submitSearchForm();
+                    }
                 } else {
                     // ÁP DỤNG GPS GẦN BẠN -> XÓA SẠCH TỈNH / HUYỆN ĐỂ TÁCH BIỆT HOÀN TOÀN
-                    const lat = currentLat || hiddenLat.value;
-                    const lng = currentLng || hiddenLng.value;
+                    let lat = currentLat || (hiddenLat && hiddenLat.value);
+                    let lng = currentLng || (hiddenLng && hiddenLng.value);
 
                     if (!lat || !lng) {
-                        alert('Vui lòng bấm "Lấy vị trí GPS hiện tại" trước khi áp dụng');
+                        const cLat = getCookie('user_lat');
+                        const cLng = getCookie('user_lng');
+                        if (cLat && cLng && !isNaN(parseFloat(cLat)) && !isNaN(parseFloat(cLng))) {
+                            lat = cLat;
+                            lng = cLng;
+                            currentLat = parseFloat(cLat);
+                            currentLng = parseFloat(cLng);
+                        }
+                    }
+
+                    if (!lat || !lng) {
+                        if (!navigator.geolocation) {
+                            alert('Trình duyệt không hỗ trợ định vị GPS');
+                            return;
+                        }
+
+                        if (gpsBtnText) gpsBtnText.textContent = 'Đang lấy vị trí GPS...';
+                        if (applyLocationBtn) {
+                            applyLocationBtn.disabled = true;
+                            applyLocationBtn.innerHTML = '<span class="inline-block animate-spin mr-1">⏳</span> Đang định vị...';
+                        }
+
+                        navigator.geolocation.getCurrentPosition(
+                            (pos) => {
+                                currentLat = pos.coords.latitude;
+                                currentLng = pos.coords.longitude;
+                                document.cookie = `user_lat=${currentLat}; path=/; max-age=2592000; SameSite=Lax`;
+                                document.cookie = `user_lng=${currentLng}; path=/; max-age=2592000; SameSite=Lax`;
+
+                                hiddenTinhThanh.value = '';
+                                hiddenQuanHuyen.value = '';
+                                provinceSelect.value = '';
+                                districtSelect.innerHTML = '<option value="">Tất cả quận/huyện</option>';
+
+                                hiddenLat.value = currentLat;
+                                hiddenLng.value = currentLng;
+                                const radius = radiusInput?.value || '3';
+                                if (hiddenBanKinh) hiddenBanKinh.value = radius;
+                                hiddenSapXep.value = 'near_me';
+
+                                locationLabel.textContent = `Gần bạn (< ${radius}km)`;
+
+                                if (gpsStatus) gpsStatus.className = 'flex items-center gap-2.5 p-3 rounded-xl border border-emerald-200 bg-emerald-50 text-[12.5px] text-emerald-800 font-medium';
+                                if (gpsStatusIcon) {
+                                    gpsStatusIcon.className = 'material-symbols-outlined text-[20px] text-emerald-600';
+                                    gpsStatusIcon.textContent = 'my_location';
+                                }
+                                if (gpsStatusText) gpsStatusText.textContent = `Đã có tọa độ vị trí (${radius} km)`;
+                                if (gpsBtnText) gpsBtnText.textContent = 'Lấy lại vị trí';
+
+                                if (applyLocationBtn) {
+                                    applyLocationBtn.disabled = false;
+                                    applyLocationBtn.textContent = 'Áp dụng';
+                                }
+                                closeLocation();
+                                if (prefix === 'kp') {
+                                    submitSearchForm();
+                                }
+                            },
+                            (err) => {
+                                if (applyLocationBtn) {
+                                    applyLocationBtn.disabled = false;
+                                    applyLocationBtn.textContent = 'Áp dụng';
+                                }
+                                if (gpsBtnText) gpsBtnText.textContent = 'Lấy vị trí GPS hiện tại';
+                                alert('Vui lòng bật quyền truy cập vị trí trên thiết bị của bạn');
+                            },
+                            { enableHighAccuracy: true, timeout: 10000 }
+                        );
                         return;
                     }
 
+                    document.cookie = `user_lat=${lat}; path=/; max-age=2592000; SameSite=Lax`;
+                    document.cookie = `user_lng=${lng}; path=/; max-age=2592000; SameSite=Lax`;
                     hiddenTinhThanh.value = '';
                     hiddenQuanHuyen.value = '';
                     provinceSelect.value = '';
@@ -1133,12 +1293,11 @@
                     hiddenSapXep.value = 'near_me';
 
                     locationLabel.textContent = `Gần bạn (< ${radius}km)`;
-                }
+                    closeLocation();
 
-                closeLocation();
-
-                if (prefix === 'kp') {
-                    submitSearchForm();
+                    if (prefix === 'kp') {
+                        submitSearchForm();
+                    }
                 }
             });
         }

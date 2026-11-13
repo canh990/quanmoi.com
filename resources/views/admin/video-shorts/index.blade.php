@@ -1,4 +1,4 @@
-@extends('admin.layout')
+@extends(request()->ajax() ? 'admin.ajax_layout' : 'admin.layout')
 
 @section('title', 'Phê Duyệt Video TikTok Review - Quán Mới Admin')
 @section('page-title', 'Phê Duyệt Video TikTok / Shorts Review')
@@ -111,9 +111,9 @@
             {{-- Tìm kiếm từ khóa --}}
             <div class="lg:col-span-2">
                 <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Tìm kiếm video</label>
-                <div class="relative">
-                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
-                    <input type="text" name="q" value="{{ request('q') }}" placeholder="Nhập tên video, người đăng, ID hoặc quán..." class="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none">
+                <div class="admin-search-wrapper w-full shadow-2xs">
+                    <span class="material-symbols-outlined text-[18px] text-slate-400">search</span>
+                    <input type="text" name="q" value="{{ request('q') }}" placeholder="Nhập tên video, người đăng, ID hoặc quán..." class="w-full bg-transparent border-0 p-0 text-xs font-medium outline-none text-slate-800 placeholder:text-slate-400">
                 </div>
             </div>
 
@@ -621,6 +621,7 @@
             const data = await res.json();
             if (res.ok && data.success) {
                 // Cập nhật UI ngay lập tức
+                const card = document.getElementById(`video-card-${id}`);
                 const badge = document.getElementById(`status-badge-${id}`);
                 if (badge) {
                     badge.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold shadow-xs bg-emerald-500 text-white';
@@ -657,8 +658,38 @@
                     if (tabA) tabA.innerText = new Intl.NumberFormat().format(count);
                 }
 
-                // Cập nhật lại số đếm thống kê
-                syncVideoShortsGrid();
+                if (card) {
+                    card.classList.remove('border-amber-300', 'ring-2', 'ring-amber-400/30');
+                    card.classList.add('border-slate-200/80');
+
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const currentFilter = urlParams.get('trang_thai');
+
+                    // Nếu đang xem ở tab / bộ lọc Chờ duyệt -> làm mờ và xóa card khỏi giao diện
+                    if (currentFilter === 'cho_duyet') {
+                        card.style.transition = 'all 0.4s ease';
+                        card.style.opacity = '0';
+                        card.style.transform = 'scale(0.95)';
+                        setTimeout(() => {
+                            card.remove();
+                            const remaining = document.querySelectorAll('[id^="video-card-"]');
+                            if (remaining.length === 0) {
+                                const gridContainer = document.getElementById('videos-grid-container');
+                                if (gridContainer) {
+                                    gridContainer.innerHTML = `
+                                        <div class="bg-white rounded-2xl border border-slate-200/80 p-12 text-center shadow-xs">
+                                            <div class="w-16 h-16 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center mx-auto mb-3">
+                                                <span class="material-symbols-outlined text-3xl">task_alt</span>
+                                            </div>
+                                            <h3 class="text-base font-bold text-slate-800">Đã phê duyệt xong tất cả video</h3>
+                                            <p class="text-xs text-slate-500 mt-1 max-w-md mx-auto">Không còn video nào trong hàng đợi chờ duyệt. Bạn có thể chuyển sang tab Đã duyệt hoặc Tất cả để xem lại.</p>
+                                        </div>
+                                    `;
+                                }
+                            }
+                        }, 400);
+                    }
+                }
 
                 if (typeof showRealtimeToast === 'function') {
                     showRealtimeToast('Phê Duyệt Video', 'Đã phê duyệt video review thành công!', '', 'check_circle', 'bg-emerald-500');
@@ -807,6 +838,9 @@
         const container = document.getElementById('preview-media-container');
         container.innerHTML = '';
 
+        const playerV1Url = `https://www.tiktok.com/player/v1/${videoId}?music_info=1&description=1`;
+        const watchUrl = `https://www.tiktok.com/@creator/video/${videoId}`;
+
         if (cleanUrl) {
             const video = document.createElement('video');
             video.src = cleanUrl;
@@ -817,23 +851,38 @@
             video.loop = true;
             video.playsInline = true;
             video.onerror = () => {
-                container.innerHTML = '';
-                const iframe = document.createElement('iframe');
-                iframe.src = `https://www.tiktok.com/embed/v2/${videoId}`;
-                iframe.className = 'w-full h-full border-none';
-                iframe.allow = 'autoplay; encrypted-media';
-                iframe.allowFullscreen = true;
-                container.appendChild(iframe);
+                container.innerHTML = `
+                    <iframe src="${playerV1Url}"
+                            class="w-full h-full border-none"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; fullscreen; gyroscope; picture-in-picture; web-share"
+                            referrerpolicy="no-referrer-when-downgrade"
+                            allowfullscreen></iframe>
+                    <div class="absolute bottom-3 inset-x-0 text-center pointer-events-auto z-20">
+                        <a href="${watchUrl}" target="_blank" rel="noopener noreferrer"
+                           class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-black/80 hover:bg-black text-amber-400 font-bold text-[11px] rounded-full border border-amber-500/40 shadow-lg backdrop-blur-xs transition">
+                            <span>Mở xem trực tiếp trên TikTok</span>
+                            <span class="material-symbols-outlined text-[14px]">open_in_new</span>
+                        </a>
+                    </div>
+                `;
             };
             container.appendChild(video);
             video.play().catch(e => console.log('Autoplay muted'));
         } else {
-            const iframe = document.createElement('iframe');
-            iframe.src = `https://www.tiktok.com/embed/v2/${videoId}`;
-            iframe.className = 'w-full h-full border-none';
-            iframe.allow = 'autoplay; encrypted-media';
-            iframe.allowFullscreen = true;
-            container.appendChild(iframe);
+            container.innerHTML = `
+                <iframe src="${playerV1Url}"
+                        class="w-full h-full border-none"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; fullscreen; gyroscope; picture-in-picture; web-share"
+                        referrerpolicy="no-referrer-when-downgrade"
+                        allowfullscreen></iframe>
+                <div class="absolute bottom-3 inset-x-0 text-center pointer-events-auto z-20">
+                    <a href="${watchUrl}" target="_blank" rel="noopener noreferrer"
+                       class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-black/80 hover:bg-black text-amber-400 font-bold text-[11px] rounded-full border border-amber-500/40 shadow-lg backdrop-blur-xs transition">
+                        <span>Mở xem trực tiếp trên TikTok</span>
+                        <span class="material-symbols-outlined text-[14px]">open_in_new</span>
+                    </a>
+                </div>
+            `;
         }
 
         document.getElementById('preview-video-modal').classList.remove('hidden');

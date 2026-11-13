@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\SafeSearchable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class VideoShort extends Model
 {
-    use HasFactory;
+    use HasFactory, SafeSearchable;
 
     protected $fillable = [
         'quan_id',
@@ -29,6 +31,71 @@ class VideoShort extends Model
         'embed_url',
         'watch_url',
     ];
+
+    /**
+     * Đồng bộ lại trường co_video_review của quán trên Elasticsearch khi video thay đổi.
+     */
+    protected static function booted(): void
+    {
+        $sync = static function (VideoShort $video): void {
+            $quan = $video->quan;
+            if ($quan && method_exists($quan, 'shouldBeSearchable') && $quan->shouldBeSearchable()) {
+                try {
+                    $quan->searchable();
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::warning('Sync Quan Elastic after VideoShort change failed: ' . $e->getMessage());
+                }
+            }
+        };
+
+        static::saved($sync);
+        static::deleted($sync);
+    }
+
+    public function searchableAs(): string
+    {
+        return 'video_shorts';
+    }
+
+    protected function makeAllSearchableUsing(Builder $query): Builder
+    {
+        return $query->with(['quan.danhMucMenu.monAn:id,danh_muc_id,ten_mon']);
+    }
+
+    public function toSearchableArray(): array
+    {
+        $quan = $this->relationLoaded('quan')
+            ? $this->quan
+            : $this->quan()->with('danhMucMenu.monAn:id,danh_muc_id,ten_mon')->first();
+
+        $danhSachMon = [];
+        if ($quan && $quan->danhMucMenu) {
+            $danhSachMon = $quan->danhMucMenu
+                ->pluck('monAn')
+                ->flatten()
+                ->pluck('ten_mon')
+                ->filter()
+                ->unique()
+                ->values()
+                ->all();
+        }
+
+        return [
+            'id' => (string) $this->id,
+            'quan_id' => (string) $this->quan_id,
+            'tieu_de' => $this->tieu_de,
+            'video_id' => (string) $this->video_id,
+            'nguoi_dang' => $this->nguoi_dang,
+            'ten_quan' => $quan?->ten_quan ?? '',
+            'ten_quan_huyen' => $quan?->ten_quan_huyen ?? '',
+            'loai_hinh_kinh_doanh' => $quan?->loai_hinh_kinh_doanh ?? '',
+            'mon_an' => $danhSachMon,
+            'trang_thai' => $this->trang_thai,
+            'luot_xem' => (int) $this->luot_xem,
+            'luot_thich' => (int) $this->luot_thich,
+            'created_at' => $this->created_at ? $this->created_at->timestamp : null,
+        ];
+    }
 
     public function quan()
     {
@@ -61,10 +128,26 @@ class VideoShort extends Model
             return $matches[1];
         }
 
-        // Trường hợp link rút gọn vt.tiktok.com hoặc vm.tiktok.com
-        if (preg_match('/(vt|vm)\.tiktok\.com\/([A-Za-z0-9]+)/i', $trimmed)) {
+        // Trường hợp link rút gọn vt.tiktok.com, vm.tiktok.com, hoặc tiktok.com/t/
+        if (preg_match('/(vt|vm)\.tiktok\.com\/([A-Za-z0-9]+)/i', $trimmed) || preg_match('/tiktok\.com\/t\/([A-Za-z0-9]+)/i', $trimmed)) {
             try {
-                $headers = @get_headers($trimmed, 1);
+                $targetUrl = str_starts_with($trimmed, 'http') ? $trimmed : 'https://' . $trimmed;
+                $ch = curl_init($targetUrl);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_HEADER, true);
+                curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+                curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+                curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+                curl_setopt($ch, CURLOPT_NOBODY, true);
+                curl_exec($ch);
+                $effectiveUrl = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
+                curl_close($ch);
+
+                if ($effectiveUrl && preg_match('/\/video\/(\d+)/i', $effectiveUrl, $m)) {
+                    return $m[1];
+                }
+
+                $headers = @get_headers($targetUrl, 1);
                 $location = $headers['Location'] ?? $headers['location'] ?? null;
                 if (is_array($location)) {
                     $location = end($location);
@@ -206,8 +289,7 @@ class VideoShort extends Model
             $ch = curl_init($coverUrl);
             curl_setopt($ch, CURLOPT_FILE, $fp);
             curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-            curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36');
-            curl_setopt($ch, CURLOPT_REFERER, 'https://www.tiktok.com/');
+            curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
             curl_setopt($ch, CURLOPT_TIMEOUT, 20);
             curl_exec($ch);
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -216,6 +298,10 @@ class VideoShort extends Model
 
             if ($httpCode === 200 && file_exists($destination) && filesize($destination) > 1000) {
                 return "/storage/videos/thumbnails/{$videoId}.jpg";
+            }
+
+            if (file_exists($destination) && filesize($destination) <= 1000) {
+                @unlink($destination);
             }
         } catch (\Throwable $e) {
             // bỏ qua lỗi nếu không tải được ảnh bìa
@@ -308,19 +394,7 @@ class VideoShort extends Model
      */
     public function getEffectiveThumbnailAttribute(): string
     {
-        // 1. Nếu có thumbnail_url cụ thể (ảnh upload tùy chỉnh hoặc link)
-        if (! empty($this->thumbnail_url) && ! str_contains($this->thumbnail_url, 'placehold.co')) {
-            if (str_starts_with($this->thumbnail_url, '/storage/') || str_starts_with($this->thumbnail_url, 'storage/')) {
-                $rel = preg_replace('#^/?storage/#', '', $this->thumbnail_url);
-                if (file_exists(storage_path("app/public/{$rel}"))) {
-                    return '/' . ltrim($this->thumbnail_url, '/');
-                }
-            } else {
-                return $this->thumbnail_url;
-            }
-        }
-
-        // 2. Kiểm tra nếu có file thumbnail trong storage theo video_id
+        // 1. Ưu tiên kiểm tra nếu có file thumbnail cục bộ theo video_id
         if (! empty($this->video_id)) {
             $candidates = [
                 storage_path("app/public/videos/thumbnails/{$this->video_id}.jpg"),
@@ -338,15 +412,27 @@ class VideoShort extends Model
             }
         }
 
+        // 2. Nếu có thumbnail_url cụ thể (ảnh upload tùy chỉnh hoặc link)
+        if (! empty($this->thumbnail_url) && ! str_contains($this->thumbnail_url, 'placehold.co')) {
+            if (str_starts_with($this->thumbnail_url, '/storage/') || str_starts_with($this->thumbnail_url, 'storage/')) {
+                $rel = preg_replace('#^/?storage/#', '', $this->thumbnail_url);
+                if (file_exists(storage_path("app/public/{$rel}"))) {
+                    return '/' . ltrim($this->thumbnail_url, '/');
+                }
+            } else {
+                return $this->thumbnail_url;
+            }
+        }
+
         return $this->quan?->anh_bia_url ?: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80';
     }
 
     /**
-     * URL nhúng iframe TikTok chuẩn
+     * URL nhúng iframe TikTok chuẩn (dùng Player v1 hiện đại)
      */
     public function getEmbedUrlAttribute(): string
     {
-        return "https://www.tiktok.com/embed/v2/{$this->video_id}";
+        return "https://www.tiktok.com/player/v1/{$this->video_id}?music_info=1&description=1";
     }
 
     /**
@@ -376,5 +462,30 @@ class VideoShort extends Model
     public function scopeChoDuyet($query)
     {
         return $query->where('trang_thai', 'cho_duyet');
+    }
+
+    /**
+     * Tìm kiếm video qua Elasticsearch (hỗ trợ tiếng Việt không dấu/có dấu, tên quán, món ăn),
+     * tự động fallback sang truy vấn SQL khi Elasticsearch không khả dụng hoặc chưa sync index.
+     */
+    public static function applyElasticSearch(Builder $query, string $keyword, ?string $statusFilter = null): void
+    {
+        $search = trim($keyword);
+        if ($search === '') {
+            return;
+        }
+
+        $filters = ($statusFilter && $statusFilter !== 'all') ? ['trang_thai' => $statusFilter] : [];
+        if (static::applyElasticIdsToQuery($query, $search, $filters)) {
+            return;
+        }
+
+        $query->where(function ($q) use ($search) {
+            $q->where('tieu_de', 'like', "%{$search}%")
+                ->orWhere('video_id', 'like', "%{$search}%")
+                ->orWhere('nguoi_dang', 'like', "%{$search}%")
+                ->orWhereHas('quan', fn ($r) => $r->where('ten_quan', 'like', "%{$search}%"))
+                ->orWhereHas('quan.danhMucMenu.monAn', fn ($m) => $m->where('ten_mon', 'like', "%{$search}%"));
+        });
     }
 }

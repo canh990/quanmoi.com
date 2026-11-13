@@ -187,7 +187,7 @@ class KhamPhaController extends Controller
                     }
                 }
 
-                if ($isIndexOutOfSync || $quans->isEmpty() || ($quans->total() > 0 && $quans->count() < $expectedCount)) {
+                if ($isIndexOutOfSync || ($quans->total() > 0 && ($quans->isEmpty() || $quans->count() < $expectedCount))) {
                     $usedEloquentFallback = true;
                     [$quans, $fallbackQuanIds] = $this->paginateWithEloquentFallback(
                         $request,
@@ -320,7 +320,7 @@ class KhamPhaController extends Controller
                         return true;
                     }
                     $tenAscii = \Illuminate\Support\Str::lower(\Illuminate\Support\Str::ascii((string) $mon->ten_mon));
-                    return $tuKhoaAscii !== '' && str_contains($tenAscii, $tuKhoaAscii);
+                    return $tuKhoaAscii !== '' && (str_contains($tenAscii, $tuKhoaAscii) || $this->khopGanDungTenMon($tenAscii, $tuKhoaAscii));
                 })
                 ->sortBy([
                     fn ($a, $b) => (int) $b->con_hang <=> (int) $a->con_hang,
@@ -422,6 +422,34 @@ class KhamPhaController extends Controller
     /**
      * Tính khoảng cách đường chim bay giữa hai toạ độ GPS theo công thức Haversine (km).
      */
+    /**
+     * Khớp gần đúng (sai chính tả nhẹ) giữa từ khóa và từng từ trong tên món,
+     * dùng cùng quy tắc Levenshtein với fallback tìm quán ở bên dưới.
+     */
+    protected function khopGanDungTenMon(string $tenAscii, string $tuKhoaAscii): bool
+    {
+        $tokens = array_filter(preg_split('/[^a-z0-9]+/', $tenAscii));
+
+        foreach (array_filter(preg_split('/\s+/', $tuKhoaAscii)) as $kwWord) {
+            if (strlen($kwWord) < 3) {
+                return false;
+            }
+            $maxDist = strlen($kwWord) >= 6 ? 2 : 1;
+            $coTuKhop = false;
+            foreach ($tokens as $token) {
+                if (abs(strlen($token) - strlen($kwWord)) <= $maxDist && levenshtein($kwWord, $token) <= $maxDist) {
+                    $coTuKhop = true;
+                    break;
+                }
+            }
+            if (!$coTuKhop) {
+                return false;
+            }
+        }
+
+        return $tuKhoaAscii !== '';
+    }
+
     protected function calculateDistance(float $lat1, float $lon1, float $lat2, float $lon2): float
     {
         $earthRadius = 6371; // km
@@ -515,11 +543,15 @@ class KhamPhaController extends Controller
                 $q->whereIn('tinh_thanh_id', $this->codeVariants($tinhThanhId));
             }
             if ($quanHuyenId !== '') {
-                $q->whereIn('quan_huyen_id', $this->codeVariants($quanHuyenId));
+                $variants = $this->codeVariants($quanHuyenId);
+                $q->where(function ($sub) use ($variants) {
+                    $sub->whereIn('quan_huyen_id', $variants)
+                        ->orWhereIn('phuong_xa_id', $variants);
+                });
             }
-            $mau = $q->first(['ten_tinh_thanh', 'ten_quan_huyen']);
+            $mau = $q->first(['ten_tinh_thanh', 'ten_quan_huyen', 'ten_phuong_xa']);
             $tenTinh = $tenTinh ?: (string) ($mau->ten_tinh_thanh ?? '');
-            $tenHuyen = $tenHuyen ?: ($quanHuyenId !== '' ? (string) ($mau->ten_quan_huyen ?? '') : '');
+            $tenHuyen = $tenHuyen ?: ($quanHuyenId !== '' ? (string) ($mau->ten_quan_huyen ?: ($mau->ten_phuong_xa ?? '')) : '');
         }
 
         return [$tenTinh, $tenHuyen];
@@ -565,7 +597,10 @@ class KhamPhaController extends Controller
         }
 
         if (!empty($huyenCodes)) {
-            $q->whereIn('quan_huyen_id', $huyenCodes);
+            $q->where(function ($sub) use ($huyenCodes) {
+                $sub->whereIn('quan_huyen_id', $huyenCodes)
+                    ->orWhereIn('phuong_xa_id', $huyenCodes);
+            });
         }
 
         if ($isXacThuc) {
@@ -607,105 +642,6 @@ class KhamPhaController extends Controller
         }
 
         $items = $q->get();
-
-        // Fallback Fuzzy Search (Chống sai chính tả Levenshtein / Tương đồng chuỗi) khi tìm chính xác LIKE trả về 0 kết quả
-        if ($tuKhoa !== '' && $items->isEmpty()) {
-            $baseQuery = Quan::query()->where('trang_thai', 'da_duyet')->withAvg('danhGia', 'so_sao')->withCount('danhGia');
-
-            if (!empty($danhMuc) && !in_array($danhMuc, ['Quán Nổi Bật', 'Quán Mới'])) {
-                if ($danhMuc === 'Cà phê' || $danhMuc === 'Cà phê & Trà') {
-                    $baseQuery->whereIn('loai_hinh_kinh_doanh', ['Cà phê & Trà', 'Cà phê']);
-                } elseif ($danhMuc === 'Ăn vặt' || $danhMuc === 'Đồ ăn vặt') {
-                    $baseQuery->whereIn('loai_hinh_kinh_doanh', ['Đồ ăn vặt', 'Ăn vặt']);
-                } else {
-                    $baseQuery->where('loai_hinh_kinh_doanh', $danhMuc);
-                }
-            }
-            if (!empty($tinhCodes)) {
-                $baseQuery->whereIn('tinh_thanh_id', $tinhCodes);
-            }
-            if (!empty($huyenCodes)) {
-                $baseQuery->whereIn('quan_huyen_id', $huyenCodes);
-            }
-            if ($isXacThuc) {
-                $baseQuery->where('is_xac_thuc', true);
-            }
-            if ($isNoiBat) {
-                $baseQuery->where('is_noi_bat', true);
-            }
-            if ($coShopee) {
-                $baseQuery->whereNotNull('shopeefood_url')->where('shopeefood_url', '!=', '');
-            }
-            if ($coVideo) {
-                $baseQuery->whereHas('videos', fn ($v) => $v->where('trang_thai', 'da_duyet'));
-            }
-            if ($mucGia === 'duoi_50k') {
-                $baseQuery->where('gia_nho_nhat', '<=', 50000);
-            } elseif ($mucGia === '50k_150k') {
-                $baseQuery->where('gia_nho_nhat', '<=', 150000)->where('gia_lon_nhat', '>=', 50000);
-            } elseif ($mucGia === '150k_300k') {
-                $baseQuery->where('gia_nho_nhat', '<=', 300000)->where('gia_lon_nhat', '>=', 150000);
-            } elseif ($mucGia === 'tren_300k') {
-                $baseQuery->where('gia_lon_nhat', '>=', 300000);
-            }
-
-            $kwAscii = \Illuminate\Support\Str::lower(\Illuminate\Support\Str::ascii($tuKhoa));
-            $kwWords = array_values(array_filter(preg_split('/\s+/', $kwAscii)));
-
-            if ($kwAscii !== '' && strlen($kwAscii) >= 3) {
-                $candidates = $baseQuery->with('danhMucMenu.monAn:id,danh_muc_id,ten_mon')->get();
-                $scored = [];
-
-                foreach ($candidates as $candidate) {
-                    $haystackParts = [
-                        (string) $candidate->ten_quan,
-                        (string) $candidate->loai_hinh_kinh_doanh,
-                        (string) $candidate->dia_chi_chi_tiet,
-                    ];
-                    if ($candidate->relationLoaded('danhMucMenu')) {
-                        foreach ($candidate->danhMucMenu as $dm) {
-                            foreach ($dm->monAn as $mon) {
-                                $haystackParts[] = (string) $mon->ten_mon;
-                            }
-                        }
-                    }
-
-                    $haystackAscii = \Illuminate\Support\Str::lower(\Illuminate\Support\Str::ascii(implode(' ', $haystackParts)));
-                    $tokens = array_values(array_filter(preg_split('/[^a-z0-9]+/', $haystackAscii)));
-
-                    $bestScore = 0;
-                    foreach ($kwWords as $kwWord) {
-                        if (strlen($kwWord) < 3) {
-                            continue;
-                        }
-                        if (str_contains($haystackAscii, $kwWord)) {
-                            $bestScore = max($bestScore, 100);
-                            continue;
-                        }
-                        $maxDist = strlen($kwWord) >= 6 ? 2 : 1;
-                        foreach ($tokens as $token) {
-                            if ($token === '' || abs(strlen($token) - strlen($kwWord)) > $maxDist) {
-                                continue;
-                            }
-                            $dist = levenshtein($kwWord, $token);
-                            if ($dist <= $maxDist) {
-                                $score = 90 - ($dist * 20);
-                                if ($score > $bestScore) {
-                                    $bestScore = $score;
-                                }
-                            }
-                        }
-                    }
-
-                    if ($bestScore > 0) {
-                        $scored[] = ['quan' => $candidate, 'score' => $bestScore];
-                    }
-                }
-
-                usort($scored, fn ($a, $b) => $b['score'] <=> $a['score']);
-                $items = collect(array_column($scored, 'quan'))->values();
-            }
-        }
 
         if ($dangMoCua) {
             $items = $items->filter(fn (Quan $quan) => $quan->isDangMoCua())->values();

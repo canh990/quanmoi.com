@@ -1,4 +1,4 @@
-@extends('admin.layout')
+@extends(request()->ajax() ? 'admin.ajax_layout' : 'admin.layout')
 
 @section('title', 'Quản Lý Quán Nổi Bật - Quán Mới Admin')
 @section('page-title', 'Quản Lý Địa Điểm Quán Nổi Bật')
@@ -105,19 +105,34 @@
                         <span>Danh Sách Đang Ghim (<span id="featured-count-badge" class="text-amber-600 font-black">{{ $featuredQuan->count() }}</span>)</span>
                     </span>
                     
-                    {{-- Search Input lọc nhanh client-side (Đồng bộ admin-search-wrapper, không lệch icon, không conflict) --}}
-                    <div class="admin-search-wrapper flex-1 min-w-[140px] max-w-xs shadow-2xs">
-                        <span class="material-symbols-outlined text-[16px] text-slate-400">search</span>
-                        <input type="text" id="featured-quick-search" oninput="filterFeaturedTable()" placeholder="Lọc tên quán, địa chỉ..." class="w-full bg-transparent border-0 p-0 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-0 font-medium leading-normal">
-                    </div>
+                    {{-- Search Input lọc bằng Elasticsearch (Hỗ trợ Live Debounce + Enter form) --}}
+                    <form method="GET" action="{{ route('admin.quan-noi-bat.index') }}" id="featured-search-form" onsubmit="event.preventDefault(); submitFeaturedSearch();" class="admin-search-wrapper flex-1 min-w-[160px] max-w-sm shadow-2xs relative">
+                        <span class="material-symbols-outlined text-[16px] text-amber-500" title="Tìm kiếm thông minh Elasticsearch">search</span>
+                        <input type="text" 
+                               name="q" 
+                               id="featured-quick-search" 
+                               value="{{ $q ?? '' }}" 
+                               oninput="debounceFeaturedSearch()" 
+                               placeholder="Tìm quán nổi bật (ES gần đúng)..." 
+                               style="padding-left: 0 !important; margin-left: 0 !important; text-align: left !important;"
+                               class="w-full bg-transparent border-0 p-0 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-0 font-medium leading-normal pr-5 !pl-0 text-left">
+                        
+                        <button type="button" 
+                                id="btn-clear-featured-search" 
+                                onclick="resetFeaturedFilter()" 
+                                class="absolute right-1.5 text-slate-400 hover:text-rose-600 transition-colors {{ empty($q) ? 'hidden' : '' }}" 
+                                title="Xóa tìm kiếm">
+                            <span class="material-symbols-outlined text-[14px] block">close</span>
+                        </button>
+                    </form>
                 </div>
 
                 {{-- Select Loại hình kinh doanh --}}
                 <div class="flex items-center gap-1.5 shrink-0">
-                    <select id="featured-filter-category" onchange="filterFeaturedTable()" class="px-2 py-1 text-xs font-medium rounded-xl border border-slate-300 bg-white text-slate-800 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20">
+                    <select id="featured-filter-category" onchange="submitFeaturedSearch()" class="px-2 py-1 text-xs font-medium rounded-xl border border-slate-300 bg-white text-slate-800 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20">
                         <option value="">Tất cả loại hình</option>
                         @foreach($businessTypes as $type)
-                            <option value="{{ $type }}">{{ $type }}</option>
+                            <option value="{{ $type }}" {{ ($loaiHinh ?? '') === $type ? 'selected' : '' }}>{{ $type }}</option>
                         @endforeach
                     </select>
 
@@ -341,10 +356,22 @@
                     <span class="text-[10px] text-slate-400 font-medium">1-click Thêm nhanh</span>
                 </div>
 
-                {{-- Live Search Input (Đồng bộ admin-search-wrapper, không lệch icon, không conflict) --}}
-                <div class="admin-search-wrapper w-full shadow-2xs">
-                    <span class="material-symbols-outlined text-[16px] text-slate-400">search</span>
-                    <input type="text" id="candidate-live-search" oninput="filterCandidateVenues()" placeholder="Gõ tìm quán theo tên, địa chỉ..." class="w-full bg-transparent border-0 p-0 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-0 font-medium leading-normal">
+                {{-- Live Search Input với Elasticsearch qua API search-available --}}
+                <div class="admin-search-wrapper w-full shadow-2xs relative">
+                    <span class="material-symbols-outlined text-[16px] text-amber-500" title="Tìm kiếm kho quán bằng Elasticsearch">search</span>
+                    <input type="text" 
+                           id="candidate-live-search" 
+                           oninput="debounceCandidateSearch()" 
+                           placeholder="Tìm kho quán (ES gần đúng)..." 
+                           style="padding-left: 0 !important; margin-left: 0 !important; text-align: left !important;"
+                           class="w-full bg-transparent border-0 p-0 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-0 font-medium leading-normal pr-5 !pl-0 text-left">
+                    <button type="button" 
+                            id="btn-clear-candidate-search" 
+                            onclick="resetCandidateSearch()" 
+                            class="absolute right-1.5 text-slate-400 hover:text-rose-600 transition-colors hidden" 
+                            title="Xóa tìm kiếm kho quán">
+                        <span class="material-symbols-outlined text-[14px] block">close</span>
+                    </button>
                 </div>
             </div>
 
@@ -1398,7 +1425,7 @@
 
     function fetchAvailableVenues(q = '', loaiHinh = '') {
         const resultsBox = document.getElementById('modal-search-results');
-        resultsBox.innerHTML = '<div class="p-8 text-center text-slate-400 text-xs flex items-center justify-center gap-2"><span class="material-symbols-outlined text-[18px] animate-spin">progress_activity</span> Đang tìm kiếm quán phù hợp...</div>';
+        resultsBox.innerHTML = '<div class="p-8 text-center text-slate-400 text-xs flex items-center justify-center gap-2 font-medium">Đang tìm kiếm quán phù hợp...</div>';
 
         const url = new URL('{{ route("admin.quan-noi-bat.search-available") }}', window.location.origin);
         if (q) url.searchParams.set('q', q);
@@ -1450,62 +1477,387 @@
     }
 
     // ========================================================
-    // 7. LỌC TỨC THÌ BẢNG QUÁN ĐANG NỔI BẬT (CLIENT-SIDE FILTER)
+    // 7. TÌM KIẾM BẢNG QUÁN ĐANG NỔI BẬT BẰNG ELASTICSEARCH (LIVE 0MS DELAY + ABORTCONTROLLER)
     // ========================================================
-    function filterFeaturedTable() {
-        const keyword = (document.getElementById('featured-quick-search').value || '').toLowerCase().trim();
-        const category = document.getElementById('featured-filter-category').value;
-        const rows = document.querySelectorAll('.featured-item-row');
-        let visibleCount = 0;
+    let featuredSearchTimer = null;
+    let featuredAbortController = null;
 
-        rows.forEach(row => {
+    function debounceFeaturedSearch() {
+        const q = (document.getElementById('featured-quick-search').value || '').trim();
+        const clearBtn = document.getElementById('btn-clear-featured-search');
+        if (clearBtn) {
+            clearBtn.classList.toggle('hidden', q === '');
+        }
+
+        // 1. Lọc tức thì DOM (0ms độ trễ - hiển thị kết quả ngay tức khắc)
+        let visibleCount = 0;
+        document.querySelectorAll('.featured-item-row').forEach(row => {
             const name = row.getAttribute('data-name') || '';
             const address = row.getAttribute('data-address') || '';
-            const rowCat = row.getAttribute('data-category') || '';
-
-            const matchKeyword = !keyword || name.includes(keyword) || address.includes(keyword);
-            const matchCategory = !category || rowCat === category;
-
-            if (matchKeyword && matchCategory) {
-                row.style.display = '';
-                visibleCount++;
-            } else {
-                row.style.display = 'none';
-            }
+            const category = row.getAttribute('data-category') || '';
+            const match = !q || (window.adminSmartMatch ? (window.adminSmartMatch(name, q) || window.adminSmartMatch(address, q) || window.adminSmartMatch(category, q)) : (name.toLowerCase().includes(q.toLowerCase()) || address.toLowerCase().includes(q.toLowerCase()) || category.toLowerCase().includes(q.toLowerCase())));
+            row.style.display = match ? '' : 'none';
+            if (match) visibleCount++;
         });
-
         const badge = document.getElementById('featured-count-badge');
         if (badge) badge.innerText = visibleCount;
+        const mobileBadge = document.getElementById('mobile-featured-badge');
+        if (mobileBadge) mobileBadge.innerText = visibleCount;
+
+        // 2. Gửi request server trong nền (debounce 160ms chống nghẽn mạng)
+        if (featuredSearchTimer) clearTimeout(featuredSearchTimer);
+        featuredSearchTimer = setTimeout(() => {
+            submitFeaturedSearch();
+        }, 160);
+    }
+
+    function submitFeaturedSearch() {
+        if (featuredSearchTimer) clearTimeout(featuredSearchTimer);
+        const q = (document.getElementById('featured-quick-search').value || '').trim();
+        const loaiHinh = document.getElementById('featured-filter-category').value;
+        const clearBtn = document.getElementById('btn-clear-featured-search');
+        
+        if (clearBtn) {
+            clearBtn.classList.toggle('hidden', q === '' && !loaiHinh);
+        }
+
+        const url = new URL('{{ route("admin.quan-noi-bat.index") }}', window.location.origin);
+        if (q) url.searchParams.set('q', q);
+        if (loaiHinh) url.searchParams.set('loai_hinh', loaiHinh);
+
+        // Cập nhật query string trên thanh địa chỉ trình duyệt không cần reload
+        window.history.replaceState({}, '', url.toString());
+
+        if (featuredAbortController) {
+            featuredAbortController.abort();
+        }
+        featuredAbortController = new AbortController();
+
+        fetch(url, {
+            signal: featuredAbortController.signal,
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success && Array.isArray(data.data)) {
+                renderFeaturedTable(data.data, q);
+                const badge = document.getElementById('featured-count-badge');
+                if (badge) badge.innerText = data.total ?? data.data.length;
+                const mobileBadge = document.getElementById('mobile-featured-badge');
+                if (mobileBadge) mobileBadge.innerText = data.total ?? data.data.length;
+            }
+        })
+        .catch(err => {
+            if (err.name !== 'AbortError') {
+                console.error('Featured search error:', err);
+            }
+        });
+    }
+
+    function renderFeaturedTable(items, query = '') {
+        const tbody = document.getElementById('featured-table-body');
+        if (!tbody) return;
+
+        if (items.length === 0) {
+            tbody.innerHTML = `
+                <tr id="featured-empty-row">
+                    <td colspan="4" class="p-8 text-center text-slate-500">
+                        <div class="flex flex-col items-center justify-center max-w-sm mx-auto">
+                            <span class="material-symbols-outlined text-[32px] text-slate-300 mb-2">storefront</span>
+                            <p class="text-xs font-bold text-slate-700">Không tìm thấy quán nổi bật nào phù hợp ${query ? `với từ khóa "${query}"` : ''}</p>
+                            <p class="text-[11px] text-slate-400 mt-0.5 mb-2.5">Thử gõ tên quán gần đúng hoặc xóa bộ lọc.</p>
+                            <button type="button" onclick="resetFeaturedFilter()" class="px-3 py-1.5 rounded-xl text-xs font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 transition-all cursor-pointer">
+                                Xóa bộ lọc tìm kiếm
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        let html = '';
+        items.forEach(q => {
+            const isDangMo = q.is_dang_mo_cua;
+            const isPublic = (q.trang_thai === 'da_duyet');
+            const gioMo = (q.gio_mo_cua || '').substring(0, 5);
+            const gioDong = (q.gio_dong_cua || '').substring(0, 5);
+            const hasHours = Boolean(gioMo && gioDong);
+            const addressText = q.dia_chi || 'Chưa cập nhật địa chỉ';
+            const escapedName = (q.ten_quan || '').replace(/'/g, "\\'");
+
+            html += `
+                <tr id="featured-row-${q.id}" 
+                    class="featured-item-row hover:bg-amber-50/50 transition-colors group"
+                    data-name="${(q.ten_quan || '').toLowerCase()}"
+                    data-address="${addressText.toLowerCase()}"
+                    data-category="${q.loai_hinh_kinh_doanh || ''}">
+                    
+                    <td class="py-2 pl-3.5 pr-2">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <div class="relative w-9 h-9 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 shrink-0 shadow-2xs">
+                                <img src="${q.anh_bia_url || ''}" alt="${q.ten_quan || ''}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=120&q=80'">
+                                <span class="absolute bottom-0 right-0 w-3 h-3 bg-amber-500 text-white rounded-tl flex items-center justify-center shadow-xs">
+                                    <span class="material-symbols-outlined text-[9px] fill-1 text-slate-950 font-bold">star</span>
+                                </span>
+                            </div>
+
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center gap-1 flex-nowrap">
+                                    <button type="button" 
+                                            onclick="openQuickViewModalById('${q.id}')" 
+                                            class="font-bold text-slate-900 hover:text-amber-600 transition-colors truncate text-xs inline-flex items-center gap-0.5 text-left cursor-pointer" 
+                                            title="Xem chi tiết quán ngay trên trang">
+                                        <span class="truncate">${q.ten_quan || ''}</span>
+                                        <span class="material-symbols-outlined text-[12px] text-slate-400 group-hover:text-amber-500 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">visibility</span>
+                                    </button>
+                                    ${q.is_xac_thuc ? '<span class="material-symbols-outlined text-blue-500 text-[14px] shrink-0 fill-1" title="Quán đã cấp Tick Xanh xác thực">verified</span>' : ''}
+                                </div>
+
+                                <div class="flex items-center gap-1.5 mt-0.5 text-[10px] text-slate-500 truncate">
+                                    <span class="px-1 py-0.2 rounded bg-slate-100 text-slate-700 font-semibold shrink-0">${q.loai_hinh_kinh_doanh || 'Ẩm thực'}</span>
+                                    <span class="truncate" title="${addressText}">${addressText}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+
+                    <td class="py-2 px-2">
+                        <div class="flex flex-col gap-0.5 min-w-0">
+                            ${isPublic ? `
+                                <span class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded-md border border-emerald-300 w-fit shadow-2xs">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                    <span>Đang hiển thị Web</span>
+                                </span>
+                            ` : `
+                                <span class="inline-flex items-center gap-1 text-[10px] font-bold text-amber-900 bg-amber-50 px-1.5 py-0.5 rounded-md border border-amber-300 w-fit shadow-2xs">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                                    <span>${q.trang_thai === 'chua_duyet' ? 'Chờ duyệt' : 'Đang tạm khóa'}</span>
+                                </span>
+                            `}
+
+                            <div class="text-[10px] text-slate-600 flex items-center gap-1 truncate">
+                                ${hasHours ? `
+                                    <span class="material-symbols-outlined text-[13px] ${isDangMo ? 'text-emerald-500' : 'text-slate-400'}">schedule</span>
+                                    <span class="truncate">${gioMo} - ${gioDong}</span>
+                                    <span class="text-[9px] font-bold ${isDangMo ? 'text-emerald-700 bg-emerald-50 px-1 rounded' : 'text-slate-500 bg-slate-100 px-1 rounded'} shrink-0">${isDangMo ? 'Mở cửa' : 'Đóng cửa'}</span>
+                                ` : `
+                                    <span class="text-slate-400 italic">24/7 hoặc chưa đặt giờ</span>
+                                `}
+                            </div>
+                        </div>
+                    </td>
+
+                    <td class="py-2 px-2 text-center">
+                        <div class="flex flex-col items-center justify-center">
+                            <span class="inline-flex items-center gap-1 text-[11px] font-bold text-slate-800 bg-purple-50 px-1.5 py-0.5 rounded-md border border-purple-200">
+                                <span class="material-symbols-outlined text-[13px] text-purple-600">visibility</span>
+                                <span>${Number(q.luot_xem || 0).toLocaleString()}</span>
+                            </span>
+                            <span class="text-[9px] text-slate-400 truncate max-w-[85px] mt-0.5" title="Chủ quán: ${q.chu_quan || 'Hệ thống'}">
+                                ${q.chu_quan || 'Hệ thống'}
+                            </span>
+                        </div>
+                    </td>
+
+                    <td class="py-2 pr-3 pl-1 text-right">
+                        <div class="inline-flex items-center justify-end gap-1 flex-nowrap shrink-0">
+                            <button type="button" 
+                                    onclick="openQuickEditModal(this)"
+                                    data-id="${q.id}"
+                                    data-name="${q.ten_quan || ''}"
+                                    data-category="${q.loai_hinh_kinh_doanh || ''}"
+                                    data-phone="${q.so_dien_thoai || ''}"
+                                    data-open="${gioMo}"
+                                    data-close="${gioDong}"
+                                    data-shopee="${q.shopeefood_url || ''}"
+                                    data-tiktok="${q.tiktok_url || ''}"
+                                    data-verified="${q.is_xac_thuc ? '1' : '0'}"
+                                    data-featured="1"
+                                    data-slug="${q.slug || ''}"
+                                    class="btn-action-edit px-2 py-1 rounded-lg text-[11px] font-bold text-blue-700 bg-blue-50 hover:bg-blue-600 hover:text-white border border-blue-200 hover:border-blue-600 shadow-2xs hover:shadow-xs transition-all flex items-center gap-0.5 active:scale-95 cursor-pointer shrink-0" 
+                                    title="Sửa thông tin quán nổi bật">
+                                <span class="material-symbols-outlined text-[13px]">edit_note</span>
+                                <span>Sửa</span>
+                            </button>
+
+                            <button type="button" 
+                                    onclick="openQuickViewModal(this)"
+                                    data-id="${q.id}"
+                                    data-name="${q.ten_quan || ''}"
+                                    data-category="${q.loai_hinh_kinh_doanh || ''}"
+                                    data-address="${addressText}"
+                                    data-phone="${q.so_dien_thoai || ''}"
+                                    data-open="${gioMo}"
+                                    data-close="${gioDong}"
+                                    data-is-open="${isDangMo ? '1' : '0'}"
+                                    data-views="${Number(q.luot_xem || 0).toLocaleString()}"
+                                    data-owner="${q.chu_quan || 'Hệ thống'}"
+                                    data-image="${q.anh_bia_url || ''}"
+                                    data-verified="${q.is_xac_thuc ? '1' : '0'}"
+                                    data-featured="1"
+                                    data-status="${q.trang_thai || 'da_duyet'}"
+                                    data-shopee="${q.shopeefood_url || ''}"
+                                    data-tiktok="${q.tiktok_url || ''}"
+                                    class="btn-action-view w-6.5 h-6.5 sm:w-7 sm:h-7 rounded-lg text-slate-700 bg-slate-100 hover:bg-slate-800 hover:text-white border border-slate-300 hover:border-slate-800 shadow-2xs hover:shadow-xs transition-all flex items-center justify-center active:scale-95 cursor-pointer shrink-0" 
+                                    title="Xem chi tiết hồ sơ quán ngay trên trang">
+                                <span class="material-symbols-outlined text-[13px]">visibility</span>
+                            </button>
+
+                            <button type="button" 
+                                    onclick="promptRemoveFeatured('${q.id}', '${escapedName}', this)" 
+                                    class="btn-action-remove px-2 py-1 rounded-lg text-[11px] font-bold text-rose-700 bg-rose-50 hover:bg-rose-600 hover:text-white border border-rose-200 hover:border-rose-600 shadow-2xs hover:shadow-xs transition-all flex items-center gap-0.5 active:scale-95 cursor-pointer shrink-0" 
+                                    title="Gỡ quán khỏi danh sách nổi bật">
+                                <span class="material-symbols-outlined text-[13px]">star_half</span>
+                                <span>Gỡ</span>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+
+        tbody.innerHTML = html;
     }
 
     function resetFeaturedFilter() {
         document.getElementById('featured-quick-search').value = '';
         document.getElementById('featured-filter-category').value = '';
-        filterFeaturedTable();
+        const clearBtn = document.getElementById('btn-clear-featured-search');
+        if (clearBtn) clearBtn.classList.add('hidden');
+        submitFeaturedSearch();
         showAdminToast('Đã Xóa Bộ Lọc', 'Đang hiển thị toàn bộ danh sách quán nổi bật.', 'info', 3000);
     }
 
     // ========================================================
-    // 8. LỌC TỨC THÌ KHO QUÁN ĐỀ CỬ BÊN PHẢI
+    // 8. TÌM KIẾM KHO QUÁN ĐỀ CỬ BÊN PHẢI BẰNG ELASTICSEARCH (0MS DELAY + ABORTCONTROLLER)
     // ========================================================
-    function filterCandidateVenues() {
-        const keyword = (document.getElementById('candidate-live-search').value || '').toLowerCase().trim();
-        const cards = document.querySelectorAll('.candidate-card');
-        let visibleCount = 0;
+    let candidateSearchTimer = null;
+    let candidateAbortController = null;
+    let initialCandidateHtml = null;
 
-        cards.forEach(card => {
-            const name = card.getAttribute('data-name') || '';
-            const address = card.getAttribute('data-address') || '';
-            if (!keyword || name.includes(keyword) || address.includes(keyword)) {
-                card.style.display = '';
-                visibleCount++;
-            } else {
-                card.style.display = 'none';
+    function debounceCandidateSearch() {
+        const input = document.getElementById('candidate-live-search');
+        const q = (input.value || '').trim();
+        const clearBtn = document.getElementById('btn-clear-candidate-search');
+        const container = document.getElementById('candidates-list-container');
+
+        if (initialCandidateHtml === null && container) {
+            initialCandidateHtml = container.innerHTML;
+        }
+
+        if (clearBtn) {
+            clearBtn.classList.toggle('hidden', q === '');
+        }
+
+        if (q === '') {
+            if (candidateAbortController) candidateAbortController.abort();
+            if (initialCandidateHtml !== null && container) {
+                container.innerHTML = initialCandidateHtml;
             }
-        });
+            const badge = document.getElementById('candidates-count-badge');
+            const count = container ? container.querySelectorAll('.candidate-card').length : 0;
+            if (badge) badge.innerText = count;
+            return;
+        }
 
-        const badge = document.getElementById('candidates-count-badge');
-        if (badge) badge.innerText = visibleCount;
+        // 1. Lọc tức thì DOM (0ms độ trễ) với smart matching (không dấu + sửa lỗi lặp ký tự)
+        let localMatches = 0;
+        if (container) {
+            container.querySelectorAll('.candidate-card').forEach(card => {
+                const name = card.getAttribute('data-name') || '';
+                const addr = card.getAttribute('data-address') || '';
+                const cat = card.getAttribute('data-category') || '';
+                const match = window.adminSmartMatch ? (window.adminSmartMatch(name, q) || window.adminSmartMatch(addr, q) || window.adminSmartMatch(cat, q)) : (name.toLowerCase().includes(q.toLowerCase()) || addr.toLowerCase().includes(q.toLowerCase()) || cat.toLowerCase().includes(q.toLowerCase()));
+                card.style.display = match ? '' : 'none';
+                if (match) localMatches++;
+            });
+            const badge = document.getElementById('candidates-count-badge');
+            if (badge) badge.innerText = localMatches;
+        }
+
+        // 2. Gửi request Elasticsearch trong nền (debounce 160ms chống nghẽn mạng)
+        if (candidateSearchTimer) clearTimeout(candidateSearchTimer);
+        candidateSearchTimer = setTimeout(() => {
+            if (candidateAbortController) {
+                candidateAbortController.abort();
+            }
+            candidateAbortController = new AbortController();
+
+            fetch(`/admin/quan-noi-bat/search-available?q=${encodeURIComponent(q)}`, {
+                signal: candidateAbortController.signal,
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+                .then(res => res.json())
+                .then(data => {
+                    const list = data.data || [];
+                    const badge = document.getElementById('candidates-count-badge');
+                    if (badge) badge.innerText = list.length;
+
+                    if (list.length === 0) {
+                        container.innerHTML = `
+                            <div class="p-6 text-center text-xs text-slate-400">
+                                <span class="material-symbols-outlined text-[24px] text-slate-300 block mb-1">search_off</span>
+                                Không tìm thấy quán đã duyệt nào với từ khóa "${q}".
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    let html = '';
+                    list.forEach(v => {
+                        const addressText = v.dia_chi || 'Ẩm thực';
+                        html += `
+                            <div id="candidate-card-${v.id}" 
+                                 class="candidate-card p-2 rounded-xl border border-slate-200 bg-white hover:border-amber-400 hover:bg-amber-50/20 transition-all flex items-center justify-between gap-2 shadow-2xs group"
+                                 data-name="${(v.ten_quan || '').toLowerCase()}"
+                                 data-address="${addressText.toLowerCase()}"
+                                 data-category="${v.loai_hinh_kinh_doanh || ''}">
+                                
+                                <div class="flex items-center gap-2 min-w-0 flex-1">
+                                    <div class="w-8 h-8 rounded-lg overflow-hidden bg-slate-100 border border-slate-200 shrink-0">
+                                        <img src="${v.anh_bia_url || ''}" alt="${v.ten_quan || ''}" class="w-full h-full object-cover" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=100&q=80'">
+                                    </div>
+
+                                    <div class="min-w-0 flex-1">
+                                        <div class="flex items-center gap-1">
+                                            <h5 class="text-xs font-bold text-slate-900 truncate" title="${v.ten_quan}">${v.ten_quan}</h5>
+                                            ${v.is_xac_thuc ? '<span class="material-symbols-outlined text-blue-500 text-[13px] shrink-0 fill-1" title="Tick xanh">verified</span>' : ''}
+                                        </div>
+                                        <p class="text-[10px] text-slate-500 truncate" title="${addressText}">${addressText}</p>
+                                    </div>
+                                </div>
+
+                                <button type="button" 
+                                        onclick="adminAddFeatured('${v.id}', this)" 
+                                        class="px-2 py-1 rounded-lg text-[11px] font-bold text-amber-900 bg-amber-100 hover:bg-amber-500 hover:text-slate-950 border border-amber-300 hover:border-amber-400 shadow-2xs hover:shadow-xs transition-all flex items-center gap-0.5 shrink-0 active:scale-95 cursor-pointer" 
+                                        title="Đánh dấu đưa quán này lên danh sách nổi bật">
+                                    <span class="material-symbols-outlined text-[13px] text-amber-700 fill-1">star</span>
+                                    <span>+ Nổi Bật</span>
+                                </button>
+                            </div>
+                        `;
+                    });
+                    container.innerHTML = html;
+                })
+                .catch(err => {
+                    if (err.name !== 'AbortError') {
+                        console.error('Candidate search error:', err);
+                    }
+                });
+        }, 160);
+    }
+
+    function resetCandidateSearch() {
+        const input = document.getElementById('candidate-live-search');
+        if (input) input.value = '';
+        debounceCandidateSearch();
     }
 
     // ========================================================
@@ -1565,6 +1917,24 @@
             mobileBadge.innerText = Math.max(0, current + delta);
         }
     }
+
+    // Tự động đồng bộ tìm kiếm khi tải trang hoặc khôi phục từ cache trình duyệt
+    function initQuanNoiBatSearchOnLoad() {
+        const candInput = document.getElementById('candidate-live-search');
+        if (candInput && candInput.value.trim() !== '') {
+            debounceCandidateSearch();
+        }
+        const featInput = document.getElementById('featured-quick-search');
+        if (featInput && featInput.value.trim() !== '') {
+            debounceFeaturedSearch();
+        }
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initQuanNoiBatSearchOnLoad);
+    } else {
+        initQuanNoiBatSearchOnLoad();
+    }
+    window.addEventListener('pageshow', initQuanNoiBatSearchOnLoad);
 </script>
 @endsection
 

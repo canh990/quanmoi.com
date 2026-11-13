@@ -23,7 +23,20 @@
     </div>
 
     <!-- Danh sách -->
-    <div class="md:col-span-2">
+    <div class="md:col-span-2 space-y-4">
+        <form method="GET" action="{{ route('admin.blog.tags.index') }}" class="flex items-center gap-2">
+            <div class="admin-search-wrapper flex-1 shadow-2xs">
+                <span class="material-symbols-outlined text-[16px] text-slate-400">search</span>
+                <input type="text" name="q" value="{{ $q ?? '' }}" placeholder="Tìm kiếm thẻ blog..." class="w-full bg-transparent border-0 p-0 text-xs font-medium outline-none text-slate-800 placeholder:text-slate-400">
+            </div>
+            <button type="submit" class="btn-action-primary-glow">
+                <span>Tìm kiếm</span>
+            </button>
+            @if(!empty($q))
+                <a href="{{ route('admin.blog.tags.index') }}" class="btn-action-secondary">Xóa lọc</a>
+            @endif
+        </form>
+
         <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden p-6">
             <div class="flex flex-wrap gap-3">
                 @foreach($tags as $tag)

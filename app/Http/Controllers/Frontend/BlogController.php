@@ -47,14 +47,8 @@ class BlogController extends Controller
         if ($request->has('suggest') || ($request->ajax() && $request->has('search'))) {
             $searchTerm = trim($request->input('search', ''));
             if ($searchTerm === '') {
-                return response()->json([
-                    'success' => true,
-                    'blogs' => [],
-                    'quans' => [],
-                    'total' => 0
-                ]);
+                return response()->json([]);
             }
-
             // 1. Gợi ý bài viết Blog qua Elasticsearch (Scout) hoặc DB fallback
             $blogSuggestions = collect();
             try {
@@ -231,6 +225,7 @@ class BlogController extends Controller
                     ->get();
             }
         }
+        }
 
         // Nếu chưa được phân trang bởi Elasticsearch (không tìm kiếm hoặc fallback)
         if ($blogs === null) {
@@ -347,6 +342,7 @@ class BlogController extends Controller
             'total_published' => Blog::where('status', 'published')->count(),
             'timestamp' => now()->toIso8601String(),
         ]);
+    }
     }
 
     public function show(Request $request, string $slug)
@@ -1036,24 +1032,6 @@ class BlogController extends Controller
             'recommendations' => $recommendations,
         ]);
     }
-
-    /**
-     * Trợ lý AI: "Hôm nay ăn gì?" theo Tâm trạng & Thời tiết (AI Culinary Itinerary Planner API)
-     */
-    public function planCulinaryItinerary(Request $request)
-    {
-        $mood = (string) $request->input('mood', 'happy');
-        $weather = (string) $request->input('weather', 'pleasant');
-        $companion = (string) $request->input('companion', 'couple');
-        $budget = (string) $request->input('budget', 'budget_mid');
-        $excludeIds = array_filter(array_map('intval', (array) $request->input('exclude_ids', [])));
-        $customPrompt = trim((string) $request->input('custom_prompt', ''));
-
-        $result = $this->blogAiService->planCulinaryItinerary($mood, $weather, $companion, $budget, $excludeIds, $customPrompt);
-
-        return response()->json($result);
-    }
-
 
     /**
      * Đăng ký nhận tin ẩm thực Blog (Newsletter Subscription)

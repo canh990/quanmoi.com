@@ -5,8 +5,8 @@
 @endif
 
 <!-- Global Centered Modal Dialog (Alert & Confirm ở giữa màn hình) -->
-<div id="global-center-modal" class="fixed inset-0 z-[999999] bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 hidden" aria-modal="true" role="dialog">
-    <div id="global-center-box" class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center space-y-4 transform transition-all scale-95 duration-200">
+<div id="global-center-modal" class="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 hidden" style="z-index: 999999 !important;" aria-modal="true" role="dialog">
+    <div id="global-center-box" class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center space-y-4 transform transition-all scale-95 duration-200" style="position: relative; z-index: 1000000;">
         <div id="global-center-icon-wrap" class="w-14 h-14 rounded-2xl mx-auto flex items-center justify-center bg-red-100 text-red-600 transition-colors" style="background-color: #fee2e2; color: #dc2626;">
             <span id="global-center-icon" class="material-symbols-outlined text-3xl">delete</span>
         </div>
@@ -27,6 +27,9 @@
 </div>
 
 <style>
+    #global-center-modal {
+        z-index: 999999 !important;
+    }
     .qm-toast-container {
         position: fixed;
         top: 84px;
