@@ -292,6 +292,10 @@ class ThongBaoAdminController extends Controller
      */
     public function realtimeCheck(Request $request)
     {
+        if ($request->hasSession()) {
+            $request->session()->reflash();
+        }
+
         return response()->json(self::buildRealtimeNotificationData($request->user()));
     }
 
@@ -1211,7 +1215,7 @@ class ThongBaoAdminController extends Controller
                         'time_ago' => $timeAgo,
                         'created_at' => $createdAtStr,
                         'created_at_formatted' => $createdAtFmt,
-                        'url' => route('admin.danh-muc.index'),
+                        'url' => route('admin.danh-muc-quan.index'),
                         'icon' => 'category',
                         'badge_class' => 'bg-purple-100 text-purple-700',
                     ];

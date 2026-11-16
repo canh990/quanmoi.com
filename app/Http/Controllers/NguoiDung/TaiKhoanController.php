@@ -25,6 +25,7 @@ class TaiKhoanController extends Controller
         $user = Auth::user();
         $tinhThanhs = $diaChiService->getTinhThanh();
         $savedQuan = $user->savedQuan()
+            ->where('quan.trang_thai', 'da_duyet')
             ->with(['hinhAnh' => function ($q) {
                 $q->limit(1);
             }])
@@ -64,7 +65,7 @@ class TaiKhoanController extends Controller
         return view('nguoi-dung.tai-khoan.cai-dat', compact('user', 'tinhThanhs', 'sessions'));
     }
 
-    public function updateSettings(Request $request)
+    public function updateSettings(Request $request, DiaChiService $diaChiService)
     {
         $user = Auth::user();
 
@@ -75,24 +76,44 @@ class TaiKhoanController extends Controller
                 $clientTime = Carbon::parse($lastUpdatedAt);
                 if ($user->updated_at->timestamp > $clientTime->timestamp) {
                     return redirect()->route('tai-khoan.cai-dat')
-                        ->with('error_conflict', 'Cài đặt đã được cập nhật ở tab hoặc thiết bị khác, vui lòng tải lại trang.');
+                        ->with('error_conflict', 'Cài đặt đã được cập nhật ở tab hoặc thiết bị khác. Vui lòng tải lại trang trước khi cập nhật!');
                 }
             } catch (\Throwable $e) {
                 // Bỏ qua nếu thời gian không hợp lệ
             }
         }
 
+        $allowedProvinces = collect($diaChiService->getTinhThanh())
+            ->pluck('name')
+            ->filter()
+            ->values()
+            ->all();
+
         $validated = $request->validate([
-            'khu_vuc_mac_dinh' => 'nullable|string|max:100',
-            'ban_kinh_tim_kiem' => 'nullable|integer|min:1|max:50',
+            'khu_vuc_mac_dinh' => array_values(array_filter([
+                'nullable',
+                'string',
+                'max:100',
+                ! empty($allowedProvinces) ? \Illuminate\Validation\Rule::in($allowedProvinces) : null,
+            ])),
+            'ban_kinh_tim_kiem' => 'nullable|integer|min:1|max:30',
             'so_thich_am_thuc' => 'nullable|array',
-            'so_thich_am_thuc.*' => 'string|max:50',
+            'so_thich_am_thuc.*' => 'string|in:pho_bun,com_tam,tra_sua_cafe,do_nuong_lau,an_vat,hai_san,do_chay,banh_mi',
             'thong_bao_email_quan_moi' => 'nullable|boolean',
             'thong_bao_email_tuong_tac' => 'nullable|boolean',
             'thong_bao_khuyen_mai' => 'nullable|boolean',
             'che_do_danh_gia' => 'nullable|in:cong_khai,an_danh',
             'cong_khai_quan_da_luu' => 'nullable|boolean',
             'giao_dien_che_do' => 'nullable|in:light,dark,system',
+        ], [
+            'khu_vuc_mac_dinh.in' => 'Tỉnh / Thành phố mặc định đã chọn không hợp lệ.',
+            'khu_vuc_mac_dinh.max' => 'Khu vực mặc định không được vượt quá 100 ký tự.',
+            'ban_kinh_tim_kiem.integer' => 'Bán kính tìm kiếm phải là chữ số chuẩn (1 - 30 km).',
+            'ban_kinh_tim_kiem.min' => 'Bán kính tìm kiếm tối thiểu là 1 km.',
+            'ban_kinh_tim_kiem.max' => 'Bán kính tìm kiếm tối đa là 30 km.',
+            'so_thich_am_thuc.*.in' => 'Tùy chọn món ngon yêu thích không hợp lệ.',
+            'che_do_danh_gia.in' => 'Chế độ hiển thị tên đánh giá không hợp lệ.',
+            'giao_dien_che_do.in' => 'Chế độ giao diện không hợp lệ.',
         ]);
 
         $settings = $user->cai_dat ?? [];
@@ -111,6 +132,10 @@ class TaiKhoanController extends Controller
         $settings['giao_dien_che_do'] = $validated['giao_dien_che_do'] ?? 'light';
 
         $user->cai_dat = $settings;
+        $currentTs = $user->updated_at ? Carbon::parse($user->updated_at) : null;
+        $user->updated_at = ($currentTs && $currentTs->timestamp >= now()->timestamp)
+            ? $currentTs->copy()->addSecond()
+            : now();
         $user->save();
 
         return redirect()->route('tai-khoan.cai-dat')->with('success', 'Lưu tùy chọn cài đặt thành công.');
@@ -211,7 +236,12 @@ class TaiKhoanController extends Controller
             unset($validated['anh_dai_dien']);
         }
 
-        $user->update($validated);
+        $user->fill($validated);
+        $currentTs = $user->updated_at ? Carbon::parse($user->updated_at) : null;
+        $user->updated_at = ($currentTs && $currentTs->timestamp >= now()->timestamp)
+            ? $currentTs->copy()->addSecond()
+            : now();
+        $user->save();
 
         return redirect()->route('tai-khoan.index')->with('success', 'Cập nhật thông tin tài khoản thành công.');
     }
@@ -220,9 +250,24 @@ class TaiKhoanController extends Controller
     {
         $user = Auth::user();
 
-        $user->update([
-            'mat_khau' => Hash::make($request->password),
-        ]);
+        $lastUpdatedAt = $request->input('last_updated_at');
+        if ($lastUpdatedAt && $user->updated_at) {
+            try {
+                $clientTime = \Carbon\Carbon::parse($lastUpdatedAt);
+                if (Carbon::parse($user->updated_at)->timestamp > $clientTime->timestamp) {
+                    return redirect()->route('tai-khoan.index')
+                        ->with('error_conflict', 'Dữ liệu tài khoản đã được cập nhật ở tab khác. Vui lòng tải lại trang trước khi cập nhật mật khẩu!');
+                }
+            } catch (\Throwable $e) {
+            }
+        }
+
+        $user->mat_khau = Hash::make($request->password);
+        $currentTs = $user->updated_at ? Carbon::parse($user->updated_at) : null;
+        $user->updated_at = ($currentTs && $currentTs->timestamp >= now()->timestamp)
+            ? $currentTs->copy()->addSecond()
+            : now();
+        $user->save();
 
         try {
             $user->notify(new \App\Notifications\WalletTransactionNotification(

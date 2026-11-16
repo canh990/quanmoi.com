@@ -4,7 +4,7 @@
     $hasVideo = $quan->co_video_review ?? ($quan->relationLoaded('videos') ? $quan->videos->isNotEmpty() : (method_exists($quan, 'videos') && $quan->videos()->exists()));
     $isSaved = in_array($quan->id, $savedQuanIds ?? []);
     $isDangMo = method_exists($quan, 'isDangMoCua') && $quan->isDangMoCua();
-    $tenLoaiHinh = str_replace('_', ' ', \Illuminate\Support\Str::title($quan->loai_hinh_kinh_doanh ?? 'Quán ăn'));
+    $tenLoaiHinh = $quan->ten_danh_muc_hien_thi;
     $ratingScore = isset($quan->danh_gia_avg_so_sao) && (float) $quan->danh_gia_avg_so_sao > 0
         ? number_format((float) $quan->danh_gia_avg_so_sao, 1)
         : '4.9';

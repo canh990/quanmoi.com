@@ -290,8 +290,17 @@ class ThongKeController extends Controller
             [$tuNgay, $denNgay] = [$denNgay->copy()->startOfDay(), $tuNgay->copy()->endOfDay()];
         }
 
-        $focus = (string) $request->input('focus', 'tong_hop');
-        $customPrompt = trim((string) $request->input('custom_prompt', ''));
+        $validatedAi = $request->validate([
+            'focus' => ['nullable', 'string', 'in:tong_hop,doanh_thu,tang_truong,goi_dich_vu,rui_ro'],
+            'custom_prompt' => ['nullable', 'string', 'max:1000'],
+        ], [
+            'focus.in' => 'Trọng tâm phân tích đã chọn không hợp lệ.',
+            'custom_prompt.max' => 'Nội dung yêu cầu phân tích không được vượt quá 1000 ký tự.',
+        ]);
+
+        $focus = (string) ($validatedAi['focus'] ?? 'tong_hop');
+        $rawPrompt = (string) ($validatedAi['custom_prompt'] ?? '');
+        $customPrompt = preg_replace('/^[\s\p{Zs}\x{3000}]+|[\s\p{Zs}\x{3000}]+$/u', '', $rawPrompt) ?? trim($rawPrompt);
 
         $insights = $this->aiRevenueService->getPlatformInsights($tuNgay, $denNgay, true, $focus, $customPrompt);
 

@@ -66,12 +66,17 @@
         const redirectedKey = 'qm_sepay_redirected_' + invoiceNumber;
         let isCancelling = false;
 
+        try {
+            sessionStorage.setItem('qm_pending_deposit_invoice', invoiceNumber);
+        } catch (e) {}
+
         function handleBackCancel() {
             if (isCancelling) return;
             isCancelling = true;
             try {
                 sessionStorage.removeItem('qm_pending_deposit_invoice');
                 sessionStorage.removeItem(redirectedKey);
+                sessionStorage.removeItem('qm_deposit_submitting');
             } catch (e) {}
             window.location.replace(cancelUrl);
         }

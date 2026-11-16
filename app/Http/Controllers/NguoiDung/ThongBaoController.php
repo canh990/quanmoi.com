@@ -24,6 +24,10 @@ class ThongBaoController extends Controller
         $unreadCount = $user->unreadNotifications()->count();
 
         if ($request->expectsJson() || $request->ajax()) {
+            if ($request->hasSession()) {
+                $request->session()->reflash();
+            }
+
             $notifications = $user->notifications()
                 ->latest()
                 ->take(30)
@@ -94,6 +98,10 @@ class ThongBaoController extends Controller
      */
     public function realtimeCheck(Request $request)
     {
+        if ($request->hasSession()) {
+            $request->session()->reflash();
+        }
+
         $user = Auth::user();
         if (!$user) {
             return response()->json(['success' => false, 'unread_count' => 0], 401);

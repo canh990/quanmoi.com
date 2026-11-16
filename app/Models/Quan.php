@@ -54,6 +54,12 @@ class Quan extends Model
     protected static function booted(): void
     {
         static::saving(function (Quan $quan) {
+            if ($quan->loai_hinh_kinh_doanh === 'Chưa phân loại') {
+                $quan->danh_muc_id = null;
+
+                return;
+            }
+
             // Tự động gán danh_muc_id nếu đang trống nhưng có loai_hinh_kinh_doanh
             if (empty($quan->danh_muc_id) && !empty($quan->loai_hinh_kinh_doanh)) {
                 $cat = DanhMucQuan::where('ten_danh_muc', $quan->loai_hinh_kinh_doanh)->first();
@@ -310,6 +316,29 @@ class Quan extends Model
     public function savedByUsers(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
         return $this->belongsToMany(User::class, 'quan_da_luu', 'quan_id', 'nguoi_dung_id')->withTimestamps();
+    }
+
+    /**
+     * Trả về tên danh mục / loại hình hiển thị thống nhất trên UI, giữ nguyên "Chưa phân loại".
+     */
+    public function getTenDanhMucHienThiAttribute(): string
+    {
+        if ($this->danh_muc_id && $this->danhMuc) {
+            return $this->danhMuc->ten_danh_muc;
+        }
+
+        $loai = trim((string) ($this->loai_hinh_kinh_doanh ?? ''));
+        if ($loai === '') {
+            return 'Quán ăn';
+        }
+
+        if ($loai === 'Chưa phân loại') {
+            return 'Chưa phân loại';
+        }
+
+        return str_contains($loai, '_')
+            ? str_replace('_', ' ', \Illuminate\Support\Str::title($loai))
+            : \Illuminate\Support\Str::title($loai);
     }
 
     public function videos()
