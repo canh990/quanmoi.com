@@ -86,45 +86,19 @@ class VideoController extends Controller
         $quan = $this->getQuan($slug);
         set_time_limit(180);
 
-        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+        $validated = $request->validate([
             'video_input' => 'nullable|string|max:1000',
-            'video_file' => 'nullable|file|mimes:mp4,mov,webm|max:204800',
+            'video_file' => 'nullable|file|mimes:mp4,mov,webm|max:102400',
             'tieu_de' => 'nullable|string|max:1000',
             'thumbnail_file' => 'nullable|image|max:10240',
         ], [
             'video_file.mimes' => 'File video phải có định dạng .mp4, .mov hoặc .webm.',
-            'video_file.max' => 'Dung lượng video tối đa là 200MB.',
+            'video_file.max' => 'Dung lượng video tối đa là 100MB.',
             'thumbnail_file.image' => 'Ảnh bìa phải là định dạng hình ảnh.',
         ]);
 
-        if ($validator->fails()) {
-            if ($request->expectsJson() || $request->ajax()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => $validator->errors()->first(),
-                    'errors' => $validator->errors(),
-                ], 422);
-            }
-
-            return redirect()
-                ->route('chu-quan.quan.show', $quan->slug)
-                ->withFragment('owner-videos-section')
-                ->withErrors($validator)
-                ->withInput();
-        }
-
-        $validated = $validator->validated();
-
         if (empty($validated['video_input']) && ! $request->hasFile('video_file')) {
-            $msg = 'Vui lòng dán link video TikTok hoặc chọn file video MP4 để tải lên.';
-            if ($request->expectsJson() || $request->ajax()) {
-                return response()->json(['success' => false, 'message' => $msg], 422);
-            }
-            return redirect()
-                ->route('chu-quan.quan.show', $quan->slug)
-                ->withFragment('owner-videos-section')
-                ->with('error', $msg)
-                ->withInput();
+            return back()->withInput()->with('error', 'Vui lòng dán link video TikTok hoặc chọn file video MP4 để tải lên.');
         }
 
         $videoId = null;
@@ -159,29 +133,13 @@ class VideoController extends Controller
             $videoId = VideoShort::extractTikTokVideoId($input);
 
             if (! $videoId) {
-                $msg = 'Không thể nhận diện Video ID từ đường dẫn TikTok. Vui lòng kiểm tra lại link video hoặc chọn file video MP4 tải lên trực tiếp.';
-                if ($request->expectsJson() || $request->ajax()) {
-                    return response()->json(['success' => false, 'message' => $msg], 422);
-                }
-                return redirect()
-                    ->route('chu-quan.quan.show', $quan->slug)
-                    ->withFragment('owner-videos-section')
-                    ->with('error', $msg)
-                    ->withInput();
+                return back()->withInput()->with('error', 'Không thể nhận diện Video ID từ đường dẫn TikTok. Vui lòng kiểm tra lại link video.');
             }
 
             // Kiểm tra xem video này đã được đăng cho quán này chưa
             $existing = VideoShort::where('video_id', $videoId)->where('quan_id', $quan->id)->first();
             if ($existing) {
-                $msg = 'Video TikTok này đã được đăng ký cho quán của bạn trước đó rồi.';
-                if ($request->expectsJson() || $request->ajax()) {
-                    return response()->json(['success' => false, 'message' => $msg], 422);
-                }
-                return redirect()
-                    ->route('chu-quan.quan.show', $quan->slug)
-                    ->withFragment('owner-videos-section')
-                    ->with('error', $msg)
-                    ->withInput();
+                return back()->withInput()->with('error', 'Video TikTok này đã được đăng ký cho quán của bạn trước đó rồi.');
             }
 
             $tiktokData = VideoShort::fetchTikTokData($input);
@@ -200,8 +158,6 @@ class VideoController extends Controller
                     if ($savedPath) {
                         $videoUrl = $savedPath;
                         $isCleanDownloaded = true;
-                    } else {
-                        $videoUrl = $tiktokData['play_url'];
                     }
                 }
 
@@ -209,24 +165,6 @@ class VideoController extends Controller
                 if (! empty($tiktokData['cover_url'])) {
                     $savedThumb = VideoShort::downloadCoverImage($tiktokData['cover_url'], $videoId);
                     $thumbnailUrl = $savedThumb ?: $tiktokData['cover_url'];
-                }
-
-                // Nếu chưa lấy được cover_url, thử dùng TikTok oEmbed
-                if (empty($thumbnailUrl)) {
-                    try {
-                        $oembedUrl = 'https://www.tiktok.com/oembed?url=' . urlencode("https://www.tiktok.com/@tiktok/video/{$videoId}");
-                        $chOembed = curl_init($oembedUrl);
-                        curl_setopt($chOembed, CURLOPT_RETURNTRANSFER, true);
-                        curl_setopt($chOembed, CURLOPT_USERAGENT, 'Mozilla/5.0');
-                        curl_setopt($chOembed, CURLOPT_TIMEOUT, 6);
-                        $oembedRaw = curl_exec($chOembed);
-                        curl_close($chOembed);
-                        $oembedJson = json_decode($oembedRaw, true);
-                        if (! empty($oembedJson['thumbnail_url'])) {
-                            $savedThumb = VideoShort::downloadCoverImage($oembedJson['thumbnail_url'], $videoId);
-                            $thumbnailUrl = $savedThumb ?: $oembedJson['thumbnail_url'];
-                        }
-                    } catch (\Throwable $e) {}
                 }
 
                 // Tải ảnh đại diện tác giả
@@ -262,10 +200,6 @@ class VideoController extends Controller
                     break;
                 }
             }
-        }
-
-        if (empty($tieuDe)) {
-            $tieuDe = 'Review ' . $quan->ten_quan;
         }
 
         // Tạo video ở trạng thái "cho_duyet" (chờ Admin duyệt)
@@ -308,10 +242,7 @@ class VideoController extends Controller
             ]);
         }
 
-        return redirect()
-            ->route('chu-quan.quan.show', $quan->slug)
-            ->withFragment('owner-videos-section')
-            ->with('success', $successMsg);
+        return back()->with('success', $successMsg);
     }
 
     /**
@@ -346,13 +277,9 @@ class VideoController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Đã xóa video khỏi quán thành công.',
-                'remaining_count' => $quan->videos()->count(),
             ]);
         }
 
-        return redirect()
-            ->route('chu-quan.quan.show', $quan->slug)
-            ->withFragment('owner-videos-section')
-            ->with('success', 'Đã xóa video thành công.');
+        return back()->with('success', 'Đã xóa video thành công.');
     }
 }

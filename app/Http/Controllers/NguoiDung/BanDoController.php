@@ -78,19 +78,6 @@ class BanDoController extends Controller
             ? $categoryFetcher()
             : Cache::remember('bando_categories_v2', 1800, $categoryFetcher);
 
-        // Tổng số quán đã duyệt có tọa độ, hiển thị trên chip "Tất cả"
-        $tongQuan = Cache::remember('bando_total_v1', 1800, function () {
-            try {
-                return Quan::query()
-                    ->where('trang_thai', 'da_duyet')
-                    ->whereNotNull('vi_do')
-                    ->whereNotNull('kinh_do')
-                    ->count();
-            } catch (\Throwable $e) {
-                return 0;
-            }
-        });
-
         return view('nguoi-dung.ban-do.index', compact(
             'danhMuc',
             'tuKhoa',
@@ -99,8 +86,7 @@ class BanDoController extends Controller
             'banKinh',
             'sapXep',
             'dangMo',
-            'categories',
-            'tongQuan'
+            'categories'
         ));
     }
 }

@@ -934,6 +934,18 @@
                     </div>
                 @endif
 
+                @if(session('warning'))
+                    <div class="admin-flash-alert bg-amber-50 border border-amber-200 text-amber-900 px-4 py-3 rounded-xl text-xs font-medium flex items-center justify-between gap-3 shadow-xs transition-all duration-300">
+                        <div class="flex items-center gap-2.5 flex-1 min-w-0">
+                            <span class="material-symbols-outlined text-amber-600 text-[18px] shrink-0">warning</span>
+                            <div class="flex-1 break-words font-medium">{{ session('warning') }}</div>
+                        </div>
+                        <button type="button" onclick="dismissAdminFlashAlert(this)" class="text-amber-700/60 hover:text-amber-900 p-1 rounded-lg hover:bg-amber-100/60 transition-colors shrink-0" title="Đóng thông báo">
+                            <span class="material-symbols-outlined text-[16px] block">close</span>
+                        </button>
+                    </div>
+                @endif
+
                 @if(isset($errors) && $errors->any())
                     <div class="admin-flash-alert bg-amber-50 border border-amber-200 text-amber-900 px-4 py-3 rounded-xl text-xs font-medium flex items-start justify-between gap-3 shadow-xs transition-all duration-300">
                         <div class="flex items-start gap-2.5 flex-1 min-w-0">
@@ -1011,9 +1023,9 @@
                     <span class="material-symbols-outlined text-[18px]">reorder</span>
                     <span>Nhật Ký Tác Vụ Hệ Thống (Audit Log)</span>
                 </a>
-                <a href="{{ route('admin.khuyen-mai-ai.index') }}" class="cmd-item flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 text-slate-700 font-medium transition-colors">
-                    <span class="material-symbols-outlined text-[18px]">loyalty</span>
-                    <span>Phê Duyệt Voucher & Khuyến Mãi</span>
+                <a href="{{ route('admin.ai-tools.index') }}" class="cmd-item flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 text-slate-700 font-medium transition-colors">
+                    <span class="material-symbols-outlined text-[18px]">neurology</span>
+                    <span>Trợ Lý Trí Tuệ Nhân Tạo AI</span>
                 </a>
                 <a href="{{ route('admin.bao-mat.index') }}" class="cmd-item flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 text-slate-700 font-medium transition-colors">
                     <span class="material-symbols-outlined text-[18px]">shield</span>
@@ -2028,9 +2040,6 @@
                     if (typeof showRealtimeToast === 'function') {
                         showRealtimeToast('Đã Phê Duyệt', data.message || 'Bài viết đã được xuất bản thành công!', '', 'check_circle', 'bg-emerald-500');
                     }
-                    try {
-                        localStorage.setItem('quanmoi_blog_sync_trigger', JSON.stringify({ action: 'approved', blog_id: blogId, timestamp: Date.now() }));
-                    } catch(e) {}
                     clearAdminPageCache();
                     closeBlogQuickPreviewModal();
 
@@ -2285,9 +2294,6 @@
                     if (typeof showRealtimeToast === 'function') {
                         showRealtimeToast('Đã Xóa', data.message || 'Bài viết đã được xóa thành công.', '', 'delete', 'bg-slate-700');
                     }
-                    try {
-                        localStorage.setItem('quanmoi_blog_sync_trigger', JSON.stringify({ action: 'deleted', blog_id: blogId, timestamp: Date.now() }));
-                    } catch(e) {}
                     clearAdminPageCache();
                     closeBlogQuickPreviewModal();
 
@@ -4286,6 +4292,81 @@
         window.addEventListener('pageshow', function() {
             scrollAdminToTop(false);
         });
+
+        // Global CRUD Hardening: Prevent duplicate form submission on rapid clicks (Case 8)
+        document.addEventListener('submit', function(e) {
+            const form = e.target;
+            if (!form || (form.method && form.method.toUpperCase() === 'GET')) return;
+            if (form.dataset.submitting === 'true') {
+                e.preventDefault();
+                return false;
+            }
+            form.dataset.submitting = 'true';
+            const submitBtn = form.querySelector('button[type="submit"], input[type="submit"]');
+            if (submitBtn && !submitBtn.disabled) {
+                submitBtn.dataset.originalHtml = submitBtn.innerHTML;
+                submitBtn.disabled = true;
+                submitBtn.classList.add('opacity-70', 'cursor-not-allowed');
+                setTimeout(function() {
+                    form.dataset.submitting = 'false';
+                    submitBtn.disabled = false;
+                    submitBtn.classList.remove('opacity-70', 'cursor-not-allowed');
+                }, 6000);
+            }
+        }, true);
+
+        // Global CRUD Hardening: Client-side full-width spaces and numbers normalization (Case 6)
+        document.addEventListener('focusout', function(e) {
+            const input = e.target;
+            if (!input || !['text', 'tel', 'search', 'email', 'number'].includes(input.type)) return;
+            if (typeof input.value === 'string' && input.value) {
+                let val = input.value.replace(/[\u3000]/g, ' ');
+                const name = (input.name || '').toLowerCase();
+                if (['tel', 'number'].includes(input.type) || name.includes('phone') || name.includes('so_dien_thoai') || name.includes('gia_') || name.includes('thu_tu')) {
+                    val = val.replace(/[０-９]/g, function(s) {
+                        return String.fromCharCode(s.charCodeAt(0) - 0xFEE0);
+                    });
+                }
+                if (val !== input.value) {
+                    input.value = val;
+                }
+            }
+        }, true);
+
+        // Global CRUD Hardening: File upload validation (type & size <= 5MB) (Case 9)
+        document.addEventListener('change', function(e) {
+            const input = e.target;
+            if (!input || input.type !== 'file' || !input.files || input.files.length === 0) return;
+            const file = input.files[0];
+            const accept = (input.accept || '').toLowerCase();
+            const name = (input.name || '').toLowerCase();
+            const isImage = accept.includes('image') || name.includes('anh') || name.includes('avatar') || name.includes('hinh');
+            if (isImage) {
+                const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp', 'image/gif'];
+                const maxSize = 5 * 1024 * 1024; // 5MB
+                if (!validTypes.includes(file.type) && !/\.(jpe?g|png|webp|gif)$/i.test(file.name)) {
+                    alert('Định dạng hình ảnh không hợp lệ. Vui lòng chỉ chọn tệp JPG, JPEG, PNG, WEBP hoặc GIF.');
+                    input.value = '';
+                    return;
+                }
+                if (file.size > maxSize) {
+                    alert('Dung lượng hình ảnh vượt quá 5MB. Vui lòng chọn tệp nhỏ hơn.');
+                    input.value = '';
+                    return;
+                }
+            }
+        }, true);
+
+        // Global CRUD Hardening: Missing image fallback (Case 10)
+        window.addEventListener('error', function(e) {
+            if (e.target && e.target.tagName === 'IMG') {
+                const img = e.target;
+                if (!img.dataset.fallbackApplied) {
+                    img.dataset.fallbackApplied = 'true';
+                    img.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100" fill="%23f1f5f9"><rect width="100%" height="100%" fill="%23e2e8f0"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%2394a3b8" font-size="11" font-family="sans-serif">Ảnh mặc định</text></svg>';
+                }
+            }
+        }, true);
     </script>
     @yield('scripts')
     @stack('scripts')

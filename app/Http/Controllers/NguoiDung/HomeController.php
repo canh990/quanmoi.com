@@ -77,7 +77,6 @@ class HomeController extends Controller
         $userLng = $rawLng;
 
         $quanGanBan = collect();
-        $totalQuanGanBan = 0;
         $hasGps = false;
 
         if ($userLat !== null && $userLng !== null && is_numeric($userLat) && is_numeric($userLng)) {
@@ -109,13 +108,9 @@ class HomeController extends Controller
                 if (in_array($driver, ['mysql', 'mariadb', 'pgsql'], true)) {
                     $haversineSql = '(6371 * ACOS(LEAST(1.0, GREATEST(-1.0, COS(RADIANS(?)) * COS(RADIANS(vi_do)) * COS(RADIANS(kinh_do) - RADIANS(?)) + SIN(RADIANS(?)) * SIN(RADIANS(vi_do))))))';
 
-                    $nearbyFilteredQuery = (clone $baseNearbyQuery)
+                    $quanGanBan = (clone $baseNearbyQuery)
                         ->selectRaw("quan.*, {$haversineSql} AS khoang_cach_km", [$lat, $lng, $lat])
-                        ->whereRaw("{$haversineSql} <= ?", [$lat, $lng, $lat, $radiusKm]);
-
-                    $totalQuanGanBan = (clone $nearbyFilteredQuery)->count();
-
-                    $quanGanBan = $nearbyFilteredQuery
+                        ->whereRaw("{$haversineSql} <= ?", [$lat, $lng, $lat, $radiusKm])
                         ->orderBy('khoang_cach_km', 'asc')
                         ->take(9)
                         ->get()
@@ -129,19 +124,14 @@ class HomeController extends Controller
                         $expandRadius = 50.0;
                         $expandDeltaLat = $expandRadius / $earthKmPerDegLat;
                         $expandDeltaLng = $expandRadius / ($earthKmPerDegLat * $cosLat);
-
-                        $expandedQuery = Quan::query()
+                        $quanGanBan = Quan::query()
                             ->where('trang_thai', 'da_duyet')
                             ->whereNotNull('vi_do')
                             ->whereNotNull('kinh_do')
                             ->whereBetween('vi_do', [max(-90.0, $lat - $expandDeltaLat), min(90.0, $lat + $expandDeltaLat)])
                             ->whereBetween('kinh_do', [max(-180.0, $lng - $expandDeltaLng), min(180.0, $lng + $expandDeltaLng)])
                             ->selectRaw("quan.*, {$haversineSql} AS khoang_cach_km", [$lat, $lng, $lat])
-                            ->whereRaw("{$haversineSql} <= ?", [$lat, $lng, $lat, $expandRadius]);
-
-                        $totalQuanGanBan = (clone $expandedQuery)->count();
-
-                        $quanGanBan = $expandedQuery
+                            ->whereRaw("{$haversineSql} <= ?", [$lat, $lng, $lat, $expandRadius])
                             ->orderBy('khoang_cach_km', 'asc')
                             ->take(9)
                             ->get()
@@ -151,7 +141,7 @@ class HomeController extends Controller
                             });
                     }
                 } else {
-                    $allNearbyMatched = $baseNearbyQuery->get()
+                    $quanGanBan = $baseNearbyQuery->get()
                         ->map(function ($q) use ($lat, $lng) {
                             $earthRadius = 6371.0;
                             $dLat = deg2rad((float) $q->vi_do - $lat);
@@ -164,10 +154,9 @@ class HomeController extends Controller
                             return $q;
                         })
                         ->filter(fn ($q) => $q->khoang_cach_km <= $radiusKm)
-                        ->sortBy('khoang_cach_km');
-
-                    $totalQuanGanBan = $allNearbyMatched->count();
-                    $quanGanBan = $allNearbyMatched->take(9)->values();
+                        ->sortBy('khoang_cach_km')
+                        ->take(9)
+                        ->values();
                 }
             }
         }
@@ -184,7 +173,6 @@ class HomeController extends Controller
             'quanMoi',
             'totalQuanMoi',
             'totalQuanNoiBat',
-            'totalQuanGanBan',
             'savedQuanIds',
             'videoShorts',
             'latestBlogs',
@@ -262,13 +250,6 @@ class HomeController extends Controller
                 'valid' => false,
                 'message' => "Mã voucher [{$code}] không tồn tại tại quán này.",
             ], 404);
-        }
-
-        if ($km->trang_thai_duyet !== 'da_duyet') {
-            return response()->json([
-                'valid' => false,
-                'message' => "Mã voucher [{$code}] chưa được kích hoạt.",
-            ], 400);
         }
 
         if (! $km->trang_thai) {

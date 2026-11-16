@@ -7,6 +7,7 @@ use App\Http\Requests\CapNhatNguoiDungRequest;
 use App\Models\User;
 use App\Models\VaiTro;
 use App\Services\AdminAuditService;
+use App\Traits\HandlesCrudSecurity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -14,6 +15,8 @@ use Illuminate\Validation\ValidationException;
 
 class QuanLyNguoiDungController extends Controller
 {
+    use HandlesCrudSecurity;
+
     public function __construct(private readonly AdminAuditService $adminAudit) {}
 
     public function index(Request $request)
@@ -78,6 +81,9 @@ class QuanLyNguoiDungController extends Controller
     {
         $this->authorize('create', User::class);
 
+        $sanitized = $this->sanitizeInput($request->all(), ['so_dien_thoai']);
+        $request->merge($sanitized);
+
         $validated = $request->validate([
             'ho_ten' => 'required|string|max:191',
             'email' => 'required|email|max:191|unique:nguoi_dung,email',
@@ -88,12 +94,17 @@ class QuanLyNguoiDungController extends Controller
             'da_xac_thuc' => 'nullable|boolean',
         ], [
             'ho_ten.required' => 'Họ tên người dùng không được để trống.',
+            'ho_ten.max' => 'Họ tên không được vượt quá 191 ký tự.',
             'email.required' => 'Email không được để trống.',
             'email.email' => 'Email không đúng định dạng.',
             'email.unique' => 'Email này đã tồn tại trong hệ thống.',
+            'email.max' => 'Email không được vượt quá 191 ký tự.',
             'mat_khau.required' => 'Mật khẩu không được để trống.',
             'mat_khau.min' => 'Mật khẩu phải có ít nhất 6 ký tự.',
+            'mat_khau.max' => 'Mật khẩu không được vượt quá 191 ký tự.',
+            'so_dien_thoai.max' => 'Số điện thoại không được vượt quá 20 ký tự.',
             'trang_thai.required' => 'Vui lòng chọn trạng thái.',
+            'trang_thai.in' => 'Trạng thái người dùng không hợp lệ.',
         ]);
 
         $actor = $request->user();
@@ -133,9 +144,17 @@ class QuanLyNguoiDungController extends Controller
         return redirect()->route('admin.nguoi-dung.index')->with('success', "Đã tạo người dùng \"{$user->ho_ten}\" thành công!");
     }
 
-    public function edit(string $id)
+    public function edit(Request $request, string $id)
     {
-        $user = User::withTrashed()->findOrFail($id);
+        if (! $this->isValidId($id, 'uuid')) {
+            return $this->invalidIdResponse($request, 'admin.nguoi-dung.index');
+        }
+
+        $user = User::withTrashed()->find($id);
+        if (! $user) {
+            return $this->recordNotFoundResponse($request, 'Người dùng', 'admin.nguoi-dung.index');
+        }
+
         $this->authorize('update', $user);
 
         return view('admin.nguoi-dung.edit', ['user' => $user, 'roles' => VaiTro::all()]);
@@ -143,6 +162,23 @@ class QuanLyNguoiDungController extends Controller
 
     public function update(CapNhatNguoiDungRequest $request, string $id)
     {
+        if (! $this->isValidId($id, 'uuid')) {
+            return $this->invalidIdResponse($request, 'admin.nguoi-dung.index');
+        }
+
+        $user = User::withTrashed()->find($id);
+        if (! $user) {
+            return $this->recordNotFoundResponse($request, 'Người dùng', 'admin.nguoi-dung.index');
+        }
+
+        // Kiểm tra xung đột cập nhật đồng thời nhiều tab (Optimistic Locking)
+        if ($conflict = $this->checkConcurrentUpdate($user, $request)) {
+            if ($request->wantsJson()) {
+                return $conflict;
+            }
+            return redirect()->back()->withInput()->with('error', $conflict->getData()->message);
+        }
+
         $validated = $request->validated();
         $actor = $request->user();
 
@@ -246,7 +282,24 @@ class QuanLyNguoiDungController extends Controller
 
     public function destroy(Request $request, string $id)
     {
+        if (! $this->isValidId($id, 'uuid')) {
+            return $this->invalidIdResponse($request, 'admin.nguoi-dung.index');
+        }
+
+        $user = User::find($id);
+        if (! $user) {
+            return $this->recordNotFoundResponse($request, 'Người dùng', 'admin.nguoi-dung.index');
+        }
+
         $actor = $request->user();
+        if ($actor && $actor->id === $user->id) {
+            $msg = 'Bạn không thể tự xóa tài khoản của chính mình.';
+            if ($request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+            return redirect()->back()->with('error', $msg);
+        }
+
         $deletedUserName = DB::transaction(function () use ($id, $actor, $request) {
             $user = User::whereKey($id)->lockForUpdate()->firstOrFail();
             $userName = $user->ho_ten;
@@ -294,6 +347,15 @@ class QuanLyNguoiDungController extends Controller
 
     public function restore(Request $request, string $id)
     {
+        if (! $this->isValidId($id, 'uuid')) {
+            return $this->invalidIdResponse($request, 'admin.nguoi-dung.index');
+        }
+
+        $user = User::onlyTrashed()->find($id);
+        if (! $user) {
+            return $this->recordNotFoundResponse($request, 'Người dùng', 'admin.nguoi-dung.index');
+        }
+
         $actor = $request->user();
         $restoredUserName = DB::transaction(function () use ($id, $actor, $request) {
             $user = User::onlyTrashed()->whereKey($id)->lockForUpdate()->firstOrFail();
@@ -340,7 +402,24 @@ class QuanLyNguoiDungController extends Controller
 
     public function forceDestroy(Request $request, string $id)
     {
+        if (! $this->isValidId($id, 'uuid')) {
+            return $this->invalidIdResponse($request, 'admin.nguoi-dung.index');
+        }
+
+        $user = User::withTrashed()->find($id);
+        if (! $user) {
+            return $this->recordNotFoundResponse($request, 'Người dùng', 'admin.nguoi-dung.index');
+        }
+
         $actor = $request->user();
+        if ($actor && $actor->id === $user->id) {
+            $msg = 'Bạn không thể tự xóa vĩnh viễn tài khoản của chính mình.';
+            if ($request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+            return redirect()->back()->with('error', $msg);
+        }
+
         $deletedUserName = DB::transaction(function () use ($id, $actor, $request) {
             $user = User::withTrashed()->whereKey($id)->lockForUpdate()->firstOrFail();
             $userName = $user->ho_ten;
@@ -378,6 +457,15 @@ class QuanLyNguoiDungController extends Controller
 
     public function toggleXacThuc(Request $request, string $id)
     {
+        if (! $this->isValidId($id, 'uuid')) {
+            return $this->invalidIdResponse($request, 'admin.nguoi-dung.index');
+        }
+
+        $user = User::withTrashed()->find($id);
+        if (! $user) {
+            return $this->recordNotFoundResponse($request, 'Người dùng', 'admin.nguoi-dung.index');
+        }
+
         $actor = $request->user();
         [$verified, $userName] = DB::transaction(function () use ($id, $actor, $request) {
             $user = User::withTrashed()->whereKey($id)->lockForUpdate()->firstOrFail();
@@ -423,6 +511,15 @@ class QuanLyNguoiDungController extends Controller
 
     public function toggleKhoa(Request $request, string $id)
     {
+        if (! $this->isValidId($id, 'uuid')) {
+            return $this->invalidIdResponse($request, 'admin.nguoi-dung.index');
+        }
+
+        $user = User::withTrashed()->find($id);
+        if (! $user) {
+            return $this->recordNotFoundResponse($request, 'Người dùng', 'admin.nguoi-dung.index');
+        }
+
         $actor = $request->user();
         $user = DB::transaction(function () use ($id, $actor, $request) {
             $user = User::withTrashed()->whereKey($id)->lockForUpdate()->firstOrFail();

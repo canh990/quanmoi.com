@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\QuyenHan;
 use App\Models\VaiTro;
+use App\Traits\HandlesCrudSecurity;
 use Illuminate\Http\Request;
 
 class VaiTroController extends Controller
 {
+    use HandlesCrudSecurity;
     public function index()
     {
         $roles = VaiTro::with('quyenHan')->withCount(['nguoiDung', 'quyenHan'])->get();
@@ -56,7 +58,10 @@ class VaiTroController extends Controller
 
     public function updatePermissions(Request $request, $id)
     {
-        $role = VaiTro::findOrFail($id);
+        $role = VaiTro::find($id);
+        if (! $role) {
+            return $this->recordNotFoundResponse($request, 'Vai trò', 'admin.vai-tro.index');
+        }
         $permissionIds = $request->input('quyen_han', []);
 
         if (!is_array($permissionIds)) {
@@ -129,7 +134,10 @@ class VaiTroController extends Controller
 
     public function destroy(Request $request, $id)
     {
-        $role = VaiTro::findOrFail($id);
+        $role = VaiTro::find($id);
+        if (! $role) {
+            return $this->recordNotFoundResponse($request, 'Vai trò', 'admin.vai-tro.index');
+        }
 
         $protectedRoles = ['admin', 'chu_quan', 'nguoi_dung'];
         if (in_array(strtolower($role->ten), $protectedRoles)) {

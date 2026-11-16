@@ -320,7 +320,7 @@ class KhamPhaController extends Controller
                         return true;
                     }
                     $tenAscii = \Illuminate\Support\Str::lower(\Illuminate\Support\Str::ascii((string) $mon->ten_mon));
-                    return $tuKhoaAscii !== '' && (str_contains($tenAscii, $tuKhoaAscii) || $this->khopGanDungTenMon($tenAscii, $tuKhoaAscii));
+                    return $tuKhoaAscii !== '' && str_contains($tenAscii, $tuKhoaAscii);
                 })
                 ->sortBy([
                     fn ($a, $b) => (int) $b->con_hang <=> (int) $a->con_hang,
@@ -422,34 +422,6 @@ class KhamPhaController extends Controller
     /**
      * Tính khoảng cách đường chim bay giữa hai toạ độ GPS theo công thức Haversine (km).
      */
-    /**
-     * Khớp gần đúng (sai chính tả nhẹ) giữa từ khóa và từng từ trong tên món,
-     * dùng cùng quy tắc Levenshtein với fallback tìm quán ở bên dưới.
-     */
-    protected function khopGanDungTenMon(string $tenAscii, string $tuKhoaAscii): bool
-    {
-        $tokens = array_filter(preg_split('/[^a-z0-9]+/', $tenAscii));
-
-        foreach (array_filter(preg_split('/\s+/', $tuKhoaAscii)) as $kwWord) {
-            if (strlen($kwWord) < 3) {
-                return false;
-            }
-            $maxDist = strlen($kwWord) >= 6 ? 2 : 1;
-            $coTuKhop = false;
-            foreach ($tokens as $token) {
-                if (abs(strlen($token) - strlen($kwWord)) <= $maxDist && levenshtein($kwWord, $token) <= $maxDist) {
-                    $coTuKhop = true;
-                    break;
-                }
-            }
-            if (!$coTuKhop) {
-                return false;
-            }
-        }
-
-        return $tuKhoaAscii !== '';
-    }
-
     protected function calculateDistance(float $lat1, float $lon1, float $lat2, float $lon2): float
     {
         $earthRadius = 6371; // km
@@ -543,15 +515,11 @@ class KhamPhaController extends Controller
                 $q->whereIn('tinh_thanh_id', $this->codeVariants($tinhThanhId));
             }
             if ($quanHuyenId !== '') {
-                $variants = $this->codeVariants($quanHuyenId);
-                $q->where(function ($sub) use ($variants) {
-                    $sub->whereIn('quan_huyen_id', $variants)
-                        ->orWhereIn('phuong_xa_id', $variants);
-                });
+                $q->whereIn('quan_huyen_id', $this->codeVariants($quanHuyenId));
             }
-            $mau = $q->first(['ten_tinh_thanh', 'ten_quan_huyen', 'ten_phuong_xa']);
+            $mau = $q->first(['ten_tinh_thanh', 'ten_quan_huyen']);
             $tenTinh = $tenTinh ?: (string) ($mau->ten_tinh_thanh ?? '');
-            $tenHuyen = $tenHuyen ?: ($quanHuyenId !== '' ? (string) ($mau->ten_quan_huyen ?: ($mau->ten_phuong_xa ?? '')) : '');
+            $tenHuyen = $tenHuyen ?: ($quanHuyenId !== '' ? (string) ($mau->ten_quan_huyen ?? '') : '');
         }
 
         return [$tenTinh, $tenHuyen];
@@ -597,10 +565,7 @@ class KhamPhaController extends Controller
         }
 
         if (!empty($huyenCodes)) {
-            $q->where(function ($sub) use ($huyenCodes) {
-                $sub->whereIn('quan_huyen_id', $huyenCodes)
-                    ->orWhereIn('phuong_xa_id', $huyenCodes);
-            });
+            $q->whereIn('quan_huyen_id', $huyenCodes);
         }
 
         if ($isXacThuc) {

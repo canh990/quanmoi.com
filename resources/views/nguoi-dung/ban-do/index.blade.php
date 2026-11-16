@@ -287,29 +287,9 @@
     }
 
     .bd-load-more-btn:hover {
-        background: var(--bd-primary) !important;
-        color: #ffffff !important;
-        border-color: var(--bd-primary) !important;
-    }
-
-    .bd-load-more-btn:hover * {
-        color: #ffffff !important;
-    }
-
-    .bd-load-more-btn-secondary {
-        background: #f8fafc !important;
-        color: #64748b !important;
-        border-color: #e2e8f0 !important;
-    }
-
-    .bd-load-more-btn-secondary:hover {
-        background: #e2e8f0 !important;
-        color: #1e293b !important;
-        border-color: #cbd5e1 !important;
-    }
-
-    .bd-load-more-btn-secondary:hover * {
-        color: #1e293b !important;
+        background: var(--bd-primary);
+        color: #ffffff;
+        border-color: var(--bd-primary);
     }
 
     .qm-cluster-badge {
@@ -980,8 +960,7 @@
         background: #dbeafe;
     }
 
-    .bd-popup-btn-detail,
-    .leaflet-container a.bd-popup-btn-detail {
+    .bd-popup-btn-detail {
         padding: 5px 12px;
         border-radius: 8px;
         background: var(--bd-primary);
@@ -991,10 +970,8 @@
         text-decoration: none;
     }
 
-    .bd-popup-btn-detail:hover,
-    .leaflet-container a.bd-popup-btn-detail:hover {
+    .bd-popup-btn-detail:hover {
         background: var(--bd-primary-hover);
-        color: #ffffff;
     }
 
     /* Radar Pulse Animation */
@@ -1189,8 +1166,7 @@
                 <button type="button" 
                         data-category="" 
                         class="bd-cat-chip bando-cat-btn {{ empty($danhMuc) ? 'active' : '' }}">
-                    <span>Tất cả</span>
-                    <span class="bd-cat-chip-count">({{ $tongQuan ?? 0 }})</span>
+                    Tất cả
                 </button>
                 @if(isset($categories) && count($categories) > 0)
                     @foreach($categories as $cat)
@@ -1325,7 +1301,6 @@
         isPopupOpen: false,
         lastPopupCloseTime: 0,
         isMobileListOpen: false,
-        showAllVenues: false,
         lastMapCenter: null,
         searchDebounceTimer: null
     };
@@ -1599,11 +1574,6 @@
                     });
                 } else {
                     state.rawQuans = json.data;
-                    state.showAllVenues = false;
-                }
-
-                if (json.meta && json.meta.category_counts) {
-                    updateCategoryChipCounts(json.meta.category_counts, json.meta.total_in_area ?? json.meta.total);
                 }
 
                 applyLocalFiltersAndSort();
@@ -1614,7 +1584,6 @@
                     state.totalMatched = 0;
                     state.currentPage = 1;
                     state.lastPage = 1;
-                    updateCategoryChipCounts({}, 0);
                     renderVenueCards([]);
                     renderVenueMarkers([]);
                 }
@@ -1646,25 +1615,6 @@
             true
         );
     };
-
-    // Cập nhật số đếm trên các chip danh mục động theo thực tế khu vực đang quét
-    function updateCategoryChipCounts(counts, totalInArea) {
-        const allCount = document.querySelector('.bando-cat-btn[data-category=""] .bd-cat-chip-count');
-        if (allCount) {
-            allCount.textContent = `(${totalInArea ?? 0})`;
-        }
-
-        document.querySelectorAll('.bando-cat-btn[data-category]:not([data-category=""])').forEach(btn => {
-            const catName = btn.getAttribute('data-category');
-            const countSpan = btn.querySelector('.bd-cat-chip-count');
-            if (countSpan && catName) {
-                let count = counts[catName] || 0;
-                if (catName === 'Cà phê & Trà' && counts['Cà phê']) count += counts['Cà phê'];
-                if (catName === 'Đồ ăn vặt' && counts['Ăn vặt']) count += counts['Ăn vặt'];
-                countSpan.textContent = `(${count})`;
-            }
-        });
-    }
 
     // Lọc và sắp xếp nội bộ ngay lập tức + cập nhật chính xác số đếm trạng thái
     function applyLocalFiltersAndSort() {
@@ -1825,14 +1775,8 @@
         const originLat = state.gpsLat || state.userLat;
         const originLng = state.gpsLng || state.userLng;
 
-        const MAX_INITIAL = 9;
-        const hasMoreThanLimit = quans.length > MAX_INITIAL;
-        const displayedQuans = (hasMoreThanLimit && !state.showAllVenues)
-            ? quans.slice(0, MAX_INITIAL)
-            : quans;
-
         let html = '';
-        displayedQuans.forEach((q, idx) => {
+        quans.forEach((q, idx) => {
             const isSelected = state.selectedVenueId === q.id;
             const priceText = (q.gia_nho_nhat && q.gia_lon_nhat)
                 ? `${formatPrice(q.gia_nho_nhat)} - ${formatPrice(q.gia_lon_nhat)}`
@@ -1905,25 +1849,6 @@
             `;
         });
 
-        if (hasMoreThanLimit) {
-            const remaining = quans.length - MAX_INITIAL;
-            if (!state.showAllVenues) {
-                html += `
-                    <button type="button" class="bd-load-more-btn" onclick="toggleShowAllVenues(true)" style="margin-top: 6px;">
-                        <span class="material-symbols-outlined" style="font-size: 18px;">expand_more</span>
-                        <span>Xem thêm (${remaining} quán khác)</span>
-                    </button>
-                `;
-            } else {
-                html += `
-                    <button type="button" class="bd-load-more-btn bd-load-more-btn-secondary" onclick="toggleShowAllVenues(false)" style="margin-top: 6px;">
-                        <span class="material-symbols-outlined" style="font-size: 18px;">expand_less</span>
-                        <span>Thu gọn (hiện 9 quán đầu)</span>
-                    </button>
-                `;
-            }
-        }
-
         if (state.currentPage < state.lastPage) {
             const remaining = Math.max(0, state.totalMatched - state.rawQuans.length);
             html += `
@@ -1937,12 +1862,6 @@
         container.innerHTML = html;
     }
 
-    // Mở rộng hoặc thu gọn danh sách quán hiển thị (giới hạn 9 quán ban đầu)
-    window.toggleShowAllVenues = function(expand = true) {
-        state.showAllVenues = expand;
-        renderVenueCards(state.filteredQuans);
-    };
-
     // Chọn quán và điều hướng bản đồ
     window.focusVenueOnMap = function(venueId) {
         selectVenue(venueId, true);
@@ -1953,15 +1872,8 @@
         const venue = state.rawQuans.find(q => q.id === venueId);
         if (!venue) return;
 
-        let card = document.getElementById(`bd-card-${venueId}`);
-        // Nếu thẻ quán đang bị ẩn do chưa bấm "Xem thêm", tự động mở rộng để cuộn tới quán
-        if (!card && state.filteredQuans.some(q => q.id === venueId)) {
-            state.showAllVenues = true;
-            renderVenueCards(state.filteredQuans);
-            card = document.getElementById(`bd-card-${venueId}`);
-        }
-
         document.querySelectorAll('.bd-card-item').forEach(c => c.classList.remove('is-selected'));
+        const card = document.getElementById(`bd-card-${venueId}`);
         if (card) {
             card.classList.add('is-selected');
             card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -2269,7 +2181,6 @@
     // Lọc danh mục ẩm thực
     window.filterBandoCategory = function(catKey) {
         state.currentCategory = catKey;
-        state.showAllVenues = false;
         document.querySelectorAll('.bando-cat-btn').forEach(btn => {
             if (btn.dataset.category === catKey) {
                 btn.classList.add('active');

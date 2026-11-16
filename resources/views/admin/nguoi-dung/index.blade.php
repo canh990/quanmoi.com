@@ -518,22 +518,22 @@
         <form id="create-user-form" onsubmit="adminSubmitCreateUser(event)" class="space-y-4">
             <div>
                 <label class="block text-xs font-bold text-slate-700 mb-1">Họ và Tên <span class="text-rose-500">*</span></label>
-                <input type="text" id="new-user-hoten" required placeholder="Ví dụ: Nguyễn Văn A" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-medium focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none">
+                <input type="text" id="new-user-hoten" required maxlength="191" placeholder="Ví dụ: Nguyễn Văn A" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-medium focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none">
             </div>
 
             <div>
                 <label class="block text-xs font-bold text-slate-700 mb-1">Địa Chỉ Email <span class="text-rose-500">*</span></label>
-                <input type="email" id="new-user-email" required placeholder="user@quanmoi.com" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-medium focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none">
+                <input type="email" id="new-user-email" required maxlength="191" placeholder="user@quanmoi.com" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-medium focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none">
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">Mật Khẩu <span class="text-rose-500">*</span></label>
-                    <input type="password" id="new-user-password" required minlength="6" placeholder="Tối thiểu 6 ký tự" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-medium focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none">
+                    <input type="password" id="new-user-password" required minlength="6" maxlength="191" placeholder="Tối thiểu 6 ký tự" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-medium focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">Số Điện Thoại</label>
-                    <input type="text" id="new-user-sdt" placeholder="0901234567" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-medium focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none">
+                    <input type="text" id="new-user-sdt" maxlength="20" placeholder="0901234567" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-medium focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none">
                 </div>
             </div>
 

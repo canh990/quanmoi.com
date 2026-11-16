@@ -32,7 +32,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Tên quán <span class="text-rose-500">*</span></label>
-                        <input type="text" name="ten_quan" value="{{ old('ten_quan') }}" required placeholder="VD: Phở Gia Truyền Bát Đàn" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-amber-500 bg-slate-50/40">
+                        <input type="text" name="ten_quan" value="{{ old('ten_quan') }}" required maxlength="255" placeholder="VD: Phở Gia Truyền Bát Đàn" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-amber-500 bg-slate-50/40">
                         @error('ten_quan') <p class="text-xs text-rose-600 mt-1">{{ $message }}</p> @enderror
                     </div>
 
@@ -74,13 +74,13 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Số điện thoại liên hệ <span class="text-rose-500">*</span></label>
-                        <input type="tel" name="so_dien_thoai" value="{{ old('so_dien_thoai') }}" required inputmode="numeric" pattern="0[0-9]{9,10}" maxlength="11" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11);" title="Số điện thoại phải bắt đầu bằng số 0 và có từ 10 đến 11 chữ số" placeholder="VD: 0912345678" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-amber-500 bg-slate-50/40">
+                        <input type="text" name="so_dien_thoai" value="{{ old('so_dien_thoai') }}" required maxlength="20" placeholder="VD: 0912345678" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-amber-500 bg-slate-50/40">
                         @error('so_dien_thoai') <p class="text-xs text-rose-600 mt-1">{{ $message }}</p> @enderror
                     </div>
 
                     <div>
                         <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Email quán (nếu có)</label>
-                        <input type="email" name="email" value="{{ old('email') }}" placeholder="VD: quanmoi@example.com" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-amber-500 bg-slate-50/40">
+                        <input type="email" name="email" value="{{ old('email') }}" maxlength="255" placeholder="VD: quanmoi@example.com" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-amber-500 bg-slate-50/40">
                         @error('email') <p class="text-xs text-rose-600 mt-1">{{ $message }}</p> @enderror
                     </div>
                 </div>
@@ -95,22 +95,22 @@
 
                 <div>
                     <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Địa chỉ chi tiết (Số nhà, Tên đường) <span class="text-rose-500">*</span></label>
-                    <input type="text" name="dia_chi_chi_tiet" value="{{ old('dia_chi_chi_tiet') }}" required placeholder="VD: 49 Bát Đàn, Cửa Đông" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-amber-500 bg-slate-50/40">
+                    <input type="text" name="dia_chi_chi_tiet" value="{{ old('dia_chi_chi_tiet') }}" required maxlength="500" placeholder="VD: 49 Bát Đàn, Cửa Đông" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-amber-500 bg-slate-50/40">
                     @error('dia_chi_chi_tiet') <p class="text-xs text-rose-600 mt-1">{{ $message }}</p> @enderror
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div>
                         <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Tỉnh / Thành phố</label>
-                        <input type="text" name="ten_tinh_thanh" value="{{ old('ten_tinh_thanh', 'Thành phố Hà Nội') }}" placeholder="VD: Thành phố Hà Nội" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-amber-500 bg-slate-50/40">
+                        <input type="text" name="ten_tinh_thanh" value="{{ old('ten_tinh_thanh', 'Thành phố Hà Nội') }}" maxlength="255" placeholder="VD: Thành phố Hà Nội" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-amber-500 bg-slate-50/40">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Quận / Huyện</label>
-                        <input type="text" name="ten_quan_huyen" value="{{ old('ten_quan_huyen', 'Quận Hoàn Kiếm') }}" placeholder="VD: Quận Hoàn Kiếm" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-amber-500 bg-slate-50/40">
+                        <input type="text" name="ten_quan_huyen" value="{{ old('ten_quan_huyen', 'Quận Hoàn Kiếm') }}" maxlength="255" placeholder="VD: Quận Hoàn Kiếm" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-amber-500 bg-slate-50/40">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Phường / Xã</label>
-                        <input type="text" name="ten_phuong_xa" value="{{ old('ten_phuong_xa', 'Phường Cửa Đông') }}" placeholder="VD: Phường Cửa Đông" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-amber-500 bg-slate-50/40">
+                        <input type="text" name="ten_phuong_xa" value="{{ old('ten_phuong_xa', 'Phường Cửa Đông') }}" maxlength="255" placeholder="VD: Phường Cửa Đông" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-amber-500 bg-slate-50/40">
                     </div>
                 </div>
 
@@ -208,12 +208,12 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Đường dẫn TikTok Video / Kênh</label>
-                        <input type="url" name="tiktok_url" value="{{ old('tiktok_url') }}" placeholder="https://www.tiktok.com/@quanmoi" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-amber-500 bg-slate-50/40">
+                        <input type="url" name="tiktok_url" value="{{ old('tiktok_url') }}" maxlength="255" placeholder="https://www.tiktok.com/@quanmoi" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-amber-500 bg-slate-50/40">
                         @error('tiktok_url') <p class="text-xs text-rose-600 mt-1">{{ $message }}</p> @enderror
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Đường dẫn ShopeeFood / Đặt món</label>
-                        <input type="url" name="shopeefood_url" value="{{ old('shopeefood_url') }}" placeholder="https://shopeefood.vn/ha-noi/..." class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-amber-500 bg-slate-50/40">
+                        <input type="url" name="shopeefood_url" value="{{ old('shopeefood_url') }}" maxlength="500" placeholder="https://shopeefood.vn/ha-noi/..." class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-amber-500 bg-slate-50/40">
                         @error('shopeefood_url') <p class="text-xs text-rose-600 mt-1">{{ $message }}</p> @enderror
                     </div>
                 </div>
@@ -242,7 +242,7 @@
 
                 <div>
                     <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Mô tả quán ăn</label>
-                    <textarea name="mo_ta" rows="4" placeholder="Nhập tóm tắt giới thiệu quán, phong cách ẩm thực, không gian..." class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-amber-500 bg-slate-50/40">{{ old('mo_ta') }}</textarea>
+                    <textarea name="mo_ta" rows="4" maxlength="2000" placeholder="Nhập tóm tắt giới thiệu quán, phong cách ẩm thực, không gian..." class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-amber-500 bg-slate-50/40">{{ old('mo_ta') }}</textarea>
                     @error('mo_ta') <p class="text-xs text-rose-600 mt-1">{{ $message }}</p> @enderror
                 </div>
             </div>

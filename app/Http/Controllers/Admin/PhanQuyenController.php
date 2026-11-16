@@ -7,11 +7,13 @@ use App\Models\NguoiDungQuyenHan;
 use App\Models\QuyenHan;
 use App\Models\User;
 use App\Models\VaiTro;
+use App\Traits\HandlesCrudSecurity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class PhanQuyenController extends Controller
 {
+    use HandlesCrudSecurity;
     public function index(Request $request)
     {
         $permissions = QuyenHan::withCount('vaiTro')->orderBy('ten')->get();
@@ -205,7 +207,10 @@ class PhanQuyenController extends Controller
 
     public function destroy(Request $request, $id)
     {
-        $permission = QuyenHan::findOrFail($id);
+        $permission = QuyenHan::find($id);
+        if (! $permission) {
+            return $this->recordNotFoundResponse($request, 'Quyền hạn', 'admin.phan-quyen.index');
+        }
 
         $rolesCount = $permission->vaiTro()->count();
         $overridesCount = NguoiDungQuyenHan::where('quyen_han_id', $permission->id)->count();

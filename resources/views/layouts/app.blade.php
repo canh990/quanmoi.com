@@ -602,14 +602,7 @@
 
         @auth
         @php
-            $authSavedBlogs = collect();
-            try {
-                if (\Illuminate\Support\Facades\Schema::hasTable('blog_da_luu')) {
-                    $authSavedBlogs = Auth::user()->savedBlogs()->where('blogs.status', 'published')->select('blogs.id', 'blogs.slug')->get();
-                }
-            } catch (\Throwable $e) {
-                // An toàn khi migration hoặc bảng blog_da_luu chưa sẵn sàng
-            }
+            $authSavedBlogs = Auth::user()->savedBlogs()->where('blogs.status', 'published')->select('blogs.id', 'blogs.slug')->get();
         @endphp
         window.__SERVER_SAVED_BLOGS = @json($authSavedBlogs);
         @endauth

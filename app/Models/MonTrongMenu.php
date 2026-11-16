@@ -37,12 +37,7 @@ class MonTrongMenu extends Model
         $sync = static function (MonTrongMenu $mon): void {
             $quan = $mon->danhMuc?->quan;
             if ($quan && $quan->shouldBeSearchable()) {
-                try {
-                    $quan->searchable();
-                    $quan->videos()->get()->searchable();
-                } catch (\Throwable $e) {
-                    \Illuminate\Support\Facades\Log::warning('Sync Quan/VideoShort Elastic after MonTrongMenu change failed: ' . $e->getMessage());
-                }
+                $quan->searchable();
             }
         };
 

@@ -6,10 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Models\KhuyenMai;
 use App\Models\Quan;
 use App\Services\AiPromotionService;
+use App\Traits\HandlesCrudSecurity;
 use Illuminate\Http\Request;
 
 class AiToolsController extends Controller
 {
+    use HandlesCrudSecurity;
+
     protected AiPromotionService $aiService;
 
     public function __construct(AiPromotionService $aiService)
@@ -263,9 +266,17 @@ class AiToolsController extends Controller
     /**
      * Xóa khuyến mãi / voucher (Dành cho Admin)
      */
-    public function destroyPromotion(string $id)
+    public function destroyPromotion(Request $request, string $id)
     {
-        $km = KhuyenMai::findOrFail($id);
+        if (! $this->isValidId($id, 'uuid')) {
+            return $this->invalidIdResponse($request, 'admin.ai-tools.index');
+        }
+
+        $km = KhuyenMai::find($id);
+        if (! $km) {
+            return $this->recordNotFoundResponse($request, 'Voucher / Khuyến mãi', 'admin.ai-tools.index');
+        }
+
         $km->delete();
 
         return response()->json([
@@ -277,9 +288,17 @@ class AiToolsController extends Controller
     /**
      * Bật / Tắt trạng thái khuyến mãi (Dành cho Admin)
      */
-    public function togglePromotion(string $id)
+    public function togglePromotion(Request $request, string $id)
     {
-        $km = KhuyenMai::findOrFail($id);
+        if (! $this->isValidId($id, 'uuid')) {
+            return $this->invalidIdResponse($request, 'admin.ai-tools.index');
+        }
+
+        $km = KhuyenMai::find($id);
+        if (! $km) {
+            return $this->recordNotFoundResponse($request, 'Voucher / Khuyến mãi', 'admin.ai-tools.index');
+        }
+
         $km->trang_thai = ! $km->trang_thai;
         $km->save();
 

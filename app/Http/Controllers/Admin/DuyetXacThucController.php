@@ -7,10 +7,13 @@ use App\Models\Quan;
 use App\Models\User;
 use App\Models\VaiTro;
 use App\Services\AdminAuditService;
+use App\Traits\HandlesCrudSecurity;
 use Illuminate\Http\Request;
 
 class DuyetXacThucController extends Controller
 {
+    use HandlesCrudSecurity;
+
     public function __construct(private readonly ?AdminAuditService $adminAudit = null) {}
 
     public function index(Request $request)
@@ -213,9 +216,17 @@ class DuyetXacThucController extends Controller
             return $this->rejectQuan($request, $id);
         }
 
+        if (! $this->isValidId($id, 'uuid')) {
+            return $this->invalidIdResponse($request, 'admin.duyet-xac-thuc.index');
+        }
+
         $this->markItemAsRead($request, 'quan_' . $id);
 
-        $quan = Quan::findOrFail($id);
+        $quan = Quan::find($id);
+        if (! $quan) {
+            return $this->recordNotFoundResponse($request, 'Hồ sơ quán', 'admin.duyet-xac-thuc.index');
+        }
+
         $quan->update([
             'trang_thai' => 'da_duyet',
             'is_xac_thuc' => true,
@@ -272,9 +283,17 @@ class DuyetXacThucController extends Controller
     {
         $this->checkPermissionQuan($request);
 
+        if (! $this->isValidId($id, 'uuid')) {
+            return $this->invalidIdResponse($request, 'admin.duyet-xac-thuc.index');
+        }
+
         $this->markItemAsRead($request, 'quan_' . $id);
 
-        $quan = Quan::findOrFail($id);
+        $quan = Quan::find($id);
+        if (! $quan) {
+            return $this->recordNotFoundResponse($request, 'Hồ sơ quán', 'admin.duyet-xac-thuc.index');
+        }
+
         $quan->update([
             'trang_thai' => 'bi_khoa',
             'is_xac_thuc' => false,
@@ -314,9 +333,17 @@ class DuyetXacThucController extends Controller
     {
         $this->checkPermissionQuan($request);
 
+        if (! $this->isValidId($id, 'uuid')) {
+            return $this->invalidIdResponse($request, 'admin.duyet-xac-thuc.index');
+        }
+
         $this->markItemAsRead($request, 'quan_' . $id);
 
-        $quan = Quan::findOrFail($id);
+        $quan = Quan::find($id);
+        if (! $quan) {
+            return $this->recordNotFoundResponse($request, 'Hồ sơ quán', 'admin.duyet-xac-thuc.index');
+        }
+
         $quan->update(['trang_thai' => 'bi_khoa']);
         $quan->delete(); // Soft delete qua ngay_xoa
 
@@ -356,9 +383,17 @@ class DuyetXacThucController extends Controller
             return $this->rejectUser($request, $id);
         }
 
+        if (! $this->isValidId($id, 'uuid')) {
+            return $this->invalidIdResponse($request, 'admin.duyet-xac-thuc.index');
+        }
+
         $this->markItemAsRead($request, 'user_' . $id);
 
-        $user = User::findOrFail($id);
+        $user = User::find($id);
+        if (! $user) {
+            return $this->recordNotFoundResponse($request, 'Người dùng', 'admin.duyet-xac-thuc.index');
+        }
+
         $settings = $user->cai_dat ?? [];
         if (isset($settings['yeu_cau_xac_thuc'])) {
             $settings['yeu_cau_xac_thuc']['trang_thai'] = 'da_duyet';
@@ -404,9 +439,17 @@ class DuyetXacThucController extends Controller
     {
         $this->checkPermissionUser($request);
 
+        if (! $this->isValidId($id, 'uuid')) {
+            return $this->invalidIdResponse($request, 'admin.duyet-xac-thuc.index');
+        }
+
         $this->markItemAsRead($request, 'user_' . $id);
 
-        $user = User::findOrFail($id);
+        $user = User::find($id);
+        if (! $user) {
+            return $this->recordNotFoundResponse($request, 'Người dùng', 'admin.duyet-xac-thuc.index');
+        }
+
         $settings = $user->cai_dat ?? [];
         if (isset($settings['yeu_cau_xac_thuc'])) {
             $settings['yeu_cau_xac_thuc']['trang_thai'] = 'tu_choi';

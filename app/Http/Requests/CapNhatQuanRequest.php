@@ -24,7 +24,7 @@ class CapNhatQuanRequest extends FormRequest
             'chu_quan_id'          => 'nullable|string|exists:nguoi_dung,id',
             'ten_quan'             => 'required|string|max:255',
             'loai_hinh_kinh_doanh' => 'required|string|max:255',
-            'so_dien_thoai'        => ['required', 'string', 'regex:/^0[0-9]{9,10}$/'],
+            'so_dien_thoai'        => 'required|string|max:20',
             'email'                => 'nullable|email|max:255',
             'dia_chi_chi_tiet'     => 'required|string|max:500',
             'tinh_thanh_id'        => 'nullable|string|max:50',
@@ -56,6 +56,7 @@ class CapNhatQuanRequest extends FormRequest
             'shopeefood_url'       => 'nullable|url|max:500',
             'anh_bia'              => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
             'mo_ta'                => 'nullable|string|max:2000',
+            'last_updated_at'      => 'nullable|string',
         ];
     }
 
@@ -66,7 +67,6 @@ class CapNhatQuanRequest extends FormRequest
             'ten_quan.max'                  => 'Tên cơ sở không được vượt quá 255 ký tự.',
             'loai_hinh_kinh_doanh.required' => 'Vui lòng chọn hoặc nhập loại hình kinh doanh.',
             'so_dien_thoai.required'        => 'Số điện thoại liên hệ là bắt buộc.',
-            'so_dien_thoai.regex'           => 'Số điện thoại không hợp lệ (phải bắt đầu bằng số 0 và có từ 10 đến 11 số).',
             'so_dien_thoai.max'             => 'Số điện thoại không được vượt quá 20 ký tự.',
             'email.email'                   => 'Email không đúng định dạng.',
             'dia_chi_chi_tiet.required'     => 'Vui lòng nhập địa chỉ chi tiết của quán.',
@@ -89,9 +89,18 @@ class CapNhatQuanRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $sanitized = [];
+        $numericFields = ['so_dien_thoai', 'gia_nho_nhat', 'gia_lon_nhat'];
+
         foreach ($this->all() as $key => $value) {
             if (is_string($value) && ! in_array($key, ['tiktok_url', 'shopeefood_url'], true)) {
-                $sanitized[$key] = trim(strip_tags($value));
+                $value = preg_replace('/[\x{3000}\s]+/u', ' ', $value);
+                $value = trim(strip_tags($value));
+
+                if (in_array($key, $numericFields, true)) {
+                    $value = mb_convert_kana($value, 'n', 'UTF-8');
+                }
+
+                $sanitized[$key] = $value;
             }
         }
         $this->merge($sanitized);

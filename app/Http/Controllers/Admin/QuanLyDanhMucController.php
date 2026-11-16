@@ -6,12 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Models\AdminAuditLog;
 use App\Models\DanhMucQuan;
 use App\Models\Quan;
+use App\Traits\HandlesCrudSecurity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 class QuanLyDanhMucController extends Controller
 {
+    use HandlesCrudSecurity;
     private array $presetIcons = [
         ['icon' => 'restaurant', 'label' => 'Nhà hàng'],
         ['icon' => 'local_cafe', 'label' => 'Cà phê'],
@@ -32,16 +34,16 @@ class QuanLyDanhMucController extends Controller
     ];
 
     private array $presetColors = [
-        'rose'    => ['name' => 'Hồng Ruby', 'badge' => 'bg-rose-50 text-rose-700 border-rose-200', 'bg' => 'bg-rose-500', 'hex' => '#f43f5e', 'light' => '#fff1f2', 'border' => '#fecdd3', 'text' => '#be123c'],
-        'amber'   => ['name' => 'Vàng Hổ Phách', 'badge' => 'bg-amber-50 text-amber-700 border-amber-200', 'bg' => 'bg-amber-500', 'hex' => '#f59e0b', 'light' => '#fffbeb', 'border' => '#fde68a', 'text' => '#b45309'],
-        'indigo'  => ['name' => 'Chàm Tinh Tế', 'badge' => 'bg-indigo-50 text-indigo-700 border-indigo-200', 'bg' => 'bg-indigo-500', 'hex' => '#6366f1', 'light' => '#eef2ff', 'border' => '#c7d2fe', 'text' => '#4338ca'],
-        'emerald' => ['name' => 'Xanh Lục Bảo', 'badge' => 'bg-emerald-50 text-emerald-700 border-emerald-200', 'bg' => 'bg-emerald-500', 'hex' => '#10b981', 'light' => '#ecfdf5', 'border' => '#a7f3d0', 'text' => '#047857'],
-        'orange'  => ['name' => 'Cam Nhiệt Đới', 'badge' => 'bg-orange-50 text-orange-700 border-orange-200', 'bg' => 'bg-orange-500', 'hex' => '#f97316', 'light' => '#fff7ed', 'border' => '#fed7aa', 'text' => '#c2410c'],
-        'violet'  => ['name' => 'Tím Huyền Bí', 'badge' => 'bg-violet-50 text-violet-700 border-violet-200', 'bg' => 'bg-violet-500', 'hex' => '#8b5cf6', 'light' => '#f5f3ff', 'border' => '#ddd6fe', 'text' => '#6d28d9'],
-        'pink'    => ['name' => 'Hồng Pastel', 'badge' => 'bg-pink-50 text-pink-700 border-pink-200', 'bg' => 'bg-pink-500', 'hex' => '#ec4899', 'light' => '#fdf2f8', 'border' => '#fbcfe8', 'text' => '#be185d'],
-        'yellow'  => ['name' => 'Vàng Nắng', 'badge' => 'bg-yellow-50 text-yellow-800 border-yellow-200', 'bg' => 'bg-yellow-400', 'hex' => '#eab308', 'light' => '#fefce8', 'border' => '#fef08a', 'text' => '#854d0e'],
-        'teal'    => ['name' => 'Xanh Mòng Két', 'badge' => 'bg-teal-50 text-teal-700 border-teal-200', 'bg' => 'bg-teal-500', 'hex' => '#14b8a6', 'light' => '#f0fdfa', 'border' => '#99f6e4', 'text' => '#0f766e'],
-        'sky'     => ['name' => 'Xanh Lam Nhạt', 'badge' => 'bg-sky-50 text-sky-700 border-sky-200', 'bg' => 'bg-sky-500', 'hex' => '#0ea5e9', 'light' => '#f0f9ff', 'border' => '#bae6fd', 'text' => '#0369a1'],
+        'rose'    => ['name' => 'Hồng Ruby', 'badge' => 'bg-rose-50 text-rose-700 border-rose-200', 'bg' => 'bg-rose-500'],
+        'amber'   => ['name' => 'Vàng Hổ Phách', 'badge' => 'bg-amber-50 text-amber-700 border-amber-200', 'bg' => 'bg-amber-500'],
+        'indigo'  => ['name' => 'Chàm Tinh Tế', 'badge' => 'bg-indigo-50 text-indigo-700 border-indigo-200', 'bg' => 'bg-indigo-500'],
+        'emerald' => ['name' => 'Xanh Lục Bảo', 'badge' => 'bg-emerald-50 text-emerald-700 border-emerald-200', 'bg' => 'bg-emerald-500'],
+        'orange'  => ['name' => 'Cam Nhiệt Đới', 'badge' => 'bg-orange-50 text-orange-700 border-orange-200', 'bg' => 'bg-orange-500'],
+        'violet'  => ['name' => 'Tím Huyền Bí', 'badge' => 'bg-violet-50 text-violet-700 border-violet-200', 'bg' => 'bg-violet-500'],
+        'pink'    => ['name' => 'Hồng Pastel', 'badge' => 'bg-pink-50 text-pink-700 border-pink-200', 'bg' => 'bg-pink-500'],
+        'yellow'  => ['name' => 'Vàng Nắng', 'badge' => 'bg-yellow-50 text-yellow-800 border-yellow-200', 'bg' => 'bg-yellow-400'],
+        'teal'    => ['name' => 'Xanh Mòng Két', 'badge' => 'bg-teal-50 text-teal-700 border-teal-200', 'bg' => 'bg-teal-500'],
+        'sky'     => ['name' => 'Xanh Lam Nhạt', 'badge' => 'bg-sky-50 text-sky-700 border-sky-200', 'bg' => 'bg-sky-500'],
     ];
 
     public function index(Request $request)
@@ -101,6 +103,9 @@ class QuanLyDanhMucController extends Controller
 
     public function store(Request $request)
     {
+        $sanitized = $this->sanitizeInput($request->all(), ['thu_tu']);
+        $request->merge($sanitized);
+
         $validated = $request->validate([
             'ten_danh_muc' => ['required', 'string', 'max:100'],
             'slug'         => ['nullable', 'string', 'max:100', 'unique:danh_muc_quan,slug'],
@@ -112,7 +117,12 @@ class QuanLyDanhMucController extends Controller
             'is_noi_bat'   => ['nullable', 'boolean'],
         ], [
             'ten_danh_muc.required' => 'Vui lòng nhập tên danh mục.',
-            'slug.unique'          => 'Đường dẫn (slug) này đã được sử dụng.',
+            'ten_danh_muc.max'      => 'Tên danh mục không được vượt quá 100 ký tự.',
+            'slug.max'              => 'Đường dẫn (slug) không được vượt quá 100 ký tự.',
+            'slug.unique'           => 'Đường dẫn (slug) này đã được sử dụng.',
+            'mo_ta.max'             => 'Mô tả không được vượt quá 255 ký tự.',
+            'thu_tu.integer'        => 'Thứ tự hiển thị phải là số nguyên hợp lệ.',
+            'thu_tu.min'            => 'Thứ tự hiển thị không được âm.',
         ]);
 
         $slug = !empty($validated['slug']) ? Str::slug($validated['slug']) : Str::slug($validated['ten_danh_muc']);
@@ -156,22 +166,46 @@ class QuanLyDanhMucController extends Controller
         return redirect()->route('admin.danh-muc-quan.index')->with('success', 'Thêm danh mục "' . $category->ten_danh_muc . '" thành công!');
     }
 
-    public function update(Request $request, int $id)
+    public function update(Request $request, $id)
     {
-        $category = DanhMucQuan::findOrFail($id);
+        if (! $this->isValidId($id, 'int')) {
+            return $this->invalidIdResponse($request, 'admin.danh-muc-quan.index');
+        }
+
+        $category = DanhMucQuan::find($id);
+        if (! $category) {
+            return $this->recordNotFoundResponse($request, 'Danh mục', 'admin.danh-muc-quan.index');
+        }
+
+        // Kiểm tra xung đột cập nhật đồng thời giữa nhiều tab (Optimistic Locking)
+        if ($conflict = $this->checkConcurrentUpdate($category, $request)) {
+            if ($request->wantsJson()) {
+                return $conflict;
+            }
+            return redirect()->back()->withInput()->with('error', $conflict->getData()->message);
+        }
+
+        $sanitized = $this->sanitizeInput($request->all(), ['thu_tu']);
+        $request->merge($sanitized);
 
         $validated = $request->validate([
-            'ten_danh_muc' => ['required', 'string', 'max:100'],
-            'slug'         => ['nullable', 'string', 'max:100', 'unique:danh_muc_quan,slug,' . $id],
-            'mo_ta'        => ['nullable', 'string', 'max:255'],
-            'icon'         => ['nullable', 'string', 'max:50'],
-            'mau_sac'      => ['nullable', 'string', 'max:30'],
-            'thu_tu'       => ['nullable', 'integer', 'min:0'],
-            'is_hien_thi'  => ['nullable', 'boolean'],
-            'is_noi_bat'   => ['nullable', 'boolean'],
+            'ten_danh_muc'    => ['required', 'string', 'max:100'],
+            'slug'            => ['nullable', 'string', 'max:100', 'unique:danh_muc_quan,slug,' . $id],
+            'mo_ta'           => ['nullable', 'string', 'max:255'],
+            'icon'            => ['nullable', 'string', 'max:50'],
+            'mau_sac'         => ['nullable', 'string', 'max:30'],
+            'thu_tu'          => ['nullable', 'integer', 'min:0'],
+            'is_hien_thi'     => ['nullable', 'boolean'],
+            'is_noi_bat'      => ['nullable', 'boolean'],
+            'last_updated_at' => ['nullable', 'string'],
         ], [
             'ten_danh_muc.required' => 'Vui lòng nhập tên danh mục.',
-            'slug.unique'          => 'Đường dẫn (slug) này đã được sử dụng.',
+            'ten_danh_muc.max'      => 'Tên danh mục không được vượt quá 100 ký tự.',
+            'slug.max'              => 'Đường dẫn (slug) không được vượt quá 100 ký tự.',
+            'slug.unique'           => 'Đường dẫn (slug) này đã được sử dụng.',
+            'mo_ta.max'             => 'Mô tả không được vượt quá 255 ký tự.',
+            'thu_tu.integer'        => 'Thứ tự hiển thị phải là số nguyên hợp lệ.',
+            'thu_tu.min'            => 'Thứ tự hiển thị không được âm.',
         ]);
 
         $oldName = $category->ten_danh_muc;
@@ -219,9 +253,17 @@ class QuanLyDanhMucController extends Controller
         return redirect()->route('admin.danh-muc-quan.index')->with('success', 'Đã cập nhật danh mục "' . $category->ten_danh_muc . '"!');
     }
 
-    public function destroy(Request $request, int $id)
+    public function destroy(Request $request, $id)
     {
-        $category = DanhMucQuan::findOrFail($id);
+        if (! $this->isValidId($id, 'int')) {
+            return $this->invalidIdResponse($request, 'admin.danh-muc-quan.index');
+        }
+
+        $category = DanhMucQuan::find($id);
+        if (! $category) {
+            return $this->recordNotFoundResponse($request, 'Danh mục', 'admin.danh-muc-quan.index');
+        }
+
         $name = $category->ten_danh_muc;
 
         // An toàn: gỡ liên kết các quán trước khi xóa danh mục
@@ -251,9 +293,17 @@ class QuanLyDanhMucController extends Controller
         return redirect()->route('admin.danh-muc-quan.index')->with('success', 'Đã xóa danh mục "' . $name . '"!');
     }
 
-    public function toggleHienThi(Request $request, int $id)
+    public function toggleHienThi(Request $request, $id)
     {
-        $category = DanhMucQuan::findOrFail($id);
+        if (! $this->isValidId($id, 'int')) {
+            return $this->invalidIdResponse($request, 'admin.danh-muc-quan.index');
+        }
+
+        $category = DanhMucQuan::find($id);
+        if (! $category) {
+            return $this->recordNotFoundResponse($request, 'Danh mục', 'admin.danh-muc-quan.index');
+        }
+
         $category->is_hien_thi = !$category->is_hien_thi;
         $category->save();
 
@@ -266,9 +316,17 @@ class QuanLyDanhMucController extends Controller
         ]);
     }
 
-    public function toggleNoiBat(Request $request, int $id)
+    public function toggleNoiBat(Request $request, $id)
     {
-        $category = DanhMucQuan::findOrFail($id);
+        if (! $this->isValidId($id, 'int')) {
+            return $this->invalidIdResponse($request, 'admin.danh-muc-quan.index');
+        }
+
+        $category = DanhMucQuan::find($id);
+        if (! $category) {
+            return $this->recordNotFoundResponse($request, 'Danh mục', 'admin.danh-muc-quan.index');
+        }
+
         $category->is_noi_bat = !$category->is_noi_bat;
         $category->save();
 

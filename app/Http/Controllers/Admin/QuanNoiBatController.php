@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Quan;
 use App\Notifications\QuanStatusUpdatedNotification;
 use App\Services\AdminAuditService;
+use App\Traits\HandlesCrudSecurity;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,6 +15,8 @@ use Illuminate\View\View;
 
 class QuanNoiBatController extends Controller
 {
+    use HandlesCrudSecurity;
+
     public function __construct(private readonly AdminAuditService $adminAudit) {}
 
     /**
@@ -252,9 +255,21 @@ class QuanNoiBatController extends Controller
 
         $request->validate([
             'quan_id' => 'required|string|exists:quan,id',
+        ], [
+            'quan_id.required' => 'Vui lòng chọn cơ sở quán cần thêm vào nổi bật.',
+            'quan_id.exists'   => 'Cơ sở quán được chọn không tồn tại trong hệ thống.',
         ]);
 
-        $quan = Quan::findOrFail($request->input('quan_id'));
+        $quanId = $request->input('quan_id');
+        if (! $this->isValidId($quanId, 'uuid')) {
+            return $this->invalidIdResponse($request, 'admin.quan-noi-bat.index');
+        }
+
+        $quan = Quan::find($quanId);
+        if (! $quan) {
+            return $this->recordNotFoundResponse($request, 'Quán', 'admin.quan-noi-bat.index');
+        }
+
         $quan->is_noi_bat = true;
         $quan->save();
 
@@ -312,7 +327,25 @@ class QuanNoiBatController extends Controller
     {
         $this->authorizeAccess();
 
-        $quan = Quan::findOrFail($id);
+        if (! $this->isValidId($id, 'uuid')) {
+            return $this->invalidIdResponse($request, 'admin.quan-noi-bat.index');
+        }
+
+        $quan = Quan::find($id);
+        if (! $quan) {
+            return $this->recordNotFoundResponse($request, 'Quán nổi bật', 'admin.quan-noi-bat.index');
+        }
+
+        // Kiểm tra xung đột cập nhật đồng thời nhiều tab (Optimistic Locking)
+        if ($conflict = $this->checkConcurrentUpdate($quan, $request)) {
+            if ($request->wantsJson()) {
+                return $conflict;
+            }
+            return redirect()->back()->withInput()->with('error', $conflict->getData()->message);
+        }
+
+        $sanitized = $this->sanitizeInput($request->all(), ['so_dien_thoai']);
+        $request->merge($sanitized);
 
         $validated = $request->validate([
             'ten_quan'             => 'required|string|max:255',
@@ -324,6 +357,17 @@ class QuanNoiBatController extends Controller
             'tiktok_url'           => 'nullable|url|max:255',
             'is_xac_thuc'          => 'nullable|boolean',
             'is_noi_bat'           => 'nullable|boolean',
+            'last_updated_at'      => 'nullable|string',
+        ], [
+            'ten_quan.required'             => 'Tên quán không được để trống.',
+            'ten_quan.max'                  => 'Tên quán không được vượt quá 255 ký tự.',
+            'loai_hinh_kinh_doanh.required' => 'Loại hình kinh doanh không được để trống.',
+            'loai_hinh_kinh_doanh.max'      => 'Loại hình kinh doanh không được vượt quá 100 ký tự.',
+            'so_dien_thoai.max'             => 'Số điện thoại không được vượt quá 20 ký tự.',
+            'gio_mo_cua.date_format'        => 'Giờ mở cửa phải đúng định dạng Giờ:Phút (HH:mm).',
+            'gio_dong_cua.date_format'      => 'Giờ đóng cửa phải đúng định dạng Giờ:Phút (HH:mm).',
+            'shopeefood_url.url'            => 'Đường dẫn ShopeeFood phải là link URL hợp lệ.',
+            'tiktok_url.url'                => 'Đường dẫn TikTok phải là link URL hợp lệ.',
         ]);
 
         $validated['is_xac_thuc'] = $request->boolean('is_xac_thuc');
@@ -382,7 +426,15 @@ class QuanNoiBatController extends Controller
     {
         $this->authorizeAccess();
 
-        $quan = Quan::findOrFail($id);
+        if (! $this->isValidId($id, 'uuid')) {
+            return $this->invalidIdResponse($request, 'admin.quan-noi-bat.index');
+        }
+
+        $quan = Quan::find($id);
+        if (! $quan) {
+            return $this->recordNotFoundResponse($request, 'Quán', 'admin.quan-noi-bat.index');
+        }
+
         $quan->is_noi_bat = ! $quan->is_noi_bat;
         $quan->save();
 
@@ -399,8 +451,7 @@ class QuanNoiBatController extends Controller
 
         if ($quan->chuQuan) {
             try {
-                $quan->chuQuan->notify(new QuanStatusUpdatedNotification(
-                    $quan,
+                $quan->chuQuan->notify(new QuanStatusUpdatedNotification($quan,
                     $quan->is_noi_bat ? 'featured_granted' : 'featured_revoked'
                 ));
             } catch (\Throwable $e) {
@@ -439,7 +490,15 @@ class QuanNoiBatController extends Controller
     {
         $this->authorizeAccess();
 
-        $quan = Quan::findOrFail($id);
+        if (! $this->isValidId($id, 'uuid')) {
+            return $this->invalidIdResponse($request, 'admin.quan-noi-bat.index');
+        }
+
+        $quan = Quan::find($id);
+        if (! $quan) {
+            return $this->recordNotFoundResponse($request, 'Quán nổi bật', 'admin.quan-noi-bat.index');
+        }
+
         $quan->is_noi_bat = false;
         $quan->save();
 

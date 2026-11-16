@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\VaiTro;
 use App\Notifications\QuanStatusUpdatedNotification;
 use App\Services\AdminAuditService;
+use App\Traits\HandlesCrudSecurity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -20,6 +21,8 @@ use Intervention\Image\ImageManager;
 
 class QuanLyQuanController extends Controller
 {
+    use HandlesCrudSecurity;
+
     public function __construct(private readonly AdminAuditService $adminAudit) {}
 
     public function index(Request $request)
@@ -78,16 +81,10 @@ class QuanLyQuanController extends Controller
             }
         }
 
-        // 3. Filter by business type (loai_hinh_kinh_doanh or danh_muc_id)
+        // 3. Filter by business type (loai_hinh_kinh_doanh)
         $rawLoaiHinh = $request->input('loai_hinh');
-        $rawDanhMucId = $request->input('danh_muc_id');
-        if (!empty($rawDanhMucId) && !is_array($rawDanhMucId)) {
-            $query->where('danh_muc_id', (int) $rawDanhMucId);
-        } elseif (! empty($rawLoaiHinh) && ! is_array($rawLoaiHinh)) {
-            $query->where(function ($sub) use ($rawLoaiHinh) {
-                $sub->where('loai_hinh_kinh_doanh', (string) $rawLoaiHinh)
-                    ->orWhereHas('danhMuc', fn ($dm) => $dm->where('ten_danh_muc', (string) $rawLoaiHinh));
-            });
+        if (! empty($rawLoaiHinh) && ! is_array($rawLoaiHinh)) {
+            $query->where('loai_hinh_kinh_doanh', (string) $rawLoaiHinh);
         }
 
         // 4. Filter by is_noi_bat
@@ -206,9 +203,17 @@ class QuanLyQuanController extends Controller
 
     public function show(Request $request, string $id)
     {
+        if (! $this->isValidId($id, 'uuid')) {
+            return $this->invalidIdResponse($request, 'admin.quan.index');
+        }
+
         $quan = Quan::withTrashed()
             ->with(['chuQuan', 'hinhAnh', 'danhMucMenu.monTrongMenu', 'danhGia.nguoiDung'])
-            ->findOrFail($id);
+            ->find($id);
+
+        if (! $quan) {
+            return $this->recordNotFoundResponse($request, 'Quán', 'admin.quan.index');
+        }
 
         $this->authorize('view', $quan);
 
@@ -253,9 +258,17 @@ class QuanLyQuanController extends Controller
         return redirect()->route('admin.quan.edit', $quan->id);
     }
 
-    public function edit(string $id)
+    public function edit(Request $request, string $id)
     {
-        $quan = Quan::withTrashed()->with(['chuQuan', 'hinhAnh', 'danhMucMenu.monTrongMenu', 'danhGia'])->findOrFail($id);
+        if (! $this->isValidId($id, 'uuid')) {
+            return $this->invalidIdResponse($request, 'admin.quan.index');
+        }
+
+        $quan = Quan::withTrashed()->with(['chuQuan', 'hinhAnh', 'danhMucMenu.monTrongMenu', 'danhGia'])->find($id);
+        if (! $quan) {
+            return $this->recordNotFoundResponse($request, 'Quán', 'admin.quan.index');
+        }
+
         $this->authorize('update', $quan);
 
         $users = User::where('trang_thai', 'hoat_dong')->orderBy('ho_ten')->get();
@@ -266,8 +279,25 @@ class QuanLyQuanController extends Controller
 
     public function update(CapNhatQuanRequest $request, string $id)
     {
-        $quan = Quan::withTrashed()->findOrFail($id);
+        if (! $this->isValidId($id, 'uuid')) {
+            return $this->invalidIdResponse($request, 'admin.quan.index');
+        }
+
+        $quan = Quan::withTrashed()->find($id);
+        if (! $quan) {
+            return $this->recordNotFoundResponse($request, 'Quán', 'admin.quan.index');
+        }
+
         $this->authorize('update', $quan);
+
+        // Kiểm tra xung đột cập nhật đồng thời nhiều tab (Optimistic Locking)
+        if ($conflict = $this->checkConcurrentUpdate($quan, $request)) {
+            if ($request->wantsJson()) {
+                return $conflict;
+            }
+            return redirect()->back()->withInput()->with('error', $conflict->getData()->message);
+        }
+
         $validated = $request->validated();
         if (!empty($validated['loai_hinh_kinh_doanh'])) {
             $catRecord = \App\Models\DanhMucQuan::where('ten_danh_muc', $validated['loai_hinh_kinh_doanh'])->first();
@@ -338,7 +368,15 @@ class QuanLyQuanController extends Controller
 
     public function destroy(Request $request, string $id)
     {
-        $quan = Quan::findOrFail($id);
+        if (! $this->isValidId($id, 'uuid')) {
+            return $this->invalidIdResponse($request, 'admin.quan.index');
+        }
+
+        $quan = Quan::find($id);
+        if (! $quan) {
+            return $this->recordNotFoundResponse($request, 'Quán', 'admin.quan.index');
+        }
+
         $this->authorize('delete', $quan);
         $quan->update(['trang_thai' => 'bi_khoa']);
         $quan->delete(); // Soft delete via ngay_xoa
@@ -368,7 +406,15 @@ class QuanLyQuanController extends Controller
 
     public function restore(Request $request, string $id)
     {
-        $quan = Quan::onlyTrashed()->findOrFail($id);
+        if (! $this->isValidId($id, 'uuid')) {
+            return $this->invalidIdResponse($request, 'admin.quan.index');
+        }
+
+        $quan = Quan::onlyTrashed()->find($id);
+        if (! $quan) {
+            return $this->recordNotFoundResponse($request, 'Quán', 'admin.quan.index');
+        }
+
         $this->authorize('restore', $quan);
         $quan->restore();
         $quan->update(['trang_thai' => 'da_duyet']);
@@ -398,7 +444,15 @@ class QuanLyQuanController extends Controller
 
     public function forceDestroy(Request $request, string $id)
     {
-        $quan = Quan::withTrashed()->findOrFail($id);
+        if (! $this->isValidId($id, 'uuid')) {
+            return $this->invalidIdResponse($request, 'admin.quan.index');
+        }
+
+        $quan = Quan::withTrashed()->find($id);
+        if (! $quan) {
+            return $this->recordNotFoundResponse($request, 'Quán', 'admin.quan.index');
+        }
+
         $this->authorize('forceDelete', $quan);
         $quanName = $quan->ten_quan;
 
@@ -434,7 +488,15 @@ class QuanLyQuanController extends Controller
 
     public function toggleNoiBat(Request $request, string $id)
     {
-        $quan = Quan::withTrashed()->findOrFail($id);
+        if (! $this->isValidId($id, 'uuid')) {
+            return $this->invalidIdResponse($request, 'admin.quan.index');
+        }
+
+        $quan = Quan::withTrashed()->find($id);
+        if (! $quan) {
+            return $this->recordNotFoundResponse($request, 'Quán', 'admin.quan.index');
+        }
+
         $this->authorize('update', $quan);
         $quan->is_noi_bat = ! $quan->is_noi_bat;
         $quan->save();
@@ -465,7 +527,15 @@ class QuanLyQuanController extends Controller
 
     public function toggleXacThuc(Request $request, string $id)
     {
-        $quan = Quan::withTrashed()->findOrFail($id);
+        if (! $this->isValidId($id, 'uuid')) {
+            return $this->invalidIdResponse($request, 'admin.quan.index');
+        }
+
+        $quan = Quan::withTrashed()->find($id);
+        if (! $quan) {
+            return $this->recordNotFoundResponse($request, 'Quán', 'admin.quan.index');
+        }
+
         $this->authorize('update', $quan);
         $quan->is_xac_thuc = ! $quan->is_xac_thuc;
         $quan->save();

@@ -71,6 +71,7 @@
         <form action="{{ route('admin.quan.update', $quan->id) }}" method="POST" enctype="multipart/form-data" class="space-y-6">
             @csrf
             @method('PUT')
+            <input type="hidden" name="last_updated_at" value="{{ $quan->updated_at?->toISOString() ?? $quan->updated_at }}">
 
             {{-- Block 1: Thông tin cơ bản & Chủ sở hữu --}}
             <div class="space-y-4">
@@ -82,7 +83,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Tên quán <span class="text-rose-500">*</span></label>
-                        <input type="text" name="ten_quan" value="{{ old('ten_quan', $quan->ten_quan) }}" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-amber-500 bg-slate-50/40">
+                        <input type="text" name="ten_quan" value="{{ old('ten_quan', $quan->ten_quan) }}" required maxlength="255" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-amber-500 bg-slate-50/40">
                         @error('ten_quan') <p class="text-xs text-rose-600 mt-1">{{ $message }}</p> @enderror
                     </div>
 
@@ -123,13 +124,13 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Số điện thoại liên hệ <span class="text-rose-500">*</span></label>
-                        <input type="tel" name="so_dien_thoai" value="{{ old('so_dien_thoai', $quan->so_dien_thoai) }}" required inputmode="numeric" pattern="0[0-9]{9,10}" maxlength="11" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11);" title="Số điện thoại phải bắt đầu bằng số 0 và có từ 10 đến 11 chữ số" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-amber-500 bg-slate-50/40">
+                        <input type="text" name="so_dien_thoai" value="{{ old('so_dien_thoai', $quan->so_dien_thoai) }}" required maxlength="20" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-amber-500 bg-slate-50/40">
                         @error('so_dien_thoai') <p class="text-xs text-rose-600 mt-1">{{ $message }}</p> @enderror
                     </div>
 
                     <div>
                         <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Email quán</label>
-                        <input type="email" name="email" value="{{ old('email', $quan->email) }}" placeholder="VD: quan@example.com" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-amber-500 bg-slate-50/40">
+                        <input type="email" name="email" value="{{ old('email', $quan->email) }}" maxlength="255" placeholder="VD: quan@example.com" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-amber-500 bg-slate-50/40">
                         @error('email') <p class="text-xs text-rose-600 mt-1">{{ $message }}</p> @enderror
                     </div>
                 </div>
@@ -144,22 +145,22 @@
 
                 <div>
                     <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Địa chỉ chi tiết <span class="text-rose-500">*</span></label>
-                    <input type="text" name="dia_chi_chi_tiet" value="{{ old('dia_chi_chi_tiet', $quan->dia_chi_chi_tiet) }}" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-amber-500 bg-slate-50/40">
+                    <input type="text" name="dia_chi_chi_tiet" value="{{ old('dia_chi_chi_tiet', $quan->dia_chi_chi_tiet) }}" required maxlength="500" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-amber-500 bg-slate-50/40">
                     @error('dia_chi_chi_tiet') <p class="text-xs text-rose-600 mt-1">{{ $message }}</p> @enderror
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div>
                         <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Tỉnh / Thành phố</label>
-                        <input type="text" name="ten_tinh_thanh" value="{{ old('ten_tinh_thanh', $quan->ten_tinh_thanh) }}" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-amber-500 bg-slate-50/40">
+                        <input type="text" name="ten_tinh_thanh" value="{{ old('ten_tinh_thanh', $quan->ten_tinh_thanh) }}" maxlength="255" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-amber-500 bg-slate-50/40">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Quận / Huyện</label>
-                        <input type="text" name="ten_quan_huyen" value="{{ old('ten_quan_huyen', $quan->ten_quan_huyen) }}" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-amber-500 bg-slate-50/40">
+                        <input type="text" name="ten_quan_huyen" value="{{ old('ten_quan_huyen', $quan->ten_quan_huyen) }}" maxlength="255" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-amber-500 bg-slate-50/40">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Phường / Xã</label>
-                        <input type="text" name="ten_phuong_xa" value="{{ old('ten_phuong_xa', $quan->ten_phuong_xa) }}" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-amber-500 bg-slate-50/40">
+                        <input type="text" name="ten_phuong_xa" value="{{ old('ten_phuong_xa', $quan->ten_phuong_xa) }}" maxlength="255" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-amber-500 bg-slate-50/40">
                     </div>
                 </div>
 
@@ -257,12 +258,12 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Đường dẫn TikTok Video / Kênh</label>
-                        <input type="url" name="tiktok_url" value="{{ old('tiktok_url', $quan->tiktok_url) }}" placeholder="https://www.tiktok.com/@quanmoi" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-amber-500 bg-slate-50/40">
+                        <input type="url" name="tiktok_url" value="{{ old('tiktok_url', $quan->tiktok_url) }}" maxlength="255" placeholder="https://www.tiktok.com/@quanmoi" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-amber-500 bg-slate-50/40">
                         @error('tiktok_url') <p class="text-xs text-rose-600 mt-1">{{ $message }}</p> @enderror
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Đường dẫn ShopeeFood / Đặt món</label>
-                        <input type="url" name="shopeefood_url" value="{{ old('shopeefood_url', $quan->shopeefood_url) }}" placeholder="https://shopeefood.vn/ha-noi/..." class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-amber-500 bg-slate-50/40">
+                        <input type="url" name="shopeefood_url" value="{{ old('shopeefood_url', $quan->shopeefood_url) }}" maxlength="500" placeholder="https://shopeefood.vn/ha-noi/..." class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-amber-500 bg-slate-50/40">
                         @error('shopeefood_url') <p class="text-xs text-rose-600 mt-1">{{ $message }}</p> @enderror
                     </div>
                 </div>
@@ -283,7 +284,7 @@
                         </div>
                         <div class="flex-1">
                             <input type="file" name="anh_bia" id="anh_bia_input" accept="image/jpeg,image/png,image/jpg,image/webp" class="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100 file:cursor-pointer">
-                            <p class="text-[11px] text-slate-400 mt-1">Tải ảnh mới lên nếu muốn thay đổi ảnh bìa hiện tại (JPG, PNG, WEBP, tối đa 5MB).</p>
+                            <p class="text-[11px] text-slate-400 mt-1">Tải ảnh mới lên nếu muốn thay đổi ảnh bìa hiện tại (JPG, PNG, WEBP, tối đa 5MB). Nếu không chọn ảnh mới, hệ thống sẽ giữ nguyên ảnh cũ.</p>
                         </div>
                     </div>
                     @error('anh_bia') <p class="text-xs text-rose-600 mt-1">{{ $message }}</p> @enderror
@@ -308,7 +309,7 @@
 
                 <div>
                     <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Mô tả quán ăn</label>
-                    <textarea name="mo_ta" rows="4" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-amber-500 bg-slate-50/40">{{ old('mo_ta', $quan->mo_ta) }}</textarea>
+                    <textarea name="mo_ta" rows="4" maxlength="2000" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium outline-none focus:border-amber-500 bg-slate-50/40">{{ old('mo_ta', $quan->mo_ta) }}</textarea>
                     @error('mo_ta') <p class="text-xs text-rose-600 mt-1">{{ $message }}</p> @enderror
                 </div>
             </div>

@@ -17,23 +17,35 @@ class CapNhatNguoiDungRequest extends FormRequest
         $userId = $this->route('id') ?? $this->route('nguoi_dung');
 
         return [
-            'ho_ten'       => 'required|string|max:255',
-            'email'        => ['required', 'email', 'max:255', Rule::unique('nguoi_dung', 'email')->ignore($userId)],
-            'so_dien_thoai' => 'nullable|string|max:20',
-            'vai_tro_id'   => 'nullable|string|exists:vai_tro,id',
-            'trang_thai'   => 'required|in:hoat_dong,bi_khoa',
-            'mat_khau'     => 'nullable|string|min:6',
-            'da_xac_thuc'  => 'nullable|boolean',
+            'ho_ten'          => 'required|string|max:191',
+            'email'           => ['required', 'email', 'max:191', Rule::unique('nguoi_dung', 'email')->ignore($userId)],
+            'so_dien_thoai'   => 'nullable|string|max:20',
+            'vai_tro_id'      => 'nullable|string|exists:vai_tro,id',
+            'trang_thai'      => 'required|in:hoat_dong,bi_khoa',
+            'mat_khau'        => 'nullable|string|min:6|max:191',
+            'da_xac_thuc'     => 'nullable|boolean',
+            'last_updated_at' => 'nullable|string',
         ];
     }
 
     protected function prepareForValidation(): void
     {
-        if ($this->has('ho_ten')) {
-            $this->merge([
-                'ho_ten' => strip_tags($this->input('ho_ten')),
-            ]);
+        $sanitized = [];
+        foreach ($this->all() as $key => $value) {
+            if (is_string($value)) {
+                // Chuẩn hóa khoảng trắng toàn giác và nửa giác
+                $value = preg_replace('/[\x{3000}\s]+/u', ' ', $value);
+                $value = trim(strip_tags($value));
+
+                // Chuẩn hóa số full-width (０-９ -> 0-9) cho số điện thoại
+                if ($key === 'so_dien_thoai') {
+                    $value = mb_convert_kana($value, 'n', 'UTF-8');
+                }
+
+                $sanitized[$key] = $value;
+            }
         }
+        $this->merge($sanitized);
     }
 
     public function messages(): array

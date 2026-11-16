@@ -18,9 +18,13 @@ class VideoShortController extends Controller
                     ->orWhereHas('quan', fn ($sub) => $sub->where('trang_thai', 'da_duyet'));
             });
 
-        // 1. Tìm kiếm thông minh qua Elasticsearch theo tiêu đề video, tên quán hoặc món ăn
+        // 1. Tìm kiếm theo tên quán hoặc từ khóa tiêu đề
         if ($request->filled('q')) {
-            VideoShort::applyElasticSearch($query, (string) $request->q, 'da_duyet');
+            $search = $request->q;
+            $query->where(function ($q) use ($search) {
+                $q->where('tieu_de', 'like', "%{$search}%")
+                    ->orWhereHas('quan', fn ($r) => $r->where('ten_quan', 'like', "%{$search}%"));
+            });
         }
 
         // 2. Lọc theo quận/huyện

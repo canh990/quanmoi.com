@@ -16,22 +16,23 @@
         <form action="{{ route('admin.nguoi-dung.update', $user->id) }}" method="POST" class="space-y-4">
             @csrf
             @method('PUT')
+            <input type="hidden" name="last_updated_at" value="{{ $user->updated_at?->toISOString() ?? $user->updated_at }}">
 
             <div>
                 <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Họ và tên <span class="text-red-500">*</span></label>
-                <input type="text" name="ho_ten" value="{{ old('ho_ten', $user->ho_ten) }}" required class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-primary">
+                <input type="text" name="ho_ten" value="{{ old('ho_ten', $user->ho_ten) }}" required maxlength="191" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-primary">
                 @error('ho_ten') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
             </div>
 
             <div>
                 <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Email <span class="text-red-500">*</span></label>
-                <input type="email" name="email" value="{{ old('email', $user->email) }}" required class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-primary">
+                <input type="email" name="email" value="{{ old('email', $user->email) }}" required maxlength="191" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-primary">
                 @error('email') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
             </div>
 
             <div>
                 <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Số điện thoại</label>
-                <input type="text" name="so_dien_thoai" value="{{ old('so_dien_thoai', $user->so_dien_thoai) }}" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-primary">
+                <input type="text" name="so_dien_thoai" value="{{ old('so_dien_thoai', $user->so_dien_thoai) }}" maxlength="20" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-primary">
                 @error('so_dien_thoai') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
             </div>
 
@@ -68,7 +69,7 @@
 
             <div>
                 <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Đặt lại mật khẩu mới (Bỏ trống nếu giữ nguyên)</label>
-                <input type="password" name="mat_khau" placeholder="Nhập mật khẩu mới..." class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-primary">
+                <input type="password" name="mat_khau" maxlength="191" placeholder="Nhập mật khẩu mới..." class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-primary">
                 @error('mat_khau') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
             </div>
 
