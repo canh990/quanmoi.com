@@ -320,7 +320,9 @@
                         
                         {{-- Nút Trái tim thả/bỏ lưu --}}
                         <button type="button" 
-                                onclick="toggleSave(this, '{{ $quan->id }}')" 
+                                data-quan-id="{{ $quan->id }}"
+                                data-saved="1"
+                                onclick="event.preventDefault(); event.stopPropagation(); toggleSave(this, '{{ $quan->id }}')" 
                                 class="saved-heart-btn" 
                                 title="Bỏ lưu quán">
                             <span class="material-symbols-outlined text-[21px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
@@ -662,95 +664,197 @@
         filterSavedPlaces();
     };
 
-    // Xử lý Bỏ lưu / Thả tim (Optimistic UI)
-    window.toggleSave = async function(btn, quanId) {
-        if (btn.dataset.loading === 'true') return;
-        btn.dataset.loading = 'true';
+    let needsReloadOnVisible = false;
+    const inFlightSavedIds = new Set();
 
-        const card = document.getElementById(`quan-card-desktop-${quanId}`);
+    function updateSavedCountAndCategoryPills() {
+        const cards = Array.from(document.querySelectorAll('.saved-item-element'));
+        const remainingCount = cards.length;
+        const totalCountElem = document.getElementById('saved-total-count');
+        if (totalCountElem) totalCountElem.textContent = remainingCount;
+
+        document.querySelectorAll('.saved-cat-btn').forEach(pill => {
+            const cat = pill.dataset.category ?? '';
+            if (cat === '') {
+                pill.textContent = `Tất cả (${remainingCount})`;
+            } else {
+                const count = cards.filter(c => (c.dataset.category || '') === cat).length;
+                const countSpan = pill.querySelector('span:last-child');
+                if (countSpan) countSpan.textContent = `(${count})`;
+            }
+        });
+    }
+
+    function removeSavedCardFromView(quanId) {
+        const id = String(quanId || '');
+        const card = document.getElementById(`quan-card-desktop-${id}`);
+        savedState.placesData = savedState.placesData.filter(p => String(p.id) !== id);
+
+        if (!card || card.dataset.removing === '1') return;
+        card.dataset.removing = '1';
+
+        card.style.transition = 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)';
+        card.style.opacity = '0';
+        card.style.transform = 'scale(0.88)';
+
+        setTimeout(() => {
+            card.remove();
+            updateSavedCountAndCategoryPills();
+            filterSavedPlaces();
+
+            const remainingCards = document.querySelectorAll('.saved-item-element').length;
+            const grid = document.getElementById('saved-places-grid-desktop');
+            if (grid && remainingCards === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full py-16 px-4 text-center empty-state-desktop">
+                        <div class="w-16 h-16 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center mx-auto mb-4 shadow-xs">
+                            <span class="material-symbols-outlined text-[32px]">favorite</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 mb-1">Bạn chưa lưu địa điểm nào.</h3>
+                        <p class="text-sm text-gray-500 max-w-sm mx-auto mb-6">Hãy dạo quanh Khám phá hoặc Bản đồ để thả tim lưu lại những quán ăn bạn muốn ghé thăm.</p>
+                        <div class="flex flex-wrap items-center justify-center gap-3">
+                            <a href="{{ route('kham-pha') }}" class="px-5 py-2.5 rounded-xl bg-primary text-white font-bold text-xs shadow-sm hover:brightness-105 active:scale-95 transition-all">
+                                Khám phá món ngon ngay
+                            </a>
+                            <a href="{{ route('ban-do') }}" class="px-5 py-2.5 rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 font-bold text-xs transition-all">
+                                Tìm quán quanh bạn
+                            </a>
+                        </div>
+                    </div>
+                `;
+                const toolbar = document.getElementById('saved-filter-toolbar');
+                if (toolbar) toolbar.remove();
+            }
+        }, 250);
+    }
+
+    document.addEventListener('visibilitychange', function() {
+        if (document.visibilityState === 'visible' && needsReloadOnVisible) {
+            needsReloadOnVisible = false;
+            window.location.reload();
+        }
+    });
+
+    window.onQuanMoiSavedPlacesSync = function(msg) {
+        if (!msg || !msg.quanId) return;
+        const id = String(msg.quanId);
+
+        if (!msg.saved) {
+            removeSavedCardFromView(id);
+            return;
+        }
+
+        if (!document.getElementById(`quan-card-desktop-${id}`)) {
+            if (document.visibilityState === 'visible') {
+                window.location.reload();
+            } else {
+                needsReloadOnVisible = true;
+            }
+        }
+    };
+
+    window.onQuanMoiSavedPlacesFullSync = function(syncData) {
+        if (!syncData || !Array.isArray(syncData.saved_ids)) return;
+        const serverSet = new Set(syncData.saved_ids.map(String));
+        const domCards = Array.from(document.querySelectorAll('.saved-item-element'));
+        const domSet = new Set(domCards.map(c => String(c.dataset.id || '')));
+
+        domCards.forEach(c => {
+            const id = String(c.dataset.id || '');
+            if (id && !serverSet.has(id)) {
+                removeSavedCardFromView(id);
+            }
+        });
+
+        for (const id of serverSet) {
+            if (!domSet.has(id)) {
+                window.location.reload();
+                return;
+            }
+        }
+    };
+
+    // Xử lý Bỏ lưu idempotent & đồng bộ đa tab
+    window.toggleSave = async function(btn, quanId) {
+        const id = String(quanId || '');
+        if (!id || inFlightSavedIds.has(id) || btn?.dataset.loading === 'true') return;
+
+        inFlightSavedIds.add(id);
+        if (btn) btn.dataset.loading = 'true';
+
+        const card = document.getElementById(`quan-card-desktop-${id}`);
         const quanName = card?.querySelector('h3')?.textContent?.trim() || 'Quán ăn';
         const quanImg = card?.querySelector('img')?.getAttribute('src') || null;
 
-        // 1. Toast thông báo lập tức
-        if (window.showToast) {
-            window.showToast({
-                eyebrow: 'Đã cập nhật danh sách',
-                title: `Đã bỏ lưu "${quanName}"`,
-                message: 'Địa điểm đã được gỡ khỏi danh sách yêu thích của bạn.',
-                type: 'unsaved',
-                image: quanImg
-            });
-        }
-
-        // 2. Hiệu ứng gỡ card mượt mà
         if (card) {
-            card.style.transition = 'all 0.28s cubic-bezier(0.4, 0, 0.2, 1)';
-            card.style.opacity = '0';
-            card.style.transform = 'scale(0.88)';
-
-            setTimeout(() => {
-                card.remove();
-
-                // Cập nhật số lượng
-                const remainingCards = document.querySelectorAll('.saved-item-element').length;
-                const totalCountElem = document.getElementById('saved-total-count');
-                if (totalCountElem) totalCountElem.textContent = remainingCards;
-
-                // Nếu hết quán, hiện empty state chuẩn
-                const grid = document.getElementById('saved-places-grid-desktop');
-                if (grid && remainingCards === 0) {
-                    grid.innerHTML = `
-                        <div class="col-span-full py-16 px-4 text-center empty-state-desktop">
-                            <div class="w-16 h-16 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center mx-auto mb-4 shadow-xs">
-                                <span class="material-symbols-outlined text-[32px]">favorite</span>
-                            </div>
-                            <h3 class="text-lg font-bold text-gray-900 mb-1">Bạn chưa lưu địa điểm nào.</h3>
-                            <p class="text-sm text-gray-500 max-w-sm mx-auto mb-6">Hãy dạo quanh Khám phá hoặc Bản đồ để thả tim lưu lại những quán ăn bạn muốn ghé thăm.</p>
-                            <div class="flex flex-wrap items-center justify-center gap-3">
-                                <a href="{{ route('kham-pha') }}" class="px-5 py-2.5 rounded-xl bg-primary text-white font-bold text-xs shadow-sm hover:brightness-105 active:scale-95 transition-all">
-                                    Khám phá món ngon ngay
-                                </a>
-                                <a href="{{ route('ban-do') }}" class="px-5 py-2.5 rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 font-bold text-xs transition-all">
-                                    Tìm quán quanh bạn
-                                </a>
-                            </div>
-                        </div>
-                    `;
-                    const toolbar = document.getElementById('saved-filter-toolbar');
-                    if (toolbar) toolbar.remove();
-                }
-            }, 280);
+            card.classList.add('opacity-50', 'pointer-events-none');
         }
 
-        // 3. Gửi request backend
         try {
-            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-            const res = await fetch(`/quan-da-luu/${quanId}/toggle`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': token,
-                    'Accept': 'application/json'
-                }
-            });
+            const result = window.QuanMoiSavedSync
+                ? await window.QuanMoiSavedSync.sendToggleRequest(id, 'unsave')
+                : { ok: false, data: null };
 
-            if (res.status === 401) {
+            if (result.unauthenticated) {
                 window.location.href = "{{ route('login') }}";
                 return;
             }
 
-            const data = await res.json();
-            if (!data.success && window.showToast) {
+            if (result.csrfExpired) {
+                if (card) card.classList.remove('opacity-50', 'pointer-events-none');
+                if (window.showToast) {
+                    window.showToast({
+                        title: 'Phiên làm việc đã hết hạn',
+                        message: 'Vui lòng tải lại trang để cập nhật mã bảo mật và thử lại.',
+                        type: 'warning',
+                        actionText: 'Tải lại trang',
+                        actionUrl: window.location.href
+                    });
+                }
+                return;
+            }
+
+            if (!result.ok) {
+                if (result.data?.already_unsaved) {
+                    removeSavedCardFromView(id);
+                } else if (card) {
+                    card.classList.remove('opacity-50', 'pointer-events-none');
+                }
+                if (window.showToast) {
+                    window.showToast({
+                        title: result.data?.already_unsaved ? 'Xóa không hợp lệ' : 'Không thể thực hiện',
+                        message: result.data?.message || 'Đã có lỗi xảy ra, vui lòng thử lại.',
+                        type: 'error'
+                    });
+                }
+                return;
+            }
+
+            if (window.showToast) {
                 window.showToast({
-                    title: 'Không thể thực hiện',
-                    message: data.message || 'Đã có lỗi xảy ra.',
+                    eyebrow: 'Đã cập nhật danh sách',
+                    title: `Đã bỏ lưu "${quanName}"`,
+                    message: 'Địa điểm đã được gỡ khỏi danh sách yêu thích của bạn.',
+                    type: 'unsaved',
+                    image: quanImg
+                });
+            }
+
+            removeSavedCardFromView(id);
+            window.QuanMoiSavedSync?.broadcastChange(id, false, result.data?.saved_count);
+        } catch (err) {
+            console.error('Lỗi toggle save:', err);
+            if (card) card.classList.remove('opacity-50', 'pointer-events-none');
+            if (window.showToast) {
+                window.showToast({
+                    title: 'Lỗi kết nối',
+                    message: 'Không thể gửi yêu cầu đến máy chủ, vui lòng thử lại.',
                     type: 'error'
                 });
             }
-        } catch (err) {
-            console.error('Lỗi toggle save:', err);
         } finally {
-            btn.dataset.loading = 'false';
+            inFlightSavedIds.delete(id);
+            if (btn) btn.dataset.loading = 'false';
         }
     };
 

@@ -62,6 +62,7 @@ Route::view('/cookie', 'pages.phap-ly.cookie');
 Route::get('/media/venue/{path}', [HinhAnhQuanController::class, 'localImage'])
     ->where('path', '.*')
     ->name('media.venue.local');
+Route::get('/quan-da-luu/sync', [\App\Http\Controllers\NguoiDung\QuanDaLuuController::class, 'sync'])->name('quan-da-luu.sync');
 
 // ─── Auth routes (chỉ dành cho khách chưa đăng nhập) ──────────────────────────
 Route::middleware('guest')->group(function () {

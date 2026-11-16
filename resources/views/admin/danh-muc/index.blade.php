@@ -44,6 +44,11 @@
             <div>
                 <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Quán Đã Gán</p>
                 <p class="text-xl font-black text-slate-800">{{ $stats['mapped_quans'] }} <span class="text-xs font-normal text-slate-400">/ {{ $stats['total_quans'] }}</span></p>
+                @if(($stats['total_quans'] - $stats['mapped_quans']) > 0)
+                    <a href="{{ route('admin.quan.index', ['loai_hinh' => 'Chưa phân loại']) }}" class="text-[11px] font-semibold text-amber-600 hover:underline inline-block mt-0.5">
+                        {{ $stats['total_quans'] - $stats['mapped_quans'] }} chưa phân loại →
+                    </a>
+                @endif
             </div>
         </div>
     </div>
@@ -170,7 +175,7 @@
                                     </button>
 
                                     {{-- Nút Xóa --}}
-                                    <form method="POST" action="{{ route('admin.danh-muc-quan.destroy', $category->id) }}" onsubmit="return confirm('Bạn có chắc chắn muốn xóa danh mục \'{{ $category->ten_danh_muc }}\'?\nCác quán thuộc danh mục này sẽ được chuyển về Chưa phân loại.')" class="inline">
+                                    <form method="POST" action="{{ route('admin.danh-muc-quan.destroy', $category->id) }}" onsubmit="return confirm({{ \Illuminate\Support\Js::from('Bạn có chắc chắn muốn xóa danh mục "' . $category->ten_danh_muc . '"?' . "\n" . 'Các quán thuộc danh mục này sẽ được chuyển về Chưa phân loại.') }})" class="inline">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" title="Xóa danh mục" class="w-8 h-8 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition-colors">
@@ -218,13 +223,15 @@
         <form id="categoryForm" method="POST" action="{{ route('admin.danh-muc-quan.store') }}" class="p-6 space-y-4">
             @csrf
             <div id="methodContainer"></div>
+            <input type="hidden" id="cat_last_updated_at" name="last_updated_at" value="">
 
             {{-- Tên danh mục --}}
             <div>
                 <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                     Tên Danh Mục <span class="text-rose-500">*</span>
                 </label>
-                <input type="text" id="cat_ten_danh_muc" name="ten_danh_muc" required placeholder="VD: Lẩu & Nướng, Cà phê & Trà..." oninput="autoSlug(this.value)" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/10 bg-white text-slate-800 transition-all shadow-2xs">
+                <input type="text" id="cat_ten_danh_muc" name="ten_danh_muc" required placeholder="VD: Lẩu & Nướng, Cà phê & Trà..." oninput="onCategoryNameInput(this.value)" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/10 bg-white text-slate-800 transition-all shadow-2xs">
+                <p id="cat_name_duplicate_error" class="hidden text-[11px] font-semibold text-rose-600 mt-1.5"></p>
             </div>
 
             {{-- Slug --}}
@@ -232,10 +239,11 @@
                 <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                     Đường Dẫn Tĩnh (Slug) <span class="text-slate-400 text-[10px] font-normal">(tự động sinh hoặc tùy chỉnh)</span>
                 </label>
-                <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500 font-mono shadow-2xs">
+                <div id="cat_slug_wrapper" class="flex items-center rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500 font-mono shadow-2xs">
                     <span class="shrink-0 text-slate-400 select-none">/danh-muc/</span>
-                    <input type="text" id="cat_slug" name="slug" placeholder="ca-phe-tra" class="w-full bg-transparent border-0 p-0 text-xs font-mono font-semibold text-slate-800 outline-none">
+                    <input type="text" id="cat_slug" name="slug" placeholder="ca-phe-tra" oninput="validateCategoryModalFields()" class="w-full bg-transparent border-0 p-0 text-xs font-mono font-semibold text-slate-800 outline-none">
                 </div>
+                <p id="cat_slug_duplicate_error" class="hidden text-[11px] font-semibold text-rose-600 mt-1.5"></p>
             </div>
 
             {{-- Mô tả ngắn --}}
@@ -319,7 +327,7 @@
                 <button type="button" onclick="closeModal()" class="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer">
                     Hủy bỏ
                 </button>
-                <button type="submit" class="btn-action-primary-glow cursor-pointer">
+                <button type="submit" id="submitCategoryBtn" class="btn-action-primary-glow cursor-pointer">
                     <span class="material-symbols-outlined text-[18px]">save</span>
                     <span id="submitBtnText">Lưu Danh Mục</span>
                 </button>
@@ -331,19 +339,96 @@
 {{-- JAVASCRIPT XỬ LÝ MODAL & AJAX --}}
 <script>
     let isEditing = false;
+    let editingCategoryId = null;
     const presetColorsMap = @json($presetColors);
+    const existingCategoriesList = @json($allCategories ?? $categories);
+
+    function normalizeCategoryNameJs(text) {
+        return String(text || '').trim().replace(/[\s\u3000]+/g, '').toLowerCase();
+    }
+
+    function slugifyCategoryJs(text) {
+        return String(text || '').toLowerCase()
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            .replace(/[đĐ]/g, 'd')
+            .replace(/[^a-z0-9\s-]/g, '')
+            .trim()
+            .replace(/[\s-]+/g, '-');
+    }
 
     function autoSlug(text) {
         if (!isEditing) {
-            const slug = text.toLowerCase()
-                .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-                .replace(/[đĐ]/g, 'd')
-                .replace(/[^a-z0-9\s-]/g, '')
-                .trim()
-                .replace(/[\s-]+/g, '-');
-            document.getElementById('cat_slug').value = slug;
+            document.getElementById('cat_slug').value = slugifyCategoryJs(text);
         }
     }
+
+    function onCategoryNameInput(text) {
+        autoSlug(text);
+        validateCategoryModalFields();
+    }
+
+    function validateCategoryModalFields() {
+        const nameInput = document.getElementById('cat_ten_danh_muc');
+        const slugInput = document.getElementById('cat_slug');
+        const slugWrapper = document.getElementById('cat_slug_wrapper');
+        const nameErrorEl = document.getElementById('cat_name_duplicate_error');
+        const slugErrorEl = document.getElementById('cat_slug_duplicate_error');
+        const submitBtn = document.getElementById('submitCategoryBtn');
+
+        const normalizedName = normalizeCategoryNameJs(nameInput?.value || '');
+        const normalizedSlug = slugifyCategoryJs(slugInput?.value || '');
+
+        const duplicateName = normalizedName !== ''
+            ? existingCategoriesList.find(cat => Number(cat.id) !== Number(editingCategoryId) && normalizeCategoryNameJs(cat.ten_danh_muc) === normalizedName)
+            : null;
+
+        const duplicateSlug = normalizedSlug !== ''
+            ? existingCategoriesList.find(cat => Number(cat.id) !== Number(editingCategoryId) && String(cat.slug || '') === normalizedSlug)
+            : null;
+
+        if (nameErrorEl && nameInput) {
+            if (duplicateName) {
+                nameErrorEl.textContent = `Tên danh mục "${duplicateName.ten_danh_muc}" đã tồn tại (không phân biệt hoa/thường và khoảng trắng).`;
+                nameErrorEl.classList.remove('hidden');
+                nameInput.classList.add('border-rose-500', 'focus:border-rose-500');
+                nameInput.classList.remove('border-slate-200', 'focus:border-amber-500');
+            } else {
+                nameErrorEl.textContent = '';
+                nameErrorEl.classList.add('hidden');
+                nameInput.classList.remove('border-rose-500', 'focus:border-rose-500');
+                nameInput.classList.add('border-slate-200', 'focus:border-amber-500');
+            }
+        }
+
+        if (slugErrorEl && slugWrapper) {
+            if (duplicateSlug) {
+                slugErrorEl.textContent = `Đường dẫn "/danh-muc/${duplicateSlug.slug}" đã được sử dụng bởi "${duplicateSlug.ten_danh_muc}".`;
+                slugErrorEl.classList.remove('hidden');
+                slugWrapper.classList.add('border-rose-500');
+                slugWrapper.classList.remove('border-slate-200');
+            } else {
+                slugErrorEl.textContent = '';
+                slugErrorEl.classList.add('hidden');
+                slugWrapper.classList.remove('border-rose-500');
+                slugWrapper.classList.add('border-slate-200');
+            }
+        }
+
+        const hasConflict = Boolean(duplicateName || duplicateSlug);
+        if (submitBtn) {
+            submitBtn.disabled = hasConflict;
+            submitBtn.classList.toggle('opacity-50', hasConflict);
+            submitBtn.classList.toggle('cursor-not-allowed', hasConflict);
+        }
+
+        return !hasConflict;
+    }
+
+    document.getElementById('categoryForm')?.addEventListener('submit', function(e) {
+        if (!validateCategoryModalFields()) {
+            e.preventDefault();
+        }
+    });
 
     function updateIconHighlight(activeIcon, hexColor) {
         document.querySelectorAll('.icon-choice-btn').forEach(btn => {
@@ -408,10 +493,12 @@
 
     function openAddModal() {
         isEditing = false;
+        editingCategoryId = null;
         document.getElementById('modalTitle').innerText = 'Thêm Danh Mục Quán Mới';
         document.getElementById('submitBtnText').innerText = 'Tạo Danh Mục';
         document.getElementById('categoryForm').action = "{{ route('admin.danh-muc-quan.store') }}";
         document.getElementById('methodContainer').innerHTML = '';
+        document.getElementById('cat_last_updated_at').value = '';
         
         document.getElementById('cat_ten_danh_muc').value = '';
         document.getElementById('cat_slug').value = '';
@@ -422,16 +509,19 @@
 
         selectColor('amber', 'Vàng Hổ Phách');
         selectIcon('restaurant');
+        validateCategoryModalFields();
 
         document.getElementById('categoryModal').classList.remove('hidden');
     }
 
     function openEditModal(category) {
         isEditing = true;
+        editingCategoryId = category.id;
         document.getElementById('modalTitle').innerText = 'Chỉnh Sửa Danh Mục: ' + category.ten_danh_muc;
         document.getElementById('submitBtnText').innerText = 'Lưu Thay Đổi';
         document.getElementById('categoryForm').action = "/admin/danh-muc-quan/" + category.id;
         document.getElementById('methodContainer').innerHTML = '<input type="hidden" name="_method" value="PUT">';
+        document.getElementById('cat_last_updated_at').value = category.updated_at || '';
 
         document.getElementById('cat_ten_danh_muc').value = category.ten_danh_muc;
         document.getElementById('cat_slug').value = category.slug;
@@ -442,6 +532,7 @@
 
         selectColor(category.mau_sac || 'amber');
         selectIcon(category.icon || 'restaurant');
+        validateCategoryModalFields();
 
         document.getElementById('categoryModal').classList.remove('hidden');
     }
@@ -493,6 +584,15 @@
                     showCenterRealtimeAlert('Cập Nhật Danh Mục Ẩm Thực', data.message || 'Trạng thái danh mục đã được đồng bộ vào CSDL.', 'category', 'info');
                 } else if (window.showToast) {
                     window.showToast(data.message, 'success');
+                }
+            } else {
+                const errMsg = data?.message || 'Thao tác không hợp lệ: Danh mục không tồn tại hoặc đã bị xóa ở tab khác.';
+                if (typeof showCenterRealtimeAlert === 'function') {
+                    showCenterRealtimeAlert('Không Thể Cập Nhật Danh Mục', errMsg, 'error', 'error');
+                } else if (window.showToast) {
+                    window.showToast(errMsg, 'error');
+                } else {
+                    alert(errMsg);
                 }
             }
         })

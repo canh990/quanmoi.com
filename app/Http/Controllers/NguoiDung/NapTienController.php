@@ -28,6 +28,17 @@ class NapTienController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
+
+        // Khôi phục thông báo hủy / lỗi nạp tiền nếu bị request polling làm trôi flash session trong lúc redirect
+        $persistedCancelMsg = $request->hasSession() ? $request->session()->pull('sepay_last_cancel_msg') : null;
+        $persistedErrorMsg = $request->hasSession() ? $request->session()->pull('sepay_last_error_msg') : null;
+
+        if ($persistedCancelMsg && ! session()->has('error')) {
+            session()->now('error', $persistedCancelMsg);
+        } elseif ($persistedErrorMsg && ! session()->has('error')) {
+            session()->now('error', $persistedErrorMsg);
+        }
+
         $lichSuNapTien = ThanhToan::where('user_id', $user->id)
             ->orderBy('created_at', 'desc')
             ->paginate(10);
@@ -66,15 +77,31 @@ class NapTienController extends Controller
      */
     public function checkout(Request $request)
     {
+        $rawSoTien = $request->input('so_tien');
+        if (is_string($rawSoTien)) {
+            $rawSoTien = preg_replace('/^[\s\p{Zs}\x{3000}]+|[\s\p{Zs}\x{3000}]+$/u', '', $rawSoTien) ?? trim($rawSoTien);
+            $request->merge(['so_tien' => $rawSoTien]);
+        }
+
         $validated = $request->validate([
-            'so_tien' => 'required|numeric|min:10000|max:100000000',
+            'so_tien' => [
+                'required',
+                function (string $attribute, mixed $value, \Closure $fail) {
+                    if (is_string($value) && preg_match('/[\x{FF10}-\x{FF19}]/u', $value)) {
+                        $fail('Số tiền nạp chỉ chấp nhận chữ số chuẩn (0-9), không chấp nhận chữ số full-width (０-９).');
+                    }
+                },
+                'numeric',
+                'min:10000',
+                'max:100000000',
+            ],
             'phuong_thuc' => 'nullable|string|in:ALL,CARD,BANK_TRANSFER,NAPAS_BANK_TRANSFER,VIETQR,SEPAY_GATEWAY',
         ], [
             'so_tien.required' => 'Vui lòng chọn hoặc nhập số tiền muốn nạp.',
-            'so_tien.numeric' => 'Số tiền nạp phải là dạng số hợp lệ.',
+            'so_tien.numeric' => 'Số tiền nạp phải là chữ số chuẩn (0-9), không dùng số full-width hoặc ký tự chữ.',
             'so_tien.min' => 'Số tiền nạp tối thiểu là 10.000 VNĐ.',
             'so_tien.max' => 'Số tiền nạp tối đa mỗi lần là 100.000.000 VNĐ.',
-            'phuong_thuc.in' => 'Phương thức thanh toán không hợp lệ.',
+            'phuong_thuc.in' => 'Phương thức thanh toán đã chọn không hợp lệ.',
         ]);
 
         $user = Auth::user();
@@ -307,6 +334,10 @@ class NapTienController extends Controller
             ? "Giao dịch nạp tiền #{$invoiceNumber} ({$amountFormatted}) không thành công hoặc gặp lỗi từ cổng thanh toán. Vui lòng thử lại."
             : 'Quá trình thanh toán nạp tiền đã gặp lỗi hoặc không hoàn tất. Vui lòng thử lại hoặc liên hệ hỗ trợ nếu cần giải đáp.';
 
+        if ($request->hasSession()) {
+            $request->session()->put('sepay_last_error_msg', $msg);
+        }
+
         return redirect()->route('tai-khoan.vi-tien')
             ->with('error', $msg);
     }
@@ -341,9 +372,14 @@ class NapTienController extends Controller
 
         $msg = ($invoiceNumber && $amountFormatted)
             ? "Đã hủy giao dịch nạp tiền #{$invoiceNumber} ({$amountFormatted}) do bạn bấm quay lại hoặc hủy thanh toán."
-            : 'Bạn đã hủy bỏ yêu cầu nạp tiền. Giao dịch chưa được thực hiện.';
+            : 'Đã hủy giao dịch nạp tiền do bạn bấm quay lại hoặc hủy thanh toán.';
+
+        if ($request->hasSession()) {
+            $request->session()->put('sepay_last_cancel_msg', $msg);
+        }
 
         return redirect()->route('tai-khoan.vi-tien')
+            ->with('error', $msg)
             ->with('info', $msg)
             ->with('warning', $msg);
     }

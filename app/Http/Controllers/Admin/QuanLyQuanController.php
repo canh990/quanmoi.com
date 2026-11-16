@@ -25,7 +25,7 @@ class QuanLyQuanController extends Controller
     public function index(Request $request)
     {
         $this->authorize('viewAny', Quan::class);
-        $query = Quan::with(['chuQuan:id,ho_ten,email,so_dien_thoai'])->withTrashed();
+        $query = Quan::with(['chuQuan:id,ho_ten,email,so_dien_thoai', 'danhMuc:id,ten_danh_muc'])->withTrashed();
 
         // 1. Search keyword (ten_quan, dia_chi_chi_tiet, so_dien_thoai, email, chu_quan name/email)
         $rawQ = $request->input('q');
@@ -84,10 +84,17 @@ class QuanLyQuanController extends Controller
         if (!empty($rawDanhMucId) && !is_array($rawDanhMucId)) {
             $query->where('danh_muc_id', (int) $rawDanhMucId);
         } elseif (! empty($rawLoaiHinh) && ! is_array($rawLoaiHinh)) {
-            $query->where(function ($sub) use ($rawLoaiHinh) {
-                $sub->where('loai_hinh_kinh_doanh', (string) $rawLoaiHinh)
-                    ->orWhereHas('danhMuc', fn ($dm) => $dm->where('ten_danh_muc', (string) $rawLoaiHinh));
-            });
+            if ((string) $rawLoaiHinh === 'Chưa phân loại') {
+                $query->where(function ($sub) {
+                    $sub->whereNull('danh_muc_id')
+                        ->orWhere('loai_hinh_kinh_doanh', 'Chưa phân loại');
+                });
+            } else {
+                $query->where(function ($sub) use ($rawLoaiHinh) {
+                    $sub->where('loai_hinh_kinh_doanh', (string) $rawLoaiHinh)
+                        ->orWhereHas('danhMuc', fn ($dm) => $dm->where('ten_danh_muc', (string) $rawLoaiHinh));
+                });
+            }
         }
 
         // 4. Filter by is_noi_bat
@@ -126,12 +133,7 @@ class QuanLyQuanController extends Controller
     {
         $this->authorize('create', Quan::class);
         $validated = $request->validated();
-        if (!empty($validated['loai_hinh_kinh_doanh'])) {
-            $catRecord = \App\Models\DanhMucQuan::where('ten_danh_muc', $validated['loai_hinh_kinh_doanh'])->first();
-            if ($catRecord) {
-                $validated['danh_muc_id'] = $catRecord->id;
-            }
-        }
+        $this->assignDanhMucId($validated);
 
 
         // 1. Assign owner (default to current admin if not specified)
@@ -207,7 +209,7 @@ class QuanLyQuanController extends Controller
     public function show(Request $request, string $id)
     {
         $quan = Quan::withTrashed()
-            ->with(['chuQuan', 'hinhAnh', 'danhMucMenu.monTrongMenu', 'danhGia.nguoiDung'])
+            ->with(['chuQuan', 'danhMuc', 'hinhAnh', 'danhMucMenu.monTrongMenu', 'danhGia.nguoiDung'])
             ->findOrFail($id);
 
         $this->authorize('view', $quan);
@@ -218,7 +220,7 @@ class QuanLyQuanController extends Controller
                 'data' => [
                     'id' => $quan->id,
                     'ten_quan' => $quan->ten_quan,
-                    'loai_hinh_kinh_doanh' => $quan->loai_hinh_kinh_doanh ?: 'Nhà hàng',
+                    'loai_hinh_kinh_doanh' => $quan->danhMuc?->ten_danh_muc ?: ($quan->loai_hinh_kinh_doanh ?: 'Chưa phân loại'),
                     'slug' => $quan->slug,
                     'detail_url' => route('quan.detail', ['slug' => $quan->slug]),
                     'so_dien_thoai' => $quan->so_dien_thoai,
@@ -269,12 +271,7 @@ class QuanLyQuanController extends Controller
         $quan = Quan::withTrashed()->findOrFail($id);
         $this->authorize('update', $quan);
         $validated = $request->validated();
-        if (!empty($validated['loai_hinh_kinh_doanh'])) {
-            $catRecord = \App\Models\DanhMucQuan::where('ten_danh_muc', $validated['loai_hinh_kinh_doanh'])->first();
-            if ($catRecord) {
-                $validated['danh_muc_id'] = $catRecord->id;
-            }
-        }
+        $this->assignDanhMucId($validated);
 
 
         // 1. Handle Cover Image upload
@@ -530,6 +527,25 @@ class QuanLyQuanController extends Controller
             'bi_khoa' => (int) ($stats->bi_khoa_count ?? 0),
             'soft_deleted' => (int) ($stats->soft_deleted_count ?? 0),
         ];
+    }
+
+    private function assignDanhMucId(array &$validated): void
+    {
+        $loaiHinh = $validated['loai_hinh_kinh_doanh'] ?? null;
+        if (empty($loaiHinh)) {
+            return;
+        }
+
+        if ($loaiHinh === 'Chưa phân loại') {
+            $validated['danh_muc_id'] = null;
+
+            return;
+        }
+
+        $catRecord = \App\Models\DanhMucQuan::where('ten_danh_muc', $loaiHinh)->first();
+        if ($catRecord) {
+            $validated['danh_muc_id'] = $catRecord->id;
+        }
     }
 
     private function getBusinessTypes(): array

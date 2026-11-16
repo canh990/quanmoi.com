@@ -216,6 +216,69 @@ class QuanLyDanhMucTest extends TestCase
         $this->assertDatabaseMissing('danh_muc_quan', ['id' => $category->id]);
         $quan->refresh();
         $this->assertNull($quan->danh_muc_id);
+        $this->assertSame('Chưa phân loại', $quan->loai_hinh_kinh_doanh);
+    }
+
+    public function test_deleting_tiem_banh_category_moves_active_trashed_and_alias_quans_to_chua_phan_loai_and_filters_correctly(): void
+    {
+        $category = DanhMucQuan::firstOrCreate(
+            ['slug' => 'tiem-banh'],
+            [
+                'ten_danh_muc' => 'Tiệm bánh',
+                'icon'         => 'bakery_dining',
+                'mau_sac'      => 'pink',
+            ]
+        );
+
+        $activeQuan = Quan::factory()->create([
+            'chu_quan_id'          => $this->admin->id,
+            'ten_quan'             => 'Tiệm Bánh BreadTalk Test',
+            'danh_muc_id'          => $category->id,
+            'loai_hinh_kinh_doanh' => 'Tiệm bánh',
+            'trang_thai'           => 'da_duyet',
+        ]);
+
+        $trashedQuan = Quan::factory()->create([
+            'chu_quan_id'          => $this->admin->id,
+            'ten_quan'             => 'Tiệm Bánh Đã Xóa Mềm',
+            'danh_muc_id'          => $category->id,
+            'loai_hinh_kinh_doanh' => 'Tiệm bánh',
+        ]);
+        $trashedQuan->delete();
+
+        $aliasQuan = Quan::factory()->create([
+            'chu_quan_id'          => $this->admin->id,
+            'ten_quan'             => 'Tiệm Bánh Ngọt Unmapped',
+            'danh_muc_id'          => null,
+            'loai_hinh_kinh_doanh' => 'Bánh ngọt',
+        ]);
+
+        $response = $this->actingAs($this->admin)->delete(route('admin.danh-muc-quan.destroy', $category->id));
+        $response->assertRedirect(route('admin.danh-muc-quan.index'));
+        $this->assertDatabaseMissing('danh_muc_quan', ['id' => $category->id]);
+
+        foreach ([$activeQuan, $trashedQuan, $aliasQuan] as $quan) {
+            $fresh = Quan::withTrashed()->findOrFail($quan->id);
+            $this->assertNull($fresh->danh_muc_id);
+            $this->assertSame('Chưa phân loại', $fresh->loai_hinh_kinh_doanh);
+        }
+
+        // Lọc theo "Chưa phân loại" trên trang admin/quan
+        $adminQuanResponse = $this->actingAs($this->admin)->get(route('admin.quan.index', ['loai_hinh' => 'Chưa phân loại']));
+        $adminQuanResponse->assertStatus(200);
+        $adminQuanResponse->assertSee('Tiệm Bánh BreadTalk Test');
+        $adminQuanResponse->assertSee('Chưa phân loại');
+
+        // Quick view JSON trên admin/quan/{id}
+        $showResponse = $this->actingAs($this->admin)->getJson(route('admin.quan.show', $activeQuan->id));
+        $showResponse->assertStatus(200);
+        $showResponse->assertJsonPath('data.loai_hinh_kinh_doanh', 'Chưa phân loại');
+
+        // Trang chi tiết công khai hiển thị đúng "Chưa phân loại"
+        $detailResponse = $this->get(route('quan.detail', $activeQuan->slug));
+        $detailResponse->assertStatus(200);
+        $detailResponse->assertSee('Chưa phân loại');
+        $detailResponse->assertDontSee('Chưa Phân Loại');
     }
 
     public function test_homepage_renders_category_colors_dynamically(): void
@@ -302,6 +365,155 @@ class QuanLyDanhMucTest extends TestCase
         // Kiểm tra sau khi tải trang thì các quán trên đã tự động được sync danh_muc_id
         $this->assertEquals($cat1->id, \Illuminate\Support\Facades\DB::table('quan')->where('id', $quanId1)->value('danh_muc_id'));
         $this->assertEquals($cat2->id, \Illuminate\Support\Facades\DB::table('quan')->where('id', $quanId2)->value('danh_muc_id'));
+    }
+
+    public function test_admin_cannot_create_duplicate_danh_muc_name_ignoring_case_and_whitespace(): void
+    {
+        $initialCount = DanhMucQuan::count();
+
+        // Dù nhập khác hoa/thường, thừa khoảng trắng và đổi sang slug khác ("nha-hang1"), hệ thống vẫn chặn
+        $webResponse = $this->actingAs($this->admin)->post(route('admin.danh-muc-quan.store'), [
+            'ten_danh_muc' => '  nhà   HÀNG  ',
+            'slug'         => 'nha-hang1',
+            'mau_sac'      => 'amber',
+        ]);
+        $webResponse->assertSessionHasErrors('ten_danh_muc');
+        $this->assertSame($initialCount, DanhMucQuan::count());
+
+        // Không còn khoảng trắng giữa các từ vẫn bị chặn qua JSON (422)
+        $jsonResponse = $this->actingAs($this->admin)->postJson(route('admin.danh-muc-quan.store'), [
+            'ten_danh_muc' => 'NhàHàng',
+            'slug'         => 'nhahang-moi',
+        ]);
+        $jsonResponse->assertStatus(422);
+        $jsonResponse->assertJsonValidationErrors('ten_danh_muc');
+
+        // Chỉ toàn khoảng trắng cũng không hợp lệ
+        $blankResponse = $this->actingAs($this->admin)->postJson(route('admin.danh-muc-quan.store'), [
+            'ten_danh_muc' => '     ',
+            'slug'         => 'blank-cat',
+        ]);
+        $blankResponse->assertStatus(422);
+        $blankResponse->assertJsonValidationErrors('ten_danh_muc');
+
+        $this->assertSame($initialCount, DanhMucQuan::count());
+    }
+
+    public function test_admin_cannot_update_danh_muc_to_duplicate_name_ignoring_case_and_whitespace(): void
+    {
+        $nhaHang = DanhMucQuan::where('slug', 'nha-hang')->firstOrFail();
+        $caPhe = DanhMucQuan::where('slug', 'ca-phe-tra')->firstOrFail();
+
+        // Không thể đổi tên "Cà phê & Trà" thành biến thể hoa/thường/khoảng trắng của "Nhà hàng"
+        $conflictResponse = $this->actingAs($this->admin)->putJson(route('admin.danh-muc-quan.update', $caPhe->id), [
+            'ten_danh_muc' => '  NHÀ   hàng ',
+            'slug'         => $caPhe->slug,
+            'mo_ta'        => 'Mô tả test',
+            'mau_sac'      => 'amber',
+            'thu_tu'       => 2,
+        ]);
+        $conflictResponse->assertStatus(422);
+        $conflictResponse->assertJsonValidationErrors('ten_danh_muc');
+        $this->assertSame('Cà phê & Trà', $caPhe->fresh()->ten_danh_muc);
+
+        // Vẫn cho phép lưu chính danh mục "Nhà hàng" với tên của nó (đồng thời dọn khoảng trắng thừa)
+        $selfUpdateResponse = $this->actingAs($this->admin)->putJson(route('admin.danh-muc-quan.update', $nhaHang->id), [
+            'ten_danh_muc' => '  Nhà   hàng  ',
+            'slug'         => $nhaHang->slug,
+            'mo_ta'        => 'Cập nhật mô tả hợp lệ',
+            'mau_sac'      => 'rose',
+            'thu_tu'       => 1,
+            'is_hien_thi'  => '1',
+            'is_noi_bat'   => '1',
+        ]);
+        $selfUpdateResponse->assertStatus(200);
+        $this->assertSame('Nhà hàng', $nhaHang->fresh()->ten_danh_muc);
+    }
+
+    public function test_model_level_save_blocks_duplicate_danh_muc_name_and_cleans_whitespace(): void
+    {
+        $created = DanhMucQuan::create([
+            'ten_danh_muc' => '  Cơm   Tấm   Sài Gòn  ',
+            'slug'         => 'com-tam-sai-gon',
+        ]);
+        $this->assertSame('Cơm Tấm Sài Gòn', $created->ten_danh_muc);
+
+        $this->expectException(\Illuminate\Validation\ValidationException::class);
+        DanhMucQuan::create([
+            'ten_danh_muc' => 'cơm tấm   sài gòn',
+            'slug'         => 'com-tam-sai-gon-2',
+        ]);
+    }
+
+    public function test_deleting_nonexistent_or_already_deleted_danh_muc_in_second_tab_shows_invalid_delete_error(): void
+    {
+        $category = DanhMucQuan::create([
+            'ten_danh_muc' => 'Danh Mục Tab Test',
+            'slug'         => 'danh-muc-tab-test',
+        ]);
+
+        // Tab 1: Xóa thành công
+        $resTab1 = $this->actingAs($this->admin)->delete(route('admin.danh-muc-quan.destroy', $category->id));
+        $resTab1->assertRedirect(route('admin.danh-muc-quan.index'));
+        $resTab1->assertSessionHas('success');
+
+        // Tab 2: Xóa lại cùng ID -> Không văng 404, trả về redirect kèm thông báo lỗi xóa không hợp lệ
+        $resTab2 = $this->actingAs($this->admin)->delete(route('admin.danh-muc-quan.destroy', $category->id));
+        $resTab2->assertRedirect(route('admin.danh-muc-quan.index'));
+        $resTab2->assertSessionHas('error');
+
+        // ID không hợp lệ (abc hoặc 99999999999) cũng báo lỗi hợp lệ, không bị 500 TypeError
+        $resAbc = $this->actingAs($this->admin)->delete('/admin/danh-muc-quan/abc');
+        $resAbc->assertRedirect(route('admin.danh-muc-quan.index'));
+        $resAbc->assertSessionHas('error');
+
+        $resBig = $this->actingAs($this->admin)->delete('/admin/danh-muc-quan/99999999999');
+        $resBig->assertRedirect(route('admin.danh-muc-quan.index'));
+        $resBig->assertSessionHas('error');
+    }
+
+    public function test_duplicate_tab_update_and_special_inputs_fullwidth_2byte_space_and_select_validation(): void
+    {
+        $category = DanhMucQuan::create([
+            'ten_danh_muc' => 'Danh Mục Update Tab',
+            'slug'         => 'danh-muc-update-tab',
+            'mau_sac'      => 'amber',
+            'icon'         => 'restaurant',
+        ]);
+        $staleTimestamp = $category->updated_at->toISOString();
+
+        // Tab 1: Cập nhật thành công
+        $resTab1 = $this->actingAs($this->admin)->put(route('admin.danh-muc-quan.update', $category->id), [
+            'ten_danh_muc'    => 'Danh Mục Update Tab',
+            'slug'            => 'danh-muc-update-tab',
+            'mau_sac'         => 'rose',
+            'icon'            => 'restaurant',
+            'last_updated_at' => $staleTimestamp,
+        ]);
+        $resTab1->assertRedirect(route('admin.danh-muc-quan.index'));
+        $resTab1->assertSessionHas('success');
+
+        // Tab 2: Gửi cùng last_updated_at cũ -> Bị chặn và báo tải lại trang trước khi cập nhật
+        $resTab2 = $this->actingAs($this->admin)->put(route('admin.danh-muc-quan.update', $category->id), [
+            'ten_danh_muc'    => 'Danh Mục Update Tab 2',
+            'slug'            => 'danh-muc-update-tab',
+            'mau_sac'         => 'emerald',
+            'icon'            => 'restaurant',
+            'last_updated_at' => $staleTimestamp,
+        ]);
+        $resTab2->assertRedirect(route('admin.danh-muc-quan.index'));
+        $resTab2->assertSessionHas('error');
+        $this->assertSame('rose', $category->fresh()->mau_sac);
+
+        // Kiểm tra khoảng trắng 2-byte (　), số full-width (０１２３) và select-option (mau_sac / icon giả mạo)
+        $resInvalid = $this->actingAs($this->admin)->postJson(route('admin.danh-muc-quan.store'), [
+            'ten_danh_muc' => '　　',
+            'thu_tu'       => '０１２３',
+            'mau_sac'      => 'invalid-color',
+            'icon'         => 'invalid-icon',
+        ]);
+        $resInvalid->assertStatus(422);
+        $resInvalid->assertJsonValidationErrors(['ten_danh_muc', 'thu_tu', 'mau_sac', 'icon']);
     }
 }
 

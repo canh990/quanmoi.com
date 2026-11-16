@@ -71,6 +71,7 @@
                 @foreach($businessTypes as $type)
                     <option value="{{ $type }}" {{ request('loai_hinh') == $type ? 'selected' : '' }}>{{ $type }}</option>
                 @endforeach
+                <option value="Chưa phân loại" {{ request('loai_hinh') == 'Chưa phân loại' ? 'selected' : '' }}>Chưa phân loại</option>
             </select>
 
             {{-- Verified Filter --}}
@@ -135,8 +136,12 @@
                                             <span id="quan-featured-badge-{{ $quan->id }}" class="material-symbols-outlined text-amber-500 text-[14px] shrink-0 {{ $quan->is_noi_bat ? '' : 'hidden' }}" title="Quán Nổi Bật" style="font-variation-settings: 'FILL' 1;">star</span>
                                         </div>
                                         <div class="flex items-center gap-1 mt-1 min-w-0">
-                                            <span class="inline-block bg-amber-50 text-amber-700 px-1.5 py-0.5 rounded text-[10px] font-semibold border border-amber-200/60 truncate max-w-[120px]">
-                                                {{ $quan->loai_hinh_kinh_doanh ?: 'Nhà hàng' }}
+                                            @php
+                                                $quanCategoryLabel = $quan->danhMuc?->ten_danh_muc ?: ($quan->loai_hinh_kinh_doanh ?: 'Chưa phân loại');
+                                                $isUncategorized = $quanCategoryLabel === 'Chưa phân loại';
+                                            @endphp
+                                            <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold border truncate max-w-[120px] {{ $isUncategorized ? 'bg-slate-100 text-slate-600 border-slate-200' : 'bg-amber-50 text-amber-700 border-amber-200/60' }}">
+                                                {{ $quanCategoryLabel }}
                                             </span>
                                             <a href="{{ route('quan.detail', ['slug' => $quan->slug]) }}" target="_blank" class="text-slate-400 hover:text-amber-600 inline-flex items-center shrink-0" title="Xem trên web">
                                                 <span class="material-symbols-outlined text-[13px]">open_in_new</span>

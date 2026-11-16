@@ -15,12 +15,23 @@ class KhamPhaController extends Controller
      */
     public function index(Request $request)
     {
-        $tuKhoa      = trim(strip_tags(is_array($request->input('tu_khoa')) ? '' : (string) $request->input('tu_khoa')));
-        $danhMuc     = trim(strip_tags(is_array($request->input('danh_muc')) ? '' : (string) $request->input('danh_muc')));
-        $tinhThanhId = trim(strip_tags(is_array($request->input('tinh_thanh_id')) ? '' : (string) $request->input('tinh_thanh_id')));
-        $quanHuyenId = trim(strip_tags(is_array($request->input('quan_huyen_id')) ? '' : (string) $request->input('quan_huyen_id')));
-        $mucGia      = trim(strip_tags(is_array($request->input('muc_gia')) ? '' : (string) $request->input('muc_gia')));
-        $sapXep      = trim(strip_tags(is_array($request->input('sap_xep')) ? '' : (string) $request->input('sap_xep')));
+        $cleanText = static function ($val, int $maxLen = 200): string {
+            if (is_array($val)) {
+                return '';
+            }
+            $s = strip_tags((string) $val);
+            $s = preg_replace('/^[\s\p{Zs}\x{3000}]+|[\s\p{Zs}\x{3000}]+$/u', '', $s) ?? trim($s);
+            $s = preg_replace('/[\s\p{Zs}\x{3000}]+/u', ' ', $s) ?? $s;
+
+            return mb_strlen($s, 'UTF-8') > $maxLen ? mb_substr($s, 0, $maxLen, 'UTF-8') : $s;
+        };
+
+        $tuKhoa      = $cleanText($request->input('tu_khoa'), 200);
+        $danhMuc     = $cleanText($request->input('danh_muc'), 100);
+        $tinhThanhId = $cleanText($request->input('tinh_thanh_id'), 50);
+        $quanHuyenId = $cleanText($request->input('quan_huyen_id'), 50);
+        $mucGia      = $cleanText($request->input('muc_gia'), 50);
+        $sapXep      = $cleanText($request->input('sap_xep'), 50);
         $lat         = $request->input('lat');
         $lon         = $request->input('lon', $request->input('lng'));
         $banKinh     = $request->input('ban_kinh');
