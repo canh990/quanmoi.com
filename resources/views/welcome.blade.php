@@ -352,7 +352,7 @@
                                 </p>
                                 <div class="mt-2.5 sm:mt-3 pt-2 sm:pt-3 flex flex-wrap items-center justify-between border-t border-gray-100 gap-1 sm:gap-2 min-w-0">
                                     <div class="flex gap-1 sm:gap-1.5 items-center min-w-0 flex-shrink">
-                                        <span class="hidden sm:inline-block bg-gray-50 text-gray-600 px-2 py-0.5 rounded-md text-[11px] font-medium whitespace-nowrap truncate max-w-[95px]" title="{{ $quan->danhMuc->ten_danh_muc ?? str_replace('_', ' ', \Illuminate\Support\Str::title($quan->loai_hinh_kinh_doanh ?? 'Quán ăn')) }}">{{ $quan->danhMuc->ten_danh_muc ?? str_replace('_', ' ', \Illuminate\Support\Str::title($quan->loai_hinh_kinh_doanh ?? 'Quán ăn')) }}</span>
+                                        <span class="hidden sm:inline-block bg-gray-50 text-gray-600 px-2 py-0.5 rounded-md text-[11px] font-medium whitespace-nowrap truncate max-w-[95px]" title="{{ $quan->ten_danh_muc_hien_thi }}">{{ $quan->ten_danh_muc_hien_thi }}</span>
                                         <span class="flex items-center gap-0.5 text-gray-500 text-[10.5px] sm:text-[11px] whitespace-nowrap flex-shrink-0"><span class="material-symbols-outlined text-[12px] sm:text-[13px]">visibility</span>{{ number_format($quan->luot_xem ?? 0) }}</span>
                                     </div>
                                     <span class="font-bold text-primary text-[11.5px] sm:text-[13px] whitespace-nowrap flex-shrink-0 ml-auto">{{ number_format($quan->gia_nho_nhat, 0, ',', '.') }}đ</span>
@@ -559,130 +559,7 @@
 
 @push('scripts')
 <script>
-    async function toggleSave(btn, quanId) {
-        const card = btn.closest('a, article, .group');
-        const quanName = card?.querySelector('h3, h4')?.textContent?.trim() || '';
-        const quanImg = card?.querySelector('img')?.getAttribute('src') || null;
-
-        @guest
-            if (window.showToast) {
-                window.showToast({
-                    eyebrow: 'Lưu địa điểm yêu thích',
-                    title: 'Đăng nhập để lưu quán',
-                    message: quanName ? `Đăng nhập ngay để lưu "${quanName}" vào bộ sưu tập của bạn.` : 'Vui lòng đăng nhập để lưu quán vào danh sách yêu thích.',
-                    type: 'warning',
-                    image: quanImg,
-                    actionText: 'Đăng nhập ngay',
-                    actionUrl: "{{ route('login') }}"
-                });
-            } else {
-                window.location.href = "{{ route('login') }}";
-            }
-            return;
-        @endguest
-
-        if (btn.dataset.loading === 'true') return;
-
-        // Find all save buttons for this quan on the page to sync state
-        const matchingButtons = document.querySelectorAll(`button[data-quan-id="${quanId}"]`);
-        const primaryIcon = btn.querySelector('.material-symbols-outlined');
-        const isIconFilled = (el) => el && /['"]?FILL['"]?\s*1/i.test(el.style.fontVariationSettings || el.getAttribute('style') || '');
-        const currentlySaved = btn.dataset.saved !== undefined
-            ? btn.dataset.saved === '1'
-            : isIconFilled(primaryIcon);
-        const targetSaved = !currentlySaved;
-
-        const applySaveState = (state) => {
-            matchingButtons.forEach(b => {
-                b.dataset.saved = state ? '1' : '0';
-                b.title = state ? 'Bỏ lưu quán' : 'Lưu quán';
-                const icon = b.querySelector('.material-symbols-outlined');
-                if (icon) {
-                    icon.style.fontVariationSettings = state ? "'FILL' 1" : "'FILL' 0";
-                }
-            });
-        };
-
-        // 1. OPTIMISTIC UI: Update visual state INSTANTLY (0ms delay)
-        applySaveState(targetSaved);
-        matchingButtons.forEach(b => {
-            b.style.transform = 'scale(1.25)';
-            setTimeout(() => { b.style.transform = 'scale(1)'; }, 180);
-        });
-
-        // 2. SHOW TOAST NOTIFICATION INSTANTLY
-        if (window.showToast) {
-            if (targetSaved) {
-                window.showToast({
-                    eyebrow: 'Bộ sưu tập yêu thích',
-                    title: quanName ? `Đã lưu "${quanName}"` : 'Đã lưu quán thành công!',
-                    message: 'Địa điểm đã được thêm vào danh sách quán yêu thích của bạn.',
-                    type: 'saved',
-                    image: quanImg,
-                    actionText: 'Xem quán đã lưu',
-                    actionUrl: "{{ route('quan-da-luu.index') }}"
-                });
-            } else {
-                window.showToast({
-                    eyebrow: 'Đã cập nhật danh sách',
-                    title: quanName ? `Đã bỏ lưu "${quanName}"` : 'Đã bỏ lưu quán',
-                    message: 'Địa điểm đã được gỡ khỏi danh sách yêu thích.',
-                    type: 'unsaved',
-                    image: quanImg
-                });
-            }
-        }
-
-        matchingButtons.forEach(b => b.dataset.loading = 'true');
-
-        try {
-            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-            const res = await fetch(`/quan-da-luu/${quanId}/toggle`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': token,
-                    'Accept': 'application/json'
-                }
-            });
-
-            if (res.status === 401) {
-                // Revert icon and redirect to login
-                applySaveState(currentlySaved);
-                window.location.href = "{{ route('login') }}";
-                return;
-            }
-
-            const data = await res.json();
-            if (data.success) {
-                const finalSaved = data.status === 'saved';
-                applySaveState(finalSaved);
-            } else {
-                // Revert on failure
-                applySaveState(currentlySaved);
-                if (window.showToast) {
-                    window.showToast({
-                        title: 'Không thể thực hiện',
-                        message: data.message || 'Đã có lỗi xảy ra, vui lòng thử lại.',
-                        type: 'error'
-                    });
-                }
-            }
-        } catch (err) {
-            console.error(err);
-            // Revert on network error
-            applySaveState(currentlySaved);
-            if (window.showToast) {
-                window.showToast({
-                    title: 'Lỗi kết nối',
-                    message: 'Không thể gửi yêu cầu đến máy chủ, vui lòng thử lại.',
-                    type: 'error'
-                });
-            }
-        } finally {
-            matchingButtons.forEach(b => b.dataset.loading = 'false');
-        }
-    }
+    // Sử dụng window.toggleSave dùng chung từ layouts.app (hỗ trợ idempotent & đồng bộ đa tab)
 
     // ==========================================
     // TỰ ĐỘNG YÊU CẦU TRUY CẬP VỊ TRÍ & QUÁN GẦN BẠN

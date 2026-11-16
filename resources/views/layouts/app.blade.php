@@ -338,127 +338,403 @@
     @include('layouts.ai-chatbot')
 
     <script>
-        window.toggleSave = async function(btn, quanId) {
-            const card = btn.closest('a, article, .group');
-            const quanName = card?.querySelector('h3, h4')?.textContent?.trim() || '';
-            const quanImg = card?.querySelector('img')?.getAttribute('src') || null;
+        (function initSavedPlacesSyncModule() {
+            const isInitiallyAuthenticated = @json(Auth::check());
+            const loginUrl = @json(route('login'));
+            const savedListUrl = @json(route('quan-da-luu.index'));
+            const syncUrl = @json(route('quan-da-luu.sync'));
+            const toggleUrlTemplate = @json(route('quan-da-luu.toggle', ['quanId' => '__QUAN_ID__']));
+            const tabId = 'qm_tab_' + Math.random().toString(36).slice(2) + '_' + Date.now();
+            const CHANNEL_NAME = 'qm_saved_places_sync';
+            const STORAGE_KEY = 'qm_saved_places_sync_event';
+            const inFlightIds = new Set();
+            const seenEventIds = new Set();
+            let runtimeAuthenticated = isInitiallyAuthenticated;
+            let broadcastChannel = null;
 
-            @guest
-                if (window.showToast) {
-                    window.showToast({
-                        eyebrow: 'Lưu địa điểm yêu thích',
-                        title: 'Đăng nhập để lưu quán',
-                        message: quanName ? `Đăng nhập ngay để lưu "${quanName}" vào bộ sưu tập của bạn.` : 'Vui lòng đăng nhập để lưu quán vào danh sách yêu thích.',
-                        type: 'warning',
-                        image: quanImg,
-                        actionText: 'Đăng nhập ngay',
-                        actionUrl: "{{ route('login') }}"
-                    });
-                } else {
-                    window.location.href = "{{ route('login') }}";
+            function escapeAttrSelector(value) {
+                if (window.CSS && typeof window.CSS.escape === 'function') {
+                    return window.CSS.escape(String(value));
                 }
-                return;
-            @endguest
+                return String(value).replace(/["\\]/g, '\\$&');
+            }
 
-            if (btn.dataset.loading === 'true') return;
+            function getCsrfToken() {
+                return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+            }
 
-            // Đồng bộ trạng thái tất cả các nút lưu cùng ID quán trên trang
-            const matchingButtons = document.querySelectorAll(`button[data-quan-id="${quanId}"]`);
-            const primaryIcon = btn.querySelector('.material-symbols-outlined');
-            const isIconFilled = (el) => el && /['"]?FILL['"]?\s*1/i.test(el.style.fontVariationSettings || el.getAttribute('style') || '');
-            const currentlySaved = btn.dataset.saved !== undefined
-                ? btn.dataset.saved === '1'
-                : isIconFilled(primaryIcon);
-            const targetSaved = !currentlySaved;
-
-            const applySaveState = (state) => {
-                matchingButtons.forEach(b => {
-                    b.dataset.saved = state ? '1' : '0';
-                    b.title = state ? 'Bỏ lưu quán' : 'Lưu quán';
-                    const icon = b.querySelector('.material-symbols-outlined');
-                    if (icon) {
-                        icon.style.fontVariationSettings = state ? "'FILL' 1" : "'FILL' 0";
-                    }
-                });
-            };
-
-            // 1. Phản hồi giao diện tức thì (Optimistic UI)
-            applySaveState(targetSaved);
-            matchingButtons.forEach(b => {
-                b.style.transform = 'scale(1.25)';
-                setTimeout(() => { b.style.transform = 'scale(1)'; }, 180);
-            });
-
-            // 2. Hiển thị Toast thông báo
-            if (window.showToast) {
-                if (targetSaved) {
-                    window.showToast({
-                        eyebrow: 'Bộ sưu tập yêu thích',
-                        title: quanName ? `Đã lưu "${quanName}"` : 'Đã lưu quán thành công!',
-                        message: 'Địa điểm đã được thêm vào danh sách quán yêu thích của bạn.',
-                        type: 'saved',
-                        image: quanImg,
-                        actionText: 'Xem quán đã lưu',
-                        actionUrl: "{{ route('quan-da-luu.index') }}"
-                    });
-                } else {
-                    window.showToast({
-                        eyebrow: 'Đã cập nhật danh sách',
-                        title: quanName ? `Đã bỏ lưu "${quanName}"` : 'Đã bỏ lưu quán',
-                        message: 'Địa điểm đã được gỡ khỏi danh sách yêu thích.',
-                        type: 'unsaved',
-                        image: quanImg
-                    });
+            function setCsrfToken(token) {
+                if (!token) return;
+                const meta = document.querySelector('meta[name="csrf-token"]');
+                if (meta) {
+                    meta.setAttribute('content', String(token));
                 }
             }
 
-            matchingButtons.forEach(b => b.dataset.loading = 'true');
+            function getMatchingSaveButtons(quanId) {
+                return document.querySelectorAll(`button[data-quan-id="${escapeAttrSelector(quanId)}"]`);
+            }
 
-            try {
-                const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-                const res = await fetch(`/quan-da-luu/${quanId}/toggle`, {
+            function setButtonsLoading(quanId, isLoading) {
+                getMatchingSaveButtons(quanId).forEach(b => {
+                    b.dataset.loading = isLoading ? 'true' : 'false';
+                });
+            }
+
+            function syncGlobalSavedIdsArray(quanId, saved) {
+                const id = String(quanId || '');
+                if (!id) return;
+                if (!Array.isArray(window.QUANMOI_SAVED_IDS)) {
+                    window.QUANMOI_SAVED_IDS = [];
+                }
+                const set = new Set(window.QUANMOI_SAVED_IDS.map(String));
+                if (saved) set.add(id);
+                else set.delete(id);
+                window.QUANMOI_SAVED_IDS = Array.from(set);
+            }
+
+            function applySavedStateToDom(quanId, saved) {
+                const id = String(quanId || '');
+                if (!id) return;
+                syncGlobalSavedIdsArray(id, Boolean(saved));
+
+                getMatchingSaveButtons(id).forEach(b => {
+                    b.dataset.saved = saved ? '1' : '0';
+                    b.title = saved ? 'Bỏ lưu quán' : 'Lưu quán';
+                    b.setAttribute('aria-label', saved ? 'Bỏ lưu quán' : 'Lưu quán');
+
+                    const icon = b.querySelector('.material-symbols-outlined');
+                    if (icon) {
+                        icon.style.fontVariationSettings = saved ? "'FILL' 1" : "'FILL' 0";
+                    }
+
+                    const detailText = b.querySelector('#detail-save-text, .detail-save-text');
+                    if (detailText) {
+                        detailText.textContent = saved ? 'Đã lưu' : 'Lưu quán';
+                    }
+                });
+            }
+
+            function applyFullSavedIdsToDom(savedIds) {
+                const normalizedIds = Array.isArray(savedIds) ? savedIds.map(String) : [];
+                window.QUANMOI_SAVED_IDS = normalizedIds;
+                const set = new Set(normalizedIds);
+
+                document.querySelectorAll('button[data-quan-id]').forEach(b => {
+                    const id = b.dataset.quanId ? String(b.dataset.quanId) : '';
+                    if (!id) return;
+                    const saved = set.has(id);
+                    b.dataset.saved = saved ? '1' : '0';
+                    b.title = saved ? 'Bỏ lưu quán' : 'Lưu quán';
+                    const icon = b.querySelector('.material-symbols-outlined');
+                    if (icon) {
+                        icon.style.fontVariationSettings = saved ? "'FILL' 1" : "'FILL' 0";
+                    }
+                    const detailText = b.querySelector('#detail-save-text, .detail-save-text');
+                    if (detailText) {
+                        detailText.textContent = saved ? 'Đã lưu' : 'Lưu quán';
+                    }
+                });
+            }
+
+            async function fetchSyncState({ withPlaces = false } = {}) {
+                const url = withPlaces ? `${syncUrl}?with_places=1` : syncUrl;
+                const res = await fetch(url, {
+                    method: 'GET',
+                    credentials: 'same-origin',
+                    cache: 'no-store',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                if (!res.ok) {
+                    return null;
+                }
+                const data = await res.json();
+                if (data?.csrf_token) {
+                    setCsrfToken(data.csrf_token);
+                }
+                if (typeof data?.authenticated === 'boolean') {
+                    runtimeAuthenticated = data.authenticated;
+                }
+                return data;
+            }
+
+            async function performTogglePost(url, payload, token) {
+                return fetch(url, {
                     method: 'POST',
+                    credentials: 'same-origin',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': token,
+                        'X-Requested-With': 'XMLHttpRequest',
                         'Accept': 'application/json'
-                    }
+                    },
+                    body: JSON.stringify(payload)
                 });
+            }
 
-                if (res.status === 401) {
-                    applySaveState(currentlySaved);
-                    window.location.href = "{{ route('login') }}";
-                    return;
+            async function sendToggleRequest(quanId, action = null) {
+                const id = String(quanId || '');
+                const url = toggleUrlTemplate.replace('__QUAN_ID__', encodeURIComponent(id));
+                const payload = action ? { action } : {};
+
+                let token = getCsrfToken();
+                let res = await performTogglePost(url, payload, token);
+
+                // Tự làm mới CSRF & kiểm tra lại phiên nếu tab nhân đôi giữ token cũ
+                if (res.status === 419) {
+                    try {
+                        const syncData = await fetchSyncState();
+                        if (syncData && !syncData.authenticated) {
+                            return { ok: false, status: 401, unauthenticated: true, data: null };
+                        }
+                        if (syncData?.csrf_token) {
+                            token = syncData.csrf_token;
+                            res = await performTogglePost(url, payload, token);
+                        }
+                    } catch (_) {}
                 }
 
-                const data = await res.json();
-                if (data.success) {
-                    const finalSaved = data.status === 'saved';
-                    applySaveState(finalSaved);
-                } else {
-                    applySaveState(currentlySaved);
+                if (res.status === 401) {
+                    return { ok: false, status: 401, unauthenticated: true, data: null };
+                }
+
+                if (res.status === 419) {
+                    return { ok: false, status: 419, csrfExpired: true, data: null };
+                }
+
+                let data = null;
+                try {
+                    data = await res.json();
+                } catch (_) {
+                    data = null;
+                }
+
+                return {
+                    ok: Boolean(res.ok && data && data.success),
+                    status: res.status,
+                    data
+                };
+            }
+
+            function broadcastChange(quanId, saved, savedCount = null) {
+                const msg = {
+                    eventId: `${tabId}_${Date.now()}_${Math.random().toString(36).slice(2)}`,
+                    senderTabId: tabId,
+                    quanId: String(quanId),
+                    saved: Boolean(saved),
+                    savedCount: typeof savedCount === 'number' ? savedCount : null,
+                    ts: Date.now()
+                };
+
+                if (broadcastChannel) {
+                    try {
+                        broadcastChannel.postMessage(msg);
+                    } catch (_) {}
+                }
+
+                try {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(msg));
+                } catch (_) {}
+            }
+
+            function handleIncomingSync(msg) {
+                // Giữ nguyên trạng thái DOM hiện tại của tab nhân đôi để khi người dùng bấm Lưu/Bỏ lưu trùng ở tab 2 sẽ nhận thông báo lỗi rõ ràng từ server
+            }
+
+            if ('BroadcastChannel' in window) {
+                try {
+                    broadcastChannel = new BroadcastChannel(CHANNEL_NAME);
+                    broadcastChannel.onmessage = function(ev) {
+                        handleIncomingSync(ev.data);
+                    };
+                } catch (_) {}
+            }
+
+            window.addEventListener('storage', function(ev) {
+                if (ev.key !== STORAGE_KEY || !ev.newValue) return;
+                try {
+                    handleIncomingSync(JSON.parse(ev.newValue));
+                } catch (_) {}
+            });
+
+            window.addEventListener('pageshow', async function(ev) {
+                if (!ev.persisted || !runtimeAuthenticated) return;
+                try {
+                    const syncData = await fetchSyncState();
+                    if (syncData?.authenticated) {
+                        applyFullSavedIdsToDom(syncData.saved_ids);
+                        if (typeof window.onQuanMoiSavedPlacesFullSync === 'function') {
+                            window.onQuanMoiSavedPlacesFullSync(syncData);
+                        }
+                    }
+                } catch (_) {}
+            });
+
+            window.QuanMoiSavedSync = {
+                tabId,
+                loginUrl,
+                savedListUrl,
+                syncUrl,
+                inFlightIds,
+                getCsrfToken,
+                setCsrfToken,
+                fetchSyncState,
+                sendToggleRequest,
+                applySavedStateToDom,
+                applyFullSavedIdsToDom,
+                broadcastChange
+            };
+
+            window.toggleSave = async function(btn, quanId, meta = {}) {
+                const id = String(quanId || '');
+                if (!id || inFlightIds.has(id) || btn?.dataset.loading === 'true') return;
+
+                const card = btn?.closest('a, article, .group');
+                const quanName = meta.name || card?.querySelector('h1, h3, h4')?.textContent?.trim() || '';
+                const quanImg = meta.image !== undefined ? meta.image : (card?.querySelector('img')?.getAttribute('src') || null);
+
+                // Nếu tab mở từ lúc chưa đăng nhập, kiểm tra lại phiên hiện tại đề phòng người dùng vừa đăng nhập ở tab nhân đôi
+                if (!runtimeAuthenticated) {
+                    try {
+                        const syncData = await fetchSyncState();
+                        if (!syncData?.authenticated) {
+                            if (window.showToast) {
+                                window.showToast({
+                                    eyebrow: 'Lưu địa điểm yêu thích',
+                                    title: 'Đăng nhập để lưu quán',
+                                    message: quanName ? `Đăng nhập ngay để lưu "${quanName}" vào bộ sưu tập của bạn.` : 'Vui lòng đăng nhập để lưu quán vào danh sách yêu thích.',
+                                    type: 'warning',
+                                    image: quanImg,
+                                    actionText: 'Đăng nhập ngay',
+                                    actionUrl: loginUrl
+                                });
+                            } else {
+                                window.location.href = loginUrl;
+                            }
+                            return;
+                        }
+                        if (Array.isArray(syncData.saved_ids)) {
+                            applyFullSavedIdsToDom(syncData.saved_ids);
+                        }
+                    } catch (_) {
+                        window.location.href = loginUrl;
+                        return;
+                    }
+                }
+
+                const primaryIcon = btn?.querySelector('.material-symbols-outlined');
+                const isIconFilled = (el) => el && /['"]?FILL['"]?\s*1/i.test(el.style.fontVariationSettings || el.getAttribute('style') || '');
+                const currentlySaved = btn?.dataset.saved !== undefined
+                    ? btn.dataset.saved === '1'
+                    : isIconFilled(primaryIcon);
+                const targetSaved = !currentlySaved;
+                const intendedAction = targetSaved ? 'save' : 'unsave';
+
+                inFlightIds.add(id);
+                setButtonsLoading(id, true);
+
+                // Phản hồi icon tức thì (chỉ hiện Toast sau khi server xác nhận trạng thái thực tế)
+                applySavedStateToDom(id, targetSaved);
+                getMatchingSaveButtons(id).forEach(b => {
+                    b.style.transform = 'scale(1.2)';
+                    setTimeout(() => { b.style.transform = 'scale(1)'; }, 180);
+                });
+
+                try {
+                    const result = await sendToggleRequest(id, intendedAction);
+
+                    if (result.unauthenticated) {
+                        applySavedStateToDom(id, currentlySaved);
+                        if (window.showToast) {
+                            window.showToast({
+                                title: 'Phiên đăng nhập đã hết hạn',
+                                message: 'Vui lòng đăng nhập lại để tiếp tục.',
+                                type: 'warning',
+                                actionText: 'Đăng nhập ngay',
+                                actionUrl: loginUrl
+                            });
+                        } else {
+                            window.location.href = loginUrl;
+                        }
+                        return;
+                    }
+
+                    if (result.csrfExpired) {
+                        applySavedStateToDom(id, currentlySaved);
+                        if (window.showToast) {
+                            window.showToast({
+                                title: 'Phiên làm việc đã hết hạn',
+                                message: 'Vui lòng tải lại trang để cập nhật mã bảo mật và thử lại.',
+                                type: 'warning',
+                                actionText: 'Tải lại trang',
+                                actionUrl: window.location.href
+                            });
+                        }
+                        return;
+                    }
+
+                    if (!result.ok) {
+                        if (result.data?.already_unsaved) {
+                            applySavedStateToDom(id, false);
+                        } else if (result.data?.already_saved) {
+                            applySavedStateToDom(id, true);
+                        } else {
+                            applySavedStateToDom(id, currentlySaved);
+                        }
+                        if (window.showToast) {
+                            window.showToast({
+                                title: result.data?.already_unsaved ? 'Xóa không hợp lệ' : (result.data?.already_saved ? 'Lưu không hợp lệ' : 'Không thể thực hiện'),
+                                message: result.data?.message || 'Đã có lỗi xảy ra, vui lòng thử lại.',
+                                type: 'error'
+                            });
+                        }
+                        return;
+                    }
+
+                    const finalSaved = result.data.status === 'saved';
+                    applySavedStateToDom(id, finalSaved);
+                    broadcastChange(id, finalSaved, result.data.saved_count);
+
+                    if (window.showToast) {
+                        if (finalSaved) {
+                            window.showToast({
+                                eyebrow: 'Bộ sưu tập yêu thích',
+                                title: quanName ? `Đã lưu "${quanName}"` : 'Đã lưu quán thành công!',
+                                message: 'Địa điểm đã được thêm vào danh sách quán yêu thích của bạn.',
+                                type: 'saved',
+                                image: quanImg,
+                                actionText: 'Xem quán đã lưu',
+                                actionUrl: savedListUrl
+                            });
+                        } else {
+                            window.showToast({
+                                eyebrow: 'Đã cập nhật danh sách',
+                                title: quanName ? `Đã bỏ lưu "${quanName}"` : 'Đã bỏ lưu quán',
+                                message: 'Địa điểm đã được gỡ khỏi danh sách yêu thích.',
+                                type: 'unsaved',
+                                image: quanImg
+                            });
+                        }
+                    }
+                } catch (err) {
+                    console.error(err);
+                    applySavedStateToDom(id, currentlySaved);
                     if (window.showToast) {
                         window.showToast({
-                            title: 'Không thể thực hiện',
-                            message: data.message || 'Đã có lỗi xảy ra, vui lòng thử lại.',
+                            title: 'Lỗi kết nối',
+                            message: 'Không thể gửi yêu cầu đến máy chủ, vui lòng thử lại.',
                             type: 'error'
                         });
                     }
+                } finally {
+                    inFlightIds.delete(id);
+                    setButtonsLoading(id, false);
                 }
-            } catch (err) {
-                console.error(err);
-                applySaveState(currentlySaved);
-                if (window.showToast) {
-                    window.showToast({
-                        title: 'Lỗi kết nối',
-                        message: 'Không thể gửi yêu cầu đến máy chủ, vui lòng thử lại.',
-                        type: 'error'
-                    });
-                }
-            } finally {
-                matchingButtons.forEach(b => b.dataset.loading = 'false');
-            }
-        };
+            };
+        })();
 
         // Lưu / Bỏ lưu bài viết blog yêu thích (Bookmark / Đọc sau - Độc lập)
         window.toggleBlogBookmark = async function(btn, blogId, blogSlug, blogTitle) {

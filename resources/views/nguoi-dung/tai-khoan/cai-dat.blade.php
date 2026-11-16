@@ -100,6 +100,29 @@
                 @csrf
             </form>
 
+            @if(session('error_conflict') || session('error') || (isset($errors) && $errors->any()))
+                <div class="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900 text-xs sm:text-sm flex items-start justify-between gap-3 shadow-xs" role="alert">
+                    <div class="flex items-start gap-2.5">
+                        <span class="material-symbols-outlined text-rose-600 text-[20px] shrink-0 mt-0.5">error</span>
+                        <div>
+                            <p class="font-bold">{{ session('error_conflict') ?: (session('error') ?: 'Vui lòng kiểm tra lại thông tin cài đặt:') }}</p>
+                            @if(isset($errors) && $errors->any())
+                                <ul class="list-disc list-inside mt-1 space-y-0.5 text-rose-800">
+                                    @foreach($errors->all() as $err)
+                                        <li>{{ $err }}</li>
+                                    @endforeach
+                                </ul>
+                            @endif
+                        </div>
+                    </div>
+                    @if(session('error_conflict'))
+                        <a href="{{ route('tai-khoan.cai-dat') }}" class="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shrink-0">
+                            Tải lại trang
+                        </a>
+                    @endif
+                </div>
+            @endif
+
             <form id="form-settings" action="{{ route('tai-khoan.cai-dat.update') }}" method="POST" class="space-y-6">
                 @csrf
                 @method('PUT')

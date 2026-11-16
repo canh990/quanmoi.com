@@ -8,10 +8,24 @@ use App\Models\DanhMucQuan;
 use App\Models\Quan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class QuanLyDanhMucController extends Controller
 {
+    private const CATEGORY_ALIAS_MAP = [
+        'nha-hang'           => ['Nhà hàng'],
+        'ca-phe-tra'         => ['Cà phê & Trà', 'Cà phê'],
+        'billiards-giai-tri' => ['Billiards & Giải trí', 'Billiards', 'Bida'],
+        'do-an-vat'          => ['Đồ ăn vặt', 'Ăn vặt', 'Món ăn vặt'],
+        'lau-nuong'          => ['Lẩu & Nướng', 'Lẩu', 'Nướng'],
+        'quan-nhau'          => ['Quán nhậu & Bar', 'Quán nhậu', 'Quán Đêm 24/7', 'Bar', 'Pub'],
+        'tra-sua-nuoc-ep'    => ['Trà sữa & Nước ép', 'Trà sữa', 'Nước ép'],
+        'tiem-banh'          => ['Tiệm bánh', 'Bánh ngọt'],
+        'quan-an-binh-dan'   => ['Quán ăn bình dân', 'Cơm bình dân', 'Bình dân'],
+    ];
     private array $presetIcons = [
         ['icon' => 'restaurant', 'label' => 'Nhà hàng'],
         ['icon' => 'local_cafe', 'label' => 'Cà phê'],
@@ -48,7 +62,10 @@ class QuanLyDanhMucController extends Controller
     {
         $this->syncUnmappedQuans();
 
-        $q = trim(strip_tags((string) $request->input('q', '')));
+        $q = DanhMucQuan::cleanName(strip_tags((string) $request->input('q', '')));
+        if (mb_strlen($q, 'UTF-8') > 100) {
+            $q = mb_substr($q, 0, 100, 'UTF-8');
+        }
 
         $query = DanhMucQuan::withCount('quans');
 
@@ -91,45 +108,31 @@ class QuanLyDanhMucController extends Controller
         ];
 
         return view('admin.danh-muc.index', [
-            'categories'   => $categories,
-            'stats'        => $stats,
-            'presetIcons'  => $this->presetIcons,
-            'presetColors' => DanhMucQuan::$presetColors,
-            'searchQuery'  => $q,
+            'categories'    => $categories,
+            'allCategories' => DanhMucQuan::orderBy('id')->get(['id', 'ten_danh_muc', 'slug']),
+            'stats'         => $stats,
+            'presetIcons'   => $this->presetIcons,
+            'presetColors'  => DanhMucQuan::$presetColors,
+            'searchQuery'   => $q,
         ]);
     }
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'ten_danh_muc' => ['required', 'string', 'max:100'],
-            'slug'         => ['nullable', 'string', 'max:100', 'unique:danh_muc_quan,slug'],
-            'mo_ta'        => ['nullable', 'string', 'max:255'],
-            'icon'         => ['nullable', 'string', 'max:50'],
-            'mau_sac'      => ['nullable', 'string', 'max:30'],
-            'thu_tu'       => ['nullable', 'integer', 'min:0'],
-            'is_hien_thi'  => ['nullable', 'boolean'],
-            'is_noi_bat'   => ['nullable', 'boolean'],
-        ], [
-            'ten_danh_muc.required' => 'Vui lòng nhập tên danh mục.',
-            'slug.unique'          => 'Đường dẫn (slug) này đã được sử dụng.',
-        ]);
+        $validated = $this->validateCategoryInput($request);
 
-        $slug = !empty($validated['slug']) ? Str::slug($validated['slug']) : Str::slug($validated['ten_danh_muc']);
-        if (DanhMucQuan::where('slug', $slug)->exists()) {
-            $slug .= '-' . Str::random(4);
-        }
-
-        $category = DanhMucQuan::create([
-            'ten_danh_muc' => trim($validated['ten_danh_muc']),
-            'slug'         => $slug,
-            'mo_ta'        => trim($validated['mo_ta'] ?? ''),
-            'icon'         => $validated['icon'] ?? 'restaurant',
-            'mau_sac'      => $validated['mau_sac'] ?? 'amber',
-            'thu_tu'       => (int) ($validated['thu_tu'] ?? 0),
-            'is_hien_thi'  => $request->boolean('is_hien_thi', true),
-            'is_noi_bat'   => $request->boolean('is_noi_bat', false),
-        ]);
+        $category = DB::transaction(function () use ($validated, $request) {
+            return DanhMucQuan::create([
+                'ten_danh_muc' => $validated['ten_danh_muc'],
+                'slug'         => $validated['slug'],
+                'mo_ta'        => DanhMucQuan::cleanName((string) ($validated['mo_ta'] ?? '')),
+                'icon'         => $validated['icon'] ?? 'restaurant',
+                'mau_sac'      => $validated['mau_sac'] ?? 'amber',
+                'thu_tu'       => (int) ($validated['thu_tu'] ?? 0),
+                'is_hien_thi'  => $request->boolean('is_hien_thi', true),
+                'is_noi_bat'   => $request->boolean('is_noi_bat', false),
+            ]);
+        });
 
         // Ghi Audit log
         try {
@@ -156,44 +159,65 @@ class QuanLyDanhMucController extends Controller
         return redirect()->route('admin.danh-muc-quan.index')->with('success', 'Thêm danh mục "' . $category->ten_danh_muc . '" thành công!');
     }
 
-    public function update(Request $request, int $id)
+    public function update(Request $request, $id)
     {
-        $category = DanhMucQuan::findOrFail($id);
+        if (! is_numeric($id) || (int) $id <= 0 || ! ($category = DanhMucQuan::find((int) $id))) {
+            $notFoundMsg = 'Cập nhật không hợp lệ: Danh mục này không tồn tại hoặc đã bị xóa ở tab khác. Vui lòng tải lại trang.';
+            if ($request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => $notFoundMsg], 404);
+            }
 
-        $validated = $request->validate([
-            'ten_danh_muc' => ['required', 'string', 'max:100'],
-            'slug'         => ['nullable', 'string', 'max:100', 'unique:danh_muc_quan,slug,' . $id],
-            'mo_ta'        => ['nullable', 'string', 'max:255'],
-            'icon'         => ['nullable', 'string', 'max:50'],
-            'mau_sac'      => ['nullable', 'string', 'max:30'],
-            'thu_tu'       => ['nullable', 'integer', 'min:0'],
-            'is_hien_thi'  => ['nullable', 'boolean'],
-            'is_noi_bat'   => ['nullable', 'boolean'],
-        ], [
-            'ten_danh_muc.required' => 'Vui lòng nhập tên danh mục.',
-            'slug.unique'          => 'Đường dẫn (slug) này đã được sử dụng.',
-        ]);
+            return redirect()->route('admin.danh-muc-quan.index')->with('error', $notFoundMsg);
+        }
+
+        // Khóa lạc quan (Optimistic Locking): Chặn cập nhật trùng lặp khi nhân đôi tab
+        $lastUpdatedAt = $request->input('last_updated_at');
+        if (! empty($lastUpdatedAt) && $category->updated_at) {
+            try {
+                $clientTime = \Carbon\Carbon::parse((string) $lastUpdatedAt);
+                if ($category->updated_at->timestamp > $clientTime->timestamp) {
+                    $conflictMsg = 'Dữ liệu danh mục đã được cập nhật ở tab khác. Vui lòng tải lại trang trước khi cập nhật!';
+                    if ($request->wantsJson()) {
+                        return response()->json(['success' => false, 'message' => $conflictMsg], 409);
+                    }
+
+                    return redirect()->route('admin.danh-muc-quan.index')->with('error', $conflictMsg);
+                }
+            } catch (\Throwable $e) {
+            }
+        }
+
+        $validated = $this->validateCategoryInput($request, $category);
 
         $oldName = $category->ten_danh_muc;
-        $slug = !empty($validated['slug']) ? Str::slug($validated['slug']) : Str::slug($validated['ten_danh_muc']);
 
-        $category->update([
-            'ten_danh_muc' => trim($validated['ten_danh_muc']),
-            'slug'         => $slug,
-            'mo_ta'        => trim($validated['mo_ta'] ?? ''),
-            'icon'         => $validated['icon'] ?? $category->icon,
-            'mau_sac'      => $validated['mau_sac'] ?? $category->mau_sac,
-            'thu_tu'       => (int) ($validated['thu_tu'] ?? $category->thu_tu),
-            'is_hien_thi'  => $request->boolean('is_hien_thi'),
-            'is_noi_bat'   => $request->boolean('is_noi_bat'),
-        ]);
+        DB::transaction(function () use ($category, $validated, $request, $oldName) {
+            $nextUpdatedAt = ($category->updated_at && $category->updated_at->timestamp >= now()->timestamp)
+                ? $category->updated_at->copy()->addSecond()
+                : now();
 
-        // Nếu đổi tên danh mục, cập nhật đồng bộ loai_hinh_kinh_doanh của quán để bảo toàn tương thích ngược
-        if ($oldName !== $category->ten_danh_muc) {
-            Quan::where('danh_muc_id', $category->id)->update([
-                'loai_hinh_kinh_doanh' => $category->ten_danh_muc,
+            $category->fill([
+                'ten_danh_muc' => $validated['ten_danh_muc'],
+                'slug'         => $validated['slug'],
+                'mo_ta'        => DanhMucQuan::cleanName((string) ($validated['mo_ta'] ?? '')),
+                'icon'         => $validated['icon'] ?? $category->icon,
+                'mau_sac'      => $validated['mau_sac'] ?? $category->mau_sac,
+                'thu_tu'       => (int) ($validated['thu_tu'] ?? $category->thu_tu),
+                'is_hien_thi'  => $request->boolean('is_hien_thi'),
+                'is_noi_bat'   => $request->boolean('is_noi_bat'),
             ]);
-        }
+            $category->timestamps = false;
+            $category->updated_at = $nextUpdatedAt;
+            $category->save();
+            $category->timestamps = true;
+
+            // Nếu đổi tên danh mục, cập nhật đồng bộ loai_hinh_kinh_doanh của quán để bảo toàn tương thích ngược
+            if ($oldName !== $category->ten_danh_muc) {
+                Quan::where('danh_muc_id', $category->id)->update([
+                    'loai_hinh_kinh_doanh' => $category->ten_danh_muc,
+                ]);
+            }
+        });
 
         try {
             AdminAuditLog::create([
@@ -219,14 +243,157 @@ class QuanLyDanhMucController extends Controller
         return redirect()->route('admin.danh-muc-quan.index')->with('success', 'Đã cập nhật danh mục "' . $category->ten_danh_muc . '"!');
     }
 
-    public function destroy(Request $request, int $id)
+    /**
+     * Kiểm tra dữ liệu tạo/sửa danh mục dùng chung: chặn trùng tên (hoa/thường, khoảng trắng) và chuẩn hóa slug.
+     */
+    private function validateCategoryInput(Request $request, ?DanhMucQuan $existing = null): array
     {
-        $category = DanhMucQuan::findOrFail($id);
+        $ignoreId = $existing?->id;
+        $cleanName = DanhMucQuan::cleanName((string) $request->input('ten_danh_muc', ''));
+        $rawSlugInput = DanhMucQuan::cleanName((string) $request->input('slug', ''));
+        $hasCustomSlug = $rawSlugInput !== '';
+        $normalizedCustomSlug = $hasCustomSlug ? Str::slug($rawSlugInput) : null;
+
+        $rawThuTu = $request->input('thu_tu');
+        if (is_string($rawThuTu)) {
+            $rawThuTu = DanhMucQuan::cleanName($rawThuTu);
+        }
+
+        $defaultThuTu = $existing?->thu_tu ?? 0;
+        $input = $request->all();
+        $input['ten_danh_muc'] = $cleanName;
+        $input['slug'] = $normalizedCustomSlug;
+        $input['mo_ta'] = $request->has('mo_ta') ? DanhMucQuan::cleanName((string) $request->input('mo_ta', '')) : null;
+        $input['thu_tu'] = ($rawThuTu === '' || $rawThuTu === null) ? $defaultThuTu : $rawThuTu;
+
+        $slugRules = ['nullable', 'string', 'max:100'];
+        if ($hasCustomSlug) {
+            $slugRules = [
+                'required',
+                'string',
+                'max:100',
+                Rule::unique('danh_muc_quan', 'slug')->ignore($ignoreId),
+            ];
+        }
+
+        $allowedIcons = array_column($this->presetIcons, 'icon');
+        $allowedColors = array_keys(DanhMucQuan::$presetColors);
+
+        $validated = Validator::make($input, [
+            'ten_danh_muc' => [
+                'required',
+                'string',
+                'max:100',
+                function (string $attribute, mixed $value, \Closure $fail) use ($ignoreId) {
+                    $duplicate = DanhMucQuan::findDuplicateByName((string) $value, $ignoreId);
+                    if ($duplicate) {
+                        $fail('Tên danh mục "' . $duplicate->ten_danh_muc . '" đã tồn tại (không phân biệt hoa/thường và khoảng trắng).');
+                    }
+                },
+            ],
+            'slug'        => $slugRules,
+            'mo_ta'       => ['nullable', 'string', 'max:255'],
+            'icon'        => ['nullable', 'string', 'max:50', Rule::in($allowedIcons)],
+            'mau_sac'     => ['nullable', 'string', 'max:30', Rule::in($allowedColors)],
+            'thu_tu'      => ['nullable', 'integer', 'min:0', 'max:999999'],
+            'is_hien_thi' => ['nullable', 'boolean'],
+            'is_noi_bat'  => ['nullable', 'boolean'],
+        ], [
+            'ten_danh_muc.required' => 'Vui lòng nhập tên danh mục (không được chỉ nhập khoảng trắng).',
+            'ten_danh_muc.max'      => 'Tên danh mục không được vượt quá 100 ký tự.',
+            'slug.required'         => 'Đường dẫn (slug) không hợp lệ.',
+            'slug.max'              => 'Đường dẫn (slug) không được vượt quá 100 ký tự.',
+            'slug.unique'           => 'Đường dẫn (slug) này đã được sử dụng.',
+            'mo_ta.max'             => 'Mô tả ngắn không được vượt quá 255 ký tự.',
+            'icon.in'               => 'Biểu tượng (icon) đã chọn không hợp lệ.',
+            'mau_sac.in'            => 'Màu sắc đại diện đã chọn không hợp lệ.',
+            'thu_tu.integer'        => 'Thứ tự sắp xếp phải là chữ số chuẩn (0-9), không chấp nhận chữ số full-width hoặc ký tự chữ.',
+            'thu_tu.min'            => 'Thứ tự sắp xếp không được nhỏ hơn 0.',
+            'thu_tu.max'            => 'Thứ tự sắp xếp không được vượt quá 999.999.',
+        ])->validate();
+
+        $baseSlug = $hasCustomSlug
+            ? $validated['slug']
+            : (Str::slug($cleanName) ?: 'danh-muc');
+
+        $slug = $baseSlug;
+        if (! $hasCustomSlug) {
+            $suffix = 2;
+            while (
+                DanhMucQuan::where('slug', $slug)
+                    ->when($ignoreId !== null, fn ($q) => $q->where('id', '!=', $ignoreId))
+                    ->exists()
+            ) {
+                $slug = $baseSlug . '-' . $suffix;
+                $suffix++;
+            }
+        }
+
+        $validated['ten_danh_muc'] = $cleanName;
+        $validated['slug'] = $slug;
+
+        return $validated;
+    }
+
+    public function destroy(Request $request, $id)
+    {
+        if (! is_numeric($id) || (int) $id <= 0 || ! ($category = DanhMucQuan::find((int) $id))) {
+            $invalidDeleteMsg = 'Xóa không hợp lệ: Danh mục này không tồn tại hoặc đã bị xóa ở tab khác.';
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $invalidDeleteMsg,
+                ], 400);
+            }
+
+            return redirect()->route('admin.danh-muc-quan.index')->with('error', $invalidDeleteMsg);
+        }
+
         $name = $category->ten_danh_muc;
 
-        // An toàn: gỡ liên kết các quán trước khi xóa danh mục
-        Quan::where('danh_muc_id', $category->id)->update(['danh_muc_id' => null]);
-        $category->delete();
+        // An toàn: gỡ liên kết và chuyển toàn bộ quán thuộc danh mục (kể cả đã xóa mềm hoặc chưa gán FK theo alias) về Chưa phân loại
+        $affectedQuans = DB::transaction(function () use ($category, $name) {
+            $otherCategoryNames = DanhMucQuan::where('id', '!=', $category->id)
+                ->pluck('ten_danh_muc')
+                ->all();
+
+            $matchingNames = array_values(array_diff(
+                array_unique(array_merge([$name], self::CATEGORY_ALIAS_MAP[$category->slug] ?? [])),
+                $otherCategoryNames
+            ));
+
+            $affectedQuery = Quan::withTrashed()->where(function ($query) use ($category, $matchingNames) {
+                $query->where('danh_muc_id', $category->id)
+                    ->orWhere(function ($unmapped) use ($matchingNames) {
+                        $unmapped->whereNull('danh_muc_id')
+                            ->whereIn('loai_hinh_kinh_doanh', $matchingNames);
+                    });
+            });
+
+            $quans = (clone $affectedQuery)->get();
+
+            $affectedQuery->update([
+                'danh_muc_id'          => null,
+                'loai_hinh_kinh_doanh' => 'Chưa phân loại',
+            ]);
+
+            $category->delete();
+
+            return $quans;
+        });
+
+        // Đồng bộ lại Elasticsearch cho các quán còn hoạt động/chưa xóa mềm vừa chuyển sang "Chưa phân loại"
+        $nonTrashedQuans = $affectedQuans->filter(fn (Quan $quan) => ! $quan->trashed());
+        if ($nonTrashedQuans->isNotEmpty()) {
+            try {
+                $nonTrashedQuans->each(function (Quan $quan) {
+                    $quan->danh_muc_id = null;
+                    $quan->loai_hinh_kinh_doanh = 'Chưa phân loại';
+                });
+                $nonTrashedQuans->searchable();
+            } catch (\Throwable $e) {
+            }
+        }
 
         try {
             AdminAuditLog::create([
@@ -234,26 +401,41 @@ class QuanLyDanhMucController extends Controller
                 'action'      => 'category.deleted',
                 'target_type' => DanhMucQuan::class,
                 'target_id'   => (string) $id,
-                'metadata'    => ['name' => $name],
+                'metadata'    => [
+                    'name'                 => $name,
+                    'affected_quans_count' => $affectedQuans->count(),
+                ],
                 'ip_address'  => $request->ip(),
             ]);
         } catch (\Throwable $e) {}
 
         Cache::forget('bando_categories_v2');
+        Cache::forget('bando_total_v1');
+
+        $affectedCount = $affectedQuans->count();
+        $message = $affectedCount > 0
+            ? 'Đã xóa danh mục "' . $name . '" và chuyển ' . $affectedCount . ' quán về Chưa phân loại!'
+            : 'Đã xóa danh mục "' . $name . '" thành công!';
 
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Đã xóa danh mục "' . $name . '" thành công!',
+                'message' => $message,
             ]);
         }
 
-        return redirect()->route('admin.danh-muc-quan.index')->with('success', 'Đã xóa danh mục "' . $name . '"!');
+        return redirect()->route('admin.danh-muc-quan.index')->with('success', $message);
     }
 
-    public function toggleHienThi(Request $request, int $id)
+    public function toggleHienThi(Request $request, $id)
     {
-        $category = DanhMucQuan::findOrFail($id);
+        if (! is_numeric($id) || (int) $id <= 0 || ! ($category = DanhMucQuan::find((int) $id))) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Thao tác không hợp lệ: Danh mục không tồn tại hoặc đã bị xóa ở tab khác. Vui lòng tải lại trang.',
+            ], 404);
+        }
+
         $category->is_hien_thi = !$category->is_hien_thi;
         $category->save();
 
@@ -266,9 +448,15 @@ class QuanLyDanhMucController extends Controller
         ]);
     }
 
-    public function toggleNoiBat(Request $request, int $id)
+    public function toggleNoiBat(Request $request, $id)
     {
-        $category = DanhMucQuan::findOrFail($id);
+        if (! is_numeric($id) || (int) $id <= 0 || ! ($category = DanhMucQuan::find((int) $id))) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Thao tác không hợp lệ: Danh mục không tồn tại hoặc đã bị xóa ở tab khác. Vui lòng tải lại trang.',
+            ], 404);
+        }
+
         $category->is_noi_bat = !$category->is_noi_bat;
         $category->save();
 
@@ -292,19 +480,7 @@ class QuanLyDanhMucController extends Controller
 
         $categories = DanhMucQuan::all()->keyBy('slug');
 
-        $mapping = [
-            'nha-hang'           => ['Nhà hàng'],
-            'ca-phe-tra'         => ['Cà phê & Trà', 'Cà phê'],
-            'billiards-giai-tri' => ['Billiards & Giải trí', 'Billiards', 'Bida'],
-            'do-an-vat'          => ['Đồ ăn vặt', 'Ăn vặt', 'Món ăn vặt'],
-            'lau-nuong'          => ['Lẩu & Nướng', 'Lẩu', 'Nướng'],
-            'quan-nhau'          => ['Quán nhậu & Bar', 'Quán nhậu', 'Quán Đêm 24/7', 'Bar', 'Pub'],
-            'tra-sua-nuoc-ep'    => ['Trà sữa & Nước ép', 'Trà sữa', 'Nước ép'],
-            'tiem-banh'          => ['Tiệm bánh', 'Bánh ngọt'],
-            'quan-an-binh-dan'   => ['Quán ăn bình dân', 'Cơm bình dân', 'Bình dân'],
-        ];
-
-        foreach ($mapping as $slug => $types) {
+        foreach (self::CATEGORY_ALIAS_MAP as $slug => $types) {
             if (isset($categories[$slug])) {
                 Quan::whereNull('danh_muc_id')
                     ->whereIn('loai_hinh_kinh_doanh', $types)

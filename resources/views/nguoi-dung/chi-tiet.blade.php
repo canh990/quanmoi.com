@@ -215,7 +215,7 @@
             $breadcrumbItems[] = [
                 '@type' => 'ListItem',
                 'position' => $pos++,
-                'name' => str_replace('_', ' ', \Illuminate\Support\Str::title($quan->loai_hinh_kinh_doanh)),
+                'name' => $quan->ten_danh_muc_hien_thi,
                 'item' => route('kham-pha', ['danh_muc' => $quan->loai_hinh_kinh_doanh]),
             ];
         }
@@ -276,7 +276,7 @@
             @if(!empty($quan->loai_hinh_kinh_doanh))
                 <span class="material-symbols-outlined text-[16px] text-gray-400 select-none">chevron_right</span>
                 <a class="hover:text-primary transition-colors text-gray-600 hover:text-primary font-medium" href="{{ route('kham-pha', ['danh_muc' => $quan->loai_hinh_kinh_doanh]) }}">
-                    {{ str_replace('_', ' ', \Illuminate\Support\Str::title($quan->loai_hinh_kinh_doanh)) }}
+                    {{ $quan->ten_danh_muc_hien_thi }}
                 </a>
             @endif
 
@@ -1084,7 +1084,7 @@
                         <ul class="space-y-3">
                             <li class="flex items-center gap-3 text-on-surface">
                                 <span class="material-symbols-outlined text-secondary">category</span>
-                                <span class="font-body-sm text-body-sm">{{ \Illuminate\Support\Str::title(str_replace('_', ' ', $quan->loai_hinh_kinh_doanh ?? 'Quán ăn')) }}</span>
+                                <span class="font-body-sm text-body-sm">{{ $quan->ten_danh_muc_hien_thi }}</span>
                             </li>
                             @if($quan->email)
                             <li class="flex items-center gap-3 text-on-surface">
@@ -1287,122 +1287,14 @@
         `;
         document.head.appendChild(style);
 
-        window.toggleSaveDetail = async function(btn, quanId) {
+        window.toggleSaveDetail = function(btn, quanId) {
             const detailQuanName = @json($quan->ten_quan);
             const detailQuanImg = @json($quan->hinhAnh->first()->url ?? ($quan->anh_bia_url ?: null));
 
-            @guest
-                if (window.showToast) {
-                    window.showToast({
-                        eyebrow: 'Lưu địa điểm yêu thích',
-                        title: 'Đăng nhập để lưu quán',
-                        message: `Đăng nhập ngay để lưu "${detailQuanName}" vào bộ sưu tập của bạn.`,
-                        type: 'warning',
-                        image: detailQuanImg,
-                        actionText: 'Đăng nhập ngay',
-                        actionUrl: "{{ route('login') }}"
-                    });
-                } else {
-                    window.location.href = "{{ route('login') }}";
-                }
-                return;
-            @endguest
-
-            if (btn.dataset.loading === 'true') return;
-
-            const icon = btn.querySelector('.material-symbols-outlined');
-            const textEl = document.getElementById('detail-save-text');
-            const isIconFilled = (el) => el && /['"]?FILL['"]?\s*1/i.test(el.style.fontVariationSettings || el.getAttribute('style') || '');
-            const currentlySaved = btn.dataset.saved !== undefined
-                ? btn.dataset.saved === '1'
-                : isIconFilled(icon);
-            const targetSaved = !currentlySaved;
-
-            const applyDetailSaveState = (state) => {
-                btn.dataset.saved = state ? '1' : '0';
-                btn.title = state ? 'Bỏ lưu quán' : 'Lưu quán';
-                if (icon) {
-                    icon.style.fontVariationSettings = state ? "'FILL' 1" : "'FILL' 0";
-                }
-                if (textEl) {
-                    textEl.textContent = state ? 'Đã lưu' : 'Lưu quán';
-                }
-            };
-
-            // 1. Optimistic visual update (0ms delay)
-            applyDetailSaveState(targetSaved);
-            btn.style.transform = 'scale(1.15)';
-            setTimeout(() => { btn.style.transform = 'scale(1)'; }, 180);
-
-            // 2. Immediate Toast
-            if (window.showToast) {
-                if (targetSaved) {
-                    window.showToast({
-                        eyebrow: 'Bộ sưu tập yêu thích',
-                        title: `Đã lưu "${detailQuanName}"`,
-                        message: 'Địa điểm đã được thêm vào danh sách quán yêu thích của bạn.',
-                        type: 'saved',
-                        image: detailQuanImg,
-                        actionText: 'Xem quán đã lưu',
-                        actionUrl: "{{ route('quan-da-luu.index') }}"
-                    });
-                } else {
-                    window.showToast({
-                        eyebrow: 'Đã cập nhật danh sách',
-                        title: `Đã bỏ lưu "${detailQuanName}"`,
-                        message: 'Địa điểm đã được gỡ khỏi danh sách yêu thích.',
-                        type: 'unsaved',
-                        image: detailQuanImg
-                    });
-                }
-            }
-
-            btn.dataset.loading = 'true';
-
-            try {
-                const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-                const res = await fetch(`/quan-da-luu/${quanId}/toggle`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': token,
-                        'Accept': 'application/json'
-                    }
-                });
-
-                if (res.status === 401) {
-                    applyDetailSaveState(currentlySaved);
-                    window.location.href = "{{ route('login') }}";
-                    return;
-                }
-
-                const data = await res.json();
-                if (data.success) {
-                    const finalSaved = data.status === 'saved';
-                    applyDetailSaveState(finalSaved);
-                } else {
-                    applyDetailSaveState(currentlySaved);
-                    if (window.showToast) {
-                        window.showToast({
-                            title: 'Không thể thực hiện',
-                            message: data.message || 'Đã có lỗi xảy ra, vui lòng thử lại.',
-                            type: 'error'
-                        });
-                    }
-                }
-            } catch (err) {
-                console.error(err);
-                applyDetailSaveState(currentlySaved);
-                if (window.showToast) {
-                    window.showToast({
-                        title: 'Lỗi kết nối',
-                        message: 'Không thể gửi yêu cầu đến máy chủ, vui lòng thử lại.',
-                        type: 'error'
-                    });
-                }
-            } finally {
-                btn.dataset.loading = 'false';
-            }
+            return window.toggleSave(btn, quanId, {
+                name: detailQuanName,
+                image: detailQuanImg
+            });
         };
 
         function openPromoModal(modalId) {

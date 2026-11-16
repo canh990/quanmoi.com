@@ -13,11 +13,26 @@ class CapNhatTaiKhoanRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        if ($this->has('ngay_sinh')) {
-            $raw = $this->input('ngay_sinh');
-            if (is_string($raw) && trim($raw) === '') {
-                $this->merge(['ngay_sinh' => null]);
+        $cleanUnicodeTrim = static fn ($val) => is_string($val)
+            ? (preg_replace('/^[\s\p{Zs}\x{3000}]+|[\s\p{Zs}\x{3000}]+$/u', '', $val) ?? trim($val))
+            : $val;
+
+        $merged = [];
+
+        if ($this->has('ho_ten') && is_string($this->input('ho_ten'))) {
+            $trimmedName = $cleanUnicodeTrim($this->input('ho_ten'));
+            $merged['ho_ten'] = preg_replace('/[\s\p{Zs}\x{3000}]+/u', ' ', $trimmedName) ?? $trimmedName;
+        }
+
+        foreach (['ngay_sinh', 'so_dien_thoai', 'dia_chi', 'gioi_tinh'] as $field) {
+            if ($this->has($field) && is_string($this->input($field))) {
+                $cleaned = $cleanUnicodeTrim($this->input($field));
+                $merged[$field] = $cleaned === '' ? null : $cleaned;
             }
+        }
+
+        if (! empty($merged)) {
+            $this->merge($merged);
         }
     }
 
@@ -25,9 +40,9 @@ class CapNhatTaiKhoanRequest extends FormRequest
     {
         return [
             // --- Thông tin cá nhân ---
-            'ho_ten'        => 'required|string|max:255',
-            'so_dien_thoai' => 'nullable|string|regex:/^0[0-9]{9,10}$/',
-            'dia_chi'       => 'nullable|string|max:255',
+            'ho_ten'        => 'required|string|max:255|not_regex:/[<>]/',
+            'so_dien_thoai' => 'nullable|string|max:15|regex:/^0[0-9]{9,10}$/',
+            'dia_chi'       => 'nullable|string|max:255|not_regex:/[<>]/',
             'ngay_sinh'     => [
                 'nullable',
                 function ($attribute, $value, $fail) {
@@ -102,10 +117,13 @@ class CapNhatTaiKhoanRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'ho_ten.required'           => 'Vui lòng nhập họ tên.',
+            'ho_ten.required'           => 'Vui lòng nhập họ tên (không được để trống hoặc chỉ nhập khoảng trắng).',
             'ho_ten.max'                => 'Họ tên không được vượt quá 255 ký tự.',
-            'so_dien_thoai.regex'       => 'Số điện thoại không hợp lệ (phải bắt đầu bằng số 0 và có từ 10 đến 11 số).',
-            'gioi_tinh.in'              => 'Giới tính không hợp lệ.',
+            'so_dien_thoai.max'         => 'Số điện thoại không được vượt quá 15 ký tự.',
+            'so_dien_thoai.regex'       => 'Số điện thoại không hợp lệ (chỉ nhập chữ số chuẩn 0-9, bắt đầu bằng số 0 và có từ 10 đến 11 số, không dùng số full-width).',
+            'dia_chi.max'               => 'Địa chỉ không được vượt quá 255 ký tự.',
+            'dia_chi.in'                => 'Tỉnh / Thành phố đã chọn không hợp lệ.',
+            'gioi_tinh.in'              => 'Giới tính đã chọn không hợp lệ.',
             'anh_dai_dien.image'        => 'File tải lên phải là hình ảnh hợp lệ.',
             'anh_dai_dien.mimes'        => 'Định dạng ảnh phải là: jpeg, png, jpg hoặc webp.',
             'anh_dai_dien.max'          => 'Kích thước ảnh không được vượt quá 2MB.',

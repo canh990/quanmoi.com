@@ -105,6 +105,19 @@
                             <span class="material-symbols-outlined text-[18px]">close</span>
                         </button>
                     </div>
+                @elseif(isset($errors) && $errors->any())
+                    <div id="deposit-session-banner" class="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs sm:text-sm flex items-start justify-between gap-3">
+                        <div class="flex items-start gap-2.5">
+                            <span class="material-symbols-outlined text-[20px] shrink-0 text-rose-600 mt-0.5">error</span>
+                            <div>
+                                <p class="font-bold text-rose-900">Thông tin nạp tiền không hợp lệ</p>
+                                <p class="mt-0.5 text-rose-700">{{ $errors->first() }}</p>
+                            </div>
+                        </div>
+                        <button type="button" onclick="this.closest('#deposit-session-banner').remove()" class="text-rose-500 hover:text-rose-800 cursor-pointer shrink-0">
+                            <span class="material-symbols-outlined text-[18px]">close</span>
+                        </button>
+                    </div>
                 @endif
 
                 {{-- Form Nạp tiền --}}
@@ -306,8 +319,9 @@
     }
 
     (function() {
-        const hasServerCallbackFlash = @json((bool) (session('success') || session('error') || session('warning') || session('info')));
+        const hasServerCallbackFlash = @json((bool) (session('success') || session('error') || session('warning') || session('info') || request()->has('cancelled_invoice') || request()->has('failed_invoice')));
         const baseCancelUrl = @json(route('tai-khoan.nap-tien.huy'));
+        const cleanWalletUrl = @json(route('tai-khoan.vi-tien'));
 
         if (hasServerCallbackFlash) {
             try {
@@ -318,6 +332,10 @@
                 sessionStorage.removeItem('qm_pending_deposit_invoice');
                 sessionStorage.removeItem('qm_deposit_submitting');
             } catch (e) {}
+
+            if (window.history && typeof window.history.replaceState === 'function' && (window.location.search.includes('cancelled_invoice=') || window.location.search.includes('failed_invoice='))) {
+                window.history.replaceState(null, '', cleanWalletUrl);
+            }
         }
 
         function checkAndHandleBackFromGateway(event) {
@@ -362,7 +380,16 @@
         const form = document.getElementById('form-nap-tien');
 
         inputAmount.addEventListener('input', function(e) {
-            let raw = this.value.replace(/[^0-9]/g, '');
+            const rawInput = String(this.value || '');
+            if (/[\uFF10-\uFF19]/.test(rawInput) || /[^\d.,\s\u3000]/.test(rawInput)) {
+                this.dataset.invalidChars = '1';
+                hiddenAmount.value = '0';
+                showError('Số tiền nạp chỉ chấp nhận chữ số chuẩn (0-9), không chấp nhận chữ số full-width (０-９) hoặc ký tự chữ.');
+                return;
+            }
+            this.dataset.invalidChars = '0';
+
+            let raw = rawInput.replace(/[^0-9]/g, '');
             if (!raw) {
                 hiddenAmount.value = '0';
                 return;
@@ -385,6 +412,12 @@
         });
 
         form.addEventListener('submit', function(e) {
+            if (inputAmount.dataset.invalidChars === '1' || /[\uFF10-\uFF19]/.test(inputAmount.value)) {
+                e.preventDefault();
+                showError('Số tiền nạp chỉ chấp nhận chữ số chuẩn (0-9), không chấp nhận chữ số full-width (０-９) hoặc ký tự chữ.');
+                inputAmount.focus();
+                return;
+            }
             const amount = parseInt(hiddenAmount.value, 10);
             if (!amount || amount < 10000) {
                 e.preventDefault();

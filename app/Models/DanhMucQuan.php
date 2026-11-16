@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Validation\ValidationException;
 
 class DanhMucQuan extends Model
 {
@@ -66,5 +67,55 @@ class DanhMucQuan extends Model
     public function scopeSapXep($query)
     {
         return $query->orderByDesc('is_noi_bat')->orderBy('thu_tu')->orderBy('id');
+    }
+
+    /**
+     * Chuẩn hóa khoảng trắng (gồm cả khoảng trắng 1 byte và 2 bytes \u3000) trước khi lưu.
+     */
+    public static function cleanName(string $name): string
+    {
+        $trimmed = preg_replace('/^[\s\p{Zs}\x{3000}]+|[\s\p{Zs}\x{3000}]+$/u', '', $name) ?? trim($name);
+
+        return preg_replace('/[\s\p{Zs}\x{3000}]+/u', ' ', $trimmed) ?? $trimmed;
+    }
+
+    /**
+     * Chuẩn hóa tên để so sánh trùng: không phân biệt hoa/thường và khoảng trắng (1 byte & 2 bytes).
+     */
+    public static function normalizeName(string $name): string
+    {
+        return preg_replace('/[\s\p{Zs}\x{3000}]+/u', '', mb_strtolower($name, 'UTF-8')) ?? '';
+    }
+
+    /**
+     * Tìm danh mục trùng tên chuẩn hóa (loại trừ $ignoreId khi đang cập nhật).
+     */
+    public static function findDuplicateByName(string $name, ?int $ignoreId = null): ?self
+    {
+        $normalizedTarget = self::normalizeName($name);
+        if ($normalizedTarget === '') {
+            return null;
+        }
+
+        return static::query()
+            ->when($ignoreId !== null, fn ($query) => $query->where('id', '!=', $ignoreId))
+            ->get(['id', 'ten_danh_muc'])
+            ->first(fn (self $category) => self::normalizeName($category->ten_danh_muc) === $normalizedTarget);
+    }
+
+    protected static function booted(): void
+    {
+        static::saving(function (self $category) {
+            $category->ten_danh_muc = self::cleanName((string) $category->ten_danh_muc);
+
+            if (! $category->exists || $category->isDirty('ten_danh_muc')) {
+                $duplicate = self::findDuplicateByName($category->ten_danh_muc, $category->exists ? $category->id : null);
+                if ($duplicate) {
+                    throw ValidationException::withMessages([
+                        'ten_danh_muc' => ['Tên danh mục "' . $duplicate->ten_danh_muc . '" đã tồn tại (không phân biệt hoa/thường và khoảng trắng).'],
+                    ]);
+                }
+            }
+        });
     }
 }
